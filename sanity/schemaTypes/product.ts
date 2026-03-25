@@ -62,6 +62,8 @@ export const productType = defineType({
           { title: 'Juguetes', value: 'juguetes' },
           { title: 'Belleza', value: 'belleza' },
           { title: 'Alimentos', value: 'alimentos' },
+          { title: 'Accesorios', value: 'accesorios' },
+          { title: 'Sexshop', value: 'sexshop' },
           { title: 'Otros', value: 'otros' },
         ],
       },

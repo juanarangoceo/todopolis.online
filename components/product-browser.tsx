@@ -35,14 +35,39 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
   const [searchQuery, setSearchQuery] = useState('');
 
   const categories = useMemo(() => {
-    const cats = new Set(initialProducts.map(p => p.category));
-    cats.add('Accesorios');
-    cats.add('Sexshop');
-    return ['Todos', ...Array.from(cats).filter(Boolean)];
-  }, [initialProducts]);
+    // 1. All valid categories in the correct display format
+    const masterCategories = [
+      'Accesorios',
+      'Alimentos',
+      'Belleza',
+      'Deportes',
+      'Electrónica',
+      'Hogar',
+      'Juguetes',
+      'Moda',
+      'Sexshop',
+      'Otros'
+    ];
+    return ['Todos', ...masterCategories];
+  }, []);
+
+  const normalizeCategory = (cat: string) => {
+    const c = cat.toLowerCase();
+    if (c === 'electronica') return 'Electrónica';
+    if (c === 'hogar') return 'Hogar';
+    if (c === 'moda') return 'Moda';
+    if (c === 'deportes') return 'Deportes';
+    if (c === 'juguetes') return 'Juguetes';
+    if (c === 'belleza') return 'Belleza';
+    if (c === 'alimentos') return 'Alimentos';
+    return cat.charAt(0).toUpperCase() + cat.slice(1);
+  };
 
   const filterProducts = useCallback((query: string, category: string) => {
-    let results = initialProducts;
+    let results = initialProducts.map(p => ({
+      ...p,
+      category: normalizeCategory(p.category)
+    }));
 
     if (category !== 'Todos') {
       results = results.filter(p => p.category === category);
