@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
     console.log('Revalidating due to Sanity publish:', payload._type, payload._id)
 
     // Revalidate all product-related cache tags
-    revalidateTag('products')
+    revalidateTag('products', 'max')
     const productSlug = payload.slug?.current ?? payload._id
-    revalidateTag(`product-${productSlug}`)
+    revalidateTag(`product-${productSlug}`, 'max')
     revalidatePath('/')
 
     return NextResponse.json({
