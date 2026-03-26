@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 interface MagicSearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
+  compact?: boolean;
 }
 
-export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magico..." }: MagicSearchBarProps) {
+export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magico...", compact = false }: MagicSearchBarProps) {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -27,7 +28,7 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magi
   };
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto px-4">
+    <div className={cn("relative w-full", compact ? "max-w-full" : "max-w-3xl mx-auto px-4")}>
       {/* Magical glow effect */}
       <div 
         className={cn(
@@ -51,11 +52,13 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magi
       {/* Search container */}
       <div 
         className={cn(
-          "relative flex items-center gap-2 md:gap-4 px-3 py-3 md:px-6 md:py-5 rounded-2xl md:rounded-3xl transition-all duration-500",
-          "bg-white/95 backdrop-blur-2xl mx-0",
+          "relative flex items-center gap-2 transition-all duration-500",
+          compact
+            ? "px-3 py-2 rounded-xl bg-white/95 backdrop-blur-2xl"
+            : "gap-4 px-3 py-3 md:px-6 md:py-5 rounded-2xl md:rounded-3xl bg-white/95 backdrop-blur-2xl mx-0",
           isFocused 
-            ? "border-2 border-[#F43F5E] shadow-xl md:shadow-2xl shadow-[#F43F5E]/20 scale-[1.02]" 
-            : "border-2 border-[#FFB4AC] shadow-lg md:shadow-xl shadow-[#FFB4AC]/10"
+            ? "border-2 border-[#F43F5E] shadow-lg shadow-[#F43F5E]/20 scale-[1.01]" 
+            : "border-2 border-[#FFB4AC] shadow-md shadow-[#FFB4AC]/10"
         )}
       >
         {/* Wand icon */}
@@ -110,13 +113,15 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magi
       </div>
       
       {/* Helper text */}
-      <p className={cn(
-        "text-center mt-4 text-sm text-foreground/50 font-medium transition-all duration-300",
-        isFocused ? "opacity-100" : "opacity-0"
-      )}>
-        <Sparkles className="inline w-3 h-3 mr-1 text-[#FFB4AC]" />
-        Escribe para encontrar productos increibles
-      </p>
+      {!compact && (
+        <p className={cn(
+          "text-center mt-4 text-sm text-foreground/50 font-medium transition-all duration-300",
+          isFocused ? "opacity-100" : "opacity-0"
+        )}>
+          <Sparkles className="inline w-3 h-3 mr-1 text-[#FFB4AC]" />
+          Escribe para encontrar productos increibles
+        </p>
+      )}
     </div>
   );
 }

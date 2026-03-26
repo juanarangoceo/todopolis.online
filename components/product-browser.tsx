@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useMemo, ReactNode } from 'react';
+import { useState, useCallback, useMemo, ReactNode, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Product } from '@/lib/types';
 import { MagicSearchBar } from './magic-search-bar';
 import { ProductGrid } from './product-grid';
@@ -33,12 +34,17 @@ interface ProductBrowserProps {
 export function ProductBrowser({ initialProducts, children }: ProductBrowserProps) {
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    // Find the header search slot once it mounts
+    const slot = document.getElementById('header-search-slot');
+    if (slot) setHeaderSlot(slot);
+  }, []);
 
   const categories = useMemo(() => {
-    // 1. All valid categories in the correct display format
     const masterCategories = [
       'Accesorios',
-      'Alimentos',
       'Belleza',
       'Deportes',
       'Electrónica',
@@ -108,54 +114,59 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
     <>
       {children}
 
-      <section className="pt-6 pb-2 relative">
-        <MagicSearchBar onSearch={handleSearch} />
+      {/* Portal: desktop search bar into header slot */}
+      {headerSlot && createPortal(
+        <MagicSearchBar onSearch={handleSearch} compact />,
+        headerSlot
+      )}
+
+      {/* Mobile search & categories */}
+      <section className="pt-8 pb-0 relative md:hidden overflow-hidden">
+        <div className="px-4">
+          <MagicSearchBar onSearch={handleSearch} compact />
+        </div>
+
+        {/* Mobile Categories (Stories style) */}
+        <div className="w-full flex overflow-x-auto gap-3 pt-2 pb-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {categories.map((cat) => {
+            const Icon = getCategoryIcon(cat);
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={`mobile-cat-${cat}`}
+                onClick={() => setActiveCategory(cat)}
+                className="flex flex-col items-center gap-2 shrink-0"
+              >
+                <div className={`w-15 h-15 md:w-16 md:h-16 rounded-full flex items-center justify-center border-[3px] p-0.5 transition-all ${isActive ? 'border-[#FFB4AC]' : 'border-transparent'}`}>
+                  <div className={`w-12 h-12 md:w-full md:h-full rounded-full flex items-center justify-center ${isActive ? 'bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] text-white shadow-md' : 'bg-[#FFD5E5]/40 text-[#F43F5E]'}`}>
+                    <Icon className="w-5 h-5 md:w-6 md:h-6" />
+                  </div>
+                </div>
+                <span className={`text-[10px] md:text-[11px] font-bold text-center w-16 md:w-20 truncate px-1 ${isActive ? 'text-foreground' : 'text-foreground/60'}`}>
+                  {cat}
+                </span>
+              </button>
+            )
+          })}
+          {/* Spacer */}
+          <div className="shrink-0 w-2" />
+        </div>
       </section>
       
       <section id="productos" className="pt-2 pb-16 px-4 relative">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FFD5E5]/10 to-transparent pointer-events-none" />
         
         <div className="container mx-auto relative">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6">
-            <div>
-              <p className="text-foreground/80 font-serif font-medium text-sm md:text-base">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos para ti'}
-              </p>
-            </div>
+          {/* Desktop Categories & Product count */}
+          <div className="flex flex-col items-center gap-2 mb-4 md:mb-6 text-center">
             
-            {/* Mobile Categories (Stories style) */}
-            <div className="md:hidden w-full flex overflow-x-auto gap-3 py-4 px-4 -mx-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {categories.map((cat) => {
-                const Icon = getCategoryIcon(cat);
-                const isActive = activeCategory === cat;
-                return (
-                  <button
-                    key={`mobile-cat-${cat}`}
-                    onClick={() => setActiveCategory(cat)}
-                    className="flex flex-col items-center gap-2 shrink-0"
-                  >
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center border-[3px] p-0.5 transition-all ${isActive ? 'border-[#FFB4AC]' : 'border-transparent'}`}>
-                      <div className={`w-full h-full rounded-full flex items-center justify-center ${isActive ? 'bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] text-white shadow-md' : 'bg-[#FFD5E5]/40 text-[#F43F5E]'}`}>
-                        <Icon className="w-6 h-6" />
-                      </div>
-                    </div>
-                    <span className={`text-[11px] font-bold text-center w-20 truncate px-1 ${isActive ? 'text-foreground' : 'text-foreground/60'}`}>
-                      {cat}
-                    </span>
-                  </button>
-                )
-              })}
-              {/* Espaciador final para asegurar margen al final del scroll */}
-              <div className="shrink-0 w-2" />
-            </div>
-            
-            {/* Desktop Categories */}
-            <div className="hidden md:flex flex-wrap gap-2 mt-4 md:mt-0">
-              {categories.map((cat, i) => (
+            {/* Desktop Categories — centered pill row */}
+            <div className="hidden md:flex flex-wrap items-center justify-center gap-2 w-full">
+              {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
                     activeCategory === cat 
                       ? 'bg-[#FFB4AC] text-white shadow-lg shadow-[#FFB4AC]/30' 
                       : 'bg-white text-foreground/70 border border-[#EDD2F3]/30 hover:border-[#FFB4AC]/50 hover:text-[#FFB4AC]'
@@ -165,6 +176,11 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
                 </button>
               ))}
             </div>
+
+            {/* Product Count (below categories on mobile and desktop) */}
+            <p className="text-foreground/80 font-serif font-medium text-xs md:text-sm mt-1">
+              {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos para ti'}
+            </p>
           </div>
           
           <ProductGrid products={filteredProducts} searchQuery={searchQuery} />

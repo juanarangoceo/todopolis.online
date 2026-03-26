@@ -195,7 +195,8 @@ export function ProductHero({ product }: ProductHeroProps) {
       />
     </section>
 
-    {/* Sticky Mobile Checkout CTA */}
+    {/* Sticky Mobile Checkout CTA — hidden when checkout modal is open */}
+    {!isCheckoutOpen && (
     <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 animate-in slide-in-from-bottom-5">
       <button
         onClick={() => setIsCheckoutOpen(true)}
@@ -210,6 +211,7 @@ export function ProductHero({ product }: ProductHeroProps) {
         </span>
       </button>
     </div>
+    )}
     </>
   );
 }

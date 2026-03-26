@@ -2,7 +2,7 @@ import { Sparkles, Star } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section className="relative pt-6 pb-8 md:pt-12 md:pb-12 overflow-hidden">
+    <section className="relative pt-4 pb-4 md:pt-8 md:pb-6 overflow-hidden">
       {/* Animated background with brand colors */}
       <div className="absolute inset-0 -z-10">
         {/* Main gradient background */}
@@ -45,9 +45,8 @@ export function Hero() {
         </h1>
         
         {/* Subtitle */}
-        <p className="mt-8 text-lg md:text-xl lg:text-2xl text-foreground/70 max-w-3xl mx-auto text-pretty font-serif font-medium leading-relaxed">
+        <p className="mt-4 text-lg md:text-xl lg:text-2xl text-foreground/70 max-w-3xl mx-auto text-pretty font-serif font-medium leading-relaxed">
           Miles de productos seleccionados especialmente para ti. Moda, hogar, tecnologia, belleza y mucho mas.
-          <span className="block mt-2 text-[#FFB4AC] font-bold">Encuentra todo lo que buscas aqui.</span>
         </p>
         
       </div>
