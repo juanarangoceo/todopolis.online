@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 
+export const runtime = 'edge';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -78,10 +80,16 @@ export async function POST(req: NextRequest) {
     });
 
     // Build history from messages (all except the last user message)
-    const history = messages.slice(0, -1).map((m: { role: string; text: string }) => ({
+    let history = messages.slice(0, -1).map((m: { role: string; text: string }) => ({
       role: m.role === 'user' ? 'user' : 'model',
       parts: [{ text: m.text }],
     }));
+
+    // Gemini stricly requires the chat history to start with a 'user' turn.
+    // If our UI sent an initial greeting from the 'model', we must remove it from history.
+    while (history.length > 0 && history[0].role !== 'user') {
+      history.shift();
+    }
 
     const chat = model.startChat({ history });
     const lastMessage = messages[messages.length - 1].text;
