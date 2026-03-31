@@ -3,6 +3,7 @@ import { Nunito, Montserrat } from 'next/font/google'
 import './globals.css'
 import { FavoritesProvider } from '@/app/providers/favorites-provider'
 import { CartProvider } from '@/app/providers/cart-provider'
+import { LucyChatButton } from '@/components/lucy/lucy-chat-button'
 
 const nunito = Nunito({ 
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
         <FavoritesProvider>
           <CartProvider>
             {children}
+            <LucyChatButton />
           </CartProvider>
         </FavoritesProvider>
       </body>

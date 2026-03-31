@@ -112,22 +112,16 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
 
   return (
     <>
-      {children}
-
       {/* Portal: desktop search bar into header slot */}
       {headerSlot && createPortal(
         <MagicSearchBar onSearch={handleSearch} compact />,
         headerSlot
       )}
 
-      {/* Mobile search & categories */}
-      <section className="pt-8 pb-0 relative md:hidden overflow-hidden">
-        <div className="px-4">
-          <MagicSearchBar onSearch={handleSearch} compact />
-        </div>
-
-        {/* Mobile Categories (Stories style) */}
-        <div className="w-full flex overflow-x-auto gap-3 pt-2 pb-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      {/* Top Categories Navigation (Desktop & Mobile) */}
+      <div className="w-full relative z-30 bg-white/40 backdrop-blur-md border-b border-[#EDD2F3]/20">
+        {/* Mobile Categories */}
+        <div className="md:hidden w-full flex overflow-x-auto gap-3 pt-4 pb-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {categories.map((cat) => {
             const Icon = getCategoryIcon(cat);
             const isActive = activeCategory === cat;
@@ -148,36 +142,42 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
               </button>
             )
           })}
-          {/* Spacer */}
           <div className="shrink-0 w-2" />
         </div>
-      </section>
+
+        {/* Desktop Categories */}
+        <div className="hidden md:flex container mx-auto px-4 py-4">
+          <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+            {categories.map((cat) => (
+              <button
+                key={`desktop-cat-${cat}`}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  activeCategory === cat 
+                    ? 'bg-[#FFB4AC] text-white shadow-lg shadow-[#FFB4AC]/30' 
+                    : 'bg-white text-foreground/70 border border-[#EDD2F3]/30 hover:border-[#FFB4AC]/50 hover:text-[#FFB4AC]'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {children}
       
-      <section id="productos" className="pt-2 pb-16 px-4 relative">
+      {/* Mobile Search Bar */}
+      <div className="md:hidden px-4 pt-6 pb-2">
+        <MagicSearchBar onSearch={handleSearch} compact />
+      </div>
+
+      <section id="productos" className="pt-4 pb-16 px-4 relative">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FFD5E5]/10 to-transparent pointer-events-none" />
         
         <div className="container mx-auto relative">
-          {/* Desktop Categories & Product count */}
-          <div className="flex flex-col items-center gap-2 mb-4 md:mb-6 text-center">
-            
-            {/* Desktop Categories — centered pill row */}
-            <div className="hidden md:flex flex-wrap items-center justify-center gap-2 w-full">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
-                    activeCategory === cat 
-                      ? 'bg-[#FFB4AC] text-white shadow-lg shadow-[#FFB4AC]/30' 
-                      : 'bg-white text-foreground/70 border border-[#EDD2F3]/30 hover:border-[#FFB4AC]/50 hover:text-[#FFB4AC]'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            {/* Product Count (below categories on mobile and desktop) */}
+          <div className="flex flex-col items-center gap-2 mb-6 text-center">
+            {/* Product Count */}
             <p className="text-foreground/80 font-serif font-medium text-xs md:text-sm mt-1">
               {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos para ti'}
             </p>
