@@ -114,9 +114,8 @@ export function LucyPanel({ isOpen, onClose, sessionId, initialMode = 'welcome' 
           <LucyDirectChat sessionId={sessionId} onBack={() => setMode('welcome')} />
         )}
 
-        {/* MAGIC FORM */}
         {mode === 'magic' && (
-          <LucyMagicForm sessionId={sessionId} onBack={() => setMode('welcome')} />
+          <LucyMagicForm sessionId={sessionId} onBack={() => setMode('welcome')} onClose={handleClose} />
         )}
       </div>
     </>

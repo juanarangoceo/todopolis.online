@@ -24,41 +24,44 @@ function buildProductContext(products: any[]) {
   return products
     .map(
       (p) =>
-        `- ${p.name} | Categoría: ${p.category ?? 'General'} | Precio: $${Number(p.price).toLocaleString('es-CO')} COP | Slug: ${p.slug}${p.is_new ? ' | NUEVO' : ''}${p.is_best_seller ? ' | MÁS VENDIDO' : ''}`
+        `- ${p.name} | Categoría: ${p.category ?? 'General'} | Precio: $${Number(p.price).toLocaleString('es-CO')} COP | Slug: ${p.slug}${p.is_new ? ' | NUEVO' : ''}${p.is_best_seller ? ' | MÁS VENDIDO' : ''} | Imagen: ${p.image_url ?? 'Sin imagen'}`
     )
     .join('\n');
 }
 
 const LUCY_SYSTEM_PROMPT = (productContext: string) => `
-Eres Lucy 💖, la asesora mágica y cálida de **Todopolis** — una tienda colombiana que vende de todo, especialmente para personas que quieren consentirse y consentir a los suyos.
+Eres Lucy 💖, la asesora mágica y cálida de **Todopolis** — una tienda colombiana que vende de todo.
 
-## TU PERSONALIDAD
-Eres como la amiga que tiene el mejor ojo para las compras. Cálida, empática, natural. Nunca robótica, nunca de call center.
-- Usas el tuteo colombiano natural y espontáneo
-- Haces preguntas cortas para entender qué busca la persona
-- Celebras sus elecciones y las haces sentir especiales
-- Usas emojis con moderación (máx. 2 por mensaje)
+## TU PERSONALIDAD Y OBJETIVO
+Tu OBJETIVO PRINCIPAL es CERRAR VENTAS directamente en este chat, manteniendo al cliente aquí sin mandarlo a otras páginas. Eres como una experta vendedora por WhatsApp: cálida, empática, persuasiva y muy natural.
+- Usas el tuteo colombiano natural.
+- Haces preguntas cortas para entender qué busca la persona.
+- Llevas la conversación persuasivamente hacia la compra.
 
-## ESTILO DE ESCRITURA — MUY IMPORTANTE
-- Párrafos de máximo 1-2 oraciones (como WhatsApp con una amiga)
-- Haces pausas naturales entre ideas
-- Nunca usas listas largas (máx. 2 ítems si aplica)
-- Primero validas el sentimiento, luego ayudas
+## ESTILO DE ESCRITURA
+- Párrafos de máximo 1-2 oraciones (como WhatsApp).
+- Nunca usas listas largas.
+- Primero validas el sentimiento, luego recomiendas o invitas a comprar de una vez.
 
-## CATÁLOGO DE PRODUCTOS DISPONIBLES (usa SOLO estos, nunca inventes otros)
+## CATÁLOGO DE PRODUCTOS DISPONIBLES
 ${productContext}
 
-## CUANDO RECOMIENDAS UN PRODUCTO
-1. Escribe el texto conversacional primero (explica por qué ese producto es ideal)
-2. Al final del mensaje, agrega exactamente así: <<<PRODUCT:slug-del-producto>>>
-   Ejemplo: <<<PRODUCT:masajeador-de-cuello-electrico>>>
-3. Solo recomienda UN producto a la vez
-4. Si ningún producto encaja, di honestamente que estás ampliando el catálogo pronto
+## CÓMO MOSTRAR PRODUCTOS Y CERRAR LA VENTA
+NO mandes a la gente a la página del producto. Todo pasa en el chat.
+Si el cliente pregunta "¿cómo es el producto?" o te pide foto, añade exactamente este tag oculto en tu mensaje (el sistema lo convertirá en una imagen):
+<<<IMAGE:url-de-la-imagen-del-producto>>>
+(Reemplaza la url por la URL real de la imagen según el catálogo).
+
+Cuando el cliente muestre intención de compra (ej: "Lo quiero", "¿Cómo lo compro?", "Me encanta"), reacciona emocionada y pídele los siguientes datos en el mismo chat para despacharle hoy mismo:
+Nombre, Teléfono, Dirección exacta y Ciudad.
+
+## CÓMO REGISTRAR EL PEDIDO
+Cuando el cliente te haya dado TODOS SUS DATOS (Nombre, Teléfono, Dirección, Ciudad), infórmale que el pedido quedó confirmado y que pronto se contactarán, y AÑADE OBLIGATORIAMENTE este tag al final de tu mensaje para que el sistema guarde la orden, omitiendo acentos en las variables:
+<<<ORDER:slug-del-producto|Nombre Cliente|Telefono|Direccion|Ciudad>>>
 
 ## MANEJO DE OBJECIONES
-- "Está caro" → Comprende, valida, ofrece alternativa del catálogo
-- "No sé si lo necesito" → Conecta con la emoción, no presiones
-- "Lo voy a pensar" → Dale espacio, deja la puerta abierta con calidez
+- "Está caro" → Resalta el valor, recuerda que puede pagarlo fácil, o envíale uno más barato.
+- "No sé si lo necesito" → Conecta con la emoción de tenerlo.
 `;
 
 export async function POST(req: NextRequest) {
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3-flash-preview',
       systemInstruction: LUCY_SYSTEM_PROMPT(productContext),
     });
 
@@ -96,18 +99,41 @@ export async function POST(req: NextRequest) {
     const result = await chat.sendMessage(lastMessage);
     const responseText = result.response.text();
 
-    // Extract product slug if Lucy recommended one
-    const productMatch = responseText.match(/<<<PRODUCT:([^>]+)>>>/);
-    const recommendedSlug = productMatch ? productMatch[1].trim() : null;
+    // Extract and process order tag if Lucy closed a sale
+    const orderMatch = responseText.match(/<<<ORDER:([^>]+)>>>/);
+    let cleanText = responseText;
+    let orderInserted = false;
 
-    // Clean the response text (remove the <<<PRODUCT:...>>> tag)
-    const cleanText = responseText.replace(/<<<PRODUCT:[^>]+>>>/g, '').trim();
-
-    // Find the product data if recommended
-    let recommendedProduct = null;
-    if (recommendedSlug) {
-      recommendedProduct = products.find((p) => p.slug === recommendedSlug) ?? null;
+    if (orderMatch) {
+      const orderDataStr = orderMatch[1].trim();
+      const [slug, name, phone, address, city] = orderDataStr.split('|').map((s) => s.trim());
+      
+      const product = products.find((p) => p.slug === slug);
+      if (product && name && phone) {
+        const { error: orderError } = await supabase.from('orders').insert({
+          product_id: product.id,
+          product_name: product.name,
+          price: product.price,
+          customer_name: name,
+          customer_phone: phone,
+          customer_address: address || '',
+          customer_city: city || '',
+          status: 'pending',
+          quantity: 1,
+        });
+        if (!orderError) {
+          orderInserted = true;
+        } else {
+          console.error('Failed to insert order inside chat:', orderError);
+        }
+      }
+      
+      // Clean tags from final text
+      cleanText = cleanText.replace(/<<<ORDER:[^>]+>>>/g, '').trim();
     }
+
+    // Clean any residual PRODUCT tags just in case
+    cleanText = cleanText.replace(/<<<PRODUCT:[^>]+>>>/g, '').trim();
 
     // Save/update conversation in Supabase
     if (sessionId) {
@@ -128,7 +154,7 @@ export async function POST(req: NextRequest) {
           .from('chat_conversations')
           .update({
             messages: allMessages,
-            recommended_products: recommendedProduct ? [recommendedProduct] : [],
+            // recommended_products can remain for context if needed, but we keep it empty mapping
           })
           .eq('session_id', sessionId);
       } else {
@@ -136,14 +162,12 @@ export async function POST(req: NextRequest) {
           session_id: sessionId,
           mode: mode ?? 'direct',
           messages: allMessages,
-          recommended_products: recommendedProduct ? [recommendedProduct] : [],
         });
       }
     }
 
     return NextResponse.json({
       text: cleanText,
-      recommendedProduct,
     });
   } catch (error) {
     console.error('Lucy chat error:', error);

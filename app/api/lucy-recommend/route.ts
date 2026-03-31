@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       : `No hay un producto perfecto en este momento, pero el catálogo incluye: ${products.map((p) => p.name).join(', ')}`;
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
     const prompt = `
 Eres Lucy, la asesora mágica de Todopolis, una tienda colombiana que vende de todo.
@@ -105,7 +105,7 @@ ${productContext}
 
 TAREA: Escribe un mensaje mágico y personalizado (máx. 3 oraciones cortas) explicando por qué este producto es su match perfecto, conectando con sus respuestas. Sé cálida, empática, como si fueras su mejor amiga. Usa el tuteo colombiano. Máx. 1 emoji.
 
-Devuelve solo el texto del mensaje, sin comillas ni formato adicional.
+MUY IMPORTANTE: Termina el mensaje preguntándole si quiere comprarl de inmediato para enviárselo hoy mismo. Si el cliente acepta en el chat después, se le pedirán sus datos. (NO incluyas hashtags ni formato Markdown innecesario). Devuelve solo el texto del mensaje.
 `;
 
     const result = await model.generateContent(prompt);

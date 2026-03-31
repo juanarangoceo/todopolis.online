@@ -3,12 +3,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, ArrowLeft } from 'lucide-react';
 import { LucyAvatar } from './lucy-avatar';
-import { LucyProductCard } from './lucy-product-card';
 
 interface Message {
   role: 'user' | 'model';
   text: string;
-  product?: any;
+  imageUrl?: string;
 }
 
 interface LucyDirectChatProps {
@@ -64,12 +63,21 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
         throw new Error(data.error || 'Error fetching chat');
       }
 
+      let newText = data.text ?? '¡Ay, se me cruzaron los cables! ¿Me repites? 🙈';
+      let extractedImage: string | undefined = undefined;
+
+      const imageMatch = newText.match(/<<<IMAGE:([^>]+)>>>/);
+      if (imageMatch) {
+         extractedImage = imageMatch[1].trim();
+         newText = newText.replace(/<<<IMAGE:[^>]+>>>/g, '').trim();
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           role: 'model',
-          text: data.text ?? '¡Ay, se me cruzaron los cables! ¿Me repites? 🙈',
-          product: data.recommendedProduct ?? undefined,
+          text: newText,
+          imageUrl: extractedImage,
         },
       ]);
     } catch {
@@ -117,7 +125,12 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
               >
                 {msg.text}
               </div>
-              {msg.product && <LucyProductCard product={msg.product} />}
+              {msg.imageUrl && (
+                <div className="mt-2 rounded-xl overflow-hidden border border-[#EDD2F3]/40 shadow-sm sm:max-w-[200px] max-w-[150px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={msg.imageUrl} alt="Producto recomendado" className="w-full h-auto object-cover" />
+                </div>
+              )}
             </div>
           </div>
         ))}

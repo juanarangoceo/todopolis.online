@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Heart, Star, ShoppingBag, Sparkles, ArrowLeft, Wand2 } from 'lucide-react';
 import { LucyAvatar } from './lucy-avatar';
-import { LucyProductCard } from './lucy-product-card';
 
 const QUESTIONS = [
   {
@@ -50,11 +49,12 @@ const QUESTIONS = [
 interface LucyMagicFormProps {
   sessionId: string;
   onBack: () => void;
+  onClose: () => void;
 }
 
 type FormMode = 'questions' | 'loading' | 'result';
 
-export function LucyMagicForm({ sessionId, onBack }: LucyMagicFormProps) {
+export function LucyMagicForm({ sessionId, onBack, onClose }: LucyMagicFormProps) {
   const [step, setStep] = useState(0); // 0-indexed
   const [answers, setAnswers] = useState<string[]>([]);
   const [formMode, setFormMode] = useState<FormMode>('questions');
@@ -142,7 +142,34 @@ export function LucyMagicForm({ sessionId, onBack }: LucyMagicFormProps) {
           </div>
 
           {/* Product card */}
-          {result.product && <LucyProductCard product={result.product} />}
+          {result.product && (
+            <div className="mt-3 rounded-2xl overflow-hidden border border-[#EDD2F3]/40 bg-white shadow-md">
+              {result.product.image_url && (
+                <div className="relative w-full h-36 bg-gradient-to-br from-[#FFF0F5] to-[#F5F0FF]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={result.product.image_url} alt={result.product.name} className="w-full h-full object-contain p-2" />
+                </div>
+              )}
+              <div className="p-3">
+                <p className="font-bold text-foreground text-sm leading-tight mb-0.5 line-clamp-2">{result.product.name}</p>
+                {result.product.short_description && (
+                  <p className="text-[11px] text-foreground/60 line-clamp-2 mb-2">{result.product.short_description}</p>
+                )}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[#F43F5E] font-black text-base">
+                    {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(result.product.price)}
+                  </span>
+                  <a
+                    href={`/producto/${result.product.slug}`}
+                    onClick={onClose}
+                    className="flex items-center gap-1 text-[11px] font-bold text-white bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity shrink-0"
+                  >
+                    Ver producto
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
 
           {!result.product && (
             <div className="text-center py-6 text-sm text-foreground/50">
