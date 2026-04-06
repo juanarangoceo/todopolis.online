@@ -41,6 +41,15 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+    
+    // Validación de número de teléfono (Colombia - 10 dígitos)
+    const phone = formData.get('customerPhone') as string;
+    if (phone && !/^\d{10}$/.test(phone)) {
+      setError('El número de celular debe tener exactamente 10 dígitos.');
+      setLoading(false);
+      return;
+    }
+
     formData.append('productId', (product as any).slug || (product as any)._id || '');
     formData.append('productName', product.name);
     formData.append('price', totalPrice.toString());
@@ -153,8 +162,15 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                       type="tel" 
                       name="customerPhone" 
                       required
+                      pattern="[0-9]{10}"
+                      minLength={10}
+                      maxLength={10}
+                      title="Debe ingresar exactamente 10 números"
                       placeholder="Tu celular (WhatsApp)"
                       className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-base"
+                      onInput={(e) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
+                      }}
                     />
                   </div>
 

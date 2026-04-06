@@ -54,7 +54,7 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magi
         className={cn(
           "relative flex items-center gap-2 transition-all duration-500",
           compact
-            ? "px-3 py-2 rounded-xl bg-white/95 backdrop-blur-2xl"
+            ? "px-4 py-1.5 rounded-xl bg-white/95 backdrop-blur-2xl"
             : "gap-4 px-3 py-3 md:px-6 md:py-5 rounded-2xl md:rounded-3xl bg-white/95 backdrop-blur-2xl mx-0",
           isFocused 
             ? "border-2 border-[#F43F5E] shadow-lg shadow-[#F43F5E]/20 scale-[1.01]" 
@@ -63,14 +63,16 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magi
       >
         {/* Wand icon */}
         <div className={cn(
-          "hidden md:block p-2.5 rounded-xl transition-all duration-300",
+          "hidden md:block rounded-xl transition-all duration-300",
+          compact ? "p-1.5" : "p-2.5",
           isFocused 
             ? "bg-gradient-to-br from-[#FFB4AC] to-[#FFD5E5]" 
             : "bg-[#FFD5E5]/30"
         )}>
           <Wand2 
             className={cn(
-              "w-5 h-5 transition-all duration-300",
+              "transition-all duration-300",
+              compact ? "w-4 h-4" : "w-5 h-5",
               isFocused ? "text-white" : "text-[#FFB4AC]"
             )} 
           />
@@ -84,23 +86,30 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magi
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
-          className="flex-1 w-full min-w-0 bg-transparent text-foreground placeholder:text-foreground/40 focus:outline-none text-base md:text-lg font-sans font-medium px-2 md:px-0"
+          className={cn(
+            "flex-1 w-full min-w-0 bg-transparent text-foreground placeholder:text-foreground/40 focus:outline-none font-sans font-medium",
+            compact ? "text-sm md:text-base px-2" : "text-base md:text-lg px-2 md:px-0"
+          )}
         />
         
         {query && (
           <button
             onClick={handleClear}
-            className="p-2 rounded-xl hover:bg-[#FFD5E5]/30 transition-colors"
+            className={cn(
+              "rounded-xl hover:bg-[#FFD5E5]/30 transition-colors",
+              compact ? "p-1.5" : "p-2"
+            )}
             aria-label="Limpiar busqueda"
           >
-            <X className="w-5 h-5 text-foreground/50" />
+            <X className={cn("text-foreground/50", compact ? "w-4 h-4" : "w-5 h-5")} />
           </button>
         )}
         
         {/* Search button */}
         <button
           className={cn(
-            "p-2 md:p-3 rounded-xl transition-all duration-300 shrink-0",
+            "rounded-xl transition-all duration-300 shrink-0",
+            compact ? "p-2" : "p-2 md:p-3",
             "bg-gradient-to-br from-[#F43F5E] to-[#FFB4AC]",
             "hover:from-[#E11D48] hover:to-[#F43F5E]",
             "shadow-lg shadow-[#F43F5E]/30 hover:shadow-xl hover:shadow-[#F43F5E]/40",
@@ -108,7 +117,7 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magi
           )}
           aria-label="Buscar"
         >
-          <Search className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          <Search className={cn("text-white", compact ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5")} />
         </button>
       </div>
       

@@ -67,7 +67,7 @@ export function ProductCTA({ product }: ProductCTAProps) {
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-foreground">Muestra gratis incluida</span>
+                <span className="text-sm font-medium text-foreground">Pago Contraentrega</span>
               </div>
             </div>
 
@@ -84,8 +84,8 @@ export function ProductCTA({ product }: ProductCTAProps) {
               Comprar ahora
             </button>
 
-            <p className="mt-4 text-sm text-muted-foreground">
-              Pago seguro con encriptacion SSL
+            <p className="mt-4 text-sm font-medium text-foreground">
+              Solo pagas al recibir tu pedido
             </p>
           </div>
 

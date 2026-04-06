@@ -83,9 +83,17 @@ export function ProductHero({ product }: ProductHeroProps) {
           <div className="lg:sticky lg:top-24 space-y-6">
             {/* Category & Rating */}
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-primary uppercase tracking-wider">
-                {product.category}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-primary uppercase tracking-wider">
+                  {product.category}
+                </span>
+                {product.isBestSeller && (
+                  <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full uppercase tracking-wider">
+                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    Más Vendido
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star

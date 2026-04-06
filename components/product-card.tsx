@@ -131,13 +131,22 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           
           {/* Content */}
           <div className="p-5 bg-white/80 backdrop-blur-sm">
-            {/* Category */}
-            <span 
-              className="text-xs font-bold uppercase tracking-wider"
-              style={{ color: variant.accent }}
-            >
-              {product.category}
-            </span>
+            <div className="flex items-center justify-between mb-2">
+              {/* Category */}
+              <span 
+                className="text-xs font-bold uppercase tracking-wider"
+                style={{ color: variant.accent }}
+              >
+                {product.category}
+              </span>
+
+              {product.isBestSeller && (
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-100/80 text-amber-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                  <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                  Más Vendido
+                </span>
+              )}
+            </div>
             
             {/* Name */}
             <h3 className="mt-2 font-sans text-lg font-bold text-foreground line-clamp-2 group-hover:text-[#FFB4AC] transition-colors leading-tight">

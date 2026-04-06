@@ -165,10 +165,11 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
         </div>
       </div>
 
-      {children}
+      {/* Se oculta el hero y los íconos de confianza si el usuario está buscando o filtrando por categoría */}
+      {(!searchQuery && activeCategory === 'Todos') && children}
       
       {/* Mobile Search Bar */}
-      <div className="md:hidden px-4 pt-6 pb-2">
+      <div className="md:hidden px-6 py-6">
         <MagicSearchBar onSearch={handleSearch} compact />
       </div>
 
