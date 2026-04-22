@@ -6,27 +6,15 @@ import { LucyAvatar } from './lucy-avatar';
 import { LucyDirectChat } from './lucy-direct-chat';
 import { LucyMagicForm } from './lucy-magic-form';
 
-type PanelMode = 'welcome' | 'chat' | 'magic';
-
 interface LucyPanelProps {
   isOpen: boolean;
   onClose: () => void;
   sessionId: string;
-  initialMode?: PanelMode;
 }
 
-export function LucyPanel({ isOpen, onClose, sessionId, initialMode = 'welcome' }: LucyPanelProps) {
-  const [mode, setMode] = useState<PanelMode>(initialMode);
-
-  // Sync mode when initialMode changes (triggered by header icons)
-  useEffect(() => {
-    if (isOpen) setMode(initialMode);
-  }, [isOpen, initialMode]);
-
+export function LucyPanel({ isOpen, onClose, sessionId }: LucyPanelProps) {
   const handleClose = () => {
     onClose();
-    // Reset to welcome after animation
-    setTimeout(() => setMode('welcome'), 300);
   };
 
   return (
@@ -59,64 +47,8 @@ export function LucyPanel({ isOpen, onClose, sessionId, initialMode = 'welcome' 
           <X className="w-4 h-4" />
         </button>
 
-        {/* WELCOME SCREEN */}
-        {mode === 'welcome' && (
-          <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-6">
-            {/* Lucy avatar big */}
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] flex items-center justify-center shadow-xl">
-                <Sparkles className="w-9 h-9 text-white" />
-              </div>
-              <div className="absolute inset-0 rounded-full border-4 border-[#FFB4AC]/20 animate-ping" />
-            </div>
-
-            <div>
-              <h2 className="font-serif font-bold text-2xl text-foreground mb-1">
-                ¡Hola! Soy Lucy ✨
-              </h2>
-              <p className="text-sm text-foreground/60 leading-relaxed max-w-xs">
-                Tu asesora mágica de Todopolis. ¿Cómo te ayudo hoy?
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 w-full max-w-xs">
-              <button
-                onClick={() => setMode('magic')}
-                className="group flex items-center gap-3 px-5 py-4 rounded-2xl bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white font-bold shadow-lg shadow-[#FFB4AC]/30 hover:opacity-90 transition-opacity"
-              >
-                <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                <div className="text-left">
-                  <p className="text-sm font-bold leading-tight">Cuestionario Mágico</p>
-                  <p className="text-[11px] font-normal opacity-80">Encuentro tu producto ideal</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setMode('chat')}
-                className="group flex items-center gap-3 px-5 py-4 rounded-2xl bg-white border-2 border-[#EDD2F3]/50 hover:border-[#FFB4AC]/60 hover:bg-[#FFF5F8] transition-all"
-              >
-                <MessageCircle className="w-5 h-5 text-[#F43F5E] group-hover:scale-110 transition-transform" />
-                <div className="text-left">
-                  <p className="text-sm font-bold text-foreground leading-tight">Hablar con Lucy</p>
-                  <p className="text-[11px] text-foreground/50">Chat directo y personalizado</p>
-                </div>
-              </button>
-            </div>
-
-            <p className="text-[11px] text-foreground/30">
-              Powered by IA · Tu privacidad es sagrada
-            </p>
-          </div>
-        )}
-
-        {/* DIRECT CHAT */}
-        {mode === 'chat' && (
-          <LucyDirectChat sessionId={sessionId} onBack={() => setMode('welcome')} />
-        )}
-
-        {mode === 'magic' && (
-          <LucyMagicForm sessionId={sessionId} onBack={() => setMode('welcome')} onClose={handleClose} />
-        )}
+        {/* DIRECT CHAT (Always rendered so it preserves state) */}
+        <LucyDirectChat sessionId={sessionId} onBack={handleClose} />
       </div>
     </>
   );

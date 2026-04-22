@@ -20,6 +20,8 @@ export default async function Home() {
     rating: 4.8,
     isNew: p.isNew ?? false,
     isBestSeller: p.isBestSeller ?? false,
+    testimonials: p.testimonials ?? [],
+    reviewsCount: p.reviewsCount,
   }));
 
   return (
@@ -51,16 +53,18 @@ export default async function Home() {
                 ].map((feature, i) => (
                   <div 
                     key={i}
-                    className="w-[48vw] shrink-0 flex flex-col items-center text-center p-3 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#EDD2F3]/30 shadow-sm"
+                    className="w-[60vw] shrink-0 flex flex-row items-center text-left p-3 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#EDD2F3]/30 shadow-sm gap-3"
                   >
                     <div 
-                      className="w-10 h-10 rounded-xl flex items-center justify-center mb-2"
+                      className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center"
                       style={{ backgroundColor: `${feature.color}30` }}
                     >
                       <feature.icon className="w-5 h-5" style={{ color: feature.color }} />
                     </div>
-                    <span className="font-sans font-bold text-foreground text-xs">{feature.label}</span>
-                    <span className="text-[10px] text-foreground/60 mt-0.5 whitespace-nowrap">{feature.desc}</span>
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="font-sans font-bold text-foreground text-xs truncate">{feature.label}</span>
+                      <span className="text-[10px] text-foreground/60 mt-0.5 truncate">{feature.desc}</span>
+                    </div>
                   </div>
                 ))}
               </div>

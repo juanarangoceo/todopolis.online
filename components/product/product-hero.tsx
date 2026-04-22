@@ -108,7 +108,7 @@ export function ProductHero({ product }: ProductHeroProps) {
                 ))}
                 <span className="ml-2 text-sm font-medium">{product.rating ?? 5.0}</span>
                 <span className="text-sm text-muted-foreground">
-                  ({product.reviews?.length ?? 0} opiniones)
+                  ({(product as any).reviewsCount ?? (product as any).testimonials?.length ?? product.reviews?.length ?? 15} reseñas)
                 </span>
               </div>
             </div>

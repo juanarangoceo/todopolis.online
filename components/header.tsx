@@ -38,21 +38,6 @@ export function Header() {
             {/* Right — Lucy icons + Favorites + Cart */}
             <div className="flex items-center justify-end gap-1.5 md:gap-2 w-28 md:w-40 shrink-0">
 
-              {/* Magic Form icon */}
-              <Link
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
-                  // Fire a custom event that LucyChatButton listens to
-                  window.dispatchEvent(new CustomEvent('lucy:open-magic'))
-                }}
-                className="group relative p-2 md:p-2.5 rounded-2xl bg-gradient-to-br from-[#EDD2F3]/50 to-[#FFD5E5]/50 hover:from-[#EDD2F3]/80 hover:to-[#FFD5E5]/80 transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Cuestionario Mágico"
-                title="Cuestionario Mágico"
-              >
-                <Wand2 className="w-4 h-4 text-foreground group-hover:rotate-12 transition-transform" />
-              </Link>
-
               {/* Lucy Chat icon */}
               <Link
                 href="#"

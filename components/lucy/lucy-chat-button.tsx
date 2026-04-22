@@ -19,7 +19,6 @@ export function LucyChatButton() {
   const [sessionId, setSessionId] = useState('');
   const [showHint, setShowHint] = useState(false);
   const [hintDismissed, setHintDismissed] = useState(false);
-  const [initialMode, setInitialMode] = useState<'welcome' | 'chat' | 'magic'>('welcome');
 
   useEffect(() => {
     setSessionId(getOrCreateSessionId());
@@ -29,32 +28,21 @@ export function LucyChatButton() {
       if (!isOpen) setShowHint(true);
     }, 4000);
 
-    // Listen for header icon events
-    const handleOpenMagic = () => {
-      setInitialMode('magic');
-      setIsOpen(true);
-      setShowHint(false);
-      setHintDismissed(true);
-    };
     const handleOpenChat = () => {
-      setInitialMode('chat');
       setIsOpen(true);
       setShowHint(false);
       setHintDismissed(true);
     };
 
-    window.addEventListener('lucy:open-magic', handleOpenMagic);
     window.addEventListener('lucy:open-chat', handleOpenChat);
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('lucy:open-magic', handleOpenMagic);
       window.removeEventListener('lucy:open-chat', handleOpenChat);
     };
   }, [isOpen]);
 
   const handleOpen = () => {
-    setInitialMode('welcome');
     setIsOpen(true);
     setShowHint(false);
     setHintDismissed(true);
@@ -62,7 +50,6 @@ export function LucyChatButton() {
 
   const handleClose = () => {
     setIsOpen(false);
-    setTimeout(() => setInitialMode('welcome'), 350);
   };
 
   const dismissHint = (e: React.MouseEvent) => {
@@ -123,12 +110,11 @@ export function LucyChatButton() {
         </button>
       </div>
 
-      {/* Lucy panel — passes initialMode and resets on close */}
+      {/* Lucy panel */}
       <LucyPanel
         isOpen={isOpen}
         onClose={handleClose}
         sessionId={sessionId}
-        initialMode={initialMode}
       />
 
       <style jsx global>{`

@@ -161,6 +161,13 @@ export const productType = defineType({
       ],
     }),
     defineField({
+      name: 'reviewsCount',
+      title: 'Cantidad Manual de Reseñas',
+      type: 'number',
+      description: 'Si se deja en blanco, se mostrará la cantidad de testimonios registrados abajo.',
+      group: 'landing',
+    }),
+    defineField({
       name: 'ctaHeadline',
       title: 'CTA Final: Título',
       type: 'string',

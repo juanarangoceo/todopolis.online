@@ -16,6 +16,7 @@ export interface SanityProduct {
   benefits?: Array<{ icon: string; title: string; description: string }>
   specifications?: Array<{ label: string; value: string }>
   testimonials?: Array<{ name: string; role: string; rating: number; text: string }>
+  reviewsCount?: number
   ctaHeadline?: string
   ctaText?: string
 }
@@ -41,6 +42,7 @@ export interface Product {
   specifications?: { label: string; value: string }[]
   benefits?: { icon: string; title: string; description: string }[]
   testimonials?: { name: string; role: string; rating: number; text: string }[]
+  reviewsCount?: number
   heroTitle?: string
   heroSubtitle?: string
   heroCta?: string

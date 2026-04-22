@@ -44,9 +44,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ skipped: true, reason: 'Not a product document' })
     }
 
-    // Build image URL from Sanity asset reference
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
+
+    // Verify if product still exists in Sanity to handle deletions
+    const cleanId = payload._id?.replace('drafts.', '')
+    if (cleanId) {
+      const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2025-01-01'
+      const sanityToken = process.env.SANITY_API_TOKEN
+      const headers: Record<string, string> = {}
+      if (sanityToken) headers['Authorization'] = `Bearer ${sanityToken}`
+      
+      const sanityCheckUrl = `https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}?query=${encodeURIComponent(`*[_id == "${cleanId}"]{_id}`)}`
+      
+      const sanityRes = await fetch(sanityCheckUrl, { headers })
+      if (sanityRes.ok) {
+        const sanityData = await sanityRes.json()
+        if (!sanityData.result || sanityData.result.length === 0) {
+          // Product was deleted from Sanity
+          const supabaseAdmin = getSupabaseAdmin()
+          const { error } = await supabaseAdmin.from('products').delete().eq('id', cleanId)
+          
+          if (error) throw error
+          console.log(`🗑️ Producto eliminado de Supabase: ${cleanId}`)
+          return NextResponse.json({ synced: true, deleted: true, id: cleanId })
+        }
+      }
+    }
+
+    // Build image URL from Sanity asset reference
     const imageRef = payload.images?.[0]?.asset?._ref
     let imageUrl: string | null = null
 

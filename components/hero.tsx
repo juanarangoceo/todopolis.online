@@ -30,7 +30,7 @@ export function Hero() {
         {/* Badge removed */}
         
         {/* Main heading */}
-        <h1 className="font-sans text-5xl md:text-7xl lg:text-8xl font-black text-foreground leading-[1.1] text-balance">
+        <h1 className="font-sans text-4xl md:text-6xl lg:text-7xl font-black text-foreground leading-[1.1] text-balance">
           Todo lo que
           <span className="relative inline-block mx-3">
             <span className="relative z-10 bg-gradient-to-r from-[#FFB4AC] via-[#EDD2F3] to-[#A2D2FF] bg-clip-text text-transparent">
@@ -40,13 +40,13 @@ export function Hero() {
               <path d="M0,8 Q25,0 50,8 T100,8" fill="none" stroke="currentColor" strokeWidth="4" />
             </svg>
           </span>
-          <br className="hidden md:block" />
+          <br className="block" />
           en un solo lugar
         </h1>
         
         {/* Subtitle */}
-        <p className="mt-4 text-lg md:text-xl lg:text-2xl text-foreground/70 max-w-3xl mx-auto text-pretty font-serif font-medium leading-relaxed">
-          Miles de productos seleccionados especialmente para ti. Moda, hogar, tecnologia, belleza y mucho mas.
+        <p className="mt-4 text-base md:text-lg lg:text-xl text-foreground/70 max-w-2xl mx-auto text-pretty font-serif font-medium leading-relaxed">
+          Miles de productos seleccionados especialmente para ti.
         </p>
         
       </div>

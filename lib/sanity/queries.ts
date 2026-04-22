@@ -12,7 +12,9 @@ const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | or
   category,
   isNew,
   isBestSeller,
-  heroTitle
+  heroTitle,
+  testimonials,
+  reviewsCount
 }`
 
 // GROQ query for a single product (for landing page)
@@ -34,6 +36,7 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
   benefits,
   specifications,
   testimonials,
+  reviewsCount,
   ctaHeadline,
   ctaText
 }`
