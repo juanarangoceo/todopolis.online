@@ -22,6 +22,15 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magi
     return () => clearTimeout(timer);
   }, [query, onSearch]);
 
+  // Listen for focus event from mobile search FAB
+  useEffect(() => {
+    const handleFocusEvent = () => {
+      inputRef.current?.focus();
+    };
+    window.addEventListener('magic-search:focus', handleFocusEvent);
+    return () => window.removeEventListener('magic-search:focus', handleFocusEvent);
+  }, []);
+
   const handleClear = () => {
     setQuery('');
     inputRef.current?.focus();

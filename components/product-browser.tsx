@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, ReactNode, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Product } from '@/lib/types';
 import { MagicSearchBar } from './magic-search-bar';
+import { MobileSearchFab } from './mobile-search-fab';
 import { ProductGrid } from './product-grid';
 import { 
   Sparkles, Grid, Watch, HeartPulse, Sparkle, 
@@ -74,6 +75,10 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
       ...p,
       category: normalizeCategory(p.category)
     }));
+
+    if (category === 'Todos') {
+      results = results.filter(p => p.category !== 'Sexshop');
+    }
 
     if (category !== 'Todos') {
       results = results.filter(p => p.category === category);
@@ -187,6 +192,9 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
           <ProductGrid products={filteredProducts} searchQuery={searchQuery} />
         </div>
       </section>
+
+      {/* Floating search button for mobile */}
+      <MobileSearchFab />
     </>
   );
 }

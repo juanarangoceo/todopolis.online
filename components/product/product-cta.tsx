@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ShoppingBag, Sparkles, Clock, Gift } from 'lucide-react';
+import { ShoppingBag, Sparkles, Clock, Gift, ShieldCheck, Truck, CheckCircle2 } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { CheckoutModal } from '@/components/checkout-modal';
@@ -59,15 +59,29 @@ export function ProductCTA({ product }: ProductCTAProps) {
               </span>
             </div>
 
-            {/* Bonuses */}
-            <div className="flex flex-wrap justify-center gap-4 mb-8">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10">
-                <Gift className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-foreground">Envio gratis</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-foreground">Pago Contraentrega</span>
+            {/* Trust Block - Contraentrega Prominente */}
+            <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-[#E7FBBE]/40 to-[#A2D2FF]/20 border border-[#E7FBBE]/60 shadow-inner relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/40 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700" />
+              
+              <div className="relative z-10 flex flex-col items-center text-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center mb-1">
+                  <ShieldCheck className="w-8 h-8 text-[#10B981]" />
+                </div>
+                <div>
+                  <h4 className="font-sans font-bold text-xl text-foreground mb-1">Pago 100% Contraentrega</h4>
+                  <p className="text-sm text-foreground/70 font-medium">Solo pagas cuando el pedido llegue a tu puerta. Sin riesgos, sin sorpresas.</p>
+                </div>
+                
+                <div className="flex flex-wrap justify-center gap-3 mt-3">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 text-xs font-bold text-foreground/80 shadow-sm">
+                    <Truck className="w-3.5 h-3.5 text-[#3B82F6]" />
+                    Envío gratis
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#10B981]/10 text-xs font-bold text-[#10B981] shadow-sm border border-[#10B981]/20">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Compra Segura
+                  </div>
+                </div>
               </div>
             </div>
 

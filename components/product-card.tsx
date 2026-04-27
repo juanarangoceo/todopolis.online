@@ -68,7 +68,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </div>
 
           {/* Image container */}
-          <div className="relative w-full overflow-hidden bg-white/50" style={{ aspectRatio: '4/5', minHeight: '200px' }}>
+          <div className="relative w-full overflow-hidden bg-white/50 aspect-[4/5] min-h-[140px] sm:min-h-[200px]">
             <Image
               src={product.image}
               alt={product.name}
@@ -84,8 +84,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             {/* Discount badge */}
             {discount > 0 && (
               <span 
-                className="absolute top-4 left-4 px-3 py-1.5 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1"
-                style={{ backgroundColor: variant.accent }}
+                className="absolute top-4 left-4 px-3 py-1.5 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1 bg-[#1a1a2e]/90 backdrop-blur-sm border border-white/20"
               >
                 <Sparkles className="w-3 h-3" />
                 -{discount}%
@@ -102,7 +101,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               className={cn(
                 "absolute top-4 right-4 p-2.5 rounded-2xl transition-all duration-300",
                 "bg-white/90 backdrop-blur-sm hover:bg-[#FFD5E5]",
-                "opacity-100 translate-y-0 lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-2 lg:group-hover:translate-y-0",
+                "opacity-100 translate-y-0",
                 "shadow-lg"
               )}
               aria-label={isFavorited ? "Quitar de favoritos" : "Agregar a favoritos"}
@@ -120,7 +119,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               className={cn(
                 "absolute bottom-4 right-4 p-3.5 rounded-2xl transition-all duration-300",
                 "bg-[#FFB4AC] text-white hover:bg-[#FF9A8A]",
-                "opacity-100 translate-y-0 lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-2 lg:group-hover:translate-y-0",
+                "opacity-100 translate-y-0",
                 "shadow-xl shadow-[#FFB4AC]/40"
               )}
               aria-label="Agregar al carrito"
@@ -130,7 +129,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </div>
           
           {/* Content */}
-          <div className="p-5 bg-white/80 backdrop-blur-sm">
+          <div className="p-3 sm:p-5 bg-white/80 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
               {/* Category */}
               <span 
@@ -149,7 +148,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
             
             {/* Name */}
-            <h3 className="mt-2 font-sans text-lg font-bold text-foreground line-clamp-2 group-hover:text-[#FFB4AC] transition-colors leading-tight">
+            <h3 className="mt-2 font-sans text-sm sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-[#FFB4AC] transition-colors leading-tight">
               {product.name}
             </h3>
             
@@ -168,17 +167,17 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                   />
                 ))}
               </div>
-              <span className="text-sm font-semibold text-foreground">{product.rating}</span>
-              <span className="text-sm text-foreground/50">({product.reviewsCount ?? (product as any).testimonials?.length ?? product.reviews?.length ?? 15} reseñas)</span>
+              <span className="text-sm font-semibold text-foreground hidden sm:inline">{product.rating}</span>
+              <span className="text-xs sm:text-sm text-foreground/50 hidden sm:inline">({product.reviewsCount ?? (product as any).testimonials?.length ?? product.reviews?.length ?? 15} reseñas)</span>
             </div>
             
             {/* Price */}
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-2xl font-black text-foreground">
+            <div className="mt-2 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-baseline sm:gap-2">
+              <span className="text-base sm:text-2xl font-black text-foreground">
                 {formatPrice(product.price)}
               </span>
               {product.originalPrice && (
-                <span className="text-sm text-foreground/40 line-through">
+                <span className="text-[10px] sm:text-sm text-foreground/40 line-through">
                   {formatPrice(product.originalPrice)}
                 </span>
               )}

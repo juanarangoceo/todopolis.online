@@ -15,6 +15,7 @@ export default async function Home() {
     shortDescription: p.shortDescription ?? '',
     description: p.shortDescription ?? '',
     price: p.price ?? 0,
+    originalPrice: p.originalPrice,
     image: p.image ?? '/placeholder.jpg',
     category: p.category ?? 'Otros',
     rating: 4.8,

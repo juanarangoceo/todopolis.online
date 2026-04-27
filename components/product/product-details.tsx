@@ -13,6 +13,7 @@ type Tab = 'description' | 'specifications';
 
 export function ProductDetails({ product }: ProductDetailsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('description');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const tabs = [
     { id: 'description' as Tab, label: 'Descripción', icon: Info },
@@ -45,10 +46,23 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           {/* Content */}
           <div className="bg-card/60 backdrop-blur-xl rounded-3xl border border-white/20 p-6 md:p-8 shadow-xl">
             {activeTab === 'description' && (
-              <div className="prose prose-lg max-w-none">
-                <p className="text-foreground leading-relaxed text-lg">
-                  {product.description || product.shortDescription}
-                </p>
+              <div className="prose prose-lg max-w-none relative">
+                <div className={cn(
+                  "text-foreground leading-relaxed text-lg transition-all duration-300 overflow-hidden",
+                  !isExpanded ? "line-clamp-3 sm:line-clamp-none max-h-24 sm:max-h-[2000px]" : "max-h-[2000px]"
+                )}>
+                  <p>{product.description || product.shortDescription}</p>
+                </div>
+                
+                {/* Mobile Expand Button */}
+                <div className="sm:hidden mt-4 flex justify-center">
+                  <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                  >
+                    {isExpanded ? 'Ver menos' : 'Ver más'}
+                  </button>
+                </div>
               </div>
             )}
 

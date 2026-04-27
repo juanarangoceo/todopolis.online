@@ -2,11 +2,12 @@ import { notFound } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductHero } from '@/components/product/product-hero'
+import { ProductImageGallery } from '@/components/product/product-image-gallery'
 import { ProductBenefits } from '@/components/product/product-benefits'
 import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
 import { ProductCTA } from '@/components/product/product-cta'
-import { ProductGrid } from '@/components/product-grid'
+import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts } from '@/lib/sanity/queries'
 import { SanityProduct } from '@/lib/types'
 
@@ -52,6 +53,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       shortDescription: p.shortDescription ?? '',
       description: p.shortDescription ?? '',
       price: p.price ?? 0,
+      originalPrice: p.originalPrice,
       image: p.image ?? '/placeholder.jpg',
       category: p.category ?? 'Otros',
       rating: 4.8,
@@ -68,6 +70,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     shortDescription: product.shortDescription ?? '',
     description: product.shortDescription ?? '',
     price: product.price ?? 0,
+    originalPrice: (product as any).originalPrice,
     image: product.image ?? '',
     images: product.images ?? (product.image ? [product.image] : []),
     category: product.category ?? 'Otros',
@@ -90,29 +93,67 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <Header />
 
       <main className="flex-1">
-        <ProductHero product={adaptedProduct} />
-        <ProductBenefits product={adaptedProduct} />
-        <ProductDetails product={adaptedProduct} />
-        
-        {/* Suggested Products Section */}
-        {suggestedProducts.length > 0 && (
-          <section className="py-8 md:py-16 bg-white">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-10">
-                <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-                  También te podría interesar
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Productos seleccionados especialmente para ti que complementan perfectamente tu elección.
-                </p>
+        {/* Desktop: Two-column layout with sticky image sidebar */}
+        <div className="hidden lg:block">
+          <div className="container mx-auto px-4 py-8">
+            <div className="grid lg:grid-cols-2 gap-12 items-start">
+              {/* Left column — sticky image gallery */}
+              <div className="lg:sticky lg:top-24 lg:self-start">
+                <ProductImageGallery product={adaptedProduct} />
               </div>
-              <ProductGrid products={suggestedProducts} />
-            </div>
-          </section>
-        )}
 
-        <ProductTestimonials product={adaptedProduct} />
-        <ProductCTA product={adaptedProduct} />
+              {/* Right column — all content flows naturally */}
+              <div className="space-y-0">
+                <ProductHero product={adaptedProduct} />
+                <ProductBenefits product={adaptedProduct} />
+                <ProductDetails product={adaptedProduct} />
+                
+                {suggestedProducts.length > 0 && (
+                  <section className="py-8 md:py-16">
+                    <div className="text-center mb-10">
+                      <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
+                        También te podría interesar
+                      </h2>
+                      <p className="text-muted-foreground max-w-2xl mx-auto">
+                        Productos seleccionados especialmente para ti que complementan perfectamente tu elección.
+                      </p>
+                    </div>
+                    <SuggestedProductsCarousel products={suggestedProducts} />
+                  </section>
+                )}
+
+                <ProductTestimonials product={adaptedProduct} />
+                <ProductCTA product={adaptedProduct} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile: Normal stacked layout */}
+        <div className="lg:hidden">
+          <ProductHero product={adaptedProduct} />
+          <ProductBenefits product={adaptedProduct} />
+          <ProductDetails product={adaptedProduct} />
+          
+          {suggestedProducts.length > 0 && (
+            <section className="py-8 bg-white">
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-10">
+                  <h2 className="font-serif text-3xl font-bold text-foreground mb-4">
+                    También te podría interesar
+                  </h2>
+                  <p className="text-muted-foreground max-w-2xl mx-auto">
+                    Productos seleccionados especialmente para ti que complementan perfectamente tu elección.
+                  </p>
+                </div>
+                <SuggestedProductsCarousel products={suggestedProducts} />
+              </div>
+            </section>
+          )}
+
+          <ProductTestimonials product={adaptedProduct} />
+          <ProductCTA product={adaptedProduct} />
+        </div>
       </main>
 
       <Footer />
