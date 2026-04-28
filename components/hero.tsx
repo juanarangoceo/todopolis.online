@@ -30,7 +30,7 @@ export function Hero() {
         {/* Badge removed */}
         
         {/* Main heading */}
-        <h1 className="font-sans text-4xl md:text-6xl lg:text-7xl font-black text-foreground leading-[1.1] text-balance">
+        <h1 className="font-sans text-4xl md:text-6xl lg:text-7xl font-black text-[#0D2651] leading-[1.1] text-balance">
           Todo lo que
           <span className="relative inline-block mx-3">
             <span className="relative z-10 bg-gradient-to-r from-[#FFB4AC] via-[#EDD2F3] to-[#A2D2FF] bg-clip-text text-transparent">

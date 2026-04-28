@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Star, Heart, ShoppingBag, Truck, Shield, RotateCcw, Zap } from 'lucide-react';
 import { Product } from '@/lib/types';
@@ -20,6 +20,13 @@ export function ProductHero({ product }: ProductHeroProps) {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isExpandedDescription, setIsExpandedDescription] = useState(false);
+
+  // Listen for buy event dispatched from the desktop image gallery banner
+  useEffect(() => {
+    const handler = () => setIsCheckoutOpen(true);
+    window.addEventListener('product:buy', handler);
+    return () => window.removeEventListener('product:buy', handler);
+  }, []);
 
   const formatPrice = (price: number) => {
     return '$ ' + price.toLocaleString('es-CO');
@@ -50,21 +57,28 @@ export function ProductHero({ product }: ProductHeroProps) {
         <div className="lg:hidden space-y-4 mb-8">
           {/* Sale Banner */}
           {discount > 0 && (
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#F43F5E] via-[#FF6B6B] to-[#F43F5E] p-3 shadow-lg shadow-[#F43F5E]/30">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_ease-in-out_infinite]" />
-              <div className="relative flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-white" />
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#F43F5E] via-[#FF6B6B] to-[#F43F5E] p-2.5 sm:p-3 shadow-lg shadow-[#F43F5E]/30">
+              <div className="relative flex items-center justify-between gap-1.5 sm:gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-                  <div>
-                    <p className="text-white font-black text-sm uppercase tracking-wider">Oferta -{discount}%</p>
-                    <p className="text-white/80 text-xs font-medium">¡Por tiempo limitado!</p>
+                  <div className="min-w-0">
+                    <p className="text-white font-black text-[11px] sm:text-sm uppercase tracking-wider truncate">Oferta -{discount}%</p>
+                    <p className="text-white/80 text-[9px] sm:text-xs font-medium truncate">¡Por tiempo limitado!</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-white/70 text-xs font-medium">Ahorras</p>
-                  <p className="text-white font-black text-lg">{formatPrice(savings)}</p>
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <div className="text-right shrink-0 hidden min-[380px]:block">
+                    <p className="text-white/70 text-[9px] sm:text-xs font-medium">Ahorras</p>
+                    <p className="text-white font-black text-[11px] sm:text-base">{formatPrice(savings)}</p>
+                  </div>
+                  <button
+                    onClick={() => setIsCheckoutOpen(true)}
+                    className="shrink-0 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-white text-[#F43F5E] text-[10px] sm:text-xs font-black rounded-lg sm:rounded-xl hover:bg-white/90 active:scale-95 transition-all shadow-md whitespace-nowrap"
+                  >
+                    Comprar ya
+                  </button>
                 </div>
               </div>
             </div>
@@ -115,6 +129,11 @@ export function ProductHero({ product }: ProductHeroProps) {
 
         {/* Product Info — full width, desktop version gets its own column from page layout */}
         <div className="space-y-6">
+          {/* Title */}
+          <h1 className="font-serif text-xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
+            {heroTitle}
+          </h1>
+
           {/* Category & Rating */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -146,11 +165,6 @@ export function ProductHero({ product }: ProductHeroProps) {
               </span>
             </div>
           </div>
-
-          {/* Title */}
-          <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight text-balance">
-            {heroTitle}
-          </h1>
 
           {/* Subtitle */}
           {(product as any).heroSubtitle && (

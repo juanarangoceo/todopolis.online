@@ -49,10 +49,6 @@ export function MobileSearchFab() {
       aria-label="Buscar productos"
     >
       <Search className="w-5 h-5 text-[#F43F5E]" />
-      {/* Pulse ring */}
-      {isVisible && (
-        <span className="absolute inset-0 rounded-full border-2 border-[#FFB4AC] animate-ping opacity-30" />
-      )}
     </button>
   );
 }

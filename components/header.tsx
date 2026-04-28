@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingBag, Heart, Wand2, MessageCircle } from 'lucide-react'
+import { ShoppingBag, Heart, MessageCircle, Zap } from 'lucide-react'
 import { useCart } from '@/app/providers/cart-provider'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useFavorites } from '@/app/providers/favorites-provider'
@@ -21,7 +21,15 @@ export function Header() {
             
             {/* Left — Brand Logo */}
             <div className="flex shrink-0 w-28 md:w-40 justify-start">
-              <Link href="/" className="flex items-center group">
+              <Link 
+                href="/" 
+                className="relative z-10 flex items-center group"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('todopolis:reset-home'));
+                  }
+                }}
+              >
                 <span className="font-sans text-2xl md:text-3xl font-black tracking-tight text-foreground relative">
                   Todo
                   <span className="bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] bg-clip-text text-transparent">polis</span>
@@ -35,14 +43,23 @@ export function Header() {
               <div id="header-search-slot" className="w-full" />
             </div>
 
-            {/* Right — Lucy icons + Favorites + Cart */}
-            <div className="flex items-center justify-end gap-1.5 md:gap-2 w-28 md:w-40 shrink-0">
+            {/* Right — Ofertas + Lucy + Favorites + Cart */}
+            <div className="flex items-center justify-end gap-1.5 md:gap-2 shrink-0">
 
-              {/* Lucy Chat icon */}
+              {/* Ofertas link */}
               <Link
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
+                href="/ofertas"
+                className="group relative flex items-center gap-1 px-2 py-1.5 md:px-3 md:py-2 rounded-2xl bg-gradient-to-br from-[#F43F5E]/10 to-[#FFB4AC]/10 hover:from-[#F43F5E]/25 hover:to-[#FFB4AC]/25 border border-[#F43F5E]/20 hover:border-[#F43F5E]/40 transition-all duration-300 shadow-sm hover:shadow-md"
+                aria-label="Ver ofertas"
+                title="Ofertas"
+              >
+                <Zap className="w-3.5 h-3.5 text-[#F43F5E] group-hover:scale-110 transition-transform" />
+                <span className="hidden md:inline text-xs font-bold text-[#F43F5E] uppercase tracking-wide">Ofertas</span>
+              </Link>
+
+              {/* Lucy Chat icon — button, not Link, to avoid nav conflict */}
+              <button
+                onClick={() => {
                   window.dispatchEvent(new CustomEvent('lucy:open-chat'))
                 }}
                 className="group relative p-2 md:p-2.5 rounded-2xl bg-gradient-to-br from-[#FFB4AC]/50 to-[#FFD5E5]/50 hover:from-[#FFB4AC]/80 hover:to-[#FFD5E5]/80 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -52,7 +69,7 @@ export function Header() {
                 <MessageCircle className="w-4 h-4 text-foreground group-hover:scale-110 transition-transform" />
                 {/* Live indicator dot */}
                 <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full border border-white" />
-              </Link>
+              </button>
 
               {/* Favorites */}
               <Link

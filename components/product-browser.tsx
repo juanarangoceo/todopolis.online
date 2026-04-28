@@ -41,6 +41,21 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
     // Find the header search slot once it mounts
     const slot = document.getElementById('header-search-slot');
     if (slot) setHeaderSlot(slot);
+
+    // Read initial search query from URL if available
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('q');
+      if (q) setSearchQuery(q);
+    }
+
+    // Listen for logo click to reset home state
+    const handleResetHome = () => {
+      setActiveCategory('Todos');
+      setSearchQuery('');
+    };
+    window.addEventListener('todopolis:reset-home', handleResetHome);
+    return () => window.removeEventListener('todopolis:reset-home', handleResetHome);
   }, []);
 
   const categories = useMemo(() => {
@@ -153,19 +168,24 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
         {/* Desktop Categories */}
         <div className="hidden md:flex container mx-auto px-4 py-4">
           <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-            {categories.map((cat) => (
-              <button
-                key={`desktop-cat-${cat}`}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
-                  activeCategory === cat 
-                    ? 'bg-[#FFB4AC] text-white shadow-lg shadow-[#FFB4AC]/30' 
-                    : 'bg-white text-foreground/70 border border-[#EDD2F3]/30 hover:border-[#FFB4AC]/50 hover:text-[#FFB4AC]'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const Icon = getCategoryIcon(cat);
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={`desktop-cat-${cat}`}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
+                    isActive 
+                      ? 'bg-[#FFB4AC] text-white shadow-lg shadow-[#FFB4AC]/30' 
+                      : 'bg-white text-foreground/70 border border-[#EDD2F3]/30 hover:border-[#FFB4AC]/50 hover:text-[#FFB4AC]'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-white' : 'text-[#FFB4AC]'}`} />
+                  {cat}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

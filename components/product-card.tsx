@@ -133,8 +133,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             <div className="flex items-center justify-between mb-2">
               {/* Category */}
               <span 
-                className="text-xs font-bold uppercase tracking-wider"
-                style={{ color: variant.accent }}
+                className="text-xs font-bold uppercase tracking-wider text-[#C2185B]"
               >
                 {product.category}
               </span>

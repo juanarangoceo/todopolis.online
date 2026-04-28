@@ -31,9 +31,8 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
       {/* Sale Banner — only for discounted products */}
       {discount > 0 && (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#F43F5E] via-[#FF6B6B] to-[#F43F5E] p-3 md:p-4 shadow-lg shadow-[#F43F5E]/30">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_ease-in-out_infinite]" />
           <div className="relative flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                 <Zap className="w-5 h-5 text-white" />
               </div>
@@ -46,11 +45,19 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
                 </p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-white/70 text-xs font-medium">Ahorras</p>
-              <p className="text-white font-black text-lg md:text-xl">
-                {formatPrice(savings)}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="text-right shrink-0">
+                <p className="text-white/70 text-xs font-medium">Ahorras</p>
+                <p className="text-white font-black text-lg md:text-xl">
+                  {formatPrice(savings)}
+                </p>
+              </div>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('product:buy'))}
+                className="shrink-0 px-3 py-2 bg-white text-[#F43F5E] text-xs font-black rounded-xl hover:bg-white/90 active:scale-95 transition-all shadow-md whitespace-nowrap"
+              >
+                Comprar ya
+              </button>
             </div>
           </div>
         </div>

@@ -1,24 +1,11 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function proxy(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request)
+  const { supabaseResponse } = await updateSession(request)
 
-  const isFavoritos = request.nextUrl.pathname.startsWith('/favoritos')
-
-  // si no hay usuario e intenta ir a favoritos, redirigir a login
-  if (isFavoritos && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  // si hay usuario e intenta ir a login, redirigir a favoritos (o home)
-  if (request.nextUrl.pathname.startsWith('/login') && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/favoritos'
-    return NextResponse.redirect(url)
-  }
+  // Favoritos now uses localStorage — no auth required.
+  // Login redirect logic removed.
 
   return supabaseResponse
 }

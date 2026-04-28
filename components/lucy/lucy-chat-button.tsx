@@ -61,7 +61,7 @@ export function LucyChatButton() {
   return (
     <>
       {/* Floating button area */}
-      <div className="fixed bottom-6 right-4 sm:right-6 z-40 flex flex-col items-end gap-2">
+      <div className="fixed bottom-32 md:bottom-6 right-4 sm:right-6 z-[60] flex flex-col items-end gap-2">
         {/* Hint bubble */}
         {showHint && !hintDismissed && !isOpen && (
           <div className="relative flex items-start gap-1.5 max-w-[210px]"
