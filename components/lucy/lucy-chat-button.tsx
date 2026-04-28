@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { LucyPanel } from './lucy-panel';
 
+import { usePathname } from 'next/navigation';
+
 function getOrCreateSessionId() {
   if (typeof window === 'undefined') return '';
   let sid = sessionStorage.getItem('lucy_session_id');
@@ -15,6 +17,8 @@ function getOrCreateSessionId() {
 }
 
 export function LucyChatButton() {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [showHint, setShowHint] = useState(false);
