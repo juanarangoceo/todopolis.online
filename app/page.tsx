@@ -1,9 +1,22 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/header';
 import { Hero } from '@/components/hero';
 import { ProductBrowser } from '@/components/product-browser';
 import { Footer } from '@/components/footer';
 import { getSanityProducts } from '@/lib/sanity/queries';
 import { Sparkles, Gift, Truck, Shield } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Todopolis - Tu Destino de Belleza',
+  description: 'Descubre productos exclusivos de belleza y bienestar en Todopolis. Tu tienda de confianza con los mejores productos seleccionados para ti.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    title: 'Todopolis - Tu Destino de Belleza',
+    description: 'Descubre productos exclusivos de belleza y bienestar en Todopolis.',
+  },
+}
 
 export default async function Home() {
   // Fetch products from Sanity

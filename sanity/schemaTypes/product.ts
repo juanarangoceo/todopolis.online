@@ -1,5 +1,6 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
 import { GenerateContentButton } from '../components/GenerateContentButton'
+import { MultiImageUploader } from '../components/MultiImageUploader'
 
 export const productType = defineType({
   name: 'product',
@@ -27,6 +28,9 @@ export const productType = defineType({
       of: [{ type: 'image', options: { hotspot: true } }],
       options: {
         layout: 'grid',
+      },
+      components: {
+        input: MultiImageUploader,
       },
       validation: (rule) => rule.required().min(1),
     }),

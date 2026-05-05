@@ -25,11 +25,32 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return { title: 'Producto no encontrado' }
   }
 
+  const title = `${product.name} | Todopolis`
+  const description = product.shortDescription ?? `Compra ${product.name} en Todopolis. Envío rápido y los mejores precios.`
+  const images = product.images?.length
+    ? product.images.map((url: string) => ({ url, alt: product.name }))
+    : product.image
+    ? [{ url: product.image, alt: product.name }]
+    : []
+
   return {
-    title: `${product.name} | Todopolis`,
-    description: product.shortDescription,
+    title,
+    description,
+    alternates: { canonical: `/producto/${slug}` },
     openGraph: {
-      images: product.image ? [product.image] : [],
+      type: 'website',
+      url: `/producto/${slug}`,
+      title,
+      description,
+      images,
+      locale: 'es_CO',
+      siteName: 'Todopolis',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: images[0]?.url ? [images[0].url] : [],
     },
   }
 }
@@ -120,8 +141,46 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       category: p.category ?? 'Otros',
     }))
 
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: adaptedProduct.name,
+    description: adaptedProduct.shortDescription,
+    image: adaptedProduct.images,
+    url: `${BASE_URL}/producto/${adaptedProduct.slug}`,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'COP',
+      price: adaptedProduct.price,
+      availability: 'https://schema.org/InStock',
+      url: `${BASE_URL}/producto/${adaptedProduct.slug}`,
+    },
+    ...(adaptedProduct.reviewsCount && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: adaptedProduct.rating,
+        reviewCount: adaptedProduct.reviewsCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+    ...(adaptedProduct.testimonials?.length && {
+      review: adaptedProduct.testimonials.map((t: any) => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: t.name },
+        reviewRating: { '@type': 'Rating', ratingValue: t.rating ?? 5 },
+        reviewBody: t.text,
+      })),
+    }),
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <GlobalSearch products={searchableProducts} />
 
