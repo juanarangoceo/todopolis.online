@@ -94,8 +94,8 @@ export default function MastershopSyncPage() {
   }, [loadData, page])
 
   const importProduct = useCallback(async (idProduct: number) => {
-    setRows(prev =>
-      prev.map(r => (r.idProduct === idProduct ? { ...r, status: 'importing' } : r))
+    setRows((prev: ProductRow[]) =>
+      prev.map((r: ProductRow) => (r.idProduct === idProduct ? { ...r, status: 'importing' } : r))
     )
     try {
       const res = await fetch('/api/mastershop/import', {
@@ -106,16 +106,16 @@ export default function MastershopSyncPage() {
       const data = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error ?? 'Error desconocido')
 
-      setRows(prev =>
-        prev.map(r =>
+      setRows((prev: ProductRow[]) =>
+        prev.map((r: ProductRow) =>
           r.idProduct === idProduct
             ? { ...r, status: 'done', inSanity: true, sanityId: data.sanityId }
             : r
         )
       )
     } catch (e: any) {
-      setRows(prev =>
-        prev.map(r =>
+      setRows((prev: ProductRow[]) =>
+        prev.map((r: ProductRow) =>
           r.idProduct === idProduct ? { ...r, status: 'error', error: e.message } : r
         )
       )
@@ -422,7 +422,7 @@ export default function MastershopSyncPage() {
         <div className="ms-pagination">
           <button
             className="ms-btn ms-btn-outline ms-btn-sm"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => setPage((p: number) => Math.max(1, p - 1))}
             disabled={page === 1 || loading}
             id="btn-prev-page"
           >
@@ -433,7 +433,7 @@ export default function MastershopSyncPage() {
           </span>
           <button
             className="ms-btn ms-btn-outline ms-btn-sm"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages || loading}
             id="btn-next-page"
           >
