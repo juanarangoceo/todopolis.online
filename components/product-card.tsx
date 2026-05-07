@@ -53,7 +53,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           className={cn(
             "relative h-full rounded-3xl overflow-hidden transition-all duration-500",
             "bg-gradient-to-br", variant.bg,
-            "backdrop-blur-xl border-2", variant.border,
+            "md:backdrop-blur-xl bg-white/90 md:bg-transparent border-2", variant.border,
             "shadow-lg hover:shadow-2xl",
             "hover:scale-[1.03] hover:-translate-y-2",
             "group-focus-visible:ring-2 group-focus-visible:ring-[#FFB4AC] group-focus-visible:ring-offset-2"
@@ -76,6 +76,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               priority={index < 4}
+              unoptimized={true}
             />
             
             {/* Overlay gradient */}
@@ -100,7 +101,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               }}
               className={cn(
                 "absolute top-4 right-4 p-2.5 rounded-2xl transition-all duration-300",
-                "bg-white/90 backdrop-blur-sm hover:bg-[#FFD5E5]",
+                "bg-white/90 md:backdrop-blur-sm hover:bg-[#FFD5E5]",
                 "opacity-100 translate-y-0",
                 "shadow-lg"
               )}
@@ -129,7 +130,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </div>
           
           {/* Content */}
-          <div className="p-3 sm:p-5 bg-white/80 backdrop-blur-sm">
+          <div className="p-3 sm:p-5 bg-white/95 md:bg-white/80 md:backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
               {/* Category */}
               <span 
