@@ -12,7 +12,7 @@ export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, s
     <section className="w-full pt-4 md:pt-6 pb-2">
       <div className="container mx-auto px-4">
         <div 
-          className="relative w-full rounded-3xl overflow-hidden shadow-sm flex flex-col p-8 md:p-12 lg:p-16 min-h-[300px] md:min-h-[380px]"
+          className="relative w-full rounded-3xl overflow-hidden shadow-sm flex flex-col md:flex-row items-center justify-between p-8 md:p-12 lg:p-16 min-h-[300px] md:min-h-[380px]"
           style={{ backgroundColor: banner.backgroundColor || '#FDF4FF' }}
         >
           {/* Background decorations */}
