@@ -19,36 +19,10 @@ export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, s
           <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-64 h-64 bg-white/40 blur-3xl rounded-full pointer-events-none" />
           <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-64 h-64 bg-white/40 blur-3xl rounded-full pointer-events-none" />
 
-          {/* Main Store Title (Editable via StoreSettings) */}
-          <div className="relative z-10 w-full text-center mb-8 md:mb-12">
-            <h1 className="font-sans text-3xl md:text-5xl lg:text-6xl font-black text-[#0D2651] leading-[1.1] text-balance">
-              {settings?.heroTitle || (
-                <>
-                  Todo lo que
-                  <span className="relative inline-block mx-2">
-                    <span className="relative z-10 bg-gradient-to-r from-[#FFB4AC] via-[#EDD2F3] to-[#A2D2FF] bg-clip-text text-transparent">
-                      necesitas
-                    </span>
-                    <svg className="absolute -bottom-2 left-0 w-full h-3 text-[#FFB4AC]/30" viewBox="0 0 100 12" preserveAspectRatio="none">
-                      <path d="M0,8 Q25,0 50,8 T100,8" fill="none" stroke="currentColor" strokeWidth="4" />
-                    </svg>
-                  </span>
-                  <br className="hidden md:block" />
-                  en un solo lugar
-                </>
-              )}
-            </h1>
-            <p className="mt-4 text-sm md:text-lg lg:text-xl text-neutral-800/80 max-w-2xl mx-auto text-pretty font-serif font-medium leading-relaxed">
-              {settings?.heroSubtitle || "Miles de productos seleccionados especialmente para ti."}
-            </p>
-          </div>
+          {/* Left Content (Text) */}
+          <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left w-full md:w-1/2 mb-10 md:mb-0">
 
-          {/* Banner Content Split */}
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between w-full">
-            {/* Left Content (Text) */}
-            <div className="flex flex-col items-center md:items-start text-center md:text-left w-full md:w-1/2 mb-10 md:mb-0">
-
-              <h2 className="font-serif text-2xl md:text-4xl lg:text-5xl font-extrabold text-neutral-900 leading-[1.1] mb-4 drop-shadow-sm">
+            <h2 className="font-serif text-3xl md:text-5xl lg:text-6xl font-extrabold text-neutral-900 leading-[1.1] mb-4 drop-shadow-sm">
               {banner.title}
             </h2>
             <p className="text-sm md:text-lg text-neutral-700 max-w-md mb-8 opacity-90 font-medium">
@@ -64,17 +38,42 @@ export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, s
           </div>
 
           {/* Right Content (Floating Products) */}
-          <div className="relative z-10 w-full md:w-1/2 flex justify-center items-center h-[240px] md:h-full mt-4 md:mt-0">
-            <div className="relative w-full max-w-[400px] h-full flex justify-center items-center">
+          <div className="relative z-10 w-full md:w-1/2 flex items-center md:justify-end mt-4 md:mt-0">
+            {/* Desktop: Scattered layout / Mobile: Snap Carousel layout */}
+            <div className="w-full flex md:hidden overflow-x-auto snap-x snap-mandatory gap-4 pb-6 pt-2 px-4 -mx-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {banner.products.map((product) => {
+                const formatPrice = (price: number) => '$' + price.toLocaleString('es-CO');
+                return (
+                  <Link 
+                    href={`/producto/${product.slug}`}
+                    key={product._id}
+                    className="shrink-0 snap-center w-[200px] transition-transform hover:scale-105"
+                  >
+                    <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border-4 border-white bg-white">
+                      <Image 
+                        src={product.mastershopImageUrl || product.image || '/placeholder.jpg'}
+                        alt={product.name}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                      <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md rounded-xl p-1.5 flex justify-center items-center border border-white/20">
+                        <span className="text-white text-sm font-bold">{formatPrice(product.price ?? 0)}</span>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+
+            {/* Desktop layout */}
+            <div className="hidden md:flex relative w-full h-[320px] justify-center items-center">
               {banner.products.map((product, idx) => {
-                // Different styles for each of the 3 images to create a dynamic cluster
+                // Desktop styles: Spread out horizontally with different rotations and sizes
                 const styles = [
-                  // Main/Center
-                  { zIndex: 30, transform: 'scale(1.1) translateY(-10px)', rotate: 'rotate-0' },
-                  // Left
-                  { zIndex: 20, transform: 'translateX(-35%) translateY(15px) scale(0.9)', rotate: '-rotate-6' },
-                  // Right
-                  { zIndex: 10, transform: 'translateX(35%) translateY(20px) scale(0.85)', rotate: 'rotate-12' },
+                  { zIndex: 30, transform: 'translateX(0) scale(1.1)', rotate: 'rotate-0' }, // Center front
+                  { zIndex: 20, transform: 'translateX(-60%) scale(0.95)', rotate: '-rotate-6' }, // Left back
+                  { zIndex: 10, transform: 'translateX(60%) scale(0.9)', rotate: 'rotate-12' }, // Right back
                 ];
                 
                 const style = styles[idx] || styles[0];
@@ -84,10 +83,10 @@ export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, s
                   <Link 
                     href={`/producto/${product.slug}`}
                     key={product._id}
-                    className={`absolute transition-transform hover:z-50 hover:!scale-110 duration-500 ${style.rotate}`}
+                    className={`absolute transition-transform hover:z-50 hover:!scale-110 duration-500 ${style.rotate} origin-bottom`}
                     style={{ transform: style.transform, zIndex: style.zIndex }}
                   >
-                    <div className="relative w-[140px] h-[180px] md:w-[180px] md:h-[240px] rounded-2xl overflow-hidden shadow-2xl border-4 border-white group bg-white">
+                    <div className="relative w-[180px] h-[240px] lg:w-[200px] lg:h-[280px] rounded-2xl overflow-hidden shadow-2xl border-4 border-white group bg-white">
                       <Image 
                         src={product.mastershopImageUrl || product.image || '/placeholder.jpg'}
                         alt={product.name}
@@ -97,7 +96,7 @@ export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, s
                       />
                       {/* Price Tag */}
                       <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md rounded-xl p-1.5 flex justify-center items-center border border-white/20">
-                        <span className="text-white text-xs md:text-sm font-bold">{formatPrice(product.price ?? 0)}</span>
+                        <span className="text-white text-sm font-bold">{formatPrice(product.price ?? 0)}</span>
                       </div>
                     </div>
                   </Link>

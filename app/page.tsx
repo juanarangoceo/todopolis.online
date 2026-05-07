@@ -64,11 +64,10 @@ export default async function Home() {
       <Header />
       
       <main className="flex-1">
-        {heroBanner && heroBanner.products?.length > 0 && (
-          <SmartBanner banner={heroBanner} settings={storeSettings} />
-        )}
-
         <ProductBrowser initialProducts={initialProducts}>
+          {heroBanner && heroBanner.products?.length > 0 && (
+            <SmartBanner banner={heroBanner} settings={storeSettings} />
+          )}
           
           {/* Features Banner */}
         <section className="py-4 md:py-8 overflow-hidden bg-transparent">
