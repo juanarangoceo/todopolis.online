@@ -104,7 +104,6 @@ export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, s
               })}
             </div>
           </div>
-          </div>
 
         </div>
       </div>
