@@ -59,3 +59,14 @@ export interface Review {
   comment: string
   date: string
 }
+
+export interface StorePolicy {
+  iconName: string
+  title: string
+  description: string
+}
+
+export interface StoreSettings {
+  _id: string
+  policies: StorePolicy[]
+}

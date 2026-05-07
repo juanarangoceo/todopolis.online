@@ -43,6 +43,11 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
   ctaText
 }`
 
+const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {
+  _id,
+  policies
+}`
+
 // GROQ query to get all slugs (for generateStaticParams)
 const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current }`
 
@@ -73,5 +78,15 @@ export async function getAllProductSlugs(): Promise<{ slug: string }[]> {
     })
   } catch {
     return []
+  }
+}
+
+export async function getSanityStoreSettings() {
+  try {
+    return await getSanityClient().fetch(STORE_SETTINGS_QUERY, {}, {
+      next: { revalidate: 86400, tags: ['storeSettings'] },
+    })
+  } catch {
+    return null
   }
 }

@@ -9,7 +9,8 @@ import { ProductTestimonials } from '@/components/product/product-testimonials'
 import { ProductCTA } from '@/components/product/product-cta'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 import { GlobalSearch } from '@/components/global-search'
-import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts } from '@/lib/sanity/queries'
+import { StorePolicies } from '@/components/store-policies'
+import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries'
 import { SanityProduct } from '@/lib/types'
 
 export async function generateStaticParams() {
@@ -62,6 +63,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!product) {
     notFound()
   }
+
+  const storeSettings = await getSanityStoreSettings()
 
   // Fetch all products to build suggested + more sections
   const sanityProducts = await getSanityProducts().catch(() => [])
@@ -237,6 +240,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <ProductTestimonials product={adaptedProduct} />
           <ProductCTA product={adaptedProduct} />
+        </div>
+
+        {/* Global Store Policies */}
+        <div className="container mx-auto px-4 mt-8">
+          <StorePolicies policies={storeSettings?.policies} />
         </div>
 
         {/* Second products section — below CTA, full width, both layouts */}
