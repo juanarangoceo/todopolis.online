@@ -111,7 +111,7 @@ ${selectedProducts.map((p: any) => `- ${p.name} (${p.category}): ${p.shortDescri
     }
 
     // Force Next.js cache revalidation for the heroBanner
-    revalidateTag('heroBanner')
+    revalidateTag('heroBanner', 'max')
 
     return NextResponse.json({ success: true, banner: sanityDoc })
 
