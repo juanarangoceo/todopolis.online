@@ -1,7 +1,20 @@
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Custom simple auth for the admin dashboard
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login') && !pathname.startsWith('/api/admin/auth')) {
+    const sessionCookie = request.cookies.get('admin_session')
+    
+    if (!sessionCookie || sessionCookie.value !== 'authenticated') {
+      const loginUrl = new URL('/admin/login', request.url)
+      loginUrl.searchParams.set('from', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
   const { supabaseResponse } = await updateSession(request)
 
   // Favoritos now uses localStorage — no auth required.

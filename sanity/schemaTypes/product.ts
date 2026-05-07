@@ -7,6 +7,22 @@ export const productType = defineType({
   title: 'Producto',
   type: 'document',
   fields: [
+    // ─── Vinculación con Mastershop ──────────────────────────────────────────
+    defineField({
+      name: 'mastershopId',
+      title: 'ID en Mastershop',
+      type: 'number',
+      description: 'ID numérico del producto en Mastershop (idProduct). Se asigna automáticamente al importar.',
+      readOnly: true,
+    }),
+    defineField({
+      name: 'mastershopImageUrl',
+      title: 'Imagen de Mastershop (URL externa)',
+      type: 'url',
+      description: 'URL de la imagen original del proveedor en cdn.bemaster.com. Se usa como imagen principal si no hay imágenes subidas.',
+      readOnly: true,
+    }),
+
     // ─── Datos básicos del producto ─────────────────────────────────────────
     defineField({
       name: 'name',
