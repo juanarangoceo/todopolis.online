@@ -227,6 +227,16 @@ export async function POST(request: NextRequest) {
       .substring(0, 96)
 
     // ── STEP 4: Create document in Sanity ────────────────────────────────────
+    // Calculate strategic price based on profitability rules
+    const rawPrice = basePrice || suggestedPrice || 0
+    let markup = 1.3 // 30% for expensive items
+    if (rawPrice < 50000) markup = 1.7 // 70% for cheap items
+    else if (rawPrice < 150000) markup = 1.5 // 50% for mid-range items
+    
+    const calculatedPrice = rawPrice * markup
+    // Strategic rounding to nearest 900 (e.g., 34900)
+    const strategicPrice = rawPrice > 0 ? Math.max(0, Math.floor(calculatedPrice / 1000) * 1000 + 900) : 0
+
     const sanityDoc = {
       _type: 'product',
       mastershopId: idProduct,
@@ -234,8 +244,8 @@ export async function POST(request: NextRequest) {
       name,
       slug: { _type: 'slug', current: slug },
       shortDescription: ai.improvedDescription ?? description,
-      price: suggestedPrice || basePrice,
-      originalPrice: suggestedPrice > basePrice ? basePrice : undefined,
+      price: strategicPrice,
+      // originalPrice intentionally omitted to not show offers
       category,
       isNew: true,
       isBestSeller: false,

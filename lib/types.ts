@@ -6,6 +6,7 @@ export interface SanityProduct {
   shortDescription?: string
   price?: number
   image?: string
+  mastershopImageUrl?: string
   images?: string[]
   category?: string
   isNew?: boolean
@@ -31,6 +32,7 @@ export interface Product {
   price: number
   originalPrice?: number
   image: string
+  mastershopImageUrl?: string
   images?: string[]
   category: string
   rating: number

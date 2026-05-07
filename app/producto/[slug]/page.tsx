@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const description = product.shortDescription ?? `Compra ${product.name} en Todopolis. Envío rápido y los mejores precios.`
   const images = product.images?.length
     ? product.images.map((url: string) => ({ url, alt: product.name }))
-    : product.image
-    ? [{ url: product.image, alt: product.name }]
+    : (product.mastershopImageUrl || product.image)
+    ? [{ url: (product.mastershopImageUrl || product.image), alt: product.name }]
     : []
 
   return {
@@ -75,7 +75,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       description: p.shortDescription ?? '',
       price: p.price ?? 0,
       originalPrice: p.originalPrice,
-      image: p.image ?? '/placeholder.jpg',
+      image: p.mastershopImageUrl ?? p.image ?? '/placeholder.jpg',
       category: p.category ?? 'Otros',
       rating: 4.8,
       isNew: p.isNew ?? false,
@@ -97,8 +97,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     description: product.shortDescription ?? '',
     price: product.price ?? 0,
     originalPrice: (product as any).originalPrice,
-    image: product.image ?? '',
-    images: product.images ?? (product.image ? [product.image] : []),
+    image: product.mastershopImageUrl ?? product.image ?? '',
+    images: product.images ?? (product.mastershopImageUrl ? [product.mastershopImageUrl] : product.image ? [product.image] : []),
     category: product.category ?? 'Otros',
     rating: 4.8,
     isNew: product.isNew,
@@ -137,7 +137,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       slug: p.slug,
       shortDescription: p.shortDescription ?? '',
       price: p.price ?? 0,
-      image: p.image ?? '/placeholder.jpg',
+      image: p.mastershopImageUrl ?? p.image ?? '/placeholder.jpg',
       category: p.category ?? 'Otros',
     }))
 

@@ -29,7 +29,7 @@ export default async function Home() {
     description: p.shortDescription ?? '',
     price: p.price ?? 0,
     originalPrice: p.originalPrice,
-    image: p.image ?? '/placeholder.jpg',
+    image: p.mastershopImageUrl ?? p.image ?? '/placeholder.jpg',
     category: p.category ?? 'Otros',
     rating: 4.8,
     isNew: p.isNew ?? false,
