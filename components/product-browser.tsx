@@ -175,13 +175,17 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
                 <button
                   key={`desktop-cat-${cat}`}
                   onClick={() => setActiveCategory(cat)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-[#FFB4AC] text-white shadow-lg shadow-[#FFB4AC]/30' 
-                      : 'bg-white text-foreground/70 border border-[#EDD2F3]/30 hover:border-[#FFB4AC]/50 hover:text-[#FFB4AC]'
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-lg shadow-[#FFB4AC]/40'
+                      : 'bg-[#FFD5E5]/40 text-foreground/70 border border-[#FFB4AC]/30 hover:border-[#FFB4AC]/70 hover:bg-[#FFD5E5]/70 hover:text-[#E11D48]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-white' : 'text-[#FFB4AC]'}`} />
+                  <span className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${
+                    isActive ? 'bg-white/30' : 'bg-[#FFB4AC]/30'
+                  }`}>
+                    <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-white' : 'text-[#F43F5E]'}`} />
+                  </span>
                   {cat}
                 </button>
               );

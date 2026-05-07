@@ -1,8 +1,15 @@
 import createImageUrlBuilder from '@sanity/image-url'
-import { sanityClient } from './client'
+import { getSanityClient } from './client'
 
-const imageBuilder = createImageUrlBuilder(sanityClient)
+let _imageBuilder: ReturnType<typeof createImageUrlBuilder> | null = null
 
-export function urlForImage(source: Parameters<typeof imageBuilder.image>[0]) {
-  return imageBuilder.image(source)
+function getImageBuilder() {
+  if (!_imageBuilder) {
+    _imageBuilder = createImageUrlBuilder(getSanityClient())
+  }
+  return _imageBuilder
+}
+
+export function urlForImage(source: Parameters<ReturnType<typeof createImageUrlBuilder>['image']>[0]) {
+  return getImageBuilder().image(source)
 }

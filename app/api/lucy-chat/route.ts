@@ -4,12 +4,15 @@ import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'edge';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 async function getProductsCatalog() {
+  const supabase = getSupabaseClient();
   const { data } = await supabase
     .from('products')
     .select('id, slug, name, short_description, price, image_url, category, is_new, is_best_seller')
@@ -78,6 +81,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'API key no configurada' }, { status: 500 });
     }
 
+    const supabase = getSupabaseClient();
     const products = await getProductsCatalog();
     const productContext = buildProductContext(products);
 

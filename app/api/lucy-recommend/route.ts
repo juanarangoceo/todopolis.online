@@ -4,12 +4,15 @@ import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'edge';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 async function getProducts() {
+  const supabase = getSupabaseClient();
   const { data } = await supabase
     .from('products')
     .select('id, slug, name, short_description, price, image_url, category, is_new, is_best_seller')
@@ -113,6 +116,7 @@ MUY IMPORTANTE: Termina el mensaje preguntándole si quiere comprarl de inmediat
 
     // Save to Supabase
     if (sessionId) {
+      const supabase = getSupabaseClient();
       await supabase.from('chat_conversations').insert({
         session_id: sessionId,
         mode: 'magic_form',

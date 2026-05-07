@@ -1,4 +1,4 @@
-import { sanityClient } from './client'
+import { getSanityClient } from './client'
 
 // GROQ query for a list of products (for home page cards)
 const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | order(_createdAt desc) {
@@ -45,19 +45,31 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
 const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current }`
 
 export async function getSanityProducts() {
-  return sanityClient.fetch(PRODUCTS_LIST_QUERY, {}, {
-    next: { revalidate: 86400, tags: ['products'] }, // 24h cache, webhook invalida al instante
-  })
+  try {
+    return await getSanityClient().fetch(PRODUCTS_LIST_QUERY, {}, {
+      next: { revalidate: 86400, tags: ['products'] },
+    })
+  } catch {
+    return []
+  }
 }
 
 export async function getSanityProductBySlug(slug: string) {
-  return sanityClient.fetch(PRODUCT_DETAIL_QUERY, { slug }, {
-    next: { revalidate: 86400, tags: ['products', `product-${slug}`] },
-  })
+  try {
+    return await getSanityClient().fetch(PRODUCT_DETAIL_QUERY, { slug }, {
+      next: { revalidate: 86400, tags: ['products', `product-${slug}`] },
+    })
+  } catch {
+    return null
+  }
 }
 
 export async function getAllProductSlugs(): Promise<{ slug: string }[]> {
-  return sanityClient.fetch(ALL_SLUGS_QUERY, {}, {
-    next: { revalidate: 86400, tags: ['products'] },
-  })
+  try {
+    return await getSanityClient().fetch(ALL_SLUGS_QUERY, {}, {
+      next: { revalidate: 86400, tags: ['products'] },
+    })
+  } catch {
+    return []
+  }
 }
