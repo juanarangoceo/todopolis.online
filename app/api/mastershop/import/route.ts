@@ -181,8 +181,8 @@ export async function POST(request: NextRequest) {
     }
     const msProduct = await msRes.json()
 
-    // Mastershop returns the product directly or wrapped — handle both
-    const p = msProduct.result ?? msProduct
+    // Mastershop returns the product wrapped in a 'results' array
+    const p = msProduct.results?.[0] ?? msProduct.result ?? msProduct
 
     const name: string = p.name ?? `Producto ${idProduct}`
     const description: string = p.description ?? ''
