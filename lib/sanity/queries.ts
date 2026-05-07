@@ -48,7 +48,7 @@ const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {
   policies
 }`
 
-const HERO_BANNER_QUERY = `*[_type == "heroBanner"][0] | order(_updatedAt desc) {
+const HERO_BANNER_QUERY = `*[_type == "heroBanner"] | order(_updatedAt desc)[0] {
   _id,
   title,
   subtitle,

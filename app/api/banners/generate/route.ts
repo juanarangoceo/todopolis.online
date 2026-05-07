@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const SYSTEM_PROMPT = `Eres un Director Creativo experto en E-commerce.
@@ -108,6 +109,9 @@ ${selectedProducts.map((p: any) => `- ${p.name} (${p.category}): ${p.shortDescri
       console.error('Error mutating sanity:', err)
       throw new Error('Error al guardar en Sanity')
     }
+
+    // Force Next.js cache revalidation for the heroBanner
+    revalidateTag('heroBanner')
 
     return NextResponse.json({ success: true, banner: sanityDoc })
 
