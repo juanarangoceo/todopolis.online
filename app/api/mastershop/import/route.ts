@@ -57,6 +57,11 @@ HERO SUBTITLE:
 - 2 oraciones. Primera: amplía el beneficio principal. Segunda: prueba social o credibilidad
 - Tono cálido, como si lo dijera una amiga que ya lo usó
 
+NOMBRE ESTRATÉGICO (improvedName):
+- Toma el nombre original del producto y mejóralo para que sea muy atractivo, persuasivo y descriptivo.
+- Ej: En vez de "GAS PIMIENTA", usa "Gas Pimienta de Defensa Personal - Ultra Rápido y Seguro" o "Protector Personal en Spray (Gas Pimienta) - Máxima Seguridad".
+- No inventes marcas que no existen. Debe sonar premium pero no engañoso. Máximo 6-8 palabras.
+
 DESCRIPCIÓN MEJORADA (improvedDescription):
 - Exactamente 3 bullet points con emoji al inicio
 - Cada punto = 1 beneficio concreto con resultado específico
@@ -91,6 +96,7 @@ CTA TEXT:
 
 Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin comentarios:
 {
+  "improvedName": "Nombre estratégico y premium del producto",
   "improvedDescription": "✅ Bullet 1 concreto y poderoso\\n🔥 Bullet 2 con resultado específico\\n⭐ Bullet 3 que conecta con identidad",
   "heroTitle": "Título máximo 8 palabras orientado al resultado",
   "heroSubtitle": "Primera oración amplía beneficio. Segunda da prueba social o credibilidad.",
@@ -214,16 +220,27 @@ export async function POST(request: NextRequest) {
 
     if (!rawText) throw new Error('Gemini no devolvió contenido')
 
-    const cleanText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    const ai = JSON.parse(cleanText)
+    // ── STEP 3: Parse AI JSON response ───────────────────────────────────────
+    let ai: any = {}
+    try {
+      // Remove backticks/markdown from JSON response if present
+      const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim()
+      ai = JSON.parse(cleanJson)
+    } catch (err) {
+      console.error('Error parsing AI JSON:', err, rawText)
+      throw new Error('La IA no devolvió un JSON válido')
+    }
 
-    // ── STEP 3: Build slug (url-friendly) ────────────────────────────────────
-    const slug = name
+    // Determine final name
+    const finalName = ai.improvedName || name
+
+    // Auto-generate a slug from the final name
+    const slug = finalName
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
+      .replace(/(^-|-$)+/g, '')
       .substring(0, 96)
 
     // ── STEP 4: Create document in Sanity ────────────────────────────────────
@@ -241,7 +258,7 @@ export async function POST(request: NextRequest) {
       _type: 'product',
       mastershopId: idProduct,
       mastershopImageUrl: imageUrl,
-      name,
+      name: finalName,
       slug: { _type: 'slug', current: slug },
       shortDescription: ai.improvedDescription ?? description,
       price: strategicPrice,
