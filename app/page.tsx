@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/header';
-import { Hero } from '@/components/hero';
 import { SmartBanner } from '@/components/smart-banner';
 import { ProductBrowser } from '@/components/product-browser';
 import { Footer } from '@/components/footer';
@@ -65,10 +64,8 @@ export default async function Home() {
       <Header />
       
       <main className="flex-1">
-        <Hero />
-        
         {heroBanner && heroBanner.products?.length > 0 && (
-          <SmartBanner banner={heroBanner} />
+          <SmartBanner banner={heroBanner} settings={storeSettings} />
         )}
 
         <ProductBrowser initialProducts={initialProducts}>

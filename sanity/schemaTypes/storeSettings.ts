@@ -6,6 +6,18 @@ export const storeSettingsType = defineType({
   type: 'document',
   fields: [
     defineField({
+      name: 'heroTitle',
+      title: 'Título Principal de la Tienda',
+      type: 'string',
+      description: 'El título gigante que se muestra en el banner inicial (Ej: Todo lo que necesitas en un solo lugar)',
+    }),
+    defineField({
+      name: 'heroSubtitle',
+      title: 'Subtítulo Principal de la Tienda',
+      type: 'string',
+      description: 'Texto secundario debajo del título gigante',
+    }),
+    defineField({
       name: 'policies',
       title: 'Políticas de la Tienda',
       type: 'array',

@@ -1,28 +1,54 @@
 'use client';
 
-import { HeroBanner } from '@/lib/types';
+import { HeroBanner, StoreSettings } from '@/lib/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
-export function SmartBanner({ banner }: { banner: HeroBanner | null }) {
+export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, settings?: StoreSettings | null }) {
   if (!banner || !banner.products || banner.products.length === 0) return null;
 
   return (
     <section className="w-full pt-4 md:pt-6 pb-2">
       <div className="container mx-auto px-4">
         <div 
-          className="relative w-full rounded-3xl overflow-hidden shadow-sm flex flex-col md:flex-row items-center justify-between p-8 md:p-12 lg:p-16 min-h-[300px] md:min-h-[380px]"
+          className="relative w-full rounded-3xl overflow-hidden shadow-sm flex flex-col p-8 md:p-12 lg:p-16 min-h-[300px] md:min-h-[380px]"
           style={{ backgroundColor: banner.backgroundColor || '#FDF4FF' }}
         >
           {/* Background decorations */}
           <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-64 h-64 bg-white/40 blur-3xl rounded-full pointer-events-none" />
           <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-64 h-64 bg-white/40 blur-3xl rounded-full pointer-events-none" />
 
-          {/* Left Content (Text) */}
-          <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left w-full md:w-1/2 mb-10 md:mb-0">
+          {/* Main Store Title (Editable via StoreSettings) */}
+          <div className="relative z-10 w-full text-center mb-8 md:mb-12">
+            <h1 className="font-sans text-3xl md:text-5xl lg:text-6xl font-black text-[#0D2651] leading-[1.1] text-balance">
+              {settings?.heroTitle || (
+                <>
+                  Todo lo que
+                  <span className="relative inline-block mx-2">
+                    <span className="relative z-10 bg-gradient-to-r from-[#FFB4AC] via-[#EDD2F3] to-[#A2D2FF] bg-clip-text text-transparent">
+                      necesitas
+                    </span>
+                    <svg className="absolute -bottom-2 left-0 w-full h-3 text-[#FFB4AC]/30" viewBox="0 0 100 12" preserveAspectRatio="none">
+                      <path d="M0,8 Q25,0 50,8 T100,8" fill="none" stroke="currentColor" strokeWidth="4" />
+                    </svg>
+                  </span>
+                  <br className="hidden md:block" />
+                  en un solo lugar
+                </>
+              )}
+            </h1>
+            <p className="mt-4 text-sm md:text-lg lg:text-xl text-neutral-800/80 max-w-2xl mx-auto text-pretty font-serif font-medium leading-relaxed">
+              {settings?.heroSubtitle || "Miles de productos seleccionados especialmente para ti."}
+            </p>
+          </div>
 
-            <h2 className="font-serif text-3xl md:text-5xl lg:text-6xl font-extrabold text-neutral-900 leading-[1.1] mb-4 drop-shadow-sm">
+          {/* Banner Content Split */}
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between w-full">
+            {/* Left Content (Text) */}
+            <div className="flex flex-col items-center md:items-start text-center md:text-left w-full md:w-1/2 mb-10 md:mb-0">
+
+              <h2 className="font-serif text-2xl md:text-4xl lg:text-5xl font-extrabold text-neutral-900 leading-[1.1] mb-4 drop-shadow-sm">
               {banner.title}
             </h2>
             <p className="text-sm md:text-lg text-neutral-700 max-w-md mb-8 opacity-90 font-medium">
@@ -78,6 +104,7 @@ export function SmartBanner({ banner }: { banner: HeroBanner | null }) {
                 )
               })}
             </div>
+          </div>
           </div>
 
         </div>

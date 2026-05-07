@@ -98,7 +98,12 @@ export async function getAllProductSlugs(): Promise<{ slug: string }[]> {
 
 export async function getSanityStoreSettings() {
   try {
-    return await getSanityClient().fetch(STORE_SETTINGS_QUERY, {}, {
+    return await getSanityClient().fetch(`*[_type == "storeSettings"][0] {
+      _id,
+      heroTitle,
+      heroSubtitle,
+      policies
+    }`, {}, {
       next: { revalidate: 86400, tags: ['storeSettings'] },
     })
   } catch {

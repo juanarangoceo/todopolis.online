@@ -68,6 +68,8 @@ export interface StorePolicy {
 
 export interface StoreSettings {
   _id: string
+  heroTitle?: string
+  heroSubtitle?: string
   policies: StorePolicy[]
 }
 
