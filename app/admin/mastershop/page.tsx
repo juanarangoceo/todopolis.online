@@ -146,13 +146,28 @@ export default function MastershopSyncPage() {
   const generateBanner = async () => {
     setGeneratingBanner(true)
     try {
-      const pwd = localStorage.getItem('mastershop_admin_pwd') || ''
+      let pwd = localStorage.getItem('mastershop_admin_pwd')
+      if (!pwd) {
+        pwd = window.prompt('Por favor, ingresa la contraseña de administrador para usar la IA:')
+        if (!pwd) {
+          setGeneratingBanner(false)
+          return
+        }
+        localStorage.setItem('mastershop_admin_pwd', pwd)
+      }
+      
       const res = await fetch('/api/banners/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pwd }),
       })
       const data = await res.json()
+      
+      // If unauthorized, clear password from localStorage so they can try again next time
+      if (res.status === 401) {
+        localStorage.removeItem('mastershop_admin_pwd')
+      }
+
       if (!res.ok) throw new Error(data.error || 'Error al generar banner')
       alert('✨ ¡Banner Mágico generado exitosamente! Ve a la página principal para verlo.')
     } catch (e: any) {

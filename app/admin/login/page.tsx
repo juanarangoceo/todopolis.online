@@ -27,7 +27,8 @@ export default function AdminLoginPage() {
         throw new Error(data.error || 'Error al iniciar sesión')
       }
 
-      // Success! Redirect to the requested page or default to mastershop dashboard
+      // Success! Save password to localStorage for APIs that need it and redirect
+      localStorage.setItem('mastershop_admin_pwd', password)
       const searchParams = new URLSearchParams(window.location.search)
       const from = searchParams.get('from') || '/admin/mastershop'
       router.push(from)
