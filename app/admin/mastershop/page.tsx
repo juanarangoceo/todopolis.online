@@ -42,6 +42,7 @@ function formatCOP(n: number) {
 export default function MastershopSyncPage() {
   const [rows, setRows] = useState<ProductRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [generatingBanner, setGeneratingBanner] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterMode>('all')
   const [batchRunning, setBatchRunning] = useState(false)
@@ -142,6 +143,25 @@ export default function MastershopSyncPage() {
     }
   }
 
+  const generateBanner = async () => {
+    setGeneratingBanner(true)
+    try {
+      const pwd = localStorage.getItem('mastershop_admin_pwd') || ''
+      const res = await fetch('/api/banners/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al generar banner')
+      alert('✨ ¡Banner Mágico generado exitosamente! Ve a la página principal para verlo.')
+    } catch (e: any) {
+      alert('Error generando banner: ' + e.message)
+    } finally {
+      setGeneratingBanner(false)
+    }
+  }
+
   const filtered = rows.filter(r => {
     if (filter === 'new') return !r.inSanity
     if (filter === 'imported') return r.inSanity
@@ -170,6 +190,14 @@ export default function MastershopSyncPage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button
+            className="ms-btn ms-btn-accent"
+            style={{ background: 'linear-gradient(135deg, #f472b6, #8b5cf6)', boxShadow: '0 4px 15px rgba(244,114,182,0.3)' }}
+            onClick={generateBanner}
+            disabled={generatingBanner}
+          >
+            {generatingBanner ? '✨ Generando IA...' : '✨ Banner Mágico'}
+          </button>
           <button
             id="btn-refresh"
             className="ms-btn ms-btn-outline"

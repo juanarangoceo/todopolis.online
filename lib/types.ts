@@ -70,3 +70,11 @@ export interface StoreSettings {
   _id: string
   policies: StorePolicy[]
 }
+
+export interface HeroBanner {
+  _id: string
+  title: string
+  subtitle?: string
+  backgroundColor?: string
+  products: SanityProduct[]
+}

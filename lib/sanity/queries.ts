@@ -48,6 +48,21 @@ const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {
   policies
 }`
 
+const HERO_BANNER_QUERY = `*[_type == "heroBanner"][0] | order(_updatedAt desc) {
+  _id,
+  title,
+  subtitle,
+  backgroundColor,
+  products[]->{
+    _id,
+    name,
+    "slug": slug.current,
+    price,
+    mastershopImageUrl,
+    "image": images[0].asset->url
+  }
+}`
+
 // GROQ query to get all slugs (for generateStaticParams)
 const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current }`
 
@@ -85,6 +100,16 @@ export async function getSanityStoreSettings() {
   try {
     return await getSanityClient().fetch(STORE_SETTINGS_QUERY, {}, {
       next: { revalidate: 86400, tags: ['storeSettings'] },
+    })
+  } catch {
+    return null
+  }
+}
+
+export async function getSanityHeroBanner() {
+  try {
+    return await getSanityClient().fetch(HERO_BANNER_QUERY, {}, {
+      next: { revalidate: 3600, tags: ['heroBanner'] },
     })
   } catch {
     return null

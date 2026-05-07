@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/header';
 import { Hero } from '@/components/hero';
+import { SmartBanner } from '@/components/smart-banner';
 import { ProductBrowser } from '@/components/product-browser';
 import { Footer } from '@/components/footer';
-import { getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries';
+import { getSanityProducts, getSanityStoreSettings, getSanityHeroBanner } from '@/lib/sanity/queries';
 import { Sparkles, Gift, Truck, Shield, ShieldCheck, Lock, WalletCards, Star, RefreshCw, Box, CheckCircle } from 'lucide-react';
 
 const IconMap: Record<string, React.ElementType> = {
@@ -42,7 +43,11 @@ export default async function Home() {
     reviewsCount: p.reviewsCount,
   }));
 
-  const storeSettings = await getSanityStoreSettings();
+  const [storeSettings, heroBanner] = await Promise.all([
+    getSanityStoreSettings(),
+    getSanityHeroBanner()
+  ]);
+
   const policies = storeSettings?.policies && storeSettings.policies.length > 0 
     ? storeSettings.policies 
     : [
@@ -60,8 +65,13 @@ export default async function Home() {
       <Header />
       
       <main className="flex-1">
+        <Hero />
+        
+        {heroBanner && heroBanner.products?.length > 0 && (
+          <SmartBanner banner={heroBanner} />
+        )}
+
         <ProductBrowser initialProducts={initialProducts}>
-          <Hero />
           
           {/* Features Banner */}
         <section className="py-4 md:py-8 overflow-hidden bg-transparent">
