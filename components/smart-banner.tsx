@@ -21,10 +21,7 @@ export function SmartBanner({ banner }: { banner: HeroBanner | null }) {
 
           {/* Left Content (Text) */}
           <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left w-full md:w-1/2 mb-10 md:mb-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 backdrop-blur-md text-xs font-bold uppercase tracking-wider text-neutral-800 mb-4 border border-white/40 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              Colección Especial
-            </span>
+
             <h2 className="font-serif text-3xl md:text-5xl lg:text-6xl font-extrabold text-neutral-900 leading-[1.1] mb-4 drop-shadow-sm">
               {banner.title}
             </h2>
@@ -35,7 +32,7 @@ export function SmartBanner({ banner }: { banner: HeroBanner | null }) {
               href="#products" 
               className="inline-flex items-center gap-2 bg-neutral-900 text-white px-8 py-3.5 rounded-full font-bold transition-transform hover:scale-105 shadow-xl shadow-neutral-900/20"
             >
-              Explorar Colección
+              Productos en Oferta
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
