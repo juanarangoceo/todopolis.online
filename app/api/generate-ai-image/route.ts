@@ -31,12 +31,12 @@ function buildImagePrompt(name: string, heroTitle: string, description: string):
   return `Generate a hyperrealistic commercial lifestyle photograph. An attractive Latin American person is using or holding this EXACT product — keep the product completely identical to the reference image provided, same shape, color, design and details. ${parts} Style: ultra-photorealistic, professional studio-quality lighting with soft natural fill, the person looks genuinely happy and satisfied, the product is clearly visible and prominent in the scene, warm inviting Colombian lifestyle setting, magazine-quality advertising composition, sharp focus on both person and product, portrait format. No text, no watermarks, no logos overlay.`
 }
 
-async function fetchImageBuffer(url: string): Promise<{ buffer: Buffer; contentType: string } | null> {
+async function fetchImageBuffer(url: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) })
     if (!res.ok) return null
     const contentType = res.headers.get('content-type') ?? 'image/jpeg'
-    const buffer = Buffer.from(await res.arrayBuffer())
+    const buffer = await res.arrayBuffer()
     return { buffer, contentType }
   } catch {
     return null
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const prompt = buildImagePrompt(name, heroTitle ?? '', shortDescription ?? '')
 
     // Resolve the product reference image (Sanity asset first, then mastershop URL)
-    let referenceImage: { buffer: Buffer; contentType: string } | null = null
+    let referenceImage: { buffer: ArrayBuffer; contentType: string } | null = null
 
     if (imageRef) {
       const url = sanityRefToUrl(imageRef)
