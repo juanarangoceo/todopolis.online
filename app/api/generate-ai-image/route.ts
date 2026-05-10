@@ -146,22 +146,14 @@ export async function POST(request: NextRequest) {
     const imageBuffer = Buffer.from(b64, 'base64')
     const client = getSanityWriteClient()
 
+    // Upload to Sanity asset store — do NOT patch the document yet.
+    // The Studio button will confirm before writing to the document field.
     const asset = await client.assets.upload('image', imageBuffer, {
-      filename: `ai-lifestyle-${docId}-${Date.now()}.png`,
+      filename: `ai-lifestyle-preview-${Date.now()}.png`,
       contentType: 'image/png',
     })
 
-    await client
-      .patch(docId)
-      .set({
-        aiLifestyleImage: {
-          _type: 'image',
-          asset: { _type: 'reference', _ref: asset._id },
-        },
-      })
-      .commit()
-
-    return NextResponse.json({ success: true, assetId: asset._id })
+    return NextResponse.json({ assetId: asset._id, assetUrl: asset.url })
   } catch (error: any) {
     const message = error?.message ?? 'Error desconocido'
     console.error('Error generando imagen con gpt-image-2:', message)
