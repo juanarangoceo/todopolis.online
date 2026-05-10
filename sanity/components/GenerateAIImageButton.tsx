@@ -9,14 +9,20 @@ export function GenerateAIImageButton(props: any) {
   const [errorMessage, setErrorMessage] = useState('')
 
   const name = useFormValue(['name']) as string
-  const category = useFormValue(['category']) as string
+  const heroTitle = useFormValue(['heroTitle']) as string
   const shortDescription = useFormValue(['shortDescription']) as string
   const docId = useFormValue(['_id']) as string
+  const images = useFormValue(['images']) as any[]
+  const mastershopImageUrl = useFormValue(['mastershopImageUrl']) as string
   const aiLifestyleImage = useFormValue(['aiLifestyleImage']) as any
 
   useClient({ apiVersion: '2023-01-01' })
 
-  const hasImage = !!aiLifestyleImage?.asset?._ref
+  const hasExistingImage = !!aiLifestyleImage?.asset?._ref
+
+  // Prefer the first uploaded Sanity image, fall back to mastershop URL
+  const imageRef = images?.[0]?.asset?._ref ?? null
+  const hasProductImage = !!(imageRef || mastershopImageUrl)
 
   const handleGenerate = async () => {
     if (!name) {
@@ -35,7 +41,14 @@ export function GenerateAIImageButton(props: any) {
       const response = await fetch('/api/generate-ai-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, category, shortDescription, docId }),
+        body: JSON.stringify({
+          name,
+          heroTitle,
+          shortDescription,
+          imageRef,
+          mastershopImageUrl,
+          docId,
+        }),
       })
 
       const result = await response.json()
@@ -63,16 +76,43 @@ export function GenerateAIImageButton(props: any) {
       margin: '8px 0',
     }}>
       <p style={{ color: 'white', marginBottom: '6px', fontSize: '14px', fontWeight: 700 }}>
-        🎨 Imagen Lifestyle con gpt-image-1
+        🎨 Generar Imagen Lifestyle con IA
       </p>
-      <p style={{ color: 'rgba(255,255,255,0.85)', marginBottom: '14px', fontSize: '13px', lineHeight: 1.5 }}>
-        Genera automáticamente una imagen hiperrealista de una persona usando o mostrando el producto.
-        Se guarda directamente en la galería de Sanity. Formato retrato 4:5 (1024×1536).
+      <p style={{ color: 'rgba(255,255,255,0.85)', marginBottom: '8px', fontSize: '13px', lineHeight: 1.5 }}>
+        Genera una foto hiperrealista de una persona usando el producto. Usa la imagen del producto como referencia para replicarlo fielmente. Formato retrato 4:5.
       </p>
 
-      {hasImage && status !== 'success' && (
+      {/* Data available indicator */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+        <span style={{
+          fontSize: '11px', padding: '2px 8px', borderRadius: '99px',
+          background: hasProductImage ? 'rgba(168,255,120,0.25)' : 'rgba(255,255,255,0.15)',
+          color: hasProductImage ? '#a8ff78' : 'rgba(255,255,255,0.5)',
+          border: `1px solid ${hasProductImage ? '#a8ff78' : 'rgba(255,255,255,0.2)'}`,
+        }}>
+          {hasProductImage ? '✓ Imagen del producto' : '○ Sin imagen (modo texto)'}
+        </span>
+        <span style={{
+          fontSize: '11px', padding: '2px 8px', borderRadius: '99px',
+          background: heroTitle ? 'rgba(168,255,120,0.25)' : 'rgba(255,255,255,0.15)',
+          color: heroTitle ? '#a8ff78' : 'rgba(255,255,255,0.5)',
+          border: `1px solid ${heroTitle ? '#a8ff78' : 'rgba(255,255,255,0.2)'}`,
+        }}>
+          {heroTitle ? '✓ Título hero' : '○ Sin título hero'}
+        </span>
+        <span style={{
+          fontSize: '11px', padding: '2px 8px', borderRadius: '99px',
+          background: shortDescription ? 'rgba(168,255,120,0.25)' : 'rgba(255,255,255,0.15)',
+          color: shortDescription ? '#a8ff78' : 'rgba(255,255,255,0.5)',
+          border: `1px solid ${shortDescription ? '#a8ff78' : 'rgba(255,255,255,0.2)'}`,
+        }}>
+          {shortDescription ? '✓ Descripción' : '○ Sin descripción'}
+        </span>
+      </div>
+
+      {hasExistingImage && status !== 'success' && (
         <p style={{ color: '#ffe6fa', marginBottom: '10px', fontSize: '12px' }}>
-          ✅ Ya existe una imagen generada. Al generar nueva, se reemplazará.
+          ⚠️ Ya existe una imagen. Al generar se reemplazará, o carga una manualmente en el campo de abajo.
         </p>
       )}
 
@@ -102,7 +142,7 @@ export function GenerateAIImageButton(props: any) {
       )}
       {status === 'error' && (
         <p style={{ color: '#ffe8e8', marginTop: '12px', fontSize: '13px', fontWeight: 600 }}>
-          ❌ {errorMessage || 'Error al generar. Verifica tu OPENAI_API_KEY (gpt-image-1) e intenta de nuevo.'}
+          ❌ {errorMessage || 'Error al generar. Verifica tu OPENAI_API_KEY e intenta de nuevo.'}
         </p>
       )}
     </div>

@@ -11,22 +11,36 @@ function getSanityWriteClient() {
   })
 }
 
-const CATEGORY_CONTEXT: Record<string, string> = {
-  electronica: 'electronic device or gadget',
-  hogar: 'home product or appliance',
-  moda: 'fashion item or clothing',
-  deportes: 'sports or fitness equipment',
-  juguetes: 'toy or children product',
-  belleza: 'beauty or skincare product',
-  alimentos: 'food or beverage product',
-  accesorios: 'accessory item',
-  sexshop: 'intimate wellness product',
-  otros: 'consumer product',
+// Converts a Sanity asset ref to a CDN URL
+// ref format: "image-{hash}-{width}x{height}-{ext}"  →  CDN URL
+function sanityRefToUrl(ref: string): string {
+  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+  const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
+  const withoutPrefix = ref.replace(/^image-/, '')
+  const withExtension = withoutPrefix.replace(/-([a-zA-Z0-9]+)$/, '.$1')
+  return `https://cdn.sanity.io/images/${projectId}/${dataset}/${withExtension}`
 }
 
-function buildImagePrompt(name: string, category: string, description: string): string {
-  const categoryCtx = CATEGORY_CONTEXT[category?.toLowerCase()] ?? 'consumer product'
-  return `A hyperrealistic commercial lifestyle photograph of an attractive Latin American person using or holding a ${categoryCtx} called "${name}". Product context: ${description?.slice(0, 200) ?? ''}. Style: ultra-photorealistic, professional studio-quality lighting with soft natural fill, the person looks genuinely happy and satisfied, the product is clearly visible and prominent, warm inviting Colombian lifestyle setting, magazine-quality advertising composition, sharp focus on both person and product, portrait composition (4:5 ratio). No text, no watermarks, no logos.`
+function buildImagePrompt(name: string, heroTitle: string, description: string): string {
+  const parts = [
+    `Product name: "${name}".`,
+    heroTitle ? `Headline: "${heroTitle}".` : '',
+    description ? `Description: ${description.slice(0, 250)}.` : '',
+  ].filter(Boolean).join(' ')
+
+  return `Generate a hyperrealistic commercial lifestyle photograph. An attractive Latin American person is using or holding this EXACT product — keep the product completely identical to the reference image provided, same shape, color, design and details. ${parts} Style: ultra-photorealistic, professional studio-quality lighting with soft natural fill, the person looks genuinely happy and satisfied, the product is clearly visible and prominent in the scene, warm inviting Colombian lifestyle setting, magazine-quality advertising composition, sharp focus on both person and product, portrait format. No text, no watermarks, no logos overlay.`
+}
+
+async function fetchImageBuffer(url: string): Promise<{ buffer: Buffer; contentType: string } | null> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+    if (!res.ok) return null
+    const contentType = res.headers.get('content-type') ?? 'image/jpeg'
+    const buffer = Buffer.from(await res.arrayBuffer())
+    return { buffer, contentType }
+  } catch {
+    return null
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -37,53 +51,90 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'SANITY_API_TOKEN no está configurada.' }, { status: 500 })
   }
 
-  const { name, category, shortDescription, docId } = await request.json()
+  const { name, heroTitle, shortDescription, imageRef, mastershopImageUrl, docId } = await request.json()
 
   if (!name || !docId) {
     return NextResponse.json({ error: 'Se requieren name y docId.' }, { status: 400 })
   }
 
   try {
-    const prompt = buildImagePrompt(name, category ?? 'otros', shortDescription ?? '')
+    const prompt = buildImagePrompt(name, heroTitle ?? '', shortDescription ?? '')
 
-    // Call gpt-image-2 via REST API (no SDK needed)
-    // Size 1024x1280 = exact 4:5 ratio (both multiples of 16, ratio < 3:1)
-    const imgGenRes = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-image-1',
-        prompt,
-        n: 1,
-        size: '1024x1536',
-        quality: 'high',
-      }),
-    })
+    // Resolve the product reference image (Sanity asset first, then mastershop URL)
+    let referenceImage: { buffer: Buffer; contentType: string } | null = null
 
-    if (!imgGenRes.ok) {
-      const errBody = await imgGenRes.json().catch(() => ({}))
-      throw new Error(errBody?.error?.message ?? `gpt-image-1 error ${imgGenRes.status}`)
+    if (imageRef) {
+      const url = sanityRefToUrl(imageRef)
+      referenceImage = await fetchImageBuffer(url)
+    }
+    if (!referenceImage && mastershopImageUrl) {
+      referenceImage = await fetchImageBuffer(mastershopImageUrl)
     }
 
-    const imgGenData = await imgGenRes.json()
-    // gpt-image-1 returns base64-encoded image data
-    const b64 = imgGenData?.data?.[0]?.b64_json
-    if (!b64) throw new Error('gpt-image-1 no devolvió datos de imagen.')
+    let b64: string | undefined
+
+    if (referenceImage) {
+      // Use /edits endpoint — model sees the real product and replicates it faithfully
+      const ext = referenceImage.contentType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg'
+      const filename = `product.${ext}`
+
+      const formData = new FormData()
+      formData.append('model', 'gpt-image-2')
+      formData.append('prompt', prompt)
+      formData.append('n', '1')
+      formData.append('size', '1024x1536')
+      formData.append('quality', 'high')
+      formData.append('image[]', new File([referenceImage.buffer], filename, { type: referenceImage.contentType }))
+
+      const editsRes = await fetch('https://api.openai.com/v1/images/edits', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: formData,
+      })
+
+      if (!editsRes.ok) {
+        const errBody = await editsRes.json().catch(() => ({}))
+        throw new Error(errBody?.error?.message ?? `gpt-image-2 edits error ${editsRes.status}`)
+      }
+
+      const editsData = await editsRes.json()
+      b64 = editsData?.data?.[0]?.b64_json
+    } else {
+      // Fallback: no reference image available → use generations endpoint
+      const genRes = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-image-2',
+          prompt,
+          n: 1,
+          size: '1024x1536',
+          quality: 'high',
+        }),
+      })
+
+      if (!genRes.ok) {
+        const errBody = await genRes.json().catch(() => ({}))
+        throw new Error(errBody?.error?.message ?? `gpt-image-2 generations error ${genRes.status}`)
+      }
+
+      const genData = await genRes.json()
+      b64 = genData?.data?.[0]?.b64_json
+    }
+
+    if (!b64) throw new Error('gpt-image-2 no devolvió datos de imagen.')
 
     const imageBuffer = Buffer.from(b64, 'base64')
-
     const client = getSanityWriteClient()
 
-    // Upload to Sanity asset store
     const asset = await client.assets.upload('image', imageBuffer, {
       filename: `ai-lifestyle-${docId}-${Date.now()}.png`,
       contentType: 'image/png',
     })
 
-    // Patch the product document with the new image reference
     await client
       .patch(docId)
       .set({
@@ -97,7 +148,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, assetId: asset._id })
   } catch (error: any) {
     const message = error?.message ?? 'Error desconocido'
-    console.error('Error generando imagen con DALL-E:', message)
+    console.error('Error generando imagen con gpt-image-2:', message)
     return NextResponse.json({ error: `Error al generar imagen: ${message}` }, { status: 500 })
   }
 }
