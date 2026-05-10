@@ -3,6 +3,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductHero } from '@/components/product/product-hero'
 import { ProductImageGallery } from '@/components/product/product-image-gallery'
+import { ProductLifestyleImage } from '@/components/product/product-lifestyle-image'
 import { ProductBenefits } from '@/components/product/product-benefits'
 import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
@@ -115,6 +116,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     reviewsCount: product.reviewsCount,
     ctaHeadline: product.ctaHeadline,
     ctaText: product.ctaText,
+    aiLifestyleImage: product.aiLifestyleImage,
   }
 
   const SuggestedSection = ({ products, title, subtitle }: { products: typeof suggestedProducts, title: string, subtitle: string }) =>
@@ -200,6 +202,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {/* Right column — all content flows naturally */}
               <div className="space-y-0">
                 <ProductHero product={adaptedProduct} />
+                <ProductLifestyleImage product={adaptedProduct} />
                 <ProductBenefits product={adaptedProduct} />
                 <ProductDetails product={adaptedProduct} />
                 
@@ -219,6 +222,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* Mobile: Normal stacked layout */}
         <div className="lg:hidden">
           <ProductHero product={adaptedProduct} />
+          <ProductLifestyleImage product={adaptedProduct} />
           <ProductBenefits product={adaptedProduct} />
           <ProductDetails product={adaptedProduct} />
           

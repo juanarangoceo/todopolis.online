@@ -35,6 +35,7 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
   heroTitle,
   heroSubtitle,
   heroCta,
+  "aiLifestyleImage": aiLifestyleImage.asset->url,
   benefits,
   specifications,
   testimonials,

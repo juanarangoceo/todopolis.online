@@ -1,5 +1,6 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
 import { GenerateContentButton } from '../components/GenerateContentButton'
+import { GenerateAIImageButton } from '../components/GenerateAIImageButton'
 import { MultiImageUploader } from '../components/MultiImageUploader'
 
 export const productType = defineType({
@@ -101,7 +102,7 @@ export const productType = defineType({
       initialValue: false,
     }),
 
-    // ─── Botón de generación con IA ─────────────────────────────────────────
+    // ─── Botones de generación con IA ──────────────────────────────────────
     defineField({
       name: 'generateContent',
       title: '🤖 Generar Contenido con IA',
@@ -111,8 +112,25 @@ export const productType = defineType({
       },
       description: 'Sube la imagen y llena la descripción arriba, luego haz clic en el botón para generar el contenido de la landing page.',
     }),
+    defineField({
+      name: 'generateAIImage',
+      title: '🎨 Generar Imagen Lifestyle con IA',
+      type: 'string',
+      components: {
+        input: GenerateAIImageButton,
+      },
+      description: 'Genera una imagen hiperrealista de una persona usando el producto con DALL-E 3. Se mostrará antes de la sección de beneficios en la landing page.',
+    }),
 
     // ─── Contenido Landing Page (generado por IA) ───────────────────────────
+    defineField({
+      name: 'aiLifestyleImage',
+      title: '🖼️ Imagen Lifestyle IA (DALL-E 3)',
+      type: 'image',
+      group: 'landing',
+      options: { hotspot: true },
+      description: 'Imagen generada con IA. Se muestra entre el hero y los beneficios en la landing page.',
+    }),
     defineField({
       name: 'heroTitle',
       title: 'Hero: Título Principal',

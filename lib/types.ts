@@ -14,6 +14,7 @@ export interface SanityProduct {
   heroTitle?: string
   heroSubtitle?: string
   heroCta?: string
+  aiLifestyleImage?: string
   benefits?: Array<{ icon: string; title: string; description: string }>
   specifications?: Array<{ label: string; value: string }>
   testimonials?: Array<{ name: string; role: string; rating: number; text: string }>
