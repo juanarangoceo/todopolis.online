@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { set, useFormValue } from 'sanity'
+import { useFormValue, useClient } from 'sanity'
 
 type Status = 'idle' | 'generating' | 'preview' | 'confirming' | 'confirmed' | 'error'
 
@@ -18,6 +18,8 @@ export function GenerateAIImageButton(props: any) {
   const images = useFormValue(['images']) as any[]
   const mastershopImageUrl = useFormValue(['mastershopImageUrl']) as string
   const aiLifestyleImage = useFormValue(['aiLifestyleImage']) as any
+
+  const client = useClient({ apiVersion: '2025-01-01' })
 
   const hasExistingImage = !!aiLifestyleImage?.asset?._ref
   const imageRef = images?.[0]?.asset?._ref ?? null
@@ -51,16 +53,22 @@ export function GenerateAIImageButton(props: any) {
     }
   }
 
-  const handleConfirm = () => {
-    if (!previewAssetId) return
+  const handleConfirm = async () => {
+    if (!previewAssetId || !docId) return
     setStatus('confirming')
 
-    props.onChange(set({
-      _type: 'image',
-      asset: { _type: 'reference', _ref: previewAssetId },
-    }))
-
-    setStatus('confirmed')
+    try {
+      await client.patch(docId).set({
+        aiLifestyleImage: {
+          _type: 'image',
+          asset: { _type: 'reference', _ref: previewAssetId },
+        },
+      }).commit()
+      setStatus('confirmed')
+    } catch (err: any) {
+      setErrorMessage(err.message ?? 'Error al guardar imagen')
+      setStatus('error')
+    }
   }
 
   const handleDiscard = () => {

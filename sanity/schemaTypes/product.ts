@@ -49,7 +49,6 @@ export const productType = defineType({
       components: {
         input: MultiImageUploader,
       },
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: 'shortDescription',
