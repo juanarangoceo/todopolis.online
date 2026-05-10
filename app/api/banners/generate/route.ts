@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // 1. Fetch 3 random products from Sanity
-    const query = encodeURIComponent(`*[_type == "product" && defined(mastershopImageUrl)][0...10]{ _id, name, shortDescription, category }`)
+    // 1. Fetch 3 random products from Sanity (excluyendo borradores)
+    const query = encodeURIComponent(`*[_type == "product" && defined(mastershopImageUrl) && !(_id in path("drafts.**"))][0...10]{ _id, name, shortDescription, category }`)
     const url = `https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}?query=${query}`
     
     const sanityRes = await fetch(url)
@@ -78,8 +78,9 @@ ${selectedProducts.map((p: any) => `- ${p.name} (${p.category}): ${p.shortDescri
     const ai = JSON.parse(cleanJson)
 
     // 3. Create or update the HeroBanner document in Sanity
-    // We will use a fixed ID so there's always only one active banner
-    const bannerId = 'dynamic-hero-banner'
+    // Creamos el documento como borrador (drafts.) para que no se publique automáticamente
+    // y permita al usuario revisar y publicar sin conflictos.
+    const bannerId = 'drafts.dynamic-hero-banner'
 
     const sanityDoc = {
       _id: bannerId,
@@ -90,7 +91,7 @@ ${selectedProducts.map((p: any) => `- ${p.name} (${p.category}): ${p.shortDescri
       products: selectedProducts.map((p: any) => ({
         _type: 'reference',
         _ref: p._id,
-        _key: p._id
+        _key: p._id.replace(/[^a-zA-Z0-9_-]/g, '')
       }))
     }
 
