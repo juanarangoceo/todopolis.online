@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { set, useFormValue, useClient } from 'sanity'
+import { set, useFormValue } from 'sanity'
 
 type Status = 'idle' | 'generating' | 'preview' | 'confirming' | 'confirmed' | 'error'
 
@@ -18,8 +18,6 @@ export function GenerateAIImageButton(props: any) {
   const images = useFormValue(['images']) as any[]
   const mastershopImageUrl = useFormValue(['mastershopImageUrl']) as string
   const aiLifestyleImage = useFormValue(['aiLifestyleImage']) as any
-
-  const client = useClient({ apiVersion: '2025-01-01' })
 
   const hasExistingImage = !!aiLifestyleImage?.asset?._ref
   const imageRef = images?.[0]?.asset?._ref ?? null
@@ -53,37 +51,16 @@ export function GenerateAIImageButton(props: any) {
     }
   }
 
-  const handleConfirm = async () => {
-    if (!previewAssetId || !docId) return
+  const handleConfirm = () => {
+    if (!previewAssetId) return
     setStatus('confirming')
 
-    try {
-      let draftId = docId
-      if (!docId.startsWith('drafts.')) {
-        draftId = `drafts.${docId}`
-        // Asegurarnos de que el borrador exista, copiando el doc publicado
-        const publishedDoc = await client.getDocument(docId)
-        if (publishedDoc) {
-          await client.createIfNotExists({ ...publishedDoc, _id: draftId })
-        }
-      }
+    props.onChange(set({
+      _type: 'image',
+      asset: { _type: 'reference', _ref: previewAssetId },
+    }))
 
-      await client
-        .patch(draftId)
-        .set({
-          aiLifestyleImage: {
-            _type: 'image',
-            asset: { _type: 'reference', _ref: previewAssetId },
-          },
-        })
-        .commit()
-
-      props.onChange(set(null))
-      setStatus('confirmed')
-    } catch (err: any) {
-      setErrorMessage(err.message ?? 'Error al confirmar')
-      setStatus('error')
-    }
+    setStatus('confirmed')
   }
 
   const handleDiscard = () => {
@@ -187,7 +164,7 @@ export function GenerateAIImageButton(props: any) {
                 background: status === 'confirming' ? 'rgba(34,197,94,0.5)' : '#22c55e',
               }}
             >
-              {status === 'confirming' ? '⏳ Guardando...' : '✅ Confirmar y guardar borrador'}
+              {'✅ Confirmar y guardar borrador'}
             </button>
 
             <button
