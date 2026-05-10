@@ -76,9 +76,19 @@ export function GenerateContentButton(props: any) {
         ctaText: generated.ctaText,
       }
 
+      let draftId = docId
+      if (!docId.startsWith('drafts.')) {
+        draftId = `drafts.${docId}`
+        // Asegurarnos de que el borrador exista copiando el documento publicado
+        const publishedDoc = await client.getDocument(docId)
+        if (publishedDoc) {
+          await client.createIfNotExists({ ...publishedDoc, _id: draftId })
+        }
+      }
+
       // Patch the document directly
       await client
-        .patch(docId)
+        .patch(draftId)
         .set(patchData)
         .commit()
 

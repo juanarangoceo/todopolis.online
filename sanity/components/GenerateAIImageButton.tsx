@@ -58,8 +58,18 @@ export function GenerateAIImageButton(props: any) {
     setStatus('confirming')
 
     try {
+      let draftId = docId
+      if (!docId.startsWith('drafts.')) {
+        draftId = `drafts.${docId}`
+        // Asegurarnos de que el borrador exista, copiando el doc publicado
+        const publishedDoc = await client.getDocument(docId)
+        if (publishedDoc) {
+          await client.createIfNotExists({ ...publishedDoc, _id: draftId })
+        }
+      }
+
       await client
-        .patch(docId)
+        .patch(draftId)
         .set({
           aiLifestyleImage: {
             _type: 'image',
@@ -177,7 +187,7 @@ export function GenerateAIImageButton(props: any) {
                 background: status === 'confirming' ? 'rgba(34,197,94,0.5)' : '#22c55e',
               }}
             >
-              {status === 'confirming' ? '⏳ Guardando...' : '✅ Confirmar y publicar'}
+              {status === 'confirming' ? '⏳ Guardando...' : '✅ Confirmar y guardar borrador'}
             </button>
 
             <button
