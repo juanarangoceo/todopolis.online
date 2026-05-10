@@ -31,11 +31,27 @@ function buildImagePrompt(name: string, heroTitle: string, description: string):
   return `Generate a hyperrealistic commercial lifestyle photograph. An attractive Latin American person is using or holding this EXACT product — keep the product completely identical to the reference image provided, same shape, color, design and details. ${parts} Style: ultra-photorealistic, professional studio-quality lighting with soft natural fill, the person looks genuinely happy and satisfied, the product is clearly visible and prominent in the scene, warm inviting Colombian lifestyle setting, magazine-quality advertising composition, sharp focus on both person and product, portrait format. No text, no watermarks, no logos overlay.`
 }
 
+const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+function resolveContentType(url: string, header: string | null): string {
+  // Use header if it's a valid image type (strip quality params like "; charset=...")
+  const headerBase = header?.split(';')[0].trim() ?? ''
+  if (SUPPORTED_TYPES.includes(headerBase)) return headerBase
+
+  // Infer from URL extension when header is missing or octet-stream
+  const ext = url.split('?')[0].split('.').pop()?.toLowerCase()
+  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg'
+  if (ext === 'png') return 'image/png'
+  if (ext === 'webp') return 'image/webp'
+
+  return 'image/jpeg'
+}
+
 async function fetchImageBuffer(url: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) })
     if (!res.ok) return null
-    const contentType = res.headers.get('content-type') ?? 'image/jpeg'
+    const contentType = resolveContentType(url, res.headers.get('content-type'))
     const buffer = await res.arrayBuffer()
     return { buffer, contentType }
   } catch {
