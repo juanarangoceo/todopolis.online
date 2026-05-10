@@ -157,6 +157,7 @@ export const productType = defineType({
       group: 'landing',
       of: [
         defineArrayMember({
+          name: 'benefit',
           type: 'object',
           fields: [
             defineField({ name: 'icon', title: 'Emoji/Ícono', type: 'string' }),
@@ -173,6 +174,7 @@ export const productType = defineType({
       group: 'landing',
       of: [
         defineArrayMember({
+          name: 'specification',
           type: 'object',
           fields: [
             defineField({ name: 'label', title: 'Etiqueta', type: 'string' }),
@@ -188,6 +190,7 @@ export const productType = defineType({
       group: 'landing',
       of: [
         defineArrayMember({
+          name: 'testimonial',
           type: 'object',
           fields: [
             defineField({ name: 'name', title: 'Nombre', type: 'string' }),

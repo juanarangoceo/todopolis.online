@@ -48,17 +48,30 @@ export function GenerateContentButton(props: any) {
         throw new Error('No se pudo determinar el ID del documento para guardar.')
       }
 
-      // Add required _key property to array items for Sanity
-      const mapWithKeys = (arr: any) => Array.isArray(arr) ? arr.map(item => ({ ...item, _key: crypto.randomUUID() })) : []
+      // Add required _key and _type properties to array items for Sanity
+      const generateKey = () => Math.random().toString(36).substring(2, 12) + Date.now().toString(36)
+      
+      const mapArray = (arr: any, typeName: string) => 
+        Array.isArray(arr) ? arr.map(item => {
+          const processed = { ...item }
+          if (typeName === 'testimonial' && processed.rating) {
+            processed.rating = Number(processed.rating)
+          }
+          return {
+            ...processed,
+            _key: generateKey(),
+            _type: typeName
+          }
+        }) : []
 
       const patchData = {
         shortDescription: generated.improvedDescription || shortDescription,
         heroTitle: generated.heroTitle,
         heroSubtitle: generated.heroSubtitle,
         heroCta: generated.heroCta,
-        benefits: mapWithKeys(generated.benefits),
-        specifications: mapWithKeys(generated.specifications),
-        testimonials: mapWithKeys(generated.testimonials),
+        benefits: mapArray(generated.benefits, 'benefit'),
+        specifications: mapArray(generated.specifications, 'specification'),
+        testimonials: mapArray(generated.testimonials, 'testimonial'),
         ctaHeadline: generated.ctaHeadline,
         ctaText: generated.ctaText,
       }
