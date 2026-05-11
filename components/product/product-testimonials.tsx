@@ -1,6 +1,3 @@
-'use client';
-
-import { useState, useEffect, useCallback } from 'react';
 import { Star, Quote, CheckCircle } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -41,94 +38,59 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
     ? product.testimonials
     : fallbackTestimonials;
 
-  const [current, setCurrent] = useState(0);
-  const [paused, setPaused] = useState(false);
-
-  const advance = useCallback(() => {
-    setCurrent(c => (c + 1) % testimonials.length);
-  }, [testimonials.length]);
-
-  // Auto-slide every 2 seconds, pause on hover
-  useEffect(() => {
-    if (paused) return;
-    const timer = setInterval(advance, 2000);
-    return () => clearInterval(timer);
-  }, [advance, paused]);
-
-  const t = testimonials[current] as any;
-
   return (
     <section className="py-8 md:py-12 bg-gradient-to-b from-transparent via-muted/30 to-transparent">
       <div className="container mx-auto px-4">
-        {/* Header */}
         <div className="text-center mb-8">
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
             Lo que dicen nuestras clientas
           </h2>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
             <span className="font-semibold text-foreground">{product.rating}</span>
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               basado en {(product as any).reviewsCount ?? testimonials.length ?? 15} opiniones
             </span>
           </div>
         </div>
 
-        {/* Carousel */}
-        <div
-          className="max-w-2xl mx-auto"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-        >
-          {/* Card — fixed height to prevent layout shift */}
-          <div className="relative p-6 md:p-8 rounded-3xl bg-card/80 backdrop-blur-xl border border-white/20 shadow-lg h-[260px] md:h-[220px] overflow-hidden transition-all duration-500">
-            <Quote className="absolute top-4 right-4 w-8 h-8 text-primary/20" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+          {testimonials.map((t: any, index) => (
+            <div
+              key={t.id ?? index}
+              className="relative flex flex-col p-5 md:p-6 rounded-3xl bg-card/80 backdrop-blur-xl border border-white/20 shadow-md"
+            >
+              <Quote className="absolute top-4 right-4 w-7 h-7 text-primary/15" />
 
-            <div className="flex gap-1 mb-4">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "w-4 h-4",
-                    i < (t.rating ?? 5) ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted"
-                  )}
-                />
-              ))}
-            </div>
-
-            <p className="text-foreground leading-relaxed mb-6">
-              &ldquo;{t.comment ?? t.text}&rdquo;
-            </p>
-
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-foreground">{t.name}</span>
-                {t.verified && <CheckCircle className="w-4 h-4 text-primary" />}
+              <div className="flex gap-1 mb-3">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={cn(
+                      "w-4 h-4",
+                      i < (t.rating ?? 5) ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted"
+                    )}
+                  />
+                ))}
               </div>
-              <span className="text-sm text-muted-foreground">{t.role ?? t.date}</span>
-            </div>
-          </div>
 
-          {/* Dot indicators */}
-          <div className="flex items-center justify-center gap-2 mt-5">
-            {testimonials.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => { setCurrent(i); setPaused(true); setTimeout(() => setPaused(false), 4000); }}
-                aria-label={`Ir a reseña ${i + 1}`}
-                className={cn(
-                  "rounded-full transition-all duration-400 ease-in-out",
-                  i === current
-                    ? "w-7 h-3 bg-[#FFB4AC] shadow-sm shadow-[#FFB4AC]/50"
-                    : "w-3 h-3 bg-[#FFB4AC]/30 hover:bg-[#FFB4AC]/60"
-                )}
-              />
-            ))}
-          </div>
+              <p className="text-foreground leading-relaxed text-sm md:text-base flex-1">
+                &ldquo;{t.comment ?? t.text}&rdquo;
+              </p>
+
+              <div className="flex flex-col gap-0.5 mt-4 pt-3 border-t border-border/40">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-foreground text-sm">{t.name}</span>
+                  {t.verified && <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                </div>
+                <span className="text-xs text-muted-foreground">{t.role ?? t.date}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
