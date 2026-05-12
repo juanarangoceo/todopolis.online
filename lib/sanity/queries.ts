@@ -10,6 +10,7 @@ const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | or
   originalPrice,
   mastershopImageUrl,
   "image": images[0].asset->url,
+  "aiLifestyleImage": aiLifestyleImage.asset->url,
   category,
   isNew,
   isBestSeller,

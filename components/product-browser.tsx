@@ -2,15 +2,23 @@
 
 import { useState, useCallback, useMemo, ReactNode, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import Image from 'next/image';
+import Link from 'next/link';
 import { Product } from '@/lib/types';
 import { MagicSearchBar } from './magic-search-bar';
 import { MobileSearchFab } from './mobile-search-fab';
 import { ProductGrid } from './product-grid';
-import { 
-  Sparkles, Grid, Watch, HeartPulse, Sparkle, 
-  Laptop, Home, Shirt, Dumbbell, Gamepad2, 
-  Droplets, Utensils, Flame 
+import {
+  Sparkles, Grid, Watch, HeartPulse, Sparkle,
+  Laptop, Home, Shirt, Dumbbell, Gamepad2,
+  Droplets, Utensils, Flame
 } from 'lucide-react';
+
+interface AiImage {
+  image: string;
+  name: string;
+  slug: string;
+}
 
 const getCategoryIcon = (cat: string) => {
   const lower = cat.toLowerCase();
@@ -30,9 +38,10 @@ const getCategoryIcon = (cat: string) => {
 interface ProductBrowserProps {
   initialProducts: Product[];
   children?: ReactNode;
+  aiImages?: AiImage[];
 }
 
-export function ProductBrowser({ initialProducts, children }: ProductBrowserProps) {
+export function ProductBrowser({ initialProducts, children, aiImages = [] }: ProductBrowserProps) {
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
@@ -199,23 +208,81 @@ export function ProductBrowser({ initialProducts, children }: ProductBrowserProp
         <MagicSearchBar onSearch={handleSearch} compact />
       </div>
 
-      {/* Se oculta el hero y los íconos de confianza si el usuario está buscando o filtrando por categoría */}
+      {/* Hero y políticas — se ocultan al buscar o filtrar */}
       {(!searchQuery && activeCategory === 'Todos') && children}
 
-      <section id="productos" className="pt-4 pb-16 px-4 relative">
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FFD5E5]/10 to-transparent pointer-events-none" />
-        
-        <div className="container mx-auto relative">
-          <div className="flex flex-col items-center gap-2 mb-6 text-center">
-            {/* Product Count */}
-            <p className="text-foreground/80 font-serif font-medium text-xs md:text-sm mt-1">
-              {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos para ti'}
-            </p>
+      {/* Mobile AI carousel — solo en home sin filtro */}
+      {(!searchQuery && activeCategory === 'Todos') && aiImages.length > 0 && (
+        <div className="md:hidden px-4 pt-2 pb-4">
+          <div className="flex items-center gap-1.5 mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-[#E11D48]" />
+            <p className="text-xs font-bold text-[#E11D48] uppercase tracking-wider">Looks del momento</p>
           </div>
-          
-          <ProductGrid products={filteredProducts} searchQuery={searchQuery} />
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {aiImages.map((item) => (
+              <Link key={item.slug} href={`/producto/${item.slug}`} className="shrink-0 snap-start w-[120px]">
+                <div className="rounded-xl overflow-hidden shadow-sm border border-[#EDD2F3]/40 hover:border-[#FFB4AC] transition-all">
+                  <div className="relative w-[120px] h-[180px]">
+                    <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
+                  </div>
+                  <div className="p-2 bg-white/90">
+                    <p className="text-[10px] font-medium text-foreground/80 leading-tight line-clamp-2">{item.name}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+            <div className="shrink-0 w-2" />
+          </div>
         </div>
-      </section>
+      )}
+
+      {/* Desktop: sidebar AI + product grid / Mobile: solo product grid */}
+      <div className="md:flex md:items-start">
+
+        <section id="productos" className="flex-1 pt-4 pb-16 px-4 relative">
+          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FFD5E5]/10 to-transparent pointer-events-none" />
+          <div className="container mx-auto relative">
+
+            {/* Desktop: sidebar + grid dentro del mismo contenedor */}
+            <div className="md:flex md:items-start md:gap-4">
+
+              {aiImages.length > 0 && (
+                <aside className="hidden md:flex flex-col w-44 xl:w-48 shrink-0 border-r border-[#EDD2F3]/30 sticky top-0 self-start max-h-screen overflow-y-auto pr-3 pb-10">
+                  <div className="flex items-center gap-1.5 mb-4 pt-1">
+                    <Sparkles className="w-3.5 h-3.5 text-[#E11D48]" />
+                    <p className="text-[11px] font-bold text-[#E11D48] uppercase tracking-wider">Looks del momento</p>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {aiImages.map((item) => (
+                      <Link key={item.slug} href={`/producto/${item.slug}`} className="group block">
+                        <div className="rounded-xl overflow-hidden shadow-sm border border-[#EDD2F3]/30 group-hover:shadow-md group-hover:border-[#FFB4AC] transition-all duration-200">
+                          <div className="relative w-full" style={{ aspectRatio: '2/3' }}>
+                            <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
+                          </div>
+                          <div className="p-2 bg-white/90">
+                            <p className="text-[10px] font-medium text-foreground/80 leading-tight line-clamp-2 group-hover:text-[#E11D48] transition-colors">{item.name}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </aside>
+              )}
+
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col items-center gap-2 mb-6 text-center">
+                  <p className="text-foreground/80 font-serif font-medium text-xs md:text-sm mt-1">
+                    {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos para ti'}
+                  </p>
+                </div>
+                <ProductGrid products={filteredProducts} searchQuery={searchQuery} />
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </div>
 
       {/* Floating search button for mobile */}
       <MobileSearchFab />

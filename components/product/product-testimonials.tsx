@@ -1,4 +1,7 @@
-import { Star, Quote, CheckCircle } from 'lucide-react';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Star, Quote, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -33,10 +36,65 @@ const fallbackTestimonials = [
   }
 ];
 
+function TestimonialCard({ t, index }: { t: any; index: number }) {
+  return (
+    <div className="relative flex flex-col p-5 md:p-6 rounded-3xl bg-card/80 backdrop-blur-xl border border-white/20 shadow-md h-full">
+      <Quote className="absolute top-4 right-4 w-8 h-8 text-primary/10" />
+      <div className="flex gap-1 mb-3">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={cn('w-4 h-4', i < (t.rating ?? 5) ? 'fill-yellow-400 text-yellow-400' : 'fill-muted text-muted')}
+          />
+        ))}
+      </div>
+      <p className="text-foreground leading-relaxed text-sm md:text-base flex-1 pr-4">
+        &ldquo;{t.comment ?? t.text}&rdquo;
+      </p>
+      <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border/40">
+        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+          {(t.name ?? 'A').charAt(0).toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-foreground text-sm truncate">{t.name}</span>
+            {t.verified && <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </div>
+          <span className="text-xs text-muted-foreground">{t.role ?? t.date}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProductTestimonials({ product }: ProductTestimonialsProps) {
   const testimonials = (product.testimonials && product.testimonials.length > 0)
     ? product.testimonials
     : fallbackTestimonials;
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  const goTo = (index: number) => {
+    setFading(true);
+    setTimeout(() => {
+      setCurrentIndex(index);
+      setFading(false);
+    }, 250);
+  };
+
+  const prev = () => goTo((currentIndex - 1 + testimonials.length) % testimonials.length);
+  const next = () => goTo((currentIndex + 1) % testimonials.length);
+
+  useEffect(() => {
+    const interval = setInterval(next, 4500);
+    return () => clearInterval(interval);
+  }, [currentIndex, testimonials.length]);
+
+  const visibleDesktop = [
+    testimonials[currentIndex % testimonials.length],
+    testimonials[(currentIndex + 1) % testimonials.length],
+  ];
 
   return (
     <section className="py-8 md:py-12 bg-gradient-to-b from-transparent via-muted/30 to-transparent">
@@ -58,38 +116,43 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
-          {testimonials.map((t: any, index) => (
-            <div
-              key={t.id ?? index}
-              className="relative flex flex-col p-5 md:p-6 rounded-3xl bg-card/80 backdrop-blur-xl border border-white/20 shadow-md"
-            >
-              <Quote className="absolute top-4 right-4 w-7 h-7 text-primary/15" />
+        {/* Desktop: carousel 2 en pantalla */}
+        <div className="hidden md:block max-w-4xl mx-auto">
+          <div
+            className={cn('grid grid-cols-2 gap-4 transition-opacity duration-250', fading ? 'opacity-0' : 'opacity-100')}
+          >
+            {visibleDesktop.map((t: any, i) => (
+              <TestimonialCard key={`${currentIndex}-${i}`} t={t} index={i} />
+            ))}
+          </div>
 
-              <div className="flex gap-1 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={cn(
-                      "w-4 h-4",
-                      i < (t.rating ?? 5) ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted"
-                    )}
-                  />
-                ))}
-              </div>
-
-              <p className="text-foreground leading-relaxed text-sm md:text-base flex-1">
-                &ldquo;{t.comment ?? t.text}&rdquo;
-              </p>
-
-              <div className="flex flex-col gap-0.5 mt-4 pt-3 border-t border-border/40">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-foreground text-sm">{t.name}</span>
-                  {t.verified && <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
-                </div>
-                <span className="text-xs text-muted-foreground">{t.role ?? t.date}</span>
-              </div>
+          {/* Controles */}
+          <div className="flex items-center justify-center gap-4 mt-6">
+            <button onClick={prev} className="w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:border-primary/40 transition-colors">
+              <ChevronLeft className="w-4 h-4 text-foreground/60" />
+            </button>
+            <div className="flex gap-2">
+              {testimonials.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  className={cn(
+                    'w-2 h-2 rounded-full transition-all duration-300',
+                    i === currentIndex ? 'bg-primary w-5' : 'bg-border hover:bg-primary/40'
+                  )}
+                />
+              ))}
             </div>
+            <button onClick={next} className="w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:border-primary/40 transition-colors">
+              <ChevronRight className="w-4 h-4 text-foreground/60" />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile: stack vertical */}
+        <div className="md:hidden flex flex-col gap-4 max-w-xl mx-auto">
+          {testimonials.map((t: any, index) => (
+            <TestimonialCard key={t.id ?? index} t={t} index={index} />
           ))}
         </div>
       </div>

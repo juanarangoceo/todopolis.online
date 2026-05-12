@@ -23,18 +23,21 @@ export function ProductBenefits({ product }: ProductBenefitsProps) {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 max-w-5xl mx-auto">
+        {/* Mobile: single column / Desktop: 2 columns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
           {benefits.map((b, index) => (
             <div
               key={index}
-              className="flex items-start gap-3 p-4 md:p-5 rounded-2xl bg-card/80 backdrop-blur-sm border border-white/20 shadow-sm shadow-primary/5"
+              className="flex items-start gap-4 p-5 md:p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-white/20 shadow-sm shadow-primary/5"
             >
-              <div className="flex-shrink-0 mt-0.5 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Check className="w-4 h-4 text-primary" />
+              <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Check className="w-6 h-6 text-primary" />
               </div>
-              <p className="text-foreground font-medium leading-relaxed text-sm md:text-base">
-                {(b as any).description ?? b}
-              </p>
+              <div className="min-w-0">
+                <p className="text-foreground font-medium leading-relaxed text-sm md:text-base">
+                  {(b as any).description ?? b}
+                </p>
+              </div>
             </div>
           ))}
         </div>

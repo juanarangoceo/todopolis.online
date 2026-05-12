@@ -42,6 +42,14 @@ export default async function Home() {
     reviewsCount: p.reviewsCount,
   }));
 
+  const aiImages = sanityProducts
+    .filter((p: any) => p.aiLifestyleImage)
+    .map((p: any) => ({
+      image: p.aiLifestyleImage as string,
+      name: p.name as string,
+      slug: p.slug as string,
+    }));
+
   const [storeSettings, heroBanner] = await Promise.all([
     getSanityStoreSettings(),
     getSanityHeroBanner()
@@ -64,7 +72,7 @@ export default async function Home() {
       <Header />
       
       <main className="flex-1">
-        <ProductBrowser initialProducts={initialProducts}>
+        <ProductBrowser initialProducts={initialProducts} aiImages={aiImages}>
           {heroBanner && heroBanner.products?.length > 0 && (
             <SmartBanner banner={heroBanner} settings={storeSettings} />
           )}
