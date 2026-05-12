@@ -53,3 +53,42 @@ El código usa `/placeholder.jpg` como fallback cuando un producto no tiene imag
 - Productos con imágenes nativas en Sanity: usan `images[0].asset->url` → `cdn.sanity.io`
 - Productos sincronizados desde Mastershop: usan `mastershopImageUrl` → `cdn.bemaster.com`
 - Imagen IA de landing: `aiLifestyleImage.asset->url` → `cdn.sanity.io`, servida con `unoptimized`
+
+## Despliegue — producción
+
+El centro de producción es **Vercel**. Cualquier push a `main` dispara un deploy automático:
+```bash
+git push origin main
+```
+No hay que hacer nada más. Vercel toma ~2-3 min. No correr `vercel deploy` manualmente.
+
+## Después de reiniciar Docker
+
+El túnel SSH muere cuando el contenedor se reinicia. Siempre volver a abrirlo:
+```bash
+ssh -fNR 3001:localhost:3001 juan@100.107.182.42
+```
+Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo con `pkill -f "ssh -fNR 3001"` antes si es necesario.
+
+## Arquitectura home — no romper
+
+### ProductBrowser y el sidebar IA
+`components/product-browser.tsx` recibe la prop `aiImages` desde `app/page.tsx`. Internamente renderiza:
+- **Desktop**: sidebar sticky a la izquierda DENTRO del `container mx-auto`, junto al grid de productos.
+- **Mobile**: carrusel horizontal "Looks del momento" entre las políticas y las categorías.
+
+El sidebar y el grid comparten el mismo `container mx-auto`. No moverlos a contenedores separados o se rompe el marco.
+
+### Query de productos — campo `aiLifestyleImage`
+El campo `aiLifestyleImage` está en **ambos** queries de Sanity:
+- `PRODUCTS_LIST_QUERY` → para el sidebar/carrusel de la home
+- `PRODUCT_DETAIL_QUERY` → para la imagen IA en la landing del producto
+
+Si se agrega un nuevo query, incluirlo también: `"aiLifestyleImage": aiLifestyleImage.asset->url`
+
+### Componentes que son `'use client'`
+- `product-testimonials.tsx` — tiene auto-rotación con `useEffect`. No quitar `'use client'`.
+- `product-browser.tsx` — maneja estado de filtros y búsqueda. No quitar `'use client'`.
+
+### `unoptimized` en imágenes IA — intencional
+`product-lifestyle-image.tsx` tiene `unoptimized` en el `<Image>`. Es intencional: las imágenes IA son PNG de ~2 MB y el optimizador de Next.js local hace timeout. No quitarlo.
