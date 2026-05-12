@@ -39,18 +39,18 @@ export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, s
 
           {/* Right Content (Floating Products) */}
           <div className="relative z-10 w-full md:w-1/2 flex items-center md:justify-end mt-4 md:mt-0">
-            {/* Desktop: Scattered layout / Mobile: Snap Carousel layout */}
-            <div className="w-full flex md:hidden overflow-x-auto snap-x snap-mandatory gap-4 pb-6 pt-2 px-4 -mx-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Mobile: Snap Carousel — rompe el padding del banner para ir de lado a lado */}
+            <div className="w-full flex md:hidden overflow-x-auto snap-x snap-mandatory gap-3 pb-6 pt-2 -mx-8 px-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {banner.products.map((product) => {
                 const formatPrice = (price: number) => '$' + price.toLocaleString('es-CO');
                 return (
-                  <Link 
+                  <Link
                     href={`/producto/${product.slug}`}
                     key={product._id}
-                    className="shrink-0 snap-center w-[200px] transition-transform hover:scale-105"
+                    className="shrink-0 snap-center w-[58vw] transition-transform hover:scale-105"
                   >
                     <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border-4 border-white bg-white">
-                      <Image 
+                      <Image
                         src={product.mastershopImageUrl || product.image || '/placeholder.jpg'}
                         alt={product.name}
                         fill
@@ -64,6 +64,7 @@ export function SmartBanner({ banner, settings }: { banner: HeroBanner | null, s
                   </Link>
                 )
               })}
+              <div className="shrink-0 w-4" />
             </div>
 
             {/* Desktop layout */}

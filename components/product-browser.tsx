@@ -14,6 +14,11 @@ import {
   Droplets, Utensils, Flame
 } from 'lucide-react';
 
+function sanityOptimized(url: string, width: number): string {
+  if (!url || !url.includes('cdn.sanity.io')) return url;
+  return `${url}?w=${width}&auto=format&q=80`;
+}
+
 interface AiImage {
   image: string;
   name: string;
@@ -223,7 +228,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
               <Link key={item.slug} href={`/producto/${item.slug}`} className="shrink-0 snap-start w-[120px]">
                 <div className="rounded-xl overflow-hidden shadow-sm border border-[#EDD2F3]/40 hover:border-[#FFB4AC] transition-all">
                   <div className="relative w-[120px] h-[180px]">
-                    <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
+                    <Image src={sanityOptimized(item.image, 240)} alt={item.name} fill className="object-cover" unoptimized />
                   </div>
                   <div className="p-2 bg-white/90">
                     <p className="text-[10px] font-medium text-foreground/80 leading-tight line-clamp-2">{item.name}</p>
@@ -257,7 +262,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
                       <Link key={item.slug} href={`/producto/${item.slug}`} className="group block">
                         <div className="rounded-xl overflow-hidden shadow-sm border border-[#EDD2F3]/30 group-hover:shadow-md group-hover:border-[#FFB4AC] transition-all duration-200">
                           <div className="relative w-full" style={{ aspectRatio: '2/3' }}>
-                            <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
+                            <Image src={sanityOptimized(item.image, 400)} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
                           </div>
                           <div className="p-2 bg-white/90">
                             <p className="text-[10px] font-medium text-foreground/80 leading-tight line-clamp-2 group-hover:text-[#E11D48] transition-colors">{item.name}</p>
