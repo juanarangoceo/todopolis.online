@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
 
     revalidatePath('/blog')
     revalidatePath(`/blog/${result.articleSlug}`)
+    revalidatePath(`/producto/${product.slug}`)
     return NextResponse.json({ success: true, ...result })
   } catch (err: any) {
     console.error('Error generating article:', err)

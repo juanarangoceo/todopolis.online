@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { generateAndSaveArticle } from './generate-article'
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 const PAGE_LIMIT = 50
@@ -45,50 +46,14 @@ Todopolis es una tienda online colombiana enfocada en productos de calidad con e
 
 ─── REGLAS DE REDACCIÓN ────────────────────────────────────────────────────
 
-HERO TITLE:
-- Máximo 8 palabras. Orientado al resultado final, no al producto
-- Formato: [Resultado deseado] + [sin/con + obstáculo/ventaja]
-- Ejemplos buenos: "Duerme profundo sin pastillas ni ruido" / "Cuida tu piel como experta desde casa"
-- Ejemplos malos: "Producto de alta calidad para el hogar" / "El mejor suplemento del mercado"
-
-HERO SUBTITLE:
-- 2 oraciones. Primera: amplía el beneficio principal. Segunda: prueba social o credibilidad
-- Tono cálido, como si lo dijera una amiga que ya lo usó
-
-NOMBRE ESTRATÉGICO (improvedName):
-- Toma el nombre original del producto y mejóralo para que sea muy atractivo, persuasivo y descriptivo.
-- Ej: En vez de "GAS PIMIENTA", usa "Gas Pimienta de Defensa Personal - Ultra Rápido y Seguro" o "Protector Personal en Spray (Gas Pimienta) - Máxima Seguridad".
-- No inventes marcas que no existen. Debe sonar premium pero no engañoso. Máximo 6-8 palabras.
-
-DESCRIPCIÓN MEJORADA (improvedDescription):
-- Exactamente 3 bullet points con emoji al inicio
-- Cada punto = 1 beneficio concreto con resultado específico
-- Usa ✅ 🔥 ⭐ 💪 🧬 🌿 según el tono del producto
-- Máximo 12 palabras por punto — debe leerse en 3 segundos en celular
-
-BENEFICIOS (4 en total):
-- Título: resultado concreto en 3-5 palabras
-- Descripción: 2 oraciones. Primera explica el resultado. Segunda conecta con emoción o identidad
-- Cada beneficio debe ser diferente al anterior (no repitas la misma idea con otras palabras)
-
-ESPECIFICACIONES (5 en total):
-- Mezcla datos técnicos reales con características de uso
-- Incluye siempre: material/composición, dimensiones/cantidad, compatibilidad/uso, garantía, una especificación diferenciadora
-
-TESTIMONIOS (3 en total):
-- Deben contar una HISTORIA CORTA de transformación (situación antes → resultado después)
-- Nombres colombianos reales y variados (hombre/mujer, diferentes ciudades: Bogotá, Medellín, Cali, Barranquilla, Bucaramanga)
-- Menciona un detalle específico que haga el testimonio creíble (tiempo de uso, ocasión concreta)
-- Rating: el primero 5 estrellas, el segundo 5 estrellas, el tercero 4 estrellas (más realismo)
-- Tono: como un mensaje de WhatsApp a un familiar, no como una reseña corporativa
-
-CTA HEADLINE:
-- Crea urgencia real (stock limitado, oferta por tiempo) sin mentir
-- Formato: pregunta o afirmación directa que conecte con el deseo principal
-
-CTA TEXT:
-- 2 oraciones. Primera refuerza el beneficio principal. Segunda reduce el miedo a comprar
-- Menciona garantía, envío o facilidad de compra si aplica
+HERO TITLE: Máximo 8 palabras. Orientado al resultado final, no al producto.
+HERO SUBTITLE: 2 oraciones. Primera amplía beneficio. Segunda da prueba social o credibilidad.
+NOMBRE ESTRATÉGICO (improvedName): Premium y descriptivo, máximo 6-8 palabras. Sin marcas inventadas.
+DESCRIPCIÓN MEJORADA (improvedDescription): 3 bullet points con emoji. Máximo 12 palabras por punto.
+BENEFICIOS (4): Título = resultado 3-5 palabras. Descripción = 2 oraciones (resultado + emoción).
+ESPECIFICACIONES (5): Mezcla datos técnicos con características de uso.
+TESTIMONIOS (3): Historia corta de transformación. Nombres colombianos. Rating: 5, 5, 4.
+CTA HEADLINE: Urgencia real sin mentir. CTA TEXT: 2 oraciones (beneficio + reducción de fricción).
 
 ─── FORMATO DE SALIDA ──────────────────────────────────────────────────────
 
@@ -120,8 +85,6 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin co
   "ctaHeadline": "Titular de urgencia o conexión con deseo principal",
   "ctaText": "Oración de beneficio final. Oración que reduce el miedo o fricción de compra."
 }`
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function log(msg: string) {
   console.log(`[mastershop-sync] ${new Date().toISOString()} ${msg}`)
@@ -167,6 +130,41 @@ async function fetchSanityImportedIds(
   return new Set<number>(data.result ?? [])
 }
 
+async function fetchProductsWithoutArticles(
+  projectId: string,
+  dataset: string,
+  apiVersion: string,
+  token: string,
+  limit = 3,
+): Promise<{ sanityId: string; slug: string; name: string; description: string; category: string; benefits: string[] }[]> {
+  const query = encodeURIComponent(
+    `*[_type == "product" && defined(mastershopId) && count(*[_type == "article" && relatedProduct._ref == ^._id]) == 0][0...${limit}]{ _id, name, "slug": slug.current, shortDescription, category, benefits[]{ title } }`
+  )
+  const res = await fetch(
+    `https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}?query=${query}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+  if (!res.ok) return []
+  const data = await res.json()
+  return (data.result ?? []).map((p: any) => ({
+    sanityId: p._id,
+    slug: p.slug ?? '',
+    name: p.name ?? '',
+    description: p.shortDescription ?? '',
+    category: p.category ?? 'otros',
+    benefits: (p.benefits ?? []).map((b: any) => b.title).filter(Boolean),
+  }))
+}
+
+interface ImportResult {
+  sanityId: string | null
+  slug: string
+  name: string
+  description: string
+  category: string
+  benefits: string[]
+}
+
 async function importProduct(
   idProduct: number,
   apiKey: string,
@@ -175,8 +173,7 @@ async function importProduct(
   projectId: string,
   dataset: string,
   apiVersion: string,
-): Promise<void> {
-  // Idempotency check
+): Promise<ImportResult | null> {
   const existsQuery = encodeURIComponent(
     `*[_type == "product" && mastershopId == ${idProduct}][0]._id`,
   )
@@ -187,16 +184,15 @@ async function importProduct(
   if (existsRes.ok) {
     const existsData = await existsRes.json()
     if (existsData.result) {
-      log(`Producto ${idProduct} ya existe en Sanity, saltando.`)
-      return
+      log(`Producto ${idProduct} ya existe, saltando.`)
+      return null
     }
   }
 
-  // Fetch product detail
   const msRes = await fetch(`${MS_BASE}/products/${idProduct}`, {
     headers: { 'ms-api-key': apiKey },
   })
-  if (!msRes.ok) throw new Error(`Mastershop no encontró el producto ${idProduct} (${msRes.status})`)
+  if (!msRes.ok) throw new Error(`Mastershop error ${msRes.status}`)
   const msProduct = await msRes.json()
   const p = msProduct.results?.[0] ?? msProduct.result ?? msProduct
 
@@ -208,7 +204,6 @@ async function importProduct(
   const categoryRaw: string = p.prodFormatName ?? ''
   const category = CATEGORY_MAP[categoryRaw] ?? 'otros'
 
-  // Generate AI content
   const genAI = new GoogleGenerativeAI(geminiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
   const aiResult = await model.generateContent({
@@ -300,11 +295,29 @@ async function importProduct(
     const errText = await mutateRes.text()
     throw new Error(`Sanity mutate error ${mutateRes.status}: ${errText}`)
   }
+
+  const mutateData = await mutateRes.json()
+  const sanityId: string | null = mutateData.results?.[0]?.id ?? null
+
+  return {
+    sanityId,
+    slug,
+    name: finalName,
+    description: ai.improvedDescription ?? description,
+    category,
+    benefits: (ai.benefits ?? []).map((b: any) => b.title).filter(Boolean),
+  }
 }
 
 // ─── Main sync ────────────────────────────────────────────────────────────────
 
-async function runSync(): Promise<void> {
+export interface SyncResult {
+  imported: number
+  errors: number
+  articlesCreated: string[]
+}
+
+async function runSync(): Promise<SyncResult> {
   const apiKey = process.env.MASTERSHOP_API_KEY
   const geminiKey = process.env.GEMINI_API_KEY
   const sanityToken = process.env.SANITY_API_TOKEN
@@ -314,7 +327,7 @@ async function runSync(): Promise<void> {
 
   if (!apiKey || !geminiKey || !sanityToken || !projectId) {
     log('Variables de entorno incompletas, saltando sync.')
-    return
+    return { imported: 0, errors: 0, articlesCreated: [] }
   }
 
   log('Iniciando sincronización...')
@@ -325,28 +338,69 @@ async function runSync(): Promise<void> {
   ])
 
   const pending = allIds.filter(id => !importedIds.has(id))
-  log(`${allIds.length} productos en Mastershop, ${importedIds.size} en Sanity, ${pending.length} pendientes.`)
+  log(`${allIds.length} en Mastershop, ${importedIds.size} en Sanity, ${pending.length} pendientes.`)
 
-  if (pending.length === 0) {
-    log('Nada que importar.')
-    return
-  }
+  // ── Phase 1: Import new products ─────────────────────────────────────────
+  const newlyImported: NonNullable<ImportResult>[] = []
+  let importErrors = 0
 
-  let ok = 0
-  let errors = 0
   for (const id of pending) {
     try {
-      log(`Importando producto ${id}...`)
-      await importProduct(id, apiKey, geminiKey, sanityToken, projectId, dataset, apiVersion)
-      ok++
-      log(`Producto ${id} importado (${ok}/${pending.length}).`)
+      log(`Importando ${id}...`)
+      const result = await importProduct(id, apiKey, geminiKey, sanityToken, projectId, dataset, apiVersion)
+      if (result) {
+        newlyImported.push(result)
+        log(`Producto ${id} → ${result.slug}`)
+      }
     } catch (err: any) {
-      errors++
+      importErrors++
       log(`Error importando ${id}: ${err.message}`)
     }
   }
 
-  log(`Sync completado. ${ok} importados, ${errors} errores.`)
+  // ── Phase 2: Generate articles (max 3 per cron run) ───────────────────────
+  // Candidates: newly imported products first, then existing ones without articles
+  const existingWithoutArticle = await fetchProductsWithoutArticles(
+    projectId, dataset, apiVersion, sanityToken, 3
+  )
+
+  const seen = new Set<string>()
+  const toProcess = [
+    ...newlyImported.filter(r => r.sanityId).map(r => ({ ...r, sanityId: r.sanityId! })),
+    ...existingWithoutArticle,
+  ].filter(c => {
+    if (seen.has(c.sanityId)) return false
+    seen.add(c.sanityId)
+    return true
+  }).slice(0, 3)
+
+  const articlesCreated: string[] = []
+
+  for (const item of toProcess) {
+    try {
+      log(`Generando artículo para ${item.slug}...`)
+      await generateAndSaveArticle({
+        productName: item.name,
+        productDescription: item.description,
+        productCategory: item.category,
+        productBenefits: item.benefits,
+        sanityProductId: item.sanityId,
+        productSlug: item.slug,
+        geminiKey,
+        sanityToken,
+        projectId,
+        dataset,
+        apiVersion,
+      })
+      articlesCreated.push(item.slug)
+      log(`Artículo creado para ${item.slug}`)
+    } catch (err: any) {
+      log(`Error generando artículo para ${item.slug}: ${err.message}`)
+    }
+  }
+
+  log(`Sync completado. ${newlyImported.length} importados, ${importErrors} errores, ${articlesCreated.length} artículos.`)
+  return { imported: newlyImported.length, errors: importErrors, articlesCreated }
 }
 
 export { runSync as startMastershopSync }

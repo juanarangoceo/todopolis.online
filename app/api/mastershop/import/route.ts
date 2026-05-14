@@ -359,6 +359,7 @@ export async function POST(request: NextRequest) {
       articleSlug = articleResult.articleSlug
       revalidatePath('/blog')
       revalidatePath(`/blog/${articleSlug}`)
+      revalidatePath(`/producto/${slug}`)
     } catch (articleErr) {
       console.error(`Article generation failed for ${finalName} (non-critical):`, articleErr)
     }
