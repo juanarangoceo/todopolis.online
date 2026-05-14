@@ -107,9 +107,9 @@ export async function generateAndSaveArticle({
     }
   }
 
-  // Generate article content with Gemini
+  // Generate article content with Gemini 3 Flash Preview
   const genAI = new GoogleGenerativeAI(geminiKey)
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
 
   const benefitsText = productBenefits.length > 0
     ? `\nBeneficios del producto: ${productBenefits.join(', ')}`
@@ -118,7 +118,7 @@ export async function generateAndSaveArticle({
 
   const aiResult = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: ARTICLE_PROMPT + '\n\n' + userPrompt }] }],
-    generationConfig: { temperature: 0.9 } as any,
+    generationConfig: { temperature: 1.0, thinkingConfig: { thinkingLevel: 'low' } } as any,
   })
 
   const candidate = aiResult.response.candidates?.[0]

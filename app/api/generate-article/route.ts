@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 
 export async function POST(request: NextRequest) {
@@ -59,6 +60,8 @@ export async function POST(request: NextRequest) {
       apiVersion,
     })
 
+    revalidatePath('/blog')
+    revalidatePath(`/blog/${result.articleSlug}`)
     return NextResponse.json({ success: true, ...result })
   } catch (err: any) {
     console.error('Error generating article:', err)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 
@@ -353,6 +354,8 @@ export async function POST(request: NextRequest) {
         apiVersion,
       })
       articleSlug = articleResult.articleSlug
+      revalidatePath('/blog')
+      revalidatePath(`/blog/${articleSlug}`)
     } catch (articleErr) {
       console.error(`Article generation failed for ${finalName} (non-critical):`, articleErr)
     }
