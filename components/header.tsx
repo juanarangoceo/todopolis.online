@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingBag, Heart, MessageCircle, Zap } from 'lucide-react'
+import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen } from 'lucide-react'
 import { useCart } from '@/app/providers/cart-provider'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useFavorites } from '@/app/providers/favorites-provider'
@@ -45,6 +45,17 @@ export function Header() {
 
             {/* Right — Ofertas + Lucy + Favorites + Cart */}
             <div className="flex items-center justify-end gap-1.5 md:gap-2 shrink-0">
+
+              {/* Blog link */}
+              <Link
+                href="/blog"
+                className="group relative flex items-center gap-1 px-2 py-1.5 md:px-3 md:py-2 rounded-2xl bg-gradient-to-br from-[#6366f1]/10 to-[#8b5cf6]/10 hover:from-[#6366f1]/25 hover:to-[#8b5cf6]/25 border border-[#6366f1]/20 hover:border-[#6366f1]/40 transition-all duration-300 shadow-sm hover:shadow-md"
+                aria-label="Blog"
+                title="Blog"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[#6366f1] group-hover:scale-110 transition-transform" />
+                <span className="hidden md:inline text-xs font-bold text-[#6366f1] uppercase tracking-wide">Blog</span>
+              </Link>
 
               {/* Ofertas link */}
               <Link

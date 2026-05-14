@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { generateAndSaveArticle } from '@/lib/generate-article'
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 
@@ -92,6 +93,13 @@ CTA TEXT:
 - 2 oraciones. Primera refuerza el beneficio principal. Segunda reduce el miedo a comprar
 - Menciona garantía, envío o facilidad de compra si aplica
 
+PREGUNTAS FRECUENTES (faqs, exactamente 5):
+- Preguntas reales que un comprador colombiano haría antes de pagar
+- Mezcla estratégica: (1) cómo se usa / aplica, (2) para quién es ideal, (3) garantía o soporte, (4) tiempo de entrega o envío, (5) resultado esperado o diferenciador vs productos similares
+- Respuestas directas y tranquilizadoras en 2-3 oraciones máximo
+- Las preguntas en formato interrogativo con ¿? — deben sonar naturales, como si alguien las escribiera en Google o le preguntara a ChatGPT
+- Complementan los beneficios y specs, no los repiten
+
 ─── FORMATO DE SALIDA ──────────────────────────────────────────────────────
 
 Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin comentarios:
@@ -120,7 +128,14 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin co
     { "name": "Nombre colombiano diferente", "role": "Ciudad diferente · contexto", "rating": 4, "text": "Historia positiva con una pequeña crítica constructiva que aumente credibilidad." }
   ],
   "ctaHeadline": "Titular de urgencia o conexión con deseo principal",
-  "ctaText": "Oración de beneficio final. Oración que reduce el miedo o fricción de compra."
+  "ctaText": "Oración de beneficio final. Oración que reduce el miedo o fricción de compra.",
+  "faqs": [
+    { "question": "¿Pregunta real que haría un comprador colombiano?", "answer": "Respuesta directa y tranquilizadora en 2-3 oraciones." },
+    { "question": "¿Segunda pregunta relevante?", "answer": "Respuesta directa." },
+    { "question": "¿Tercera pregunta?", "answer": "Respuesta directa." },
+    { "question": "¿Cuarta pregunta?", "answer": "Respuesta directa." },
+    { "question": "¿Quinta pregunta?", "answer": "Respuesta directa." }
+  ]
 }`
 
 
@@ -293,6 +308,12 @@ export async function POST(request: NextRequest) {
       })),
       ctaHeadline: ai.ctaHeadline ?? '',
       ctaText: ai.ctaText ?? '',
+      faqs: (ai.faqs ?? []).map((f: any) => ({
+        _type: 'faq',
+        _key: Math.random().toString(36).substring(2, 9),
+        question: f.question,
+        answer: f.answer,
+      })),
     }
 
     const mutateUrl = `https://${projectId}.api.sanity.io/v${apiVersion}/data/mutate/${dataset}`
@@ -315,11 +336,33 @@ export async function POST(request: NextRequest) {
     const mutateData = await mutateRes.json()
     const sanityId = mutateData.results?.[0]?.id ?? null
 
+    // ── STEP 5: Generate blog article (non-blocking — failure doesn't affect import) ──
+    let articleSlug: string | null = null
+    try {
+      const articleResult = await generateAndSaveArticle({
+        productName: finalName,
+        productDescription: ai.improvedDescription || description,
+        productCategory: category,
+        productBenefits: (ai.benefits ?? []).map((b: any) => b.title).filter(Boolean),
+        sanityProductId: sanityId,
+        productSlug: slug,
+        geminiKey,
+        sanityToken,
+        projectId,
+        dataset,
+        apiVersion,
+      })
+      articleSlug = articleResult.articleSlug
+    } catch (articleErr) {
+      console.error(`Article generation failed for ${finalName} (non-critical):`, articleErr)
+    }
+
     return NextResponse.json({
       success: true,
       sanityId,
       name,
       slug,
+      articleSlug,
       studioUrl: `https://todopolis.online/studio/desk/product;${sanityId}`,
     })
   } catch (err: any) {

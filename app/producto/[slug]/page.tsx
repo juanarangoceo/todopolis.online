@@ -8,10 +8,13 @@ import { ProductBenefits } from '@/components/product/product-benefits'
 import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
 import { ProductCTA } from '@/components/product/product-cta'
+import { ProductOfferTimer } from '@/components/product/product-offer-timer'
+import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 import { GlobalSearch } from '@/components/global-search'
 import { StorePolicies } from '@/components/store-policies'
 import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries'
+import Link from 'next/link'
 import { SanityProduct } from '@/lib/types'
 
 export async function generateStaticParams() {
@@ -117,6 +120,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ctaHeadline: product.ctaHeadline,
     ctaText: product.ctaText,
     aiLifestyleImage: product.aiLifestyleImage,
+    articleSlug: (product as any).articleSlug ?? null,
+    articleTopic: (product as any).articleTopic ?? null,
+    offerName: (product as any).offerName ?? null,
+    offerEndsAt: (product as any).offerEndsAt ?? null,
+    faqs: (product as any).faqs ?? [],
   }
 
   const SuggestedSection = ({ products, title, subtitle }: { products: typeof suggestedProducts, title: string, subtitle: string }) =>
@@ -202,6 +210,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {/* Right column — all content flows naturally */}
               <div className="space-y-0">
                 <ProductHero product={adaptedProduct} />
+                {adaptedProduct.offerName && adaptedProduct.offerEndsAt && (
+                  <ProductOfferTimer offerName={adaptedProduct.offerName} offerEndsAt={adaptedProduct.offerEndsAt} />
+                )}
                 <ProductLifestyleImage product={adaptedProduct} />
                 <ProductBenefits product={adaptedProduct} />
                 <ProductDetails product={adaptedProduct} />
@@ -213,6 +224,29 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 />
 
                 <ProductTestimonials product={adaptedProduct} />
+                {adaptedProduct.faqs?.length > 0 && (
+                  <ProductFaq faqs={adaptedProduct.faqs} />
+                )}
+                {adaptedProduct.articleSlug && (
+                  <div className="container mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#EDD2F3]/20 to-[#FFB4AC]/15 border border-[#EDD2F3]/40 rounded-2xl px-6 py-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">¿Aún tienes dudas?</p>
+                        <p className="font-semibold text-sm text-foreground">
+                          {adaptedProduct.articleTopic
+                            ? `Lee: ${adaptedProduct.articleTopic}`
+                            : 'Lee nuestro artículo completo'}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/blog/${adaptedProduct.articleSlug}`}
+                        className="shrink-0 text-sm font-bold text-[#8b5cf6] hover:text-[#FFB4AC] transition-colors whitespace-nowrap"
+                      >
+                        Leer artículo →
+                      </Link>
+                    </div>
+                  </div>
+                )}
                 <ProductCTA product={adaptedProduct} />
               </div>
             </div>
@@ -222,10 +256,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* Mobile: Normal stacked layout */}
         <div className="lg:hidden">
           <ProductHero product={adaptedProduct} />
+          {adaptedProduct.offerName && adaptedProduct.offerEndsAt && (
+            <ProductOfferTimer offerName={adaptedProduct.offerName} offerEndsAt={adaptedProduct.offerEndsAt} />
+          )}
           <ProductLifestyleImage product={adaptedProduct} />
           <ProductBenefits product={adaptedProduct} />
           <ProductDetails product={adaptedProduct} />
-          
+
           {suggestedProducts.length > 0 && (
             <section className="py-8 bg-white">
               <div className="container mx-auto px-4">
@@ -243,6 +280,29 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
 
           <ProductTestimonials product={adaptedProduct} />
+          {adaptedProduct.faqs?.length > 0 && (
+            <ProductFaq faqs={adaptedProduct.faqs} />
+          )}
+          {adaptedProduct.articleSlug && (
+            <div className="container mx-auto px-4 py-4">
+              <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#EDD2F3]/20 to-[#FFB4AC]/15 border border-[#EDD2F3]/40 rounded-2xl px-6 py-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">¿Aún tienes dudas?</p>
+                  <p className="font-semibold text-sm text-foreground">
+                    {adaptedProduct.articleTopic
+                      ? `Lee: ${adaptedProduct.articleTopic}`
+                      : 'Lee nuestro artículo completo'}
+                  </p>
+                </div>
+                <Link
+                  href={`/blog/${adaptedProduct.articleSlug}`}
+                  className="shrink-0 text-sm font-bold text-[#8b5cf6] hover:text-[#FFB4AC] transition-colors whitespace-nowrap"
+                >
+                  Leer artículo →
+                </Link>
+              </div>
+            </div>
+          )}
           <ProductCTA product={adaptedProduct} />
         </div>
 

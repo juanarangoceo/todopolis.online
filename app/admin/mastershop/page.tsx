@@ -23,12 +23,15 @@ interface ImportedProduct {
 }
 
 type SyncStatus = 'idle' | 'importing' | 'done' | 'error'
+type BlogStatus = 'idle' | 'creating' | 'done' | 'error'
 
 interface ProductRow extends MsProduct {
   inSanity: boolean
   sanityId?: string
   status: SyncStatus
   error?: string
+  blogStatus: BlogStatus
+  blogSlug?: string
 }
 
 type FilterMode = 'all' | 'new' | 'imported'
@@ -50,6 +53,7 @@ export default function MastershopSyncPage() {
   const [page, setPage] = useState(1)
   const [totalProducts, setTotalProducts] = useState(0)
   const LIMIT = 50
+
 
   const loadData = useCallback(async (p = 1) => {
     setLoading(true)
@@ -79,6 +83,7 @@ export default function MastershopSyncPage() {
             inSanity: !!imp,
             sanityId: imp?.sanityId,
             status: 'idle' as SyncStatus,
+            blogStatus: 'idle' as BlogStatus,
           }
         })
       )
@@ -133,6 +138,30 @@ export default function MastershopSyncPage() {
     }
     setBatchRunning(false)
   }, [rows, importProduct])
+
+  const createBlog = useCallback(async (idProduct: number, sanityId: string) => {
+    setRows((prev: ProductRow[]) =>
+      prev.map((r: ProductRow) => r.idProduct === idProduct ? { ...r, blogStatus: 'creating' } : r)
+    )
+    try {
+      const res = await fetch('/api/generate-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sanityId }),
+      })
+      const data = await res.json()
+      if (!res.ok || (!data.success && !data.alreadyExists)) throw new Error(data.error ?? 'Error desconocido')
+      setRows((prev: ProductRow[]) =>
+        prev.map((r: ProductRow) =>
+          r.idProduct === idProduct ? { ...r, blogStatus: 'done', blogSlug: data.articleSlug } : r
+        )
+      )
+    } catch (e: any) {
+      setRows((prev: ProductRow[]) =>
+        prev.map((r: ProductRow) => r.idProduct === idProduct ? { ...r, blogStatus: 'error' } : r)
+      )
+    }
+  }, [])
 
   const logout = async () => {
     try {
@@ -390,15 +419,41 @@ export default function MastershopSyncPage() {
                   {/* Acción */}
                   <td>
                     {row.inSanity && row.status !== 'error' ? (
-                      <a
-                        href={`https://todopolis.online/studio/desk/product;${row.sanityId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ms-btn ms-btn-sm ms-btn-ghost"
-                        id={`btn-studio-${row.idProduct}`}
-                      >
-                        Ver en Studio →
-                      </a>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <a
+                          href={`https://todopolis.online/studio/desk/product;${row.sanityId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ms-btn ms-btn-sm ms-btn-ghost"
+                          id={`btn-studio-${row.idProduct}`}
+                        >
+                          Ver en Studio →
+                        </a>
+                        {row.blogStatus === 'done' && row.blogSlug ? (
+                          <a
+                            href={`/blog/${row.blogSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ms-btn ms-btn-sm"
+                            style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.35)', textDecoration: 'none' }}
+                          >
+                            📝 Ver Blog →
+                          </a>
+                        ) : (
+                          <button
+                            id={`btn-blog-${row.idProduct}`}
+                            className="ms-btn ms-btn-sm"
+                            style={{ background: 'rgba(99,102,241,0.1)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)' }}
+                            onClick={() => createBlog(row.idProduct, row.sanityId!)}
+                            disabled={row.blogStatus === 'creating'}
+                            title={row.blogStatus === 'error' ? 'Error al generar — haz clic para reintentar' : ''}
+                          >
+                            {row.blogStatus === 'creating' ? '⟳ Generando...' :
+                             row.blogStatus === 'error' ? '↺ Reintentar Blog' :
+                             '📝 Crear Blog'}
+                          </button>
+                        )}
+                      </div>
                     ) : (
                       <button
                         id={`btn-import-${row.idProduct}`}

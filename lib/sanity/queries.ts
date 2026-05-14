@@ -1,4 +1,5 @@
 import { getSanityClient } from './client'
+import { SanityArticle } from '../types'
 
 // GROQ query for a list of products (for home page cards)
 const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | order(_createdAt desc) {
@@ -42,7 +43,16 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
   testimonials,
   reviewsCount,
   ctaHeadline,
-  ctaText
+  ctaText,
+  offerName,
+  offerEndsAt,
+  faqs[] {
+    _key,
+    question,
+    answer
+  },
+  "articleSlug": *[_type == "article" && relatedProduct._ref == ^._id][0].slug.current,
+  "articleTopic": *[_type == "article" && relatedProduct._ref == ^._id][0].topic
 }`
 
 const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {
@@ -120,5 +130,78 @@ export async function getSanityHeroBanner() {
     })
   } catch {
     return null
+  }
+}
+
+// ─── Article queries ──────────────────────────────────────────────────────────
+
+const ARTICLES_LIST_QUERY = `*[_type == "article"] | order(publishedAt desc) {
+  _id,
+  title,
+  "slug": slug.current,
+  topic,
+  seoDescription,
+  readingTime,
+  category,
+  publishedAt,
+  productSlug
+}`
+
+const ARTICLE_DETAIL_QUERY = `*[_type == "article" && slug.current == $slug][0] {
+  _id,
+  title,
+  "slug": slug.current,
+  topic,
+  seoDescription,
+  seoKeywords,
+  readingTime,
+  category,
+  publishedAt,
+  productSlug,
+  "productName": relatedProduct->name,
+  sections[] {
+    _key,
+    type,
+    heading,
+    content,
+    items,
+    buttonText,
+    faqs[] {
+      _key,
+      question,
+      answer
+    }
+  }
+}`
+
+const ALL_ARTICLE_SLUGS_QUERY = `*[_type == "article" && defined(slug.current)]{ "slug": slug.current }`
+
+export async function getArticles(): Promise<SanityArticle[]> {
+  try {
+    return await getSanityClient().fetch(ARTICLES_LIST_QUERY, {}, {
+      next: { revalidate: 3600, tags: ['articles'] },
+    })
+  } catch {
+    return []
+  }
+}
+
+export async function getArticleBySlug(slug: string): Promise<SanityArticle | null> {
+  try {
+    return await getSanityClient().fetch(ARTICLE_DETAIL_QUERY, { slug }, {
+      next: { revalidate: 86400, tags: ['articles', `article-${slug}`] },
+    })
+  } catch {
+    return null
+  }
+}
+
+export async function getAllArticleSlugs(): Promise<{ slug: string }[]> {
+  try {
+    return await getSanityClient().fetch(ALL_ARTICLE_SLUGS_QUERY, {}, {
+      next: { revalidate: 3600, tags: ['articles'] },
+    })
+  } catch {
+    return []
   }
 }

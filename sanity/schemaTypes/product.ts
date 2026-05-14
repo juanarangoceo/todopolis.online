@@ -220,9 +220,44 @@ export const productType = defineType({
       rows: 2,
       group: 'landing',
     }),
+    defineField({
+      name: 'faqs',
+      title: 'Preguntas Frecuentes',
+      type: 'array',
+      group: 'landing',
+      description: 'Se generan automáticamente al importar. Aparecen antes del CTA en la landing.',
+      of: [
+        defineArrayMember({
+          name: 'faq',
+          type: 'object',
+          fields: [
+            defineField({ name: 'question', title: 'Pregunta', type: 'string' }),
+            defineField({ name: 'answer', title: 'Respuesta', type: 'text', rows: 3 }),
+          ],
+          preview: { select: { title: 'question' } },
+        }),
+      ],
+    }),
+
+    // ─── Oferta / Countdown timer ────────────────────────────────────────────
+    defineField({
+      name: 'offerName',
+      title: '🔥 Nombre de la Oferta',
+      type: 'string',
+      group: 'offer',
+      description: 'Ej: "Flash Sale", "Oferta de Lanzamiento", "Black Friday". Si está vacío, no se muestra el countdown.',
+    }),
+    defineField({
+      name: 'offerEndsAt',
+      title: '⏱️ Oferta Termina El',
+      type: 'datetime',
+      group: 'offer',
+      description: 'Fecha y hora exacta. El countdown desaparece automáticamente al llegar a cero.',
+    }),
   ],
 
   groups: [
     { name: 'landing', title: '🚀 Landing Page (Contenido IA)' },
+    { name: 'offer', title: '⏱️ Oferta / Countdown' },
   ],
 })
