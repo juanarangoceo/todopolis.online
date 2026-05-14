@@ -139,7 +139,7 @@ export default function MastershopSyncPage() {
     setBatchRunning(false)
   }, [rows, importProduct])
 
-  const createBlog = useCallback(async (idProduct: number, sanityId: string) => {
+  const createBlog = useCallback(async (idProduct: number, sanityId?: string) => {
     setRows((prev: ProductRow[]) =>
       prev.map((r: ProductRow) => r.idProduct === idProduct ? { ...r, blogStatus: 'creating' } : r)
     )
@@ -147,7 +147,8 @@ export default function MastershopSyncPage() {
       const res = await fetch('/api/generate-article', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sanityId }),
+        // Send sanityId if available, otherwise fallback to mastershopId for server-side lookup
+        body: JSON.stringify(sanityId ? { sanityId } : { mastershopId: idProduct }),
       })
       const data = await res.json()
       if (!res.ok || (!data.success && !data.alreadyExists)) throw new Error(data.error ?? 'Error desconocido')
@@ -444,7 +445,7 @@ export default function MastershopSyncPage() {
                             id={`btn-blog-${row.idProduct}`}
                             className="ms-btn ms-btn-sm"
                             style={{ background: 'rgba(99,102,241,0.1)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)' }}
-                            onClick={() => createBlog(row.idProduct, row.sanityId!)}
+                            onClick={() => createBlog(row.idProduct, row.sanityId)}
                             disabled={row.blogStatus === 'creating'}
                             title={row.blogStatus === 'error' ? 'Error al generar — haz clic para reintentar' : ''}
                           >

@@ -3,6 +3,9 @@ import { revalidatePath } from 'next/cache'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 
+// Allow up to 60s — import includes AI generation + Sanity write
+export const maxDuration = 60
+
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 
 // ─── Category mapping Mastershop → Sanity ────────────────────────────────────
