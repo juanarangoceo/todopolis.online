@@ -220,18 +220,18 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
       {(!searchQuery && activeCategory === 'Todos') && aiImages.length > 0 && (
         <div className="md:hidden px-4 pt-2 pb-4">
           <div className="flex items-center gap-1.5 mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-[#E11D48]" />
-            <p className="text-xs font-bold text-[#E11D48] uppercase tracking-wider">Looks del momento</p>
+            <Sparkles className="w-3.5 h-3.5 text-[#8b5cf6]" />
+            <p className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Inspiración</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-2.5 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {aiImages.map((item) => (
-              <Link key={item.slug} href={`/producto/${item.slug}`} className="shrink-0 snap-start w-[120px]">
-                <div className="rounded-xl overflow-hidden shadow-sm border border-[#EDD2F3]/40 hover:border-[#FFB4AC] transition-all">
-                  <div className="relative w-[120px] h-[180px]">
-                    <Image src={sanityOptimized(item.image, 240)} alt={item.name} fill className="object-cover" unoptimized />
+              <Link key={item.slug} href={`/producto/${item.slug}`} className="shrink-0 snap-start w-[130px]">
+                <div className="rounded-xl overflow-hidden shadow-sm border border-[#EDD2F3]/40 hover:border-[#EDD2F3] transition-all">
+                  <div className="relative w-[130px] h-[175px]">
+                    <Image src={sanityOptimized(item.image, 280)} alt={item.name} fill className="object-cover" unoptimized />
                   </div>
-                  <div className="p-2 bg-white/90">
-                    <p className="text-[10px] font-medium text-foreground/80 leading-tight line-clamp-2">{item.name}</p>
+                  <div className="px-1.5 py-1.5 bg-white/95">
+                    <p className="text-[9px] font-medium text-foreground/70 leading-tight line-clamp-2">{item.name}</p>
                   </div>
                 </div>
               </Link>
@@ -252,20 +252,32 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
             <div className="md:flex md:items-start md:gap-4">
 
               {aiImages.length > 0 && (
-                <aside className="hidden md:flex flex-col w-44 xl:w-48 shrink-0 border-r border-[#EDD2F3]/30 sticky top-0 self-start max-h-screen overflow-y-auto pr-3 pb-10">
-                  <div className="flex items-center gap-1.5 mb-4 pt-1">
-                    <Sparkles className="w-3.5 h-3.5 text-[#E11D48]" />
-                    <p className="text-[11px] font-bold text-[#E11D48] uppercase tracking-wider">Looks del momento</p>
+                <aside className="hidden md:flex flex-col w-52 xl:w-60 shrink-0 sticky top-0 self-start max-h-screen overflow-y-auto pb-10">
+                  {/* Sidebar header */}
+                  <div className="flex items-center gap-1.5 mb-3 pt-1 px-1">
+                    <Sparkles className="w-3 h-3 text-[#8b5cf6]" />
+                    <p className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-[#8b5cf6] to-[#EC4899] bg-clip-text text-transparent">
+                      Inspiración
+                    </p>
                   </div>
-                  <div className="flex flex-col gap-3">
+                  {/* Cards */}
+                  <div className="flex flex-col gap-2 pr-2 border-r border-[#EDD2F3]/30">
                     {aiImages.map((item) => (
                       <Link key={item.slug} href={`/producto/${item.slug}`} className="group block">
-                        <div className="rounded-xl overflow-hidden shadow-sm border border-[#EDD2F3]/30 group-hover:shadow-md group-hover:border-[#FFB4AC] transition-all duration-200">
-                          <div className="relative w-full" style={{ aspectRatio: '2/3' }}>
-                            <Image src={sanityOptimized(item.image, 400)} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
+                        <div className="rounded-xl overflow-hidden border border-[#EDD2F3]/30 group-hover:border-[#EDD2F3] group-hover:shadow-sm transition-all duration-200">
+                          <div className="relative w-full" style={{ aspectRatio: '3/4' }}>
+                            <Image
+                              src={sanityOptimized(item.image, 480)}
+                              alt={item.name}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              unoptimized
+                            />
                           </div>
-                          <div className="p-2 bg-white/90">
-                            <p className="text-[10px] font-medium text-foreground/80 leading-tight line-clamp-2 group-hover:text-[#E11D48] transition-colors">{item.name}</p>
+                          <div className="px-2 py-1.5 bg-white/95">
+                            <p className="text-[9px] font-medium text-foreground/70 leading-tight line-clamp-2 group-hover:text-[#8b5cf6] transition-colors">
+                              {item.name}
+                            </p>
                           </div>
                         </div>
                       </Link>
