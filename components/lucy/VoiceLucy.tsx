@@ -150,7 +150,11 @@ export function VoiceLucy() {
     try {
       // 1. Ephemeral key from our server
       const sessionRes = await fetch('/api/voice-session', { method: 'POST' })
-      if (!sessionRes.ok) throw new Error('No se pudo iniciar la sesión de voz')
+      if (!sessionRes.ok) {
+        let msg = 'No se pudo iniciar la sesión de voz'
+        try { const e = await sessionRes.json(); if (e.error) msg = e.error } catch { /* ignore */ }
+        throw new Error(msg)
+      }
       const { client_secret } = await sessionRes.json()
 
       // 2. Microphone access

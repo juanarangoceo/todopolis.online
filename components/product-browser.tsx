@@ -13,6 +13,7 @@ import {
   Laptop, Home, Shirt, Dumbbell, Gamepad2,
   Droplets, Utensils, Flame
 } from 'lucide-react';
+import { AgeGate } from '@/components/age-gate';
 
 function sanityOptimized(url: string, width: number): string {
   if (!url || !url.includes('cdn.sanity.io')) return url;
@@ -50,6 +51,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+  const [ageGatePending, setAgeGatePending] = useState(false);
 
   useEffect(() => {
     // Find the header search slot once it mounts
@@ -145,8 +147,24 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
     setSearchQuery(query);
   }, []);
 
+  const handleCategoryClick = useCallback((cat: string) => {
+    if (cat === 'Bienestar Íntimo' && typeof window !== 'undefined' && !sessionStorage.getItem('ageVerified')) {
+      setAgeGatePending(true);
+      return;
+    }
+    setActiveCategory(cat);
+  }, []);
+
   return (
     <>
+      {ageGatePending && (
+        <AgeGate
+          open={true}
+          onConfirm={() => { setAgeGatePending(false); setActiveCategory('Bienestar Íntimo'); }}
+          onReject={() => setAgeGatePending(false)}
+        />
+      )}
+
       {/* Portal: desktop search bar into header slot */}
       {headerSlot && createPortal(
         <MagicSearchBar onSearch={handleSearch} compact />,
@@ -163,7 +181,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
             return (
               <button
                 key={`mobile-cat-${cat}`}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => handleCategoryClick(cat)}
                 className="flex flex-col items-center gap-2 shrink-0"
               >
                 <div className={`w-15 h-15 md:w-16 md:h-16 rounded-full flex items-center justify-center border-[3px] p-0.5 transition-all ${isActive ? 'border-[#FFB4AC]' : 'border-transparent'}`}>
@@ -189,7 +207,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
               return (
                 <button
                   key={`desktop-cat-${cat}`}
-                  onClick={() => setActiveCategory(cat)}
+                  onClick={() => handleCategoryClick(cat)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105 ${
                     isActive
                       ? 'bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-lg shadow-[#FFB4AC]/40'

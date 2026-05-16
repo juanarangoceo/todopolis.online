@@ -4,23 +4,37 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
 
-export function AgeGate() {
+interface AgeGateProps {
+  open?: boolean
+  onConfirm?: () => void
+  onReject?: () => void
+}
+
+export function AgeGate({ open, onConfirm, onReject }: AgeGateProps = {}) {
   const [visible, setVisible] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    if (!sessionStorage.getItem('ageVerified')) {
+    if (open !== undefined) {
+      setVisible(open)
+    } else if (!sessionStorage.getItem('ageVerified')) {
       setVisible(true)
     }
-  }, [])
+  }, [open])
 
   const confirm = () => {
     sessionStorage.setItem('ageVerified', 'true')
     setVisible(false)
+    onConfirm?.()
   }
 
   const reject = () => {
-    router.push('/')
+    setVisible(false)
+    if (onReject) {
+      onReject()
+    } else {
+      router.push('/')
+    }
   }
 
   if (!visible) return null

@@ -22,7 +22,7 @@ export function LucyChatButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [showHint, setShowHint] = useState(false);
-  const [hintDismissed, setHintDismissed] = useState(false);
+  const [hintDismissed, setHintDismissed] = useState(true);
 
   useEffect(() => {
     setSessionId(getOrCreateSessionId());

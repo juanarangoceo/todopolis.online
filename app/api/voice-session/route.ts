@@ -91,7 +91,8 @@ export async function POST() {
 
   if (!res.ok) {
     const err = await res.text()
-    return new Response(err, { status: res.status })
+    console.error('[voice-session] OpenAI error:', err)
+    return Response.json({ error: `OpenAI: ${err}` }, { status: res.status })
   }
 
   const data = await res.json()
