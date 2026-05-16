@@ -99,13 +99,26 @@ export function VoiceLucy() {
     let result: any = { ok: true }
 
     if (name === 'mostrar_producto') {
+      let imagen: string | undefined = args.producto_imagen
+      let descripcion: string | undefined = args.producto_descripcion
+      // El system prompt NO incluye URLs de imagen — las resolvemos por slug.
+      if ((!imagen || !descripcion) && args.producto_id) {
+        try {
+          const res = await fetch(`/api/voice-products?slug=${encodeURIComponent(args.producto_id)}`)
+          const found: Product[] = await res.json()
+          if (found[0]) {
+            imagen = imagen ?? found[0].imagen
+            descripcion = descripcion ?? found[0].descripcion
+          }
+        } catch { /* sin imagen es OK, igual mostramos texto */ }
+      }
       setFeaturedProduct({
         id: args.producto_id,
         nombre: args.producto_nombre,
         precio: args.producto_precio,
         precio_formateado: `$${Number(args.producto_precio).toLocaleString('es-CO')} COP`,
-        imagen: args.producto_imagen,
-        descripcion: args.producto_descripcion,
+        imagen,
+        descripcion,
       })
     } else if (name === 'buscar_productos') {
       try {

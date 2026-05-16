@@ -6,7 +6,7 @@ OBJETIVO: Ayudar al cliente a encontrar el producto ideal y cerrar la venta de f
 
 REGLAS:
 1. Siempre tutea al cliente. Nunca uses "usted" a menos que el cliente lo pida.
-2. Cuando menciones un producto específico, SIEMPRE llama mostrar_producto para que el cliente lo vea en pantalla. Usa el slug, nombre, precio e imagen EXACTOS del catálogo de abajo.
+2. Cuando menciones un producto específico, SIEMPRE llama mostrar_producto para que el cliente lo vea en pantalla. Usa el slug, nombre y precio EXACTOS del catálogo de abajo. NO inventes URLs de imagen — el sistema las resuelve por slug.
 3. Si el cliente pide algo que no aparece en el catálogo de abajo, igual llama buscar_productos antes de afirmar que no existe — puede haber variantes o sinónimos. Prueba con términos en singular y plural y sin tildes.
 4. Cuando el cliente quiera comprar, llama iniciar_pedido de inmediato.
 5. Siempre menciona: el envío cuesta doce mil pesos colombianos y el pago es contraentrega, es decir, pagas cuando recibes.
@@ -19,15 +19,13 @@ const TOOLS = [
   {
     type: 'function',
     name: 'mostrar_producto',
-    description: 'Muestra un producto en pantalla para que el cliente lo vea mientras hablan',
+    description: 'Muestra un producto en pantalla para que el cliente lo vea mientras hablan. El sistema resuelve la imagen automáticamente desde el slug.',
     parameters: {
       type: 'object',
       properties: {
-        producto_id: { type: 'string', description: 'Slug único del producto' },
+        producto_id: { type: 'string', description: 'Slug exacto del catálogo' },
         producto_nombre: { type: 'string', description: 'Nombre del producto' },
         producto_precio: { type: 'number', description: 'Precio en COP' },
-        producto_imagen: { type: 'string', description: 'URL de la imagen' },
-        producto_descripcion: { type: 'string', description: 'Descripción breve' },
       },
       required: ['producto_id', 'producto_nombre', 'producto_precio'],
     },
@@ -100,16 +98,16 @@ function buildCatalogContext(products: CatalogProduct[]): string {
 
   const lines = products.map((p) => {
     const tags = [
-      p.isBestSeller ? 'MÁS VENDIDO' : null,
+      p.isBestSeller ? 'MV' : null,
       p.isNew ? 'NUEVO' : null,
     ]
       .filter(Boolean)
-      .join(', ')
-    const precio = p.price ? `$${Number(p.price).toLocaleString('es-CO')} COP` : 'precio s/d'
-    return `- ${p.name} | slug:${p.slug} | ${precio} | cat:${p.category ?? 'otros'}${tags ? ` | ${tags}` : ''} | img:${p.imagen ?? ''}`
+      .join(',')
+    const precio = p.price ? `$${Number(p.price).toLocaleString('es-CO')}` : 's/d'
+    return `- ${p.name} | ${p.slug} | ${precio} | ${p.category ?? 'otros'}${tags ? ` | ${tags}` : ''}`
   })
 
-  return `\n\nCATEGORÍAS DISPONIBLES: ${categories.join(', ')}.\n\nCATÁLOGO COMPLETO (${products.length} productos). Usa el slug, nombre, precio e imagen EXACTOS cuando llames mostrar_producto:\n${lines.join('\n')}`
+  return `\n\nCATEGORÍAS DISPONIBLES: ${categories.join(', ')}.\n\nCATÁLOGO (${products.length} productos). Formato: nombre | slug | precio COP | categoría | [MV=más vendido, NUEVO]. Usa el slug EXACTO al llamar mostrar_producto; la imagen la resuelve el sistema por slug — NO inventes URLs.\n${lines.join('\n')}`
 }
 
 export async function POST() {
