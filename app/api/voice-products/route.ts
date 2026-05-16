@@ -1,5 +1,12 @@
 import { getSanityClient } from '@/lib/sanity/client'
 
+const normalize = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim()
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const q = searchParams.get('q')?.trim() ?? ''
@@ -7,33 +14,44 @@ export async function GET(request: Request) {
   try {
     const client = getSanityClient()
 
-    const groqQuery = q
-      ? `*[_type == "product" && category != "bienestar-intimo" && defined(slug.current) && (
-          name match $q || category match $q || shortDescription match $q
-        )] | order(_createdAt desc) [0...6] {
-          "id": slug.current,
-          name,
-          "descripcion": shortDescription,
-          price,
-          category,
-          isNew,
-          isBestSeller,
-          "imagen": coalesce(mastershopImageUrl, images[0].asset->url)
-        }`
-      : `*[_type == "product" && category != "bienestar-intimo" && defined(slug.current)
-        ] | order(isBestSeller desc, _createdAt desc) [0...6] {
-          "id": slug.current,
-          name,
-          "descripcion": shortDescription,
-          price,
-          category,
-          isNew,
-          isBestSeller,
-          "imagen": coalesce(mastershopImageUrl, images[0].asset->url)
-        }`
+    // Traemos todos los productos válidos y filtramos en JS para tolerar tildes,
+    // mayúsculas, plurales y variaciones de transcripción del Whisper.
+    const all = await client.fetch(
+      `*[_type == "product" && category != "bienestar-intimo" && defined(slug.current)] {
+        "id": slug.current,
+        name,
+        "descripcion": shortDescription,
+        price,
+        category,
+        isNew,
+        isBestSeller,
+        "imagen": coalesce(mastershopImageUrl, images[0].asset->url)
+      }`,
+    )
 
-    const params = q ? { q: `*${q}*` } : {}
-    const products = await client.fetch(groqQuery, params)
+    let products: any[] = all
+    if (q) {
+      const needle = normalize(q)
+      const tokens = needle.split(/\s+/).filter(Boolean)
+
+      products = all
+        .map((p: any) => {
+          const haystack = normalize(
+            [p.name, p.category, p.descripcion].filter(Boolean).join(' '),
+          )
+          // Score por cuántos tokens del query aparecen como substring
+          const hits = tokens.filter((t) => haystack.includes(t)).length
+          return { p, hits }
+        })
+        .filter((x) => x.hits > 0)
+        .sort((a, b) => b.hits - a.hits)
+        .slice(0, 6)
+        .map((x) => x.p)
+    } else {
+      products = all
+        .sort((a: any, b: any) => Number(b.isBestSeller ?? 0) - Number(a.isBestSeller ?? 0))
+        .slice(0, 6)
+    }
 
     const mapped = products.map((p: any) => ({
       id: p.id,

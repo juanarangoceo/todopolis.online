@@ -1,16 +1,18 @@
-const SYSTEM_PROMPT = `Eres Lucy, la asesora de ventas de Todopolis, una tienda colombiana con productos para el hogar, tecnología, moda, belleza, deportes, juguetes y más. Tu personalidad es cálida, cercana y profesional. Hablas en español colombiano con tuteo natural.
+import { getSanityClient } from '@/lib/sanity/client'
+
+const BASE_PROMPT = `Eres Lucy, la asesora de ventas de Todopolis, una tienda colombiana con productos para el hogar, tecnología, moda, belleza, deportes, juguetes y más. Tu personalidad es cálida, cercana y profesional. Hablas en español colombiano con tuteo natural.
 
 OBJETIVO: Ayudar al cliente a encontrar el producto ideal y cerrar la venta de forma honesta y amigable.
 
 REGLAS:
 1. Siempre tutea al cliente. Nunca uses "usted" a menos que el cliente lo pida.
-2. Cuando menciones un producto específico, SIEMPRE llama mostrar_producto para que el cliente lo vea en pantalla.
-3. Si no tienes información de un producto, usa buscar_productos para buscarlo en tiempo real en el catálogo.
+2. Cuando menciones un producto específico, SIEMPRE llama mostrar_producto para que el cliente lo vea en pantalla. Usa el slug, nombre, precio e imagen EXACTOS del catálogo de abajo.
+3. Si el cliente pide algo que no aparece en el catálogo de abajo, igual llama buscar_productos antes de afirmar que no existe — puede haber variantes o sinónimos. Prueba con términos en singular y plural y sin tildes.
 4. Cuando el cliente quiera comprar, llama iniciar_pedido de inmediato.
 5. Siempre menciona: el envío cuesta doce mil pesos colombianos y el pago es contraentrega, es decir, pagas cuando recibes.
 6. Respuestas cortas y naturales: máximo dos o tres oraciones por turno.
 7. No uses emojis ni signos especiales en voz.
-8. Si el cliente pregunta por algo que no encuentras, sé honesta y ofrece alternativas similares.
+8. Si el cliente pregunta por algo que realmente no encuentras, sé honesta y ofrece alternativas similares del catálogo.
 9. Tiempo de entrega estimado: tres a siete días hábiles a todo Colombia.`
 
 const TOOLS = [
@@ -58,11 +60,66 @@ const TOOLS = [
   },
 ]
 
+type CatalogProduct = {
+  slug: string
+  name: string
+  price: number | null
+  category: string | null
+  imagen: string | null
+  isNew: boolean | null
+  isBestSeller: boolean | null
+}
+
+async function loadCatalog(): Promise<CatalogProduct[]> {
+  try {
+    const client = getSanityClient()
+    const products: CatalogProduct[] = await client.fetch(
+      `*[_type == "product" && category != "bienestar-intimo" && defined(slug.current)] | order(isBestSeller desc, isNew desc, _createdAt desc) {
+        "slug": slug.current,
+        name,
+        price,
+        category,
+        isNew,
+        isBestSeller,
+        "imagen": coalesce(mastershopImageUrl, images[0].asset->url)
+      }`,
+    )
+    return products
+  } catch (err) {
+    console.error('[voice-session] error cargando catálogo:', err)
+    return []
+  }
+}
+
+function buildCatalogContext(products: CatalogProduct[]): string {
+  if (products.length === 0) return ''
+
+  const categories = Array.from(
+    new Set(products.map((p) => p.category).filter(Boolean)),
+  ) as string[]
+
+  const lines = products.map((p) => {
+    const tags = [
+      p.isBestSeller ? 'MÁS VENDIDO' : null,
+      p.isNew ? 'NUEVO' : null,
+    ]
+      .filter(Boolean)
+      .join(', ')
+    const precio = p.price ? `$${Number(p.price).toLocaleString('es-CO')} COP` : 'precio s/d'
+    return `- ${p.name} | slug:${p.slug} | ${precio} | cat:${p.category ?? 'otros'}${tags ? ` | ${tags}` : ''} | img:${p.imagen ?? ''}`
+  })
+
+  return `\n\nCATEGORÍAS DISPONIBLES: ${categories.join(', ')}.\n\nCATÁLOGO COMPLETO (${products.length} productos). Usa el slug, nombre, precio e imagen EXACTOS cuando llames mostrar_producto:\n${lines.join('\n')}`
+}
+
 export async function POST() {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     return Response.json({ error: 'OPENAI_API_KEY no configurado' }, { status: 500 })
   }
+
+  const catalog = await loadCatalog()
+  const instructions = BASE_PROMPT + buildCatalogContext(catalog)
 
   const res = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
     method: 'POST',
@@ -86,7 +143,7 @@ export async function POST() {
           },
           output: { voice: 'shimmer' },
         },
-        instructions: SYSTEM_PROMPT,
+        instructions,
         tools: TOOLS,
         tool_choice: 'auto',
       },
@@ -100,6 +157,5 @@ export async function POST() {
   }
 
   const data = await res.json()
-  // data.value es el ephemeral key — lo envolvemos para compatibilidad con el cliente
   return Response.json({ client_secret: { value: data.value } })
 }
