@@ -23,6 +23,11 @@ const CATEGORY_MAP: Record<string, string> = {
   'Librerías y papelería': 'otros',
   Herramientas: 'otros',
   Otros: 'otros',
+  'Adultos': 'bienestar-intimo',
+  'Eróticos': 'bienestar-intimo',
+  'Bienestar sexual': 'bienestar-intimo',
+  'Juguetes adultos': 'bienestar-intimo',
+  'Lencería': 'bienestar-intimo',
 }
 
 // ─── AI System Prompt ─────────────────────────────────────────────────────────

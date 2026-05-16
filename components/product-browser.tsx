@@ -29,7 +29,7 @@ const getCategoryIcon = (cat: string) => {
   const lower = cat.toLowerCase();
   if (lower === 'todos') return Grid;
   if (lower.includes('accesorio')) return Watch;
-  if (lower.includes('sex')) return Flame;
+  if (lower.includes('bienestar')) return HeartPulse;
   if (lower.includes('electrónica') || lower.includes('electronica')) return Laptop;
   if (lower.includes('hogar')) return Home;
   if (lower.includes('moda') || lower.includes('ropa')) return Shirt;
@@ -81,7 +81,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
       'Hogar',
       'Juguetes',
       'Moda',
-      'Sexshop',
+      'Bienestar Íntimo',
       'Otros'
     ];
     return ['Todos', ...masterCategories];
@@ -96,6 +96,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
     if (c === 'juguetes') return 'Juguetes';
     if (c === 'belleza') return 'Belleza';
     if (c === 'alimentos') return 'Alimentos';
+    if (c === 'sexshop' || c === 'bienestar-intimo') return 'Bienestar Íntimo';
     return cat.charAt(0).toUpperCase() + cat.slice(1);
   };
 
@@ -106,7 +107,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
     }));
 
     if (category === 'Todos') {
-      results = results.filter(p => p.category !== 'Sexshop');
+      results = results.filter(p => p.category !== 'Bienestar Íntimo');
     }
 
     if (category !== 'Todos') {

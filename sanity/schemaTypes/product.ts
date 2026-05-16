@@ -83,7 +83,7 @@ export const productType = defineType({
           { title: 'Belleza', value: 'belleza' },
           { title: 'Alimentos', value: 'alimentos' },
           { title: 'Accesorios', value: 'accesorios' },
-          { title: 'Sexshop', value: 'sexshop' },
+          { title: 'Bienestar Íntimo', value: 'bienestar-intimo' },
           { title: 'Otros', value: 'otros' },
         ],
       },

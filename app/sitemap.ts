@@ -38,12 +38,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getAllArticleSlugs().catch(() => []),
   ])
 
-  const productRoutes: MetadataRoute.Sitemap = productSlugs.map(({ slug }) => ({
-    url: `${BASE_URL}/producto/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.9,
-  }))
+  const productRoutes: MetadataRoute.Sitemap = productSlugs
+    .filter(({ category }: { category?: string }) => category !== 'bienestar-intimo')
+    .map(({ slug }: { slug: string }) => ({
+      url: `${BASE_URL}/producto/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    }))
 
   const articleRoutes: MetadataRoute.Sitemap = articleSlugs.map(({ slug }) => ({
     url: `${BASE_URL}/blog/${slug}`,

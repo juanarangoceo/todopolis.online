@@ -18,6 +18,11 @@ const CATEGORY_MAP: Record<string, string> = {
   'Librerías y papelería': 'otros',
   Herramientas: 'otros',
   Otros: 'otros',
+  'Adultos': 'bienestar-intimo',
+  'Eróticos': 'bienestar-intimo',
+  'Bienestar sexual': 'bienestar-intimo',
+  'Juguetes adultos': 'bienestar-intimo',
+  'Lencería': 'bienestar-intimo',
 }
 
 const SYSTEM_PROMPT = `Eres el mejor copywriter de ventas de América Latina. Llevas 15 años creando landing pages de alta conversión para e-commerce en Colombia, México y toda la región. Tu escritura combina la calidez latina con técnicas probadas de persuasión: storytelling, triggers psicológicos y el método PAS (Problema → Agitación → Solución).

@@ -76,7 +76,7 @@ const HERO_BANNER_QUERY = `*[_type == "heroBanner"] | order(_updatedAt desc)[0] 
 }`
 
 // GROQ query to get all slugs (for generateStaticParams)
-const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current }`
+const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current, category }`
 
 export async function getSanityProducts() {
   try {

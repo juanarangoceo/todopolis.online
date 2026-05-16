@@ -14,7 +14,7 @@ export default async function OfertasPage() {
 
   // Filter only products with an original price (= they have a discount)
   const discountedProducts = sanityProducts
-    .filter((p: any) => p.originalPrice && p.originalPrice > (p.price ?? 0))
+    .filter((p: any) => p.originalPrice && p.originalPrice > (p.price ?? 0) && p.category !== 'bienestar-intimo')
     .map((p: any) => {
       const discount = Math.round((1 - (p.price ?? 0) / p.originalPrice) * 100)
       return {

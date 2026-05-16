@@ -16,6 +16,7 @@ import { StorePolicies } from '@/components/store-policies'
 import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries'
 import Link from 'next/link'
 import { SanityProduct } from '@/lib/types'
+import { AgeGate } from '@/components/age-gate'
 
 export async function generateStaticParams() {
   const slugs = await getAllProductSlugs()
@@ -38,9 +39,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     ? [{ url: (product.mastershopImageUrl || product.image), alt: product.name }]
     : []
 
+  const isAdult = product.category === 'bienestar-intimo'
+
   return {
     title,
     description,
+    ...(isAdult && { robots: { index: false, follow: false } }),
     alternates: { canonical: `/producto/${slug}` },
     openGraph: {
       type: 'website',
@@ -73,7 +77,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // Fetch all products to build suggested + more sections
   const sanityProducts = await getSanityProducts().catch(() => [])
   const otherProducts = sanityProducts
-    .filter((p: any) => p._id !== product._id && p.category?.toLowerCase() !== 'sexshop')
+    .filter((p: any) => p._id !== product._id && p.category?.toLowerCase() !== 'bienestar-intimo')
     .map((p: any) => ({
       id: p._id,
       name: p.name,
@@ -143,7 +147,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ) : null
 
   const searchableProducts = sanityProducts
-    .filter((p: any) => p.category?.toLowerCase() !== 'sexshop')
+    .filter((p: any) => p.category?.toLowerCase() !== 'bienestar-intimo')
     .map((p: any) => ({
       id: p._id,
       name: p.name,
@@ -195,6 +199,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Header />
+      {product.category === 'bienestar-intimo' && <AgeGate />}
       <GlobalSearch products={searchableProducts} />
 
       <main className="flex-1">
