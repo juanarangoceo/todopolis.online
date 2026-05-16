@@ -185,8 +185,13 @@ export function VoiceLucy() {
         sendEvent({
           type: 'session.update',
           session: {
-            input_audio_transcription: { model: 'whisper-1' },
-            turn_detection: { type: 'server_vad', threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 700 },
+            input_audio_transcription: { model: 'gpt-4o-mini-transcribe' },
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 700,
+            },
           },
         })
       }
