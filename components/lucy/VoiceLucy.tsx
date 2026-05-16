@@ -56,24 +56,6 @@ export function VoiceLucy() {
     }
   }, [])
 
-  // ── Timer ────────────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (callStatus !== 'active') {
-      if (timerRef.current) clearInterval(timerRef.current)
-      return
-    }
-    timerRef.current = setInterval(() => {
-      setCallDuration(d => d + 1)
-    }, 1000)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [callStatus])
-
-  // Auto-end at 5 minutes
-  useEffect(() => {
-    if (callDuration >= 300 && callStatus === 'active') endCall()
-  }, [callDuration, callStatus, endCall])
-
   // ── Cleanup ──────────────────────────────────────────────────────────────────
 
   const cleanup = useCallback(() => {
@@ -92,6 +74,24 @@ export function VoiceLucy() {
     setIsLucySpeaking(false)
     setIsMuted(false)
   }, [cleanup])
+
+  // ── Timer ────────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (callStatus !== 'active') {
+      if (timerRef.current) clearInterval(timerRef.current)
+      return
+    }
+    timerRef.current = setInterval(() => {
+      setCallDuration(d => d + 1)
+    }, 1000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [callStatus])
+
+  // Auto-end at 5 minutes
+  useEffect(() => {
+    if (callDuration >= 300 && callStatus === 'active') endCall()
+  }, [callDuration, callStatus, endCall])
 
   // ── Tool call handler ─────────────────────────────────────────────────────────
 
