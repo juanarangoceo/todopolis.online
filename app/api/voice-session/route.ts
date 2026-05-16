@@ -10,10 +10,11 @@ REGLAS:
 3. Si el cliente pide algo que no aparece en el catálogo de abajo, igual llama buscar_productos antes de afirmar que no existe — puede haber variantes o sinónimos. Prueba con términos en singular y plural y sin tildes.
 4. Cuando el cliente quiera comprar, llama iniciar_pedido de inmediato.
 5. Siempre menciona: el envío cuesta doce mil pesos colombianos y el pago es contraentrega, es decir, pagas cuando recibes.
-6. Respuestas cortas y naturales: máximo dos o tres oraciones por turno.
+6. RESPUESTAS MUY CORTAS: una o dos oraciones máximo. Nunca enumeres varios productos: recomienda UNO a la vez y espera la reacción del cliente antes de ofrecer otro.
 7. No uses emojis ni signos especiales en voz.
 8. Si el cliente pregunta por algo que realmente no encuentras, sé honesta y ofrece alternativas similares del catálogo.
-9. Tiempo de entrega estimado: tres a siete días hábiles a todo Colombia.`
+9. Tiempo de entrega estimado: tres a siete días hábiles a todo Colombia.
+10. Responde rápido y con naturalidad. No hagas pausas largas ni titubees.`
 
 const TOOLS = [
   {
@@ -68,7 +69,17 @@ type CatalogProduct = {
   isBestSeller: boolean | null
 }
 
+// Cache en memoria del proceso: la primera llamada paga el fetch, las
+// siguientes (mientras dure la instancia) arrancan al instante. Beneficio
+// extra: como las instructions son idénticas entre sesiones, OpenAI activa
+// prompt caching y la primera respuesta de Lucy sale mucho más rápido.
+let catalogCache: { products: CatalogProduct[]; expires: number } | null = null
+const CATALOG_TTL_MS = 5 * 60 * 1000
+
 async function loadCatalog(): Promise<CatalogProduct[]> {
+  if (catalogCache && catalogCache.expires > Date.now()) {
+    return catalogCache.products
+  }
   try {
     const client = getSanityClient()
     const products: CatalogProduct[] = await client.fetch(
@@ -82,6 +93,7 @@ async function loadCatalog(): Promise<CatalogProduct[]> {
         "imagen": coalesce(mastershopImageUrl, images[0].asset->url)
       }`,
     )
+    catalogCache = { products, expires: Date.now() + CATALOG_TTL_MS }
     return products
   } catch (err) {
     console.error('[voice-session] error cargando catálogo:', err)
@@ -135,11 +147,11 @@ export async function POST() {
             turn_detection: {
               type: 'server_vad',
               threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 700,
+              prefix_padding_ms: 200,
+              silence_duration_ms: 400,
             },
           },
-          output: { voice: 'shimmer' },
+          output: { voice: 'shimmer', speed: 1.1 },
         },
         instructions,
         tools: TOOLS,
