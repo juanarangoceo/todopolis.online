@@ -185,9 +185,6 @@ export function VoiceLucy() {
         sendEvent({
           type: 'session.update',
           session: {
-            voice: 'shimmer',
-            modalities: ['audio', 'text'],
-            instructions: `Eres Lucy, la asesora de ventas de Todopolis, una tienda colombiana con productos para el hogar, tecnología, moda, belleza, deportes, juguetes y más. Tu personalidad es cálida, cercana y profesional. Hablas en español colombiano con tuteo natural. OBJETIVO: Ayudar al cliente a encontrar el producto ideal y cerrar la venta de forma honesta y amigable. REGLAS: 1. Siempre tutea al cliente. 2. Cuando menciones un producto específico llama mostrar_producto. 3. Si no tienes info usa buscar_productos. 4. Cuando el cliente quiera comprar llama iniciar_pedido. 5. El envío cuesta doce mil pesos y el pago es contraentrega. 6. Respuestas cortas: máximo dos o tres oraciones. 7. No uses emojis en voz. 8. Entrega en tres a siete días hábiles a todo Colombia.`,
             input_audio_transcription: { model: 'whisper-1' },
             turn_detection: {
               type: 'server_vad',
@@ -195,49 +192,6 @@ export function VoiceLucy() {
               prefix_padding_ms: 300,
               silence_duration_ms: 700,
             },
-            tools: [
-              {
-                type: 'function',
-                name: 'mostrar_producto',
-                description: 'Muestra un producto en pantalla para que el cliente lo vea mientras hablan',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    producto_id: { type: 'string' },
-                    producto_nombre: { type: 'string' },
-                    producto_precio: { type: 'number' },
-                    producto_imagen: { type: 'string' },
-                    producto_descripcion: { type: 'string' },
-                  },
-                  required: ['producto_id', 'producto_nombre', 'producto_precio'],
-                },
-              },
-              {
-                type: 'function',
-                name: 'buscar_productos',
-                description: 'Busca productos en el catálogo de Todopolis por nombre, categoría o descripción',
-                parameters: {
-                  type: 'object',
-                  properties: { query: { type: 'string' } },
-                  required: ['query'],
-                },
-              },
-              {
-                type: 'function',
-                name: 'iniciar_pedido',
-                description: 'Abre el formulario de compra para que el cliente haga su pedido',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    producto_id: { type: 'string' },
-                    producto_nombre: { type: 'string' },
-                    precio: { type: 'number' },
-                  },
-                  required: ['producto_id', 'producto_nombre', 'precio'],
-                },
-              },
-            ],
-            tool_choice: 'auto',
           },
         })
       }
@@ -302,7 +256,7 @@ export function VoiceLucy() {
       await pc.setLocalDescription(offer)
 
       const sdpRes = await fetch(
-        'https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2025-06-03',
+        'https://api.openai.com/v1/realtime/calls',
         {
           method: 'POST',
           headers: {
