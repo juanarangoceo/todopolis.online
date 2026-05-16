@@ -39,8 +39,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ])
 
   const productRoutes: MetadataRoute.Sitemap = productSlugs
-    .filter(({ category }: { category?: string }) => category !== 'bienestar-intimo')
-    .map(({ slug }: { slug: string }) => ({
+    .filter(({ category }) => category !== 'bienestar-intimo')
+    .map(({ slug }) => ({
       url: `${BASE_URL}/producto/${slug}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,

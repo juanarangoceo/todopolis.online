@@ -98,7 +98,7 @@ export async function getSanityProductBySlug(slug: string) {
   }
 }
 
-export async function getAllProductSlugs(): Promise<{ slug: string }[]> {
+export async function getAllProductSlugs(): Promise<{ slug: string; category?: string }[]> {
   try {
     return await getSanityClient().fetch(ALL_SLUGS_QUERY, {}, {
       next: { revalidate: 86400, tags: ['products'] },
