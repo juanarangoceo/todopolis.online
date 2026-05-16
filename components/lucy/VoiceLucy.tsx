@@ -99,27 +99,31 @@ export function VoiceLucy() {
     let result: any = { ok: true }
 
     if (name === 'mostrar_producto') {
-      let imagen: string | undefined = args.producto_imagen
-      let descripcion: string | undefined = args.producto_descripcion
-      // El system prompt NO incluye URLs de imagen — las resolvemos por slug.
-      if ((!imagen || !descripcion) && args.producto_id) {
-        try {
-          const res = await fetch(`/api/voice-products?slug=${encodeURIComponent(args.producto_id)}`)
-          const found: Product[] = await res.json()
-          if (found[0]) {
-            imagen = imagen ?? found[0].imagen
-            descripcion = descripcion ?? found[0].descripcion
-          }
-        } catch { /* sin imagen es OK, igual mostramos texto */ }
-      }
+      // Pintamos lo que ya sabemos inmediatamente — sin esperar el fetch de imagen.
       setFeaturedProduct({
         id: args.producto_id,
         nombre: args.producto_nombre,
         precio: args.producto_precio,
         precio_formateado: `$${Number(args.producto_precio).toLocaleString('es-CO')} COP`,
-        imagen,
-        descripcion,
+        imagen: undefined,
+        descripcion: undefined,
       })
+      // En background resolvemos la imagen y descripción por slug, sin bloquear
+      // el function_call_output: si tardamos demasiado, Lucy se queda trabada.
+      if (args.producto_id) {
+        fetch(`/api/voice-products?slug=${encodeURIComponent(args.producto_id)}`)
+          .then(r => r.json())
+          .then((found: Product[]) => {
+            if (found[0]) {
+              setFeaturedProduct(prev =>
+                prev && prev.id === args.producto_id
+                  ? { ...prev, imagen: found[0].imagen, descripcion: found[0].descripcion }
+                  : prev,
+              )
+            }
+          })
+          .catch(() => { /* sin imagen es OK */ })
+      }
     } else if (name === 'buscar_productos') {
       try {
         const res = await fetch(`/api/voice-products?q=${encodeURIComponent(args.query)}`)
@@ -246,10 +250,40 @@ export function VoiceLucy() {
             } catch { /* ignore malformed args */ }
             break
 
-          case 'error':
-            setError(msg.error?.message ?? 'Error en la llamada')
-            setCallStatus('error')
+          // El usuario empezó a hablar mientras Lucy hablaba: OpenAI cancela la
+          // respuesta automáticamente. Reseteamos UI para que no quede "speaking".
+          case 'input_audio_buffer.speech_started':
+            setIsLucySpeaking(false)
+            lucyBufferRef.current = ''
             break
+
+          // Garantizamos que el estado quede limpio al final de cada turno de Lucy
+          case 'response.done':
+          case 'response.cancelled':
+            setIsLucySpeaking(false)
+            if (lucyBufferRef.current.trim()) {
+              setTranscript(prev => [
+                ...prev.slice(-4),
+                { role: 'lucy', text: lucyBufferRef.current.trim() },
+              ])
+              lucyBufferRef.current = ''
+            }
+            break
+
+          case 'error': {
+            const errMsg = msg.error?.message ?? 'Error en la llamada'
+            console.error('[voice-lucy] error event:', msg.error)
+            // Algunos errores son recuperables (p.ej. cancelaciones por interrupción).
+            // Solo cortamos la llamada si es un error realmente fatal.
+            const fatal = /api key|unauthorized|forbidden|rate limit|connection/i.test(errMsg)
+            if (fatal) {
+              setError(errMsg)
+              setCallStatus('error')
+            } else {
+              setIsLucySpeaking(false)
+            }
+            break
+          }
         }
       }
 
