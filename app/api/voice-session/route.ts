@@ -73,13 +73,15 @@ export async function POST() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-realtime-preview',
-      voice: 'shimmer',
-      modalities: ['audio', 'text'],
-      instructions: SYSTEM_PROMPT,
-      turn_detection: { type: 'server_vad' },
-      tools: TOOLS,
-      tool_choice: 'auto',
+      session: {
+        model: 'gpt-realtime-2',
+        voice: 'shimmer',
+        modalities: ['audio', 'text'],
+        instructions: SYSTEM_PROMPT,
+        turn_detection: { type: 'server_vad' },
+        tools: TOOLS,
+        tool_choice: 'auto',
+      },
     }),
   })
 
