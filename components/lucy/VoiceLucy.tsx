@@ -256,7 +256,7 @@ export function VoiceLucy() {
       await pc.setLocalDescription(offer)
 
       const sdpRes = await fetch(
-        'https://api.openai.com/v1/realtime?model=gpt-realtime-2',
+        'https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2025-06-03',
         {
           method: 'POST',
           headers: {
