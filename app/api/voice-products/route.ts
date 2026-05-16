@@ -34,15 +34,15 @@ export async function GET(request: Request) {
       const needle = normalize(q)
       const tokens = needle.split(/\s+/).filter(Boolean)
 
-      products = all
-        .map((p: any) => {
-          const haystack = normalize(
-            [p.name, p.category, p.descripcion].filter(Boolean).join(' '),
-          )
-          // Score por cuántos tokens del query aparecen como substring
-          const hits = tokens.filter((t) => haystack.includes(t)).length
-          return { p, hits }
-        })
+      const scored: { p: any; hits: number }[] = all.map((p: any) => {
+        const haystack = normalize(
+          [p.name, p.category, p.descripcion].filter(Boolean).join(' '),
+        )
+        const hits = tokens.filter((t) => haystack.includes(t)).length
+        return { p, hits }
+      })
+
+      products = scored
         .filter((x) => x.hits > 0)
         .sort((a, b) => b.hits - a.hits)
         .slice(0, 6)
