@@ -182,18 +182,7 @@ export function VoiceLucy() {
       dcRef.current = dc
 
       dc.onopen = () => {
-        sendEvent({
-          type: 'session.update',
-          session: {
-            input_audio_transcription: { model: 'whisper-1' },
-            turn_detection: {
-              type: 'server_vad',
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 700,
-            },
-          },
-        })
+        // Configuración ya enviada al crear el client_secret en el servidor
       }
 
       dc.onmessage = (e) => {
