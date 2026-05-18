@@ -5,7 +5,6 @@ import './globals.css'
 import { FavoritesProvider } from '@/app/providers/favorites-provider'
 import { CartProvider } from '@/app/providers/cart-provider'
 import { LucyChatButton } from '@/components/lucy/lucy-chat-button'
-import { VoiceLucy } from '@/components/lucy/VoiceLucy'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
@@ -83,7 +82,6 @@ export default function RootLayout({
         <FavoritesProvider>
           <CartProvider>
             {children}
-            <VoiceLucy />
             <LucyChatButton />
           </CartProvider>
         </FavoritesProvider>

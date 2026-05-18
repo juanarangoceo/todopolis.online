@@ -48,6 +48,19 @@ export async function POST(request: NextRequest) {
     const payload = JSON.parse(body)
     console.log('Revalidating due to Sanity publish:', payload._type, payload._id)
 
+    if (payload._type === 'voiceAssistant') {
+      // El payload del webhook puede traer la projection "productSlug" o, si se
+      // configuró sin proyección custom, la referencia cruda product._ref.
+      const voiceProductSlug: string | undefined =
+        payload.productSlug ?? payload.product?.slug?.current
+      revalidateTag('voice-assistants', 'max')
+      if (voiceProductSlug) {
+        revalidateTag(`voice-assistant-${voiceProductSlug}`, 'max')
+        revalidatePath(`/producto/${voiceProductSlug}`)
+      }
+      return NextResponse.json({ revalidated: true, timestamp: new Date().toISOString() })
+    }
+
     revalidateTag('products', 'max')
     const productSlug = payload.slug?.current ?? payload._id
     revalidateTag(`product-${productSlug}`, 'max')

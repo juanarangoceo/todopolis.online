@@ -13,10 +13,11 @@ import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 import { GlobalSearch } from '@/components/global-search'
 import { StorePolicies } from '@/components/store-policies'
-import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries'
+import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings, hasVoiceAssistantForProduct } from '@/lib/sanity/queries'
 import Link from 'next/link'
 import { SanityProduct } from '@/lib/types'
 import { AgeGate } from '@/components/age-gate'
+import { VoiceLucy } from '@/components/lucy/VoiceLucy'
 
 export async function generateStaticParams() {
   const slugs = await getAllProductSlugs()
@@ -73,6 +74,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   }
 
   const storeSettings = await getSanityStoreSettings()
+  const hasVoiceAssistant = await hasVoiceAssistantForProduct(slug)
 
   // Fetch all products to build suggested + more sections
   const sanityProducts = await getSanityProducts().catch(() => [])
@@ -333,6 +335,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </section>
         )}
       </main>
+
+      {hasVoiceAssistant && (
+        <VoiceLucy
+          product={{
+            slug: adaptedProduct.slug,
+            name: adaptedProduct.name,
+            price: adaptedProduct.price,
+            image: adaptedProduct.image || null,
+            shortDescription: adaptedProduct.shortDescription || null,
+          }}
+        />
+      )}
 
       <Footer />
     </div>

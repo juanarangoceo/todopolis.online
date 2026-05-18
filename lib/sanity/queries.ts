@@ -176,6 +176,24 @@ const ARTICLE_DETAIL_QUERY = `*[_type == "article" && slug.current == $slug][0] 
 
 const ALL_ARTICLE_SLUGS_QUERY = `*[_type == "article" && defined(slug.current)]{ "slug": slug.current }`
 
+// ─── Voice assistant queries ─────────────────────────────────────────────────
+
+const VOICE_ASSISTANT_BY_PRODUCT_QUERY = `*[_type == "voiceAssistant" && enabled == true && product->slug.current == $slug][0] {
+  _id,
+  "productSlug": product->slug.current
+}`
+
+export async function hasVoiceAssistantForProduct(slug: string): Promise<boolean> {
+  try {
+    const result = await getSanityClient().fetch(VOICE_ASSISTANT_BY_PRODUCT_QUERY, { slug }, {
+      next: { revalidate: 86400, tags: ['voice-assistants', `voice-assistant-${slug}`] },
+    })
+    return Boolean(result?._id)
+  } catch {
+    return false
+  }
+}
+
 export async function getArticles(): Promise<SanityArticle[]> {
   try {
     return await getSanityClient().fetch(ARTICLES_LIST_QUERY, {}, {

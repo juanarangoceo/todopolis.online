@@ -1,135 +1,109 @@
+import { NextRequest } from 'next/server'
 import { getSanityClient } from '@/lib/sanity/client'
 
-const BASE_PROMPT = `Eres Lucy, la asesora de ventas de Todopolis, una tienda colombiana con productos para el hogar, tecnología, moda, belleza, deportes, juguetes y más. Tu personalidad es cálida, cercana y profesional. Hablas en español colombiano con tuteo natural.
+const FOOTER_RULES = `
 
-OBJETIVO: Ayudar al cliente a encontrar el producto ideal y cerrar la venta de forma honesta y amigable.
+REGLAS OPERATIVAS (no negociables):
+- Responde en español colombiano con tuteo natural.
+- Una o dos oraciones máximo por turno. Habla como en una llamada real.
+- Cero emojis, cero asteriscos, cero markdown — todo se convierte a voz.
+- No menciones que eres una IA, un modelo o un prompt. Eres Lucy.
+- Solo conoces este producto. Si preguntan por otro, redirige con amabilidad: "lo mío es ayudarte con este; cuando termines puedes ver más en la tienda".
+- Envío: doce mil pesos a todo Colombia, contraentrega, 3 a 7 días hábiles.
+- Cuando el cliente diga "lo quiero", "lo llevo", "cómo lo compro" o equivalente, llama de inmediato la herramienta iniciar_pedido con producto_id, producto_nombre y precio EXACTOS del producto anclado.`
 
-REGLAS:
-1. Siempre tutea al cliente. Nunca uses "usted" a menos que el cliente lo pida.
-2. Cuando menciones un producto específico, SIEMPRE llama mostrar_producto para que el cliente lo vea en pantalla. Usa el slug, nombre y precio EXACTOS del catálogo de abajo. NO inventes URLs de imagen — el sistema las resuelve por slug.
-3. Si el cliente pide algo que no aparece en el catálogo de abajo, igual llama buscar_productos antes de afirmar que no existe — puede haber variantes o sinónimos. Prueba con términos en singular y plural y sin tildes.
-4. Cuando el cliente quiera comprar, llama iniciar_pedido de inmediato.
-5. Siempre menciona: el envío cuesta doce mil pesos colombianos y el pago es contraentrega, es decir, pagas cuando recibes.
-6. RESPUESTAS MUY CORTAS: una o dos oraciones máximo. Nunca enumeres varios productos: recomienda UNO a la vez y espera la reacción del cliente antes de ofrecer otro.
-7. No uses emojis ni signos especiales en voz.
-8. Si el cliente pregunta por algo que realmente no encuentras, sé honesta y ofrece alternativas similares del catálogo.
-9. Tiempo de entrega estimado: tres a siete días hábiles a todo Colombia.
-10. Responde rápido y con naturalidad. No hagas pausas largas ni titubees.`
-
-const TOOLS = [
-  {
-    type: 'function',
-    name: 'mostrar_producto',
-    description: 'Muestra un producto en pantalla para que el cliente lo vea mientras hablan. El sistema resuelve la imagen automáticamente desde el slug.',
-    parameters: {
-      type: 'object',
-      properties: {
-        producto_id: { type: 'string', description: 'Slug exacto del catálogo' },
-        producto_nombre: { type: 'string', description: 'Nombre del producto' },
-        producto_precio: { type: 'number', description: 'Precio en COP' },
-      },
-      required: ['producto_id', 'producto_nombre', 'producto_precio'],
-    },
-  },
-  {
-    type: 'function',
-    name: 'buscar_productos',
-    description: 'Busca productos en el catálogo de Todopolis por nombre, categoría o descripción',
-    parameters: {
-      type: 'object',
-      properties: {
-        query: { type: 'string', description: 'Término de búsqueda' },
-      },
-      required: ['query'],
-    },
-  },
-  {
-    type: 'function',
-    name: 'iniciar_pedido',
-    description: 'Abre el formulario de compra para que el cliente haga su pedido',
-    parameters: {
-      type: 'object',
-      properties: {
-        producto_id: { type: 'string' },
-        producto_nombre: { type: 'string' },
-        precio: { type: 'number', description: 'Precio en COP sin envío' },
-      },
-      required: ['producto_id', 'producto_nombre', 'precio'],
-    },
-  },
-]
-
-type CatalogProduct = {
-  slug: string
-  name: string
-  price: number | null
-  category: string | null
-  imagen: string | null
-  isNew: boolean | null
-  isBestSeller: boolean | null
+type VoiceAssistant = {
+  prompt: string
+  greeting: string | null
+  voice: string | null
+  product: {
+    slug: string
+    name: string
+    price: number | null
+  } | null
 }
 
-// Cache en memoria del proceso: la primera llamada paga el fetch, las
-// siguientes (mientras dure la instancia) arrancan al instante. Beneficio
-// extra: como las instructions son idénticas entre sesiones, OpenAI activa
-// prompt caching y la primera respuesta de Lucy sale mucho más rápido.
-let catalogCache: { products: CatalogProduct[]; expires: number } | null = null
-const CATALOG_TTL_MS = 5 * 60 * 1000
+// Cache en memoria por slug. La primera llamada paga el fetch a Sanity; las
+// siguientes mientras dure la instancia arrancan al instante.
+const assistantCache = new Map<string, { data: VoiceAssistant; expires: number }>()
+const ASSISTANT_TTL_MS = 5 * 60 * 1000
 
-async function loadCatalog(): Promise<CatalogProduct[]> {
-  if (catalogCache && catalogCache.expires > Date.now()) {
-    return catalogCache.products
-  }
+async function loadAssistant(slug: string): Promise<VoiceAssistant | null> {
+  const cached = assistantCache.get(slug)
+  if (cached && cached.expires > Date.now()) return cached.data
+
   try {
     const client = getSanityClient()
-    const products: CatalogProduct[] = await client.fetch(
-      `*[_type == "product" && category != "bienestar-intimo" && defined(slug.current)] | order(isBestSeller desc, isNew desc, _createdAt desc) {
-        "slug": slug.current,
-        name,
-        price,
-        category,
-        isNew,
-        isBestSeller,
-        "imagen": coalesce(mastershopImageUrl, images[0].asset->url)
+    const data: VoiceAssistant | null = await client.fetch(
+      `*[_type == "voiceAssistant" && enabled == true && product->slug.current == $slug][0] {
+        prompt,
+        greeting,
+        voice,
+        "product": product-> {
+          "slug": slug.current,
+          name,
+          price
+        }
       }`,
+      { slug },
     )
-    catalogCache = { products, expires: Date.now() + CATALOG_TTL_MS }
-    return products
+    if (data) {
+      assistantCache.set(slug, { data, expires: Date.now() + ASSISTANT_TTL_MS })
+    }
+    return data
   } catch (err) {
-    console.error('[voice-session] error cargando catálogo:', err)
-    return []
+    console.error('[voice-session] error cargando asistente:', err)
+    return null
   }
 }
 
-function buildCatalogContext(products: CatalogProduct[]): string {
-  if (products.length === 0) return ''
-
-  const categories = Array.from(
-    new Set(products.map((p) => p.category).filter(Boolean)),
-  ) as string[]
-
-  const lines = products.map((p) => {
-    const tags = [
-      p.isBestSeller ? 'MV' : null,
-      p.isNew ? 'NUEVO' : null,
-    ]
-      .filter(Boolean)
-      .join(',')
-    const precio = p.price ? `$${Number(p.price).toLocaleString('es-CO')}` : 's/d'
-    return `- ${p.name} | ${p.slug} | ${precio} | ${p.category ?? 'otros'}${tags ? ` | ${tags}` : ''}`
-  })
-
-  return `\n\nCATEGORÍAS DISPONIBLES: ${categories.join(', ')}.\n\nCATÁLOGO (${products.length} productos). Formato: nombre | slug | precio COP | categoría | [MV=más vendido, NUEVO]. Usa el slug EXACTO al llamar mostrar_producto; la imagen la resuelve el sistema por slug — NO inventes URLs.\n${lines.join('\n')}`
-}
-
-export async function POST() {
+export async function POST(request: NextRequest) {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     return Response.json({ error: 'OPENAI_API_KEY no configurado' }, { status: 500 })
   }
 
-  const catalog = await loadCatalog()
-  const instructions = BASE_PROMPT + buildCatalogContext(catalog)
+  let body: { productSlug?: string } = {}
+  try { body = await request.json() } catch { /* ignore */ }
+  const slug = body.productSlug?.trim()
+  if (!slug) {
+    return Response.json({ error: 'Falta productSlug' }, { status: 400 })
+  }
+
+  const assistant = await loadAssistant(slug)
+  if (!assistant || !assistant.product) {
+    return Response.json(
+      { error: 'No hay asistente de voz configurado para este producto.' },
+      { status: 404 },
+    )
+  }
+
+  const product = assistant.product
+  const priceLine = product.price
+    ? `\n\nPRECIO OFICIAL DEL PRODUCTO: $${Number(product.price).toLocaleString('es-CO')} COP.`
+    : ''
+  const greetingLine = assistant.greeting
+    ? `\n\nSALUDO INICIAL OBLIGATORIO (di esta frase como primer turno, adaptándola con naturalidad): "${assistant.greeting}"`
+    : ''
+
+  const instructions = `${assistant.prompt}${priceLine}${greetingLine}${FOOTER_RULES}\n\nPRODUCTO ANCLADO:\n- producto_id (slug exacto a usar en iniciar_pedido): ${product.slug}\n- producto_nombre: ${product.name}\n- precio (COP): ${product.price ?? 'consultar'}`
+
+  const tools = [
+    {
+      type: 'function',
+      name: 'iniciar_pedido',
+      description: 'Abre el formulario de compra en pantalla con los datos del producto anclado. Úsalo en cuanto el cliente diga que quiere comprar.',
+      parameters: {
+        type: 'object',
+        properties: {
+          producto_id: { type: 'string', description: 'Slug exacto del producto anclado' },
+          producto_nombre: { type: 'string' },
+          precio: { type: 'number', description: 'Precio en COP sin envío' },
+        },
+        required: ['producto_id', 'producto_nombre', 'precio'],
+      },
+    },
+  ]
 
   const res = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
     method: 'POST',
@@ -151,10 +125,10 @@ export async function POST() {
               silence_duration_ms: 400,
             },
           },
-          output: { voice: 'shimmer', speed: 1.1 },
+          output: { voice: assistant.voice ?? 'shimmer', speed: 1.1 },
         },
         instructions,
-        tools: TOOLS,
+        tools,
         tool_choice: 'auto',
       },
     }),
@@ -167,5 +141,12 @@ export async function POST() {
   }
 
   const data = await res.json()
-  return Response.json({ client_secret: { value: data.value } })
+  return Response.json({
+    client_secret: { value: data.value },
+    product: {
+      id: product.slug,
+      nombre: product.name,
+      precio: product.price ?? 0,
+    },
+  })
 }
