@@ -140,7 +140,7 @@ export function ProductHero({ product }: ProductHeroProps) {
           {/* Title block */}
           <div className="space-y-2">
             {showProductKicker && (
-              <p className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">
+              <p className="inline-block text-[11px] md:text-xs font-bold uppercase tracking-[0.18em] text-[#C2185B] bg-[#FFE8EE] px-2.5 py-1 rounded-full">
                 {product.name}
               </p>
             )}

@@ -72,7 +72,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Build image URL from Sanity asset reference
+    // Build image URL: prefer la primera imagen subida a Sanity; si no hay,
+    // caer en mastershopImageUrl (productos importados que nadie ha tocado).
     const imageRef = payload.images?.[0]?.asset?._ref
     let imageUrl: string | null = null
 
@@ -80,6 +81,8 @@ export async function POST(request: NextRequest) {
       // Convert Sanity asset ref to CDN URL: image-{id}-{width}x{height}-{format}
       const [, id, dimensions, format] = imageRef.split('-')
       imageUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}`
+    } else if (typeof payload.mastershopImageUrl === 'string' && payload.mastershopImageUrl) {
+      imageUrl = payload.mastershopImageUrl
     }
 
     const productRow = {
