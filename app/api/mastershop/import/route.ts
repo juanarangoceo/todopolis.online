@@ -48,7 +48,7 @@ Todopolis es una tienda online colombiana enfocada en productos de calidad con e
    - Autoridad: menciona si aplica datos, certificaciones, tiempo en el mercado
    - Escasez percibida: lenguaje que implique demanda alta sin mentir
    - Identidad: conecta el producto con quién quiere SER el cliente, no solo qué quiere TENER
-   - Microcompromiso: el CTA debe pedir el menor paso posible ("Ver mi pedido" > "Comprar ahora")
+   - CTA fuerte de cierre: el botón debe empujar a comprar AHORA, no a "ver" ni a "explorar". Prohibido usar verbos pasivos o de exploración ("Ver", "Explorar", "Descubrir", "Conocer", "Saber más", "Ver mi pedido", "Quiero saber más"). Siempre verbo de compra/acción.
 
 3. NARRATIVA DE TRANSFORMACIÓN
    - Antes: cómo se sentía la persona SIN el producto
@@ -94,13 +94,20 @@ TESTIMONIOS (3 en total):
 - Rating: el primero 5 estrellas, el segundo 5 estrellas, el tercero 4 estrellas (más realismo)
 - Tono: como un mensaje de WhatsApp a un familiar, no como una reseña corporativa
 
+HERO CTA (texto del botón principal):
+- Máximo 4 palabras, en imperativo, orientado a CERRAR la venta.
+- Ejemplos buenos: "Comprar ahora", "Lo quiero ya", "Pídelo hoy", "Ordénalo ahora", "Llévalo a casa", "Asegura el tuyo".
+- Ejemplos PROHIBIDOS: "Ver mi pedido", "Ver más", "Descubrir", "Conocer", "Explorar", "Más info", "Saber más", cualquier verbo pasivo o de exploración.
+
 CTA HEADLINE:
-- Crea urgencia real (stock limitado, oferta por tiempo) sin mentir
-- Formato: pregunta o afirmación directa que conecte con el deseo principal
+- Crea urgencia real (stock limitado, oferta por tiempo) sin mentir.
+- Formato: afirmación directa que conecte con el deseo principal y empuje a comprar (no preguntas abiertas).
+- Debe sentirse como un cierre de venta, no como una invitación a navegar.
 
 CTA TEXT:
-- 2 oraciones. Primera refuerza el beneficio principal. Segunda reduce el miedo a comprar
-- Menciona garantía, envío o facilidad de compra si aplica
+- 2 oraciones cortas. Primera refuerza el beneficio principal. Segunda reduce el miedo a comprar.
+- Menciona contraentrega ("paga al recibir"), envío a todo Colombia o facilidad de compra. Nunca prometas devoluciones gratis ni garantías que la tienda no ofrece.
+- Termina con una orden de compra o un empuje al botón (ej: "asegura el tuyo antes de que se agote").
 
 PREGUNTAS FRECUENTES (faqs, exactamente 5):
 - Preguntas reales que un comprador colombiano haría antes de pagar
@@ -117,7 +124,7 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin co
   "improvedDescription": "✅ Bullet 1 concreto y poderoso\\n🔥 Bullet 2 con resultado específico\\n⭐ Bullet 3 que conecta con identidad",
   "heroTitle": "Título máximo 8 palabras orientado al resultado",
   "heroSubtitle": "Primera oración amplía beneficio. Segunda da prueba social o credibilidad.",
-  "heroCta": "Texto botón máximo 4 palabras",
+  "heroCta": "Verbo de compra en imperativo, máximo 4 palabras (ej: Comprar ahora, Lo quiero ya, Pídelo hoy)",
   "benefits": [
     { "icon": "emoji", "title": "Resultado en 3-5 palabras", "description": "Oración de resultado + oración emocional." },
     { "icon": "emoji", "title": "Resultado diferente al anterior", "description": "Oración de resultado + oración emocional." },
@@ -136,8 +143,8 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin co
     { "name": "Nombre colombiano diferente", "role": "Ciudad diferente · contexto", "rating": 5, "text": "Historia corta con detalle específico de tiempo o uso." },
     { "name": "Nombre colombiano diferente", "role": "Ciudad diferente · contexto", "rating": 4, "text": "Historia positiva con una pequeña crítica constructiva que aumente credibilidad." }
   ],
-  "ctaHeadline": "Titular de urgencia o conexión con deseo principal",
-  "ctaText": "Oración de beneficio final. Oración que reduce el miedo o fricción de compra.",
+  "ctaHeadline": "Titular de cierre con urgencia honesta que empuje a comprar (afirmación, no pregunta)",
+  "ctaText": "Oración de beneficio final que cierra la venta. Segunda oración con contraentrega o facilidad de compra que empuja al botón.",
   "faqs": [
     { "question": "¿Pregunta real que haría un comprador colombiano?", "answer": "Respuesta directa y tranquilizadora en 2-3 oraciones." },
     { "question": "¿Segunda pregunta relevante?", "answer": "Respuesta directa." },

@@ -8,10 +8,20 @@ import { usePathname } from 'next/navigation';
 
 function getOrCreateSessionId() {
   if (typeof window === 'undefined') return '';
-  let sid = sessionStorage.getItem('lucy_session_id');
+  // localStorage para sobrevivir cierre del navegador. Migramos del antiguo
+  // sessionStorage si existe para no perder la conversación activa.
+  let sid = localStorage.getItem('lucy_session_id');
+  if (!sid) {
+    const legacy = sessionStorage.getItem('lucy_session_id');
+    if (legacy) {
+      sid = legacy;
+      localStorage.setItem('lucy_session_id', legacy);
+      sessionStorage.removeItem('lucy_session_id');
+    }
+  }
   if (!sid) {
     sid = `lucy_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    sessionStorage.setItem('lucy_session_id', sid);
+    localStorage.setItem('lucy_session_id', sid);
   }
   return sid;
 }

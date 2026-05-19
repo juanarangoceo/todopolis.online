@@ -58,9 +58,8 @@ export function SmartBanner({ banner, allProducts = [] }: SmartBannerProps) {
                             src={product.image || '/placeholder.jpg'}
                             alt={product.name}
                             fill
-                            sizes="10vw"
+                            sizes="(max-width: 768px) 25vw, 12vw"
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            unoptimized
                             loading="lazy"
                           />
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent py-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center">
@@ -88,8 +87,8 @@ export function SmartBanner({ banner, allProducts = [] }: SmartBannerProps) {
                           src={product.image || '/placeholder.jpg'}
                           alt={product.name}
                           fill
+                          sizes="60px"
                           className="object-cover"
-                          unoptimized
                           loading="lazy"
                         />
                       </Link>

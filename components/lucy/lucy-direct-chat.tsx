@@ -17,13 +17,14 @@ interface LucyDirectChatProps {
 
 const WELCOME_MSG: Message = {
   role: 'model',
-  text: '¡Hola! 👋 Soy Lucy, tu asesora en Todopolis. ¿Qué estás buscando hoy? Cuéntame y te ayudo a encontrar algo perfecto 🛍️',
+  text: 'Hola, soy Lucy, asesora de Todopolis. ¿Qué estás buscando hoy o qué te gustaría resolver?',
 };
 
 export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
   const [messages, setMessages] = useState<Message[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -34,6 +35,33 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
   useEffect(() => {
     setTimeout(() => inputRef.current?.focus(), 300);
   }, []);
+
+  // Reanudar conversación si el usuario reabre el navegador. Solo reemplaza
+  // los mensajes si la sesión guardada tiene contenido real.
+  useEffect(() => {
+    if (!sessionId || historyLoaded) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/lucy-chat/history?sessionId=${encodeURIComponent(sessionId)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const prior: Message[] = Array.isArray(data?.messages) ? data.messages : [];
+        // La conversación persistida ya incluye el mensaje de bienvenida porque
+        // el API guarda el array completo. Usarla como fuente de verdad si trae
+        // al menos un turno del usuario.
+        const hasUserTurn = prior.some((m) => m.role === 'user');
+        if (!cancelled && hasUserTurn) {
+          setMessages(prior);
+        }
+      } catch {
+        /* offline o sesión nueva: dejamos el welcome */
+      } finally {
+        if (!cancelled) setHistoryLoaded(true);
+      }
+    })();
+    return () => { cancelled = true };
+  }, [sessionId, historyLoaded]);
 
   const sendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,6 +183,7 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
       <form
         onSubmit={sendMessage}
         className="flex gap-2 p-3 border-t border-[#EDD2F3]/30 bg-white/80 backdrop-blur-sm shrink-0"
+        style={{ touchAction: 'manipulation' }}
       >
         <input
           ref={inputRef}
@@ -162,13 +191,26 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Escríbele a Lucy..."
-          disabled={isLoading}
-          className="flex-1 bg-[#FFF5F8] border border-[#EDD2F3]/50 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFB4AC]/50 placeholder:text-foreground/40 disabled:opacity-50"
+          readOnly={isLoading}
+          enterKeyHint="send"
+          autoComplete="off"
+          autoCorrect="on"
+          spellCheck
+          inputMode="text"
+          className="flex-1 bg-[#FFF5F8] border border-[#EDD2F3]/50 rounded-full px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#FFB4AC]/50 placeholder:text-foreground/40"
+          style={{ fontSize: '16px', touchAction: 'manipulation' }}
         />
         <button
           type="submit"
           disabled={isLoading || !input.trim()}
-          className="w-10 h-10 shrink-0 bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+          onPointerDown={(e) => {
+            // Evita que el input pierda foco antes del submit (iOS cierra el
+            // teclado y la reflow puede tragarse el click).
+            if (document.activeElement === inputRef.current) e.preventDefault()
+          }}
+          className="w-11 h-11 shrink-0 bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] text-white rounded-full flex items-center justify-center active:scale-95 hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          aria-label="Enviar mensaje"
         >
           <Send className="w-4 h-4" />
         </button>

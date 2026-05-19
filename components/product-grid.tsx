@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
 import { Product } from '@/lib/types';
 import { ProductCard } from './product-card';
 import { Package, Sparkles } from 'lucide-react';
@@ -7,7 +10,33 @@ interface ProductGridProps {
   searchQuery?: string;
 }
 
+const PAGE_SIZE = 24;
+
 export function ProductGrid({ products, searchQuery }: ProductGridProps) {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Resetear visibleCount cuando cambia el set de productos (búsqueda/categoría).
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [products]);
+
+  useEffect(() => {
+    if (visibleCount >= products.length) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, products.length));
+        }
+      },
+      { rootMargin: '600px 0px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [visibleCount, products.length]);
+
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4">
@@ -21,7 +50,7 @@ export function ProductGrid({ products, searchQuery }: ProductGridProps) {
           No encontramos resultados
         </h3>
         <p className="text-foreground/60 text-center max-w-md font-serif">
-          {searchQuery 
+          {searchQuery
             ? `No hay productos que coincidan con "${searchQuery}". Intenta con otra busqueda.`
             : 'No hay productos disponibles en este momento.'
           }
@@ -30,11 +59,21 @@ export function ProductGrid({ products, searchQuery }: ProductGridProps) {
     );
   }
 
+  const visibleProducts = products.slice(0, visibleCount);
+  const hasMore = visibleCount < products.length;
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-8">
-      {products.map((product, index) => (
-        <ProductCard key={product.id} product={product} index={index} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-8">
+        {visibleProducts.map((product, index) => (
+          <ProductCard key={product.id} product={product} index={index} />
+        ))}
+      </div>
+      {hasMore && (
+        <div ref={sentinelRef} className="h-10 mt-6 flex items-center justify-center">
+          <div className="text-xs text-foreground/40 animate-pulse">Cargando más productos…</div>
+        </div>
+      )}
+    </>
   );
 }

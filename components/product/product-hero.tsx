@@ -34,7 +34,15 @@ export function ProductHero({ product }: ProductHeroProps) {
 
   const images: string[] = (product as any).images ?? (product.image ? [product.image] : ['/placeholder.jpg']);
   const heroTitle = (product as any).heroTitle ?? product.name;
-  const heroCta = (product as any).heroCta ?? 'Agregar al carrito';
+  // Si el heroTitle persuasivo y el nombre real difieren, mostramos el nombre
+  // como kicker arriba del título para que el cliente sepa qué producto es.
+  const showProductKicker = !!product.name && heroTitle !== product.name;
+  const rawHeroCta = (product as any).heroCta ?? 'Comprar ahora';
+  // Guardrail: CTAs débiles ("Ver mi pedido", "Saber más", etc.) generados por
+  // versiones viejas del prompt → forzar a un cierre fuerte.
+  const heroCta = /^(ver|explor|descub|conoc|saber|m[áa]s\s+info)/i.test(rawHeroCta.trim())
+    ? 'Comprar ahora'
+    : rawHeroCta;
   
   const discount = (product as any).originalPrice 
     ? Math.round((1 - product.price / (product as any).originalPrice) * 100) 
@@ -129,10 +137,17 @@ export function ProductHero({ product }: ProductHeroProps) {
 
         {/* Product Info — full width, desktop version gets its own column from page layout */}
         <div className="space-y-6">
-          {/* Title */}
-          <h1 className="font-serif text-xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
-            {heroTitle}
-          </h1>
+          {/* Title block */}
+          <div className="space-y-2">
+            {showProductKicker && (
+              <p className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">
+                {product.name}
+              </p>
+            )}
+            <h1 className="font-serif text-xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
+              {heroTitle}
+            </h1>
+          </div>
 
           {/* Category & Rating */}
           <div className="flex items-center justify-between">
@@ -251,7 +266,7 @@ export function ProductHero({ product }: ProductHeroProps) {
           <div className="grid grid-cols-3 gap-3 md:gap-4 pt-4 md:pt-6">
             <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/50">
               <Truck className="w-6 h-6 text-[#F43F5E]" />
-              <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">Envío gratis +$150k</span>
+              <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">Envío a todo Colombia</span>
             </div>
             <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/50">
               <Shield className="w-6 h-6 text-[#10B981]" />

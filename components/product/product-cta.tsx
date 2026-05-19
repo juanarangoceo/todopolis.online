@@ -88,7 +88,7 @@ export function ProductCTA({ product }: ProductCTAProps) {
                 <div className="flex flex-wrap justify-center gap-3 mt-2">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 text-xs font-bold text-foreground/80 shadow-sm">
                     <Truck className="w-3.5 h-3.5 text-[#3B82F6]" />
-                    Envío gratis
+                    Envío a todo Colombia
                   </div>
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#10B981]/10 text-xs font-bold text-[#10B981] shadow-sm border border-[#10B981]/20">
                     <CheckCircle2 className="w-3.5 h-3.5" />

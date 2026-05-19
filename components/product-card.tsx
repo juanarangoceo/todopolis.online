@@ -38,14 +38,14 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   return (
     <>
-    <Link 
+    <Link
       href={`/producto/${(product as any).slug || product.id}`}
       className="group block"
-      style={{ 
-        animationDelay: `${index * 80}ms`,
-        animation: 'fadeInUp 0.5s ease-out forwards',
+      style={index < 8 ? {
+        animationDelay: `${index * 60}ms`,
+        animation: 'fadeInUp 0.45s ease-out forwards',
         opacity: 0
-      }}
+      } : undefined}
     >
       <article className="relative h-full">
         {/* Card with glassmorphism */}
@@ -73,10 +73,10 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               src={product.image}
               alt={product.name}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               priority={index < 4}
-              unoptimized={true}
+              loading={index < 4 ? undefined : 'lazy'}
             />
             
             {/* Overlay gradient */}
