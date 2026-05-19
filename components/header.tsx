@@ -164,7 +164,7 @@ export function Header() {
 
       {/* ── Mobile drawer ── */}
       <div
-        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-[55] md:hidden transition-opacity duration-300 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         aria-hidden={!menuOpen}
       >
         {/* Backdrop */}

@@ -8,20 +8,14 @@ import { usePathname } from 'next/navigation';
 
 function getOrCreateSessionId() {
   if (typeof window === 'undefined') return '';
-  // localStorage para sobrevivir cierre del navegador. Migramos del antiguo
-  // sessionStorage si existe para no perder la conversación activa.
-  let sid = localStorage.getItem('lucy_session_id');
-  if (!sid) {
-    const legacy = sessionStorage.getItem('lucy_session_id');
-    if (legacy) {
-      sid = legacy;
-      localStorage.setItem('lucy_session_id', legacy);
-      sessionStorage.removeItem('lucy_session_id');
-    }
-  }
+  // sessionStorage para que cada visita al sitio arranque una conversación
+  // fresca. Al cerrar el navegador/pestaña se borra y Lucy empieza limpia.
+  // Limpiamos también localStorage legacy si quedó por la versión anterior.
+  try { localStorage.removeItem('lucy_session_id') } catch { /* noop */ }
+  let sid = sessionStorage.getItem('lucy_session_id');
   if (!sid) {
     sid = `lucy_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    localStorage.setItem('lucy_session_id', sid);
+    sessionStorage.setItem('lucy_session_id', sid);
   }
   return sid;
 }

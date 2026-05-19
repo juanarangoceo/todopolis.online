@@ -11,25 +11,62 @@ function getSupabaseClient() {
   );
 }
 
-async function getProductsCatalog() {
+type CatalogProduct = {
+  id: string
+  slug: string
+  name: string
+  price: number | null
+  image_url: string | null
+  category: string | null
+  is_new: boolean | null
+  is_best_seller: boolean | null
+}
+
+const CATALOG_TTL_MS = 5 * 60 * 1000
+const CATALOG_MAX = 200
+let catalogCache: { products: CatalogProduct[]; context: string; expires: number } | null = null
+
+async function fetchProductsFromSupabase(): Promise<CatalogProduct[]> {
   const supabase = getSupabaseClient();
   const { data } = await supabase
     .from('products')
-    .select('id, slug, name, short_description, price, image_url, category, is_new, is_best_seller')
+    .select('id, slug, name, price, image_url, category, is_new, is_best_seller')
     .not('price', 'is', null)
     .not('slug', 'eq', 'test-webhook-producto')
     .order('created_at', { ascending: false });
 
-  return data ?? [];
+  return (data ?? []) as CatalogProduct[];
 }
 
-function buildProductContext(products: any[]) {
+// Prioriza bestsellers + nuevos + con imagen, recorta a CATALOG_MAX para no
+// inflar tokens del prompt en cada turno.
+function prioritize(products: CatalogProduct[]): CatalogProduct[] {
+  if (products.length <= CATALOG_MAX) return products
+  const score = (p: CatalogProduct) =>
+    (p.is_best_seller ? 4 : 0) +
+    (p.is_new ? 2 : 0) +
+    (p.image_url ? 1 : 0)
+  return [...products].sort((a, b) => score(b) - score(a)).slice(0, CATALOG_MAX)
+}
+
+function buildProductContext(products: CatalogProduct[]) {
   return products
     .map(
       (p) =>
         `- ${p.name} | Categoría: ${p.category ?? 'General'} | Precio: $${Number(p.price).toLocaleString('es-CO')} COP | Slug: ${p.slug}${p.is_new ? ' | NUEVO' : ''}${p.is_best_seller ? ' | MÁS VENDIDO' : ''} | Imagen: ${p.image_url ?? 'Sin imagen'}`
     )
     .join('\n');
+}
+
+async function getCatalog(): Promise<{ products: CatalogProduct[]; context: string }> {
+  if (catalogCache && catalogCache.expires > Date.now()) {
+    return { products: catalogCache.products, context: catalogCache.context }
+  }
+  const all = await fetchProductsFromSupabase()
+  const products = prioritize(all)
+  const context = buildProductContext(products)
+  catalogCache = { products, context, expires: Date.now() + CATALOG_TTL_MS }
+  return { products, context }
 }
 
 const LUCY_SYSTEM_PROMPT = (productContext: string, customerName: string | null) => {
@@ -106,8 +143,7 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
-    const products = await getProductsCatalog();
-    const productContext = buildProductContext(products);
+    const { products, context: productContext } = await getCatalog();
 
     // Cargar conversación previa para recuperar nombre del cliente (si existe).
     let existingConversation: { id: string; customer_name: string | null } | null = null;

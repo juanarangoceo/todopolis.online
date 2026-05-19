@@ -63,6 +63,13 @@ export function ProductHero({ product }: ProductHeroProps) {
       <div className="container mx-auto px-4">
         {/* Mobile-only: Image gallery inline */}
         <div className="lg:hidden space-y-4 mb-8">
+          {/* Product name kicker (mobile, antes de la imagen) */}
+          {showProductKicker && (
+            <p className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-[#C2185B] bg-[#FFE8EE] px-2.5 py-1 rounded-full">
+              {product.name}
+            </p>
+          )}
+
           {/* Sale Banner */}
           {discount > 0 && (
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#F43F5E] via-[#FF6B6B] to-[#F43F5E] p-2.5 sm:p-3 shadow-lg shadow-[#F43F5E]/30">
@@ -140,7 +147,7 @@ export function ProductHero({ product }: ProductHeroProps) {
           {/* Title block */}
           <div className="space-y-2">
             {showProductKicker && (
-              <p className="inline-block text-[11px] md:text-xs font-bold uppercase tracking-[0.18em] text-[#C2185B] bg-[#FFE8EE] px-2.5 py-1 rounded-full">
+              <p className="hidden lg:inline-block text-xs font-bold uppercase tracking-[0.18em] text-[#C2185B] bg-[#FFE8EE] px-2.5 py-1 rounded-full">
                 {product.name}
               </p>
             )}

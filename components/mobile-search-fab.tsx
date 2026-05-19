@@ -38,7 +38,7 @@ export function MobileSearchFab() {
     <button
       onClick={handleClick}
       className={cn(
-        "md:hidden fixed z-50 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500",
+        "md:hidden fixed z-30 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500",
         "bg-white/90 backdrop-blur-xl border-2 border-[#FFB4AC] shadow-lg shadow-[#FFB4AC]/30",
         "hover:bg-[#FFD5E5] hover:shadow-xl hover:shadow-[#FFB4AC]/40 active:scale-90",
         "top-24 right-4",
