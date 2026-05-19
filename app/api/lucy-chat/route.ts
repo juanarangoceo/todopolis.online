@@ -101,7 +101,7 @@ ${productContext}
 1. Apertura neutra: saluda, pregunta qué busca o qué problema quiere resolver.
 2. Discovery (1 a 2 preguntas máximo): entiende necesidad real.
 3. Captura del nombre cuando sea natural (ver sección DATOS DEL CLIENTE).
-4. Propuesta: recomienda UN producto del catálogo que encaje, con el beneficio clave en una sola frase. Si te piden ver el producto o foto, añade el tag <<<IMAGE:url-real-del-catalogo>>> (UNA imagen, una vez).
+4. Propuesta: recomienda UN producto del catálogo que encaje, con el beneficio clave en una sola frase.
 5. Trial close: "¿te lo agendamos para que llegue esta semana?" o "¿te llega mejor en la mañana o tarde?".
 6. Manejo de objeción (ver banco abajo). Después de rebatir, RE-CIERRA de inmediato.
 7. Toma de datos en cuanto haya señal de compra (ver más abajo).
@@ -122,6 +122,12 @@ Cuando tengas Nombre completo, Teléfono, Dirección y Ciudad, confirma con una 
 - "¿Y si no me sirve / no confío?" → Apoya en contraentrega + revisa al recibir. Una frase, una pregunta de cierre.
 - "Tengo que consultar con mi pareja/familia" → Valida y propone reservar con contraentrega para no perder la disponibilidad; la decisión final la toma cuando llegue.
 - "¿Es original / es de calidad?" → Confirma con honestidad lo que dice el catálogo, y refuerza con contraentrega como garantía.
+
+## ENVÍO DE IMÁGENES (regla estricta)
+El tag <<<IMAGE:url-real-del-catalogo>>> SOLO se emite cuando, en el ÚLTIMO mensaje del cliente, te pide explícitamente ver el producto o una foto. Palabras gatillo: "foto", "imagen", "véelo", "muéstrame", "cómo se ve", "puedo verlo", "tienes una imagen".
+- Si en ese turno el cliente NO lo pidió, NO incluyas el tag — aunque ya lo hayas mandado antes en la conversación. La imagen se manda UNA sola vez por pedido explícito.
+- Nunca repitas la imagen en mensajes siguientes a menos que el cliente vuelva a pedirla con palabras claras.
+- Cuando lo emitas, usa exactamente la URL del campo "Imagen" del catálogo para ESE producto. Una sola imagen por turno.
 
 ## REGLAS ABSOLUTAS
 - NUNCA inventes productos, precios, garantías médicas, certificaciones ni plazos.
@@ -233,6 +239,16 @@ export async function POST(req: NextRequest) {
     // Clean any residual PRODUCT tags just in case
     cleanText = cleanText.replace(/<<<PRODUCT:[^>]+>>>/g, '').trim();
 
+    // Extract IMAGE tag y limpiarlo del texto guardado. Si lo dejamos en el
+    // historial persistido, Gemini lo ve en turnos futuros y lo repite aunque
+    // el cliente no haya pedido foto.
+    let extractedImageUrl: string | null = null;
+    const imgMatch = cleanText.match(/<<<IMAGE:([^>]+)>>>/);
+    if (imgMatch) {
+      extractedImageUrl = imgMatch[1].trim();
+    }
+    cleanText = cleanText.replace(/<<<IMAGE:[^>]+>>>/g, '').trim();
+
     // Save/update conversation in Supabase
     if (sessionId) {
       const allMessages = [
@@ -260,6 +276,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       text: cleanText,
+      imageUrl: extractedImageUrl,
     });
   } catch (error) {
     console.error('Lucy chat error:', error);

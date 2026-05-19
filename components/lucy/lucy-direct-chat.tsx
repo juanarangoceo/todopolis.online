@@ -91,13 +91,14 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
         throw new Error(data.error || 'Error fetching chat');
       }
 
-      let newText = data.text ?? '¡Ay, se me cruzaron los cables! ¿Me repites? 🙈';
-      let extractedImage: string | undefined = undefined;
-
+      let newText: string = data.text ?? '¡Ay, se me cruzaron los cables! ¿Me repites? 🙈';
+      // El API ya devuelve la imagen como campo aparte. Mantenemos fallback
+      // por si el modelo emitió el tag inline (defensivo).
+      let extractedImage: string | undefined = typeof data.imageUrl === 'string' && data.imageUrl ? data.imageUrl : undefined;
       const imageMatch = newText.match(/<<<IMAGE:([^>]+)>>>/);
       if (imageMatch) {
-         extractedImage = imageMatch[1].trim();
-         newText = newText.replace(/<<<IMAGE:[^>]+>>>/g, '').trim();
+        if (!extractedImage) extractedImage = imageMatch[1].trim();
+        newText = newText.replace(/<<<IMAGE:[^>]+>>>/g, '').trim();
       }
 
       setMessages((prev) => [
