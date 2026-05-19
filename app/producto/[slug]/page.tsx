@@ -34,11 +34,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = `${product.name} | Todopolis`
   const description = product.shortDescription ?? `Compra ${product.name} en Todopolis. Envío rápido y los mejores precios.`
-  const images = product.images?.length
-    ? product.images.map((url: string) => ({ url, alt: product.name }))
-    : (product.mastershopImageUrl || product.image)
-    ? [{ url: (product.mastershopImageUrl || product.image), alt: product.name }]
-    : []
+  const uploadedImages: string[] = (product.images ?? []).filter((u: any): u is string => typeof u === 'string' && !!u)
+  const mastershopImage: string | undefined = product.mastershopImageUrl ?? product.image
+  const allImageUrls: string[] = mastershopImage
+    ? [mastershopImage, ...uploadedImages.filter((u) => u !== mastershopImage)]
+    : uploadedImages
+  const images = allImageUrls.map((url) => ({ url, alt: product.name }))
 
   const isAdult = product.category === 'bienestar-intimo'
 
@@ -110,7 +111,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     price: product.price ?? 0,
     originalPrice: (product as any).originalPrice,
     image: product.mastershopImageUrl ?? product.image ?? '',
-    images: product.images ?? (product.mastershopImageUrl ? [product.mastershopImageUrl] : product.image ? [product.image] : []),
+    images: (() => {
+      const uploaded = (product.images ?? []).filter((u: any): u is string => typeof u === 'string' && !!u)
+      const mastershop = product.mastershopImageUrl ?? product.image
+      const all = mastershop ? [mastershop, ...uploaded.filter((u) => u !== mastershop)] : uploaded
+      return all.length ? all : []
+    })(),
     category: product.category ?? 'Otros',
     rating: 4.8,
     isNew: product.isNew,
