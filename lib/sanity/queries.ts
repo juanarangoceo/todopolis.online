@@ -1,6 +1,26 @@
 import { getSanityClient } from './client'
 import { SanityArticle } from '../types'
 
+// Reintenta una consulta con backoff. Clave durante el build: prerenderizar
+// cientos de páginas dispara cientos de queries y la API de Sanity puede
+// devolver errores transitorios o rate-limit (429). Sin reintento, un fallo
+// transitorio en una página de detalle se convierte en un 404 permanente.
+async function withRetry<T>(fn: () => Promise<T>, retries = 8): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastError = err
+      if (attempt < retries) {
+        // Backoff exponencial con tope (500ms → 1s → 2s → … → 8s).
+        await new Promise((r) => setTimeout(r, Math.min(500 * 2 ** attempt, 8000)))
+      }
+    }
+  }
+  throw lastError
+}
+
 // GROQ query for a list of products (for home page cards)
 const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | order(_createdAt desc) {
   _id,
@@ -84,34 +104,33 @@ const HERO_BANNER_QUERY = `*[_type == "heroBanner"] | order(_updatedAt desc)[0] 
   }
 }`
 
-// GROQ query to get all slugs (for generateStaticParams)
-const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current, category }`
+// GROQ query to get all slugs (for generateStaticParams + sitemap)
+const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current, category, _updatedAt }`
 
 export async function getSanityProducts() {
   try {
-    return await getSanityClient().fetch(PRODUCTS_LIST_QUERY, {}, {
+    return await withRetry(() => getSanityClient().fetch(PRODUCTS_LIST_QUERY, {}, {
       next: { revalidate: 86400, tags: ['products'] },
-    })
+    }))
   } catch {
     return []
   }
 }
 
+// Lanza error si la consulta falla tras los reintentos — NUNCA devuelve null
+// por un error transitorio (eso convertiría un fallo de red en un 404 perenne).
+// null solo significa "el producto no existe".
 export async function getSanityProductBySlug(slug: string) {
-  try {
-    return await getSanityClient().fetch(PRODUCT_DETAIL_QUERY, { slug }, {
-      next: { revalidate: 86400, tags: ['products', `product-${slug}`] },
-    })
-  } catch {
-    return null
-  }
+  return withRetry(() => getSanityClient().fetch(PRODUCT_DETAIL_QUERY, { slug }, {
+    next: { revalidate: 86400, tags: ['products', `product-${slug}`] },
+  }))
 }
 
-export async function getAllProductSlugs(): Promise<{ slug: string; category?: string }[]> {
+export async function getAllProductSlugs(): Promise<{ slug: string; category?: string; _updatedAt?: string }[]> {
   try {
-    return await getSanityClient().fetch(ALL_SLUGS_QUERY, {}, {
+    return await withRetry(() => getSanityClient().fetch(ALL_SLUGS_QUERY, {}, {
       next: { revalidate: 86400, tags: ['products'] },
-    })
+    }))
   } catch {
     return []
   }
@@ -119,14 +138,14 @@ export async function getAllProductSlugs(): Promise<{ slug: string; category?: s
 
 export async function getSanityStoreSettings() {
   try {
-    return await getSanityClient().fetch(`*[_type == "storeSettings"][0] {
+    return await withRetry(() => getSanityClient().fetch(`*[_type == "storeSettings"][0] {
       _id,
       heroTitle,
       heroSubtitle,
       policies
     }`, {}, {
       next: { revalidate: 86400, tags: ['storeSettings'] },
-    })
+    }))
   } catch {
     return null
   }
@@ -134,9 +153,9 @@ export async function getSanityStoreSettings() {
 
 export async function getSanityHeroBanner() {
   try {
-    return await getSanityClient().fetch(HERO_BANNER_QUERY, {}, {
+    return await withRetry(() => getSanityClient().fetch(HERO_BANNER_QUERY, {}, {
       next: { revalidate: 3600, tags: ['heroBanner'] },
-    })
+    }))
   } catch {
     return null
   }
@@ -168,6 +187,8 @@ const ARTICLE_DETAIL_QUERY = `*[_type == "article" && slug.current == $slug][0] 
   publishedAt,
   productSlug,
   "productName": relatedProduct->name,
+  "productImage": coalesce(relatedProduct->images[0].asset->url, relatedProduct->mastershopImageUrl),
+  _updatedAt,
   sections[] {
     _key,
     type,
@@ -183,34 +204,32 @@ const ARTICLE_DETAIL_QUERY = `*[_type == "article" && slug.current == $slug][0] 
   }
 }`
 
-const ALL_ARTICLE_SLUGS_QUERY = `*[_type == "article" && defined(slug.current)]{ "slug": slug.current }`
+const ALL_ARTICLE_SLUGS_QUERY = `*[_type == "article" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
 
 
 export async function getArticles(): Promise<SanityArticle[]> {
   try {
-    return await getSanityClient().fetch(ARTICLES_LIST_QUERY, {}, {
+    return await withRetry(() => getSanityClient().fetch(ARTICLES_LIST_QUERY, {}, {
       next: { revalidate: 3600, tags: ['articles'] },
-    })
+    }))
   } catch {
     return []
   }
 }
 
+// Lanza error si la consulta falla tras los reintentos — NUNCA devuelve null
+// por un error transitorio. null solo significa "el artículo no existe".
 export async function getArticleBySlug(slug: string): Promise<SanityArticle | null> {
-  try {
-    return await getSanityClient().fetch(ARTICLE_DETAIL_QUERY, { slug }, {
-      next: { revalidate: 86400, tags: ['articles', `article-${slug}`] },
-    })
-  } catch {
-    return null
-  }
+  return withRetry(() => getSanityClient().fetch(ARTICLE_DETAIL_QUERY, { slug }, {
+    next: { revalidate: 86400, tags: ['articles', `article-${slug}`] },
+  }))
 }
 
-export async function getAllArticleSlugs(): Promise<{ slug: string }[]> {
+export async function getAllArticleSlugs(): Promise<{ slug: string; _updatedAt?: string }[]> {
   try {
-    return await getSanityClient().fetch(ALL_ARTICLE_SLUGS_QUERY, {}, {
+    return await withRetry(() => getSanityClient().fetch(ALL_ARTICLE_SLUGS_QUERY, {}, {
       next: { revalidate: 3600, tags: ['articles'] },
-    })
+    }))
   } catch {
     return []
   }

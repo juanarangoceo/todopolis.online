@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { getArticles } from '@/lib/sanity/queries'
+import { getArticles, getSanityProducts } from '@/lib/sanity/queries'
 import { SanityArticle } from '@/lib/types'
+import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 
 export const revalidate = 3600
 
@@ -83,7 +84,30 @@ function ArticleCard({ article }: { article: SanityArticle }) {
 }
 
 export default async function BlogPage() {
-  const articles = await getArticles()
+  const [articles, sanityProducts] = await Promise.all([
+    getArticles(),
+    getSanityProducts().catch(() => []),
+  ])
+
+  // Últimos productos subidos — PRODUCTS_LIST_QUERY ya ordena por _createdAt desc.
+  const latestProducts = sanityProducts
+    .filter((p: any) => p.slug && p.category?.toLowerCase() !== 'bienestar-intimo')
+    .slice(0, 12)
+    .map((p: any) => ({
+      id: p._id,
+      name: p.name,
+      slug: p.slug,
+      shortDescription: p.shortDescription ?? '',
+      description: p.shortDescription ?? '',
+      price: p.price ?? 0,
+      originalPrice: p.originalPrice,
+      image: p.mastershopImageUrl ?? p.image ?? '/placeholder.jpg',
+      category: p.category ?? 'Otros',
+      rating: 4.8,
+      isNew: p.isNew ?? false,
+      isBestSeller: p.isBestSeller ?? false,
+      reviewsCount: p.reviewsCount,
+    }))
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -107,6 +131,31 @@ export default async function BlogPage() {
             </p>
           </div>
         </section>
+
+        {/* Últimos productos — oportunidad de venta */}
+        {latestProducts.length > 0 && (
+          <section className="border-b border-gray-100 bg-[#FFF8FA]/60 py-10 md:py-12">
+            <div className="container mx-auto px-4">
+              <div className="flex items-end justify-between gap-4 mb-6">
+                <div>
+                  <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#FFB4AC] mb-1">
+                    Recién llegados
+                  </span>
+                  <h2 className="font-serif text-2xl md:text-3xl font-bold text-gray-900">
+                    Lo último en Todopolis
+                  </h2>
+                </div>
+                <Link
+                  href="/"
+                  className="shrink-0 text-sm font-semibold text-[#8b5cf6] hover:text-[#FFB4AC] transition-colors whitespace-nowrap"
+                >
+                  Ver todo →
+                </Link>
+              </div>
+              <SuggestedProductsCarousel products={latestProducts} />
+            </div>
+          </section>
+        )}
 
         {/* Articles grid */}
         <section className="container mx-auto px-4 py-12 md:py-16">

@@ -148,17 +148,30 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
   const category = CATEGORY_LABELS[article.category ?? ''] ?? article.category ?? 'General'
 
-  // Schema.org Article JSON-LD
+  // Schema.org BlogPosting JSON-LD
   const articleJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: article.title,
     description: article.seoDescription,
+    ...(article.productImage && { image: article.productImage }),
     keywords: article.seoKeywords?.join(', '),
     datePublished: article.publishedAt,
+    dateModified: article._updatedAt ?? article.publishedAt,
     author: { '@type': 'Organization', name: 'Todopolis', url: BASE_URL },
     publisher: { '@type': 'Organization', name: 'Todopolis', url: BASE_URL },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE_URL}/blog/${slug}` },
+  }
+
+  // Schema.org BreadcrumbList JSON-LD
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${BASE_URL}/blog` },
+      { '@type': 'ListItem', position: 3, name: article.title, item: `${BASE_URL}/blog/${slug}` },
+    ],
   }
 
   // Schema.org FAQPage JSON-LD
@@ -178,6 +191,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       {faqJsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       )}

@@ -60,6 +60,29 @@ export const metadata: Metadata = {
   },
 }
 
+// JSON-LD de marca — base para Google y agentes IA (GEO).
+const orgJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${BASE_URL}/#organization`,
+      name: 'Todopolis',
+      url: BASE_URL,
+      description:
+        'Tienda online colombiana de productos de belleza, hogar, tecnología, moda y bienestar. Pago contraentrega en toda Colombia.',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${BASE_URL}/#website`,
+      name: 'Todopolis',
+      url: BASE_URL,
+      inLanguage: 'es-CO',
+      publisher: { '@id': `${BASE_URL}/#organization` },
+    },
+  ],
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -79,6 +102,10 @@ export default function RootLayout({
         </>
       )}
       <body className="font-sans min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
         <FavoritesProvider>
           <CartProvider>
             {children}

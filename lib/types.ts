@@ -20,6 +20,8 @@ export interface SanityArticle {
   publishedAt?: string
   productSlug?: string
   productName?: string
+  productImage?: string
+  _updatedAt?: string
   sections?: ArticleSection[]
 }
 

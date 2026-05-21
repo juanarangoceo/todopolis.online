@@ -168,25 +168,47 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     }))
 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
+  const productUrl = `${BASE_URL}/producto/${adaptedProduct.slug}`
+
+  // Rating agregado: promedio real de los testimonios mostrados en la página.
+  const testimonialRatings = (adaptedProduct.testimonials ?? [])
+    .map((t: any) => Number(t.rating))
+    .filter((n: number) => n > 0)
+  const ratingValue = testimonialRatings.length
+    ? Math.round(
+        (testimonialRatings.reduce((a: number, b: number) => a + b, 0) /
+          testimonialRatings.length) * 10,
+      ) / 10
+    : adaptedProduct.rating
+  const reviewCount = adaptedProduct.reviewsCount ?? testimonialRatings.length
+
+  // priceValidUntil: fin de la oferta si existe, si no ~1 año desde hoy.
+  const priceValidUntil =
+    (adaptedProduct.offerEndsAt as string | null) ||
+    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: adaptedProduct.name,
     description: adaptedProduct.shortDescription,
     image: adaptedProduct.images,
-    url: `${BASE_URL}/producto/${adaptedProduct.slug}`,
+    url: productUrl,
+    brand: { '@type': 'Brand', name: 'Todopolis' },
     offers: {
       '@type': 'Offer',
       priceCurrency: 'COP',
       price: adaptedProduct.price,
+      priceValidUntil,
+      itemCondition: 'https://schema.org/NewCondition',
       availability: 'https://schema.org/InStock',
-      url: `${BASE_URL}/producto/${adaptedProduct.slug}`,
+      url: productUrl,
     },
-    ...(adaptedProduct.reviewsCount && {
+    ...(reviewCount > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: adaptedProduct.rating,
-        reviewCount: adaptedProduct.reviewsCount,
+        ratingValue,
+        reviewCount,
         bestRating: 5,
         worstRating: 1,
       },
@@ -201,12 +223,43 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     }),
   }
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: adaptedProduct.name, item: productUrl },
+    ],
+  }
+
+  const faqJsonLd = adaptedProduct.faqs?.length
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: adaptedProduct.faqs.map((f: any) => ({
+          '@type': 'Question',
+          name: f.question,
+          acceptedAnswer: { '@type': 'Answer', text: f.answer },
+        })),
+      }
+    : null
+
   return (
     <div className="min-h-screen flex flex-col">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <Header />
       {product.category === 'bienestar-intimo' && <AgeGate />}
       <GlobalSearch products={searchableProducts} />

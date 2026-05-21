@@ -13,7 +13,10 @@ export function getSanityClient() {
       projectId,
       dataset: process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production',
       apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION ?? '2025-01-01',
-      useCdn: false,
+      // useCdn: true → lecturas vía apicdn.sanity.io, que absorbe alto volumen
+      // sin rate-limit. Crítico durante el build (prerenderiza ~450 páginas).
+      useCdn: true,
+      perspective: 'published',
       token: process.env.SANITY_API_TOKEN,
     })
   }

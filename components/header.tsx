@@ -61,7 +61,7 @@ export function Header() {
 
         <div className="container mx-auto px-4 relative">
           {/* ── Mobile layout ── */}
-          <div className="md:hidden grid grid-cols-[auto_1fr_auto] items-center gap-3 h-16">
+          <div className="md:hidden grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 h-16">
             {/* Hamburger */}
             <button
               onClick={() => setMenuOpen(true)}
@@ -77,6 +77,21 @@ export function Header() {
             <div className="flex justify-center">
               <Logo small />
             </div>
+
+            {/* Favorites — acceso directo, fuera del menú hamburguesa */}
+            <Link
+              href="/favoritos"
+              className="relative p-2.5 rounded-2xl bg-gradient-to-br from-[#FFD5E5]/50 to-[#EDD2F3]/50 hover:from-[#FFD5E5]/80 hover:to-[#EDD2F3]/80 transition-all shadow-sm active:scale-95"
+              aria-label="Favoritos"
+              style={{ touchAction: 'manipulation' }}
+            >
+              <Heart className="w-5 h-5 text-foreground" />
+              {favoriteSlugs.length > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[#EDD2F3] text-foreground text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                  {favoriteSlugs.length}
+                </span>
+              )}
+            </Link>
 
             {/* Cart */}
             <button
@@ -219,22 +234,6 @@ export function Header() {
               </span>
               <span className="font-bold text-sm text-foreground">Ofertas</span>
               <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-[#F43F5E]">Hot</span>
-            </Link>
-
-            <Link
-              href="/favoritos"
-              onClick={closeMenu}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/70 hover:bg-white border border-transparent hover:border-[#EDD2F3]/60 transition-all shadow-sm"
-            >
-              <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFD5E5]/40 to-[#EDD2F3]/40 flex items-center justify-center shrink-0">
-                <Heart className="w-4 h-4 text-[#C2185B]" />
-              </span>
-              <span className="font-bold text-sm text-foreground">Favoritos</span>
-              {favoriteSlugs.length > 0 && (
-                <span className="ml-auto min-w-5 h-5 px-1.5 bg-[#EDD2F3] text-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {favoriteSlugs.length}
-                </span>
-              )}
             </Link>
 
             <Link
