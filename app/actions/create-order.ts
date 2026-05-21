@@ -14,6 +14,13 @@ export async function createOrder(formData: FormData) {
     // Initialize Supabase admin client to bypass RLS for inserting orders
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Variante elegida (idVariant de Mastershop). Null si el producto no tiene variantes.
+    const variantIdRaw = formData.get('variantId') as string | null
+    const variantId = variantIdRaw && !Number.isNaN(Number(variantIdRaw))
+      ? Number(variantIdRaw)
+      : null
+    const variantName = (formData.get('variantName') as string) || null
+
     const orderData = {
       product_id: formData.get('productId') as string,
       product_name: formData.get('productName') as string,
@@ -23,6 +30,8 @@ export async function createOrder(formData: FormData) {
       customer_phone: formData.get('customerPhone') as string,
       customer_address: formData.get('customerAddress') as string,
       customer_city: formData.get('customerCity') as string,
+      variant_id: variantId,
+      variant_name: variantName,
       status: 'pending',
     };
 

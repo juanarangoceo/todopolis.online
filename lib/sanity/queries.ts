@@ -31,6 +31,15 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
   mastershopImageUrl,
   "image": images[0].asset->url,
   "images": images[].asset->url,
+  variants[] {
+    _key,
+    idVariant,
+    name,
+    sku,
+    price,
+    stock,
+    isEnable
+  },
   category,
   isNew,
   isBestSeller,

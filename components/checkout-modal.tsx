@@ -5,6 +5,8 @@ import { ShoppingBag, X, MapPin, Phone, User, CheckCircle2, Truck } from 'lucide
 import { createOrder } from '@/app/actions/create-order';
 import { cn } from '@/lib/utils';
 import { Product } from '@/lib/types';
+import { useProductVariant } from '@/components/product/product-variant-context';
+import { VariantSelector } from '@/components/product/variant-selector';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -17,6 +19,11 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+
+  // Variantes: si el producto las tiene, elegir una es obligatorio.
+  const { variants, selectedVariant } = useProductVariant();
+  const variantRequired = variants.length > 0;
+  const variantMissing = variantRequired && !selectedVariant;
 
   // Reset state when opened
   useEffect(() => {
@@ -54,6 +61,16 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
     formData.append('productName', product.name);
     formData.append('price', totalPrice.toString());
     formData.append('quantity', quantity.toString());
+
+    if (variantRequired) {
+      if (!selectedVariant) {
+        setError('Por favor selecciona una opción del producto.');
+        setLoading(false);
+        return;
+      }
+      formData.append('variantId', String(selectedVariant.idVariant));
+      formData.append('variantName', selectedVariant.name);
+    }
 
     const result = await createOrder(formData);
 
@@ -113,6 +130,11 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                 </div>
                 <div className="flex flex-col justify-center w-full">
                   <h3 className="font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
+                  {variantRequired && selectedVariant && (
+                    <p className="text-xs font-semibold text-primary mt-0.5">
+                      Opción: {selectedVariant.name}
+                    </p>
+                  )}
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-gray-500 text-sm">Precio:</span>
                     <span className="font-medium text-gray-900">{formatPrice(product.price ?? 0)}</span>
@@ -135,6 +157,13 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                   </div>
                 </div>
               </div>
+
+              {/* Variant Selector — obligatorio si el producto tiene variantes */}
+              {variantRequired && (
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
+                  <VariantSelector showHint />
+                </div>
+              )}
 
               {/* Form */}
               <form id="checkout-form" onSubmit={handleSubmit} className="space-y-4">
@@ -229,16 +258,18 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
             <button
               form="checkout-form"
               type="submit"
-              disabled={loading}
+              disabled={loading || variantMissing}
               className={cn(
                 "w-full py-4 rounded-2xl text-white font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300",
                 "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40",
                 "active:scale-[0.98]",
-                loading && "opacity-70 cursor-not-allowed"
+                (loading || variantMissing) && "opacity-70 cursor-not-allowed"
               )}
             >
               {loading ? (
                 <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : variantMissing ? (
+                <>Elige una opción para continuar</>
               ) : (
                 <>Completar Pedido <span className="opacity-80 font-normal">({formatPrice(totalPrice)})</span></>
               )}

@@ -18,6 +18,7 @@ import Link from 'next/link'
 import { SanityProduct } from '@/lib/types'
 import { AgeGate } from '@/components/age-gate'
 import { VoiceLucyMount } from '@/components/lucy/VoiceLucyMount'
+import { ProductVariantProvider } from '@/components/product/product-variant-context'
 
 export async function generateStaticParams() {
   const slugs = await getAllProductSlugs()
@@ -136,6 +137,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     offerName: (product as any).offerName ?? null,
     offerEndsAt: (product as any).offerEndsAt ?? null,
     faqs: (product as any).faqs ?? [],
+    variants: product.variants ?? [],
   }
 
   const SuggestedSection = ({ products, title, subtitle }: { products: typeof suggestedProducts, title: string, subtitle: string }) =>
@@ -210,6 +212,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <GlobalSearch products={searchableProducts} />
 
       <main className="flex-1">
+        <ProductVariantProvider variants={adaptedProduct.variants}>
         {/* Desktop: Two-column layout with sticky image sidebar */}
         <div className="hidden lg:block">
           <div className="container mx-auto px-4 py-8">
@@ -317,6 +320,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
           <ProductCTA product={adaptedProduct} />
         </div>
+        </ProductVariantProvider>
 
         {/* Global Store Policies */}
         <div className="container mx-auto px-4 mt-8">

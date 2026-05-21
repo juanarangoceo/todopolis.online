@@ -23,6 +23,17 @@ export interface SanityArticle {
   sections?: ArticleSection[]
 }
 
+// Variante de producto sincronizada desde Mastershop
+export interface ProductVariant {
+  _key?: string
+  idVariant: number
+  name: string
+  sku?: string
+  price?: number
+  stock?: number
+  isEnable?: boolean
+}
+
 // Sanity product type (matches schema)
 export interface SanityProduct {
   _id: string
@@ -33,6 +44,7 @@ export interface SanityProduct {
   image?: string
   mastershopImageUrl?: string
   images?: string[]
+  variants?: ProductVariant[]
   category?: string
   isNew?: boolean
   isBestSeller?: boolean
@@ -65,6 +77,7 @@ export interface Product {
   image: string
   mastershopImageUrl?: string
   images?: string[]
+  variants?: ProductVariant[]
   category: string
   rating: number
   reviews?: Review[]

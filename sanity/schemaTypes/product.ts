@@ -24,6 +24,44 @@ export const productType = defineType({
       readOnly: true,
     }),
 
+    // ─── Variantes (sincronizadas desde Mastershop) ─────────────────────────
+    defineField({
+      name: 'variants',
+      title: 'Variantes (talla, color, etc.)',
+      type: 'array',
+      group: 'variants',
+      readOnly: true,
+      description: 'Se sincronizan automáticamente desde Mastershop al importar el producto. Si está vacío, el producto no tiene variantes y no se muestra ningún selector en la landing page.',
+      of: [
+        defineArrayMember({
+          name: 'variant',
+          type: 'object',
+          fields: [
+            defineField({ name: 'idVariant', title: 'ID Variante (Mastershop)', type: 'number' }),
+            defineField({ name: 'name', title: 'Nombre (ej: "39 / Beige")', type: 'string' }),
+            defineField({ name: 'sku', title: 'SKU', type: 'string' }),
+            defineField({ name: 'price', title: 'Precio Mastershop', type: 'number' }),
+            defineField({ name: 'stock', title: 'Stock', type: 'number' }),
+            defineField({ name: 'isEnable', title: 'Activa', type: 'boolean' }),
+          ],
+          preview: {
+            select: { title: 'name', sku: 'sku', stock: 'stock' },
+            prepare({ title, sku, stock }) {
+              return {
+                title: title || 'Variante',
+                subtitle: [
+                  sku && `SKU: ${sku}`,
+                  typeof stock === 'number' && `Stock: ${stock}`,
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+              }
+            },
+          },
+        }),
+      ],
+    }),
+
     // ─── Datos básicos del producto ─────────────────────────────────────────
     defineField({
       name: 'name',
@@ -259,5 +297,6 @@ export const productType = defineType({
   groups: [
     { name: 'landing', title: '🚀 Landing Page (Contenido IA)' },
     { name: 'offer', title: '⏱️ Oferta / Countdown' },
+    { name: 'variants', title: '🎨 Variantes' },
   ],
 })

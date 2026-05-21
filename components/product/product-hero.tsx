@@ -7,6 +7,7 @@ import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { CheckoutModal } from '@/components/checkout-modal';
 import { useFavorites } from '@/app/providers/favorites-provider';
+import { VariantSelector } from './variant-selector';
 
 interface ProductHeroProps {
   product: Product;
@@ -241,6 +242,9 @@ export function ProductHero({ product }: ProductHeroProps) {
             <div className="w-2 h-2 rounded-full bg-green-500" />
             <span className="text-sm text-muted-foreground">En stock - Envío inmediato</span>
           </div>
+
+          {/* Variant Selector — solo aparece si el producto tiene variantes */}
+          <VariantSelector />
 
           {/* Actions */}
           <div className="flex gap-4">

@@ -155,6 +155,33 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin co
 }`
 
 
+// Extrae las variantes reales del payload de Mastershop.
+// "Mis productos" usa el campo `variation`; el marketplace usa `variants`.
+// Devuelve [] si el producto no tiene variantes reales (solo "Default Variant"
+// o una única opción) — en ese caso no se escribe el campo en Sanity.
+function extractVariants(p: any): any[] {
+  const raw: any[] = p?.variation ?? p?.variants ?? []
+  if (!Array.isArray(raw)) return []
+  const real = raw.filter(
+    (v) =>
+      v &&
+      v.idVariant != null &&
+      (v.name ?? '').trim().toLowerCase() !== 'default variant' &&
+      v.isEnable !== 0,
+  )
+  if (real.length < 2) return []
+  return real.map((v) => ({
+    _type: 'variant',
+    _key: Math.random().toString(36).substring(2, 9),
+    idVariant: v.idVariant,
+    name: (v.name ?? '').trim(),
+    sku: v.sku ?? '',
+    price: typeof v.price === 'number' ? v.price : 0,
+    stock: typeof v.stock === 'number' ? v.stock : 0,
+    isEnable: v.isEnable !== 0,
+  }))
+}
+
 export async function POST(request: NextRequest) {
   const apiKey = process.env.MASTERSHOP_API_KEY
   const geminiKey = process.env.GEMINI_API_KEY
@@ -285,6 +312,9 @@ export async function POST(request: NextRequest) {
     // Strategic rounding to nearest 900 (e.g., 34900)
     const strategicPrice = rawPrice > 0 ? Math.max(0, Math.floor(calculatedPrice / 1000) * 1000 + 900) : 0
 
+    // Variantes (talla, color, etc.) — solo se incluyen si existen
+    const variants = extractVariants(p)
+
     const sanityDoc = {
       _type: 'product',
       mastershopId: idProduct,
@@ -330,6 +360,7 @@ export async function POST(request: NextRequest) {
         question: f.question,
         answer: f.answer,
       })),
+      ...(variants.length > 0 && { variants }),
     }
 
     const mutateUrl = `https://${projectId}.api.sanity.io/v${apiVersion}/data/mutate/${dataset}`
