@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { startMastershopSync } from '@/lib/mastershop-sync'
 
 export const maxDuration = 300
@@ -20,6 +20,12 @@ export async function GET(request: NextRequest) {
         revalidatePath(`/blog`)
         revalidatePath(`/producto/${slug}`)
       }
+    }
+
+    // Si entraron productos nuevos, refresca el home y el catálogo de inmediato.
+    if (result.imported > 0) {
+      revalidateTag('products', 'max')
+      revalidatePath('/')
     }
 
     return NextResponse.json({ ok: true, ...result })

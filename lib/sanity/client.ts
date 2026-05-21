@@ -13,10 +13,10 @@ export function getSanityClient() {
       projectId,
       dataset: process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production',
       apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION ?? '2025-01-01',
-      // useCdn: true → lecturas vía apicdn.sanity.io, que absorbe alto volumen
-      // sin rate-limit. Crítico durante el build (prerenderiza ~450 páginas).
-      useCdn: true,
-      perspective: 'published',
+      // useCdn: false → lecturas siempre desde el API origin. Imprescindible
+      // para la inmediatez: al revalidar tras publicar un producto, el CDN
+      // puede no haber propagado aún y el home se regeneraría sin el producto.
+      useCdn: false,
       token: process.env.SANITY_API_TOKEN,
     })
   }

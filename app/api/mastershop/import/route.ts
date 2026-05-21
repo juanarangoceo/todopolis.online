@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 
@@ -382,6 +382,12 @@ export async function POST(request: NextRequest) {
 
     const mutateData = await mutateRes.json()
     const sanityId = mutateData.results?.[0]?.id ?? null
+
+    // Revalida de inmediato — el producto aparece en el home y en su landing
+    // sin depender del webhook de Sanity ni esperar el ISR de 24 h.
+    revalidateTag('products', 'max')
+    revalidatePath('/')
+    revalidatePath(`/producto/${slug}`)
 
     // ── STEP 5: Generate blog article (non-blocking — failure doesn't affect import) ──
     let articleSlug: string | null = null
