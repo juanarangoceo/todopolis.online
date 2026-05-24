@@ -61,6 +61,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ revalidated: true, timestamp: new Date().toISOString() })
     }
 
+    // Banner de campaña: al publicar/despublicar, refrescamos el home (que muestra
+    // el banner tras la 2ª fila) y la página /temporada que renderiza la campaña.
+    if (payload._type === 'promoCampaign') {
+      revalidateTag('promoCampaign', 'max')
+      revalidatePath('/')
+      revalidatePath('/temporada')
+      return NextResponse.json({ revalidated: true, type: 'promoCampaign', timestamp: new Date().toISOString() })
+    }
+
+    // Etiquetas: cambios en la taxonomía afectan los filtros del home y /temporada.
+    if (payload._type === 'tag') {
+      revalidateTag('tags', 'max')
+      revalidatePath('/')
+      revalidatePath('/temporada')
+      return NextResponse.json({ revalidated: true, type: 'tag', timestamp: new Date().toISOString() })
+    }
+
     revalidateTag('products', 'max')
     const productSlug = payload.slug?.current ?? payload._id
     revalidateTag(`product-${productSlug}`, 'max')
