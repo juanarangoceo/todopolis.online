@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from '@/lib/generate-article'
+import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 
 // Allow up to 60s — import includes AI generation + Sanity write
 export const maxDuration = 60
@@ -256,16 +257,30 @@ export async function POST(request: NextRequest) {
     const categoryRaw: string = p.prodFormatName ?? ''
     const category = CATEGORY_MAP[categoryRaw] ?? 'otros'
 
-    // ── STEP 2: Generate AI content with Gemini ───────────────────────────────
+    // ── STEP 2: Generate AI content with Gemini (en paralelo con auto-tagging) ──
     const genAI = new GoogleGenerativeAI(geminiKey)
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
     const userPrompt = `Producto: ${name}\n\nDescripción: ${description || name}`
 
-    const aiResult = await model.generateContent({
+    // Arrancamos copy generation y auto-tagging en paralelo: ambos llaman a Gemini
+    // y son independientes. Las tags son best-effort (no bloquean si fallan).
+    const copyPromise = model.generateContent({
       contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\n' + userPrompt }] }],
       generationConfig: { temperature: 1.0 } as any,
     })
+
+    const tagsPromise = (async () => {
+      try {
+        const taxonomy = await fetchTagTaxonomy({ projectId, dataset, apiVersion, token: sanityToken })
+        return await classifyProductTags(taxonomy, { name, shortDescription: description, category }, geminiKey)
+      } catch (err) {
+        console.error('[import] auto-tagging falló (best-effort, sigue sin tags):', err)
+        return [] as string[]
+      }
+    })()
+
+    const aiResult = await copyPromise
 
     // Extract text safely (handles thinking models)
     const candidate = aiResult.response.candidates?.[0]
@@ -315,6 +330,10 @@ export async function POST(request: NextRequest) {
     // Variantes (talla, color, etc.) — solo se incluyen si existen
     const variants = extractVariants(p)
 
+    // Esperamos las tags ahora — ya tuvieron tiempo de procesarse en paralelo con el copy.
+    const tagSlugs = await tagsPromise
+    const tagReferences = tagSlugsToReferences(tagSlugs)
+
     const sanityDoc = {
       _type: 'product',
       mastershopId: idProduct,
@@ -361,6 +380,7 @@ export async function POST(request: NextRequest) {
         answer: f.answer,
       })),
       ...(variants.length > 0 && { variants }),
+      ...(tagReferences.length > 0 && { tags: tagReferences }),
     }
 
     const mutateUrl = `https://${projectId}.api.sanity.io/v${apiVersion}/data/mutate/${dataset}`

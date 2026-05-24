@@ -1,5 +1,5 @@
 import { getSanityClient } from './client'
-import { SanityArticle } from '../types'
+import { SanityArticle, TagTaxonomyEntry } from '../types'
 
 // Reintenta una consulta con backoff. Clave durante el build: prerenderizar
 // cientos de páginas dispara cientos de queries y la API de Sanity puede
@@ -37,7 +37,8 @@ const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | or
   isBestSeller,
   heroTitle,
   testimonials,
-  reviewsCount
+  reviewsCount,
+  "tags": tags[]->{ "slug": slug.current, name, group, icon }
 }`
 
 // GROQ query for a single product (for landing page)
@@ -148,6 +149,26 @@ export async function getSanityStoreSettings() {
     }))
   } catch {
     return null
+  }
+}
+
+const TAGS_QUERY = `*[_type == "tag" && defined(slug.current)] | order(group asc, priority desc) {
+  _id,
+  "slug": slug.current,
+  name,
+  group,
+  icon,
+  priority,
+  isFeatured
+}`
+
+export async function getSanityTags(): Promise<TagTaxonomyEntry[]> {
+  try {
+    return await withRetry(() => getSanityClient().fetch<TagTaxonomyEntry[]>(TAGS_QUERY, {}, {
+      next: { revalidate: 3600, tags: ['tags'] },
+    }))
+  } catch {
+    return []
   }
 }
 

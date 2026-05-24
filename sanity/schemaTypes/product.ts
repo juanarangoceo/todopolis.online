@@ -139,6 +139,28 @@ export const productType = defineType({
       initialValue: false,
     }),
 
+    // ─── Etiquetas (multi-tag para filtros y campañas) ────────────────────────
+    defineField({
+      name: 'tags',
+      title: '🏷️ Etiquetas',
+      type: 'array',
+      group: 'tags',
+      description: 'Etiquetas que cruzan categorías (audiencia, ocasión, beneficio, nicho, promo). Se asignan automáticamente al importar y se pueden ajustar manualmente. Filtros del home se construyen con esto.',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'tag' }],
+          options: {
+            disableNew: false,
+            filter: 'defined(slug.current)',
+          },
+        },
+      ],
+      options: {
+        layout: 'tags',
+      },
+    }),
+
     // ─── Botones de generación con IA ──────────────────────────────────────
     defineField({
       name: 'generateContent',
@@ -298,5 +320,6 @@ export const productType = defineType({
     { name: 'landing', title: '🚀 Landing Page (Contenido IA)' },
     { name: 'offer', title: '⏱️ Oferta / Countdown' },
     { name: 'variants', title: '🎨 Variantes' },
+    { name: 'tags', title: '🏷️ Etiquetas' },
   ],
 })

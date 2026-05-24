@@ -96,6 +96,20 @@ export interface Product {
   heroCta?: string
   ctaHeadline?: string
   ctaText?: string
+  tags?: ProductTag[]
+}
+
+export interface ProductTag {
+  slug: string
+  name: string
+  group: string
+  icon?: string
+}
+
+export interface TagTaxonomyEntry extends ProductTag {
+  _id: string
+  priority?: number
+  isFeatured?: boolean
 }
 
 export interface Review {

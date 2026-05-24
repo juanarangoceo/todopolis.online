@@ -4,14 +4,15 @@ import { useState, useCallback, useMemo, ReactNode, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Product } from '@/lib/types';
+import { Product, TagTaxonomyEntry } from '@/lib/types';
 import { MagicSearchBar } from './magic-search-bar';
 import { MobileSearchFab } from './mobile-search-fab';
 import { ProductGrid } from './product-grid';
+import { TagFilterPanel } from './tag-filter-panel';
 import {
-  Sparkles, Grid, Watch, HeartPulse, Sparkle,
+  Sparkles, Grid, Watch, HeartPulse,
   Laptop, Home, Shirt, Dumbbell, Gamepad2,
-  Droplets, Utensils, Flame
+  Droplets, Utensils, SlidersHorizontal, X
 } from 'lucide-react';
 import { AgeGate } from '@/components/age-gate';
 
@@ -45,34 +46,56 @@ interface ProductBrowserProps {
   initialProducts: Product[];
   children?: ReactNode;
   aiImages?: AiImage[];
+  tagTaxonomy?: TagTaxonomyEntry[];
 }
 
-export function ProductBrowser({ initialProducts, children, aiImages = [] }: ProductBrowserProps) {
+export function ProductBrowser({ initialProducts, children, aiImages = [], tagTaxonomy = [] }: ProductBrowserProps) {
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   const [ageGatePending, setAgeGatePending] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
   useEffect(() => {
     // Find the header search slot once it mounts
     const slot = document.getElementById('header-search-slot');
     if (slot) setHeaderSlot(slot);
 
-    // Read initial search query from URL if available
+    // Read initial state from URL (?q=&tags=slug1,slug2)
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const q = params.get('q');
       if (q) setSearchQuery(q);
+      const tagsParam = params.get('tags');
+      if (tagsParam) {
+        setSelectedTags(new Set(tagsParam.split(',').filter(Boolean)));
+      }
     }
 
     // Listen for logo click to reset home state
     const handleResetHome = () => {
       setActiveCategory('Todos');
       setSearchQuery('');
+      setSelectedTags(new Set());
     };
     window.addEventListener('todopolis:reset-home', handleResetHome);
     return () => window.removeEventListener('todopolis:reset-home', handleResetHome);
   }, []);
+
+  // Persistir selección de tags en la URL sin recargar (compartible/bookmarkable).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (selectedTags.size > 0) {
+      params.set('tags', Array.from(selectedTags).join(','));
+    } else {
+      params.delete('tags');
+    }
+    const newSearch = params.toString();
+    const newUrl = `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`;
+    window.history.replaceState(null, '', newUrl);
+  }, [selectedTags]);
 
   const categories = useMemo(() => {
     const masterCategories = [
@@ -102,7 +125,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
     return cat.charAt(0).toUpperCase() + cat.slice(1);
   };
 
-  const filterProducts = useCallback((query: string, category: string) => {
+  const filterProducts = useCallback((query: string, category: string, tags: Set<string>) => {
     let results = initialProducts.map(p => ({
       ...p,
       category: normalizeCategory(p.category)
@@ -116,19 +139,28 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
       results = results.filter(p => p.category === category);
     }
 
+    // AND-mode: el producto debe tener TODOS los tags seleccionados.
+    if (tags.size > 0) {
+      results = results.filter((p) => {
+        const productSlugs = new Set((p.tags ?? []).map((t) => t.slug));
+        for (const slug of tags) if (!productSlugs.has(slug)) return false;
+        return true;
+      });
+    }
+
     if (query.trim()) {
       const searchTerms = query.toLowerCase().split(' ');
       results = results
         .map(product => {
           let score = 0;
           const productText = `${product.name} ${product.shortDescription ?? ''} ${product.category}`.toLowerCase();
-          
+
           searchTerms.forEach(term => {
             if (product.name.toLowerCase().includes(term)) score += 10;
             if (product.category.toLowerCase().includes(term)) score += 5;
             if (productText.includes(term)) score += 1;
           });
-          
+
           return { product, score };
         })
         .filter(item => item.score > 0)
@@ -140,8 +172,45 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
   }, [initialProducts]);
 
   const filteredProducts = useMemo(() => {
-    return filterProducts(searchQuery, activeCategory);
+    return filterProducts(searchQuery, activeCategory, selectedTags);
+  }, [searchQuery, activeCategory, selectedTags, filterProducts]);
+
+  // Cuenta cuántos productos del set "sin tag filter pero con categoría/búsqueda actual"
+  // tendría cada tag, para mostrar conteos vivos en el panel. Esto refleja "si agregas
+  // este tag, ¿cuántos resultados quedan?" — ayuda a no clickear filtros muertos.
+  const tagMatchCounts = useMemo(() => {
+    const baseSet = filterProducts(searchQuery, activeCategory, new Set());
+    const counts = new Map<string, number>();
+    for (const p of baseSet) {
+      for (const t of p.tags ?? []) {
+        counts.set(t.slug, (counts.get(t.slug) ?? 0) + 1);
+      }
+    }
+    return counts;
   }, [searchQuery, activeCategory, filterProducts]);
+
+  // Mapa slug → entrada de taxonomía, para renderizar nombres/iconos de los chips activos.
+  const taxonomyBySlug = useMemo(() => {
+    const m = new Map<string, TagTaxonomyEntry>();
+    for (const t of tagTaxonomy) m.set(t.slug, t);
+    return m;
+  }, [tagTaxonomy]);
+
+  const featuredTags = useMemo(
+    () => tagTaxonomy.filter((t) => t.isFeatured).sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0)),
+    [tagTaxonomy],
+  );
+
+  const toggleTag = useCallback((slug: string) => {
+    setSelectedTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
+  }, []);
+
+  const clearTags = useCallback(() => setSelectedTags(new Set()), []);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -232,11 +301,50 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
         <MagicSearchBar onSearch={handleSearch} compact />
       </div>
 
+      {/* Featured tag chips + "Más filtros" — desktop y mobile */}
+      {tagTaxonomy.length > 0 && (
+        <div className="w-full border-b border-[#EDD2F3]/20 bg-white/30 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <button
+              onClick={() => setFilterPanelOpen(true)}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-foreground/90 text-white hover:bg-foreground transition-colors shadow-sm"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Filtros</span>
+              {selectedTags.size > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-[#FFB4AC] text-white text-[10px] font-bold leading-none">
+                  {selectedTags.size}
+                </span>
+              )}
+            </button>
+            <div className="shrink-0 h-5 w-px bg-foreground/10" />
+            {featuredTags.map((tag) => {
+              const isActive = selectedTags.has(tag.slug);
+              return (
+                <button
+                  key={tag.slug}
+                  onClick={() => toggleTag(tag.slug)}
+                  className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-sm'
+                      : 'bg-[#FFD5E5]/40 text-foreground/70 hover:bg-[#FFD5E5]/70 border border-[#FFB4AC]/30'
+                  }`}
+                >
+                  {tag.icon && <span>{tag.icon}</span>}
+                  <span>{tag.name}</span>
+                </button>
+              );
+            })}
+            <div className="shrink-0 w-2" />
+          </div>
+        </div>
+      )}
+
       {/* Hero y políticas — se ocultan al buscar o filtrar */}
-      {(!searchQuery && activeCategory === 'Todos') && children}
+      {(!searchQuery && activeCategory === 'Todos' && selectedTags.size === 0) && children}
 
       {/* Mobile AI carousel — solo en home sin filtro */}
-      {(!searchQuery && activeCategory === 'Todos') && aiImages.length > 0 && (
+      {(!searchQuery && activeCategory === 'Todos' && selectedTags.size === 0) && aiImages.length > 0 && (
         <div className="md:hidden px-4 pt-2 pb-4">
           <div className="flex items-center gap-1.5 mb-3">
             <Sparkles className="w-3.5 h-3.5 text-[#8b5cf6]" />
@@ -306,6 +414,35 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
               )}
 
               <div className="flex-1 min-w-0">
+                {/* Tags activos como chips removibles */}
+                {selectedTags.size > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-[#EDD2F3]/30">
+                    <span className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Filtros:</span>
+                    {Array.from(selectedTags).map((slug) => {
+                      const tag = taxonomyBySlug.get(slug);
+                      const label = tag?.name ?? slug;
+                      const icon = tag?.icon;
+                      return (
+                        <button
+                          key={slug}
+                          onClick={() => toggleTag(slug)}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-sm hover:opacity-90 transition-opacity"
+                        >
+                          {icon && <span>{icon}</span>}
+                          <span>{label}</span>
+                          <X className="w-3 h-3" />
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={clearTags}
+                      className="text-xs font-bold text-[#E11D48] hover:underline ml-1"
+                    >
+                      Limpiar todo
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex flex-col items-center gap-2 mb-6 text-center">
                   <p className="text-foreground/80 font-serif font-medium text-xs md:text-sm mt-1">
                     {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos para ti'}
@@ -322,6 +459,17 @@ export function ProductBrowser({ initialProducts, children, aiImages = [] }: Pro
 
       {/* Floating search button for mobile */}
       <MobileSearchFab />
+
+      {/* Panel de filtros (drawer desktop / bottom sheet mobile) */}
+      <TagFilterPanel
+        open={filterPanelOpen}
+        onClose={() => setFilterPanelOpen(false)}
+        tags={tagTaxonomy}
+        selected={selectedTags}
+        onToggle={toggleTag}
+        onClear={clearTags}
+        matchCounts={tagMatchCounts}
+      />
     </>
   );
 }

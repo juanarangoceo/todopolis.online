@@ -4,7 +4,7 @@ import { SmartBanner } from '@/components/smart-banner';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
-import { getSanityProducts, getSanityStoreSettings, getSanityHeroBanner } from '@/lib/sanity/queries';
+import { getSanityProducts, getSanityStoreSettings, getSanityHeroBanner, getSanityTags } from '@/lib/sanity/queries';
 
 export const metadata: Metadata = {
   title: 'Todopolis - Tu Destino de Belleza',
@@ -36,6 +36,7 @@ export default async function Home() {
     isBestSeller: p.isBestSeller ?? false,
     testimonials: p.testimonials ?? [],
     reviewsCount: p.reviewsCount,
+    tags: p.tags ?? [],
   }));
 
   const aiImages = sanityProducts
@@ -46,9 +47,10 @@ export default async function Home() {
       slug: p.slug as string,
     }));
 
-  const [storeSettings, heroBanner] = await Promise.all([
+  const [storeSettings, heroBanner, tagTaxonomy] = await Promise.all([
     getSanityStoreSettings(),
-    getSanityHeroBanner()
+    getSanityHeroBanner(),
+    getSanityTags(),
   ]);
 
   const policies = storeSettings?.policies && storeSettings.policies.length > 0 
@@ -65,7 +67,7 @@ export default async function Home() {
       <Header />
 
       <main className="flex-1">
-        <ProductBrowser initialProducts={initialProducts} aiImages={aiImages}>
+        <ProductBrowser initialProducts={initialProducts} aiImages={aiImages} tagTaxonomy={tagTaxonomy}>
           {heroBanner && (
             <SmartBanner banner={heroBanner} allProducts={initialProducts} />
           )}

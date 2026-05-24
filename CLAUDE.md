@@ -92,3 +92,13 @@ Si se agrega un nuevo query, incluirlo también: `"aiLifestyleImage": aiLifestyl
 
 ### `unoptimized` en imágenes IA — intencional
 `product-lifestyle-image.tsx` tiene `unoptimized` en el `<Image>`. Es intencional: las imágenes IA son PNG de ~2 MB y el optimizador de Next.js local hace timeout. No quitarlo.
+
+### Cliente Sanity — `useCdn: false` es obligatorio
+`lib/sanity/client.ts` usa `useCdn: false` a propósito. NO cambiar a `true` aunque sea el default recomendado por Sanity: al revalidar el home tras publicar un producto, el CDN puede no haber propagado aún y el home se regenera SIN el producto, quedando cacheado así hasta el siguiente deploy. El sistema depende de que las lecturas sean siempre frescas. El build NO necesita el CDN — `withRetry()` en `queries.ts` ya absorbe el rate-limit.
+
+### Inmediatez: revalidar al crear productos
+Para que un producto nuevo salga al instante en el home, quien lo crea debe revalidar: `revalidateTag('products', 'max')` + `revalidatePath('/')`. Ya lo hacen `app/api/mastershop/import` (manual) y `app/api/mastershop/sync` (cron). Cualquier nueva vía de creación de productos debe incluir esa revalidación.
+(Nota Next: `revalidateTag` lleva 2 argumentos — `(tag, 'max')`.)
+
+### Queries de detalle lanzan error, no devuelven `null`
+`getSanityProductBySlug` y `getArticleBySlug` lanzan error si la consulta falla tras los reintentos. NO volver a envolverlas en `catch { return null }`: eso convierte un fallo de red transitorio en un 404 permanente cacheado. `null` solo debe significar "el documento no existe".
