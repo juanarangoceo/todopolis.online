@@ -47,9 +47,10 @@ interface ProductBrowserProps {
   children?: ReactNode;
   aiImages?: AiImage[];
   tagTaxonomy?: TagTaxonomyEntry[];
+  rowTwoSlot?: ReactNode;
 }
 
-export function ProductBrowser({ initialProducts, children, aiImages = [], tagTaxonomy = [] }: ProductBrowserProps) {
+export function ProductBrowser({ initialProducts, children, aiImages = [], tagTaxonomy = [], rowTwoSlot }: ProductBrowserProps) {
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
@@ -448,7 +449,17 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                     {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos para ti'}
                   </p>
                 </div>
-                <ProductGrid products={filteredProducts} searchQuery={searchQuery} />
+                <ProductGrid
+                  products={filteredProducts}
+                  searchQuery={searchQuery}
+                  // El banner solo tiene sentido en el listado "limpio". Cuando hay búsqueda,
+                  // filtros activos o una categoría específica, lo ocultamos para no romper foco.
+                  rowTwoSlot={
+                    !searchQuery && activeCategory === 'Todos' && selectedTags.size === 0
+                      ? rowTwoSlot
+                      : undefined
+                  }
+                />
               </div>
 
             </div>

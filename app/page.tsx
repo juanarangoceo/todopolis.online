@@ -4,7 +4,8 @@ import { SmartBanner } from '@/components/smart-banner';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
-import { getSanityProducts, getSanityStoreSettings, getSanityHeroBanner, getSanityTags } from '@/lib/sanity/queries';
+import { PromoBanner } from '@/components/promo-banner';
+import { getSanityProducts, getSanityStoreSettings, getSanityHeroBanner, getSanityTags, getActivePromoCampaign } from '@/lib/sanity/queries';
 
 export const metadata: Metadata = {
   title: 'Todopolis - Tu Destino de Belleza',
@@ -47,10 +48,11 @@ export default async function Home() {
       slug: p.slug as string,
     }));
 
-  const [storeSettings, heroBanner, tagTaxonomy] = await Promise.all([
+  const [storeSettings, heroBanner, tagTaxonomy, promoCampaign] = await Promise.all([
     getSanityStoreSettings(),
     getSanityHeroBanner(),
     getSanityTags(),
+    getActivePromoCampaign(),
   ]);
 
   const policies = storeSettings?.policies && storeSettings.policies.length > 0 
@@ -67,7 +69,23 @@ export default async function Home() {
       <Header />
 
       <main className="flex-1">
-        <ProductBrowser initialProducts={initialProducts} aiImages={aiImages} tagTaxonomy={tagTaxonomy}>
+        <ProductBrowser
+          initialProducts={initialProducts}
+          aiImages={aiImages}
+          tagTaxonomy={tagTaxonomy}
+          rowTwoSlot={
+            promoCampaign ? (
+              <>
+                <div className="md:hidden">
+                  <PromoBanner campaign={promoCampaign} variant="mobile" />
+                </div>
+                <div className="hidden md:block">
+                  <PromoBanner campaign={promoCampaign} variant="desktop" />
+                </div>
+              </>
+            ) : undefined
+          }
+        >
           {heroBanner && (
             <SmartBanner banner={heroBanner} allProducts={initialProducts} />
           )}

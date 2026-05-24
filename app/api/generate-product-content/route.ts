@@ -27,6 +27,22 @@ Todopolis es una tienda online colombiana enfocada en productos de calidad con e
    - Después: cómo se siente CON el producto (sensaciones concretas, no abstractas)
    - Los beneficios son resultados, no características. Nunca digas "tiene X función", di "gracias a X lograrás Y"
 
+─── PROHIBIDO (clichés que matan la conversión) ────────────────────────────
+
+NUNCA uses estas muletillas — el cliente colombiano las ignora porque suenan a publicidad barata:
+- "Miles de colombianos / latinos / mujeres ya lo usan" (o cualquier "miles de…")
+- "El mejor del mercado", "el #1", "el más vendido en Colombia", "líder en su categoría"
+- "Cambiará tu vida", "transformará tu vida", "no podrás vivir sin él"
+- "Calidad premium", "calidad insuperable", "altos estándares de calidad" (sin decir QUÉ es premium)
+- "Tecnología de punta", "última tecnología", "tecnología avanzada" (sin nombrar la tecnología)
+- "Diseño elegante / moderno / sofisticado" (sin describir QUÉ lo hace elegante)
+- "100% garantizado", "satisfacción asegurada" (sin detallar la garantía real)
+- "Recomendado por expertos / dermatólogos" (a menos que sea verificable)
+- "Acabados de lujo", "experiencia única", "máximo confort" (vacíos sin detalle concreto)
+- Verbos pasivos o de exploración en CTAs: "Ver", "Descubrir", "Conocer", "Explorar", "Saber más"
+
+Regla de oro: si la frase se podría copiar tal cual a CUALQUIER otro producto, está mal. Cada texto debe ser específico a este producto, este beneficio, este momento de uso.
+
 ─── REGLAS DE REDACCIÓN ────────────────────────────────────────────────────
 
 HERO TITLE:
@@ -36,14 +52,25 @@ HERO TITLE:
 - Ejemplos malos: "Producto de alta calidad para el hogar" / "El mejor suplemento del mercado"
 
 HERO SUBTITLE:
-- 2 oraciones. Primera: amplía el beneficio principal. Segunda: prueba social o credibilidad
-- Tono cálido, como si lo dijera una amiga que ya lo usó
+- 2 oraciones, máximo 28 palabras en total. Tono cálido pero profesional, como una recomendación íntima.
+- Primera oración: describe SENSORIALMENTE el resultado (textura, olor, sonido, tiempo, sensación) o el momento de uso concreto.
+- Segunda oración: revela un detalle específico del producto que justifica el resultado (un ingrediente, un mecanismo, una característica medible) — NO prueba social, NO superlativos. La prueba social vive solo en los testimonios.
+- Ejemplos buenos:
+  · "Sentirás el aceite absorberse en segundos, sin película grasa al tacto. Formulado con escualano vegetal y vitamina E, dos hidratantes que la piel madura agradece."
+  · "Cae el silencio en la habitación y solo escuchas tu respiración. Su motor ultra-silencioso de 28 dB trabaja como un susurro mientras duermes."
+- Ejemplos PROHIBIDOS: "Miles de colombianos ya lo usan…", "El mejor del mercado…", "Calidad premium que te encantará…"
 
 DESCRIPCIÓN MEJORADA (improvedDescription):
 - Exactamente 3 bullet points con emoji al inicio
-- Cada punto = 1 beneficio concreto con resultado específico
+- Cada punto = 1 beneficio CON un detalle específico que lo justifique (un material, un tiempo, una cifra, una textura, una acción concreta)
 - Usa ✅ 🔥 ⭐ 💪 🧬 🌿 según el tono del producto
-- Máximo 12 palabras por punto — debe leerse en 3 segundos en celular
+- Máximo 14 palabras por punto — debe leerse en 3 segundos en celular
+- Ejemplos buenos:
+  · "✅ Reduce el frizz desde el primer uso gracias al aceite de argán."
+  · "🔥 Bate 3 huevos en 20 segundos sin salpicar la encimera."
+- Ejemplos PROHIBIDOS:
+  · "✅ Calidad premium para toda la familia." (vacío)
+  · "🔥 El mejor del mercado, ¡no te quedes sin el tuyo!" (clíche)
 
 BENEFICIOS (4 en total):
 - Título: resultado concreto en 3-5 palabras
@@ -67,14 +94,15 @@ HERO CTA (texto del botón principal):
 - Ejemplos PROHIBIDOS: "Ver mi pedido", "Ver más", "Descubrir", "Conocer", "Explorar", "Más info", "Saber más", cualquier verbo pasivo o de exploración.
 
 CTA HEADLINE:
-- Crea urgencia real (stock limitado, oferta por tiempo) sin mentir.
-- Formato: afirmación directa que conecte con el deseo principal y empuje a comprar (no preguntas abiertas).
-- Debe sentirse como un cierre de venta, no como una invitación a navegar.
+- Una oración afirmativa que conecte con el deseo principal y empuje a comprar (no preguntas abiertas, no superlativos genéricos).
+- Crea urgencia REAL solo si aplica (oferta por tiempo, stock limitado real). Si no aplica, enfócate en el resultado inmediato ("Empieza esta noche", "Úsalo desde hoy").
+- Ejemplos buenos: "Empieza esta noche a dormir como antes" / "Lleva la peluquería a tu baño".
+- Ejemplos PROHIBIDOS: "¡Lo mejor del mercado!", "No te quedes sin el tuyo", "Calidad insuperable".
 
 CTA TEXT:
-- 2 oraciones cortas. Primera refuerza el beneficio principal. Segunda reduce el miedo a comprar.
-- Menciona contraentrega ("paga al recibir"), envío a todo Colombia o facilidad de compra. Nunca prometas devoluciones gratis ni garantías que la tienda no ofrece.
-- Termina con una orden de compra o un empuje al botón (ej: "asegura el tuyo antes de que se agote").
+- 2 oraciones cortas (máx 24 palabras en total). Primera ancla el beneficio con un detalle concreto. Segunda baja el miedo a comprar con un hecho operativo real.
+- Hechos operativos válidos en Todopolis: pago contraentrega, envío a toda Colombia, despacho en 24-48h. NUNCA prometas devoluciones gratis ni garantías que no existan.
+- Termina con un empuje natural ("asegura el tuyo", "pídelo ya"), nunca con cliché tipo "no te lo pierdas".
 
 ─── FORMATO DE SALIDA ──────────────────────────────────────────────────────
 

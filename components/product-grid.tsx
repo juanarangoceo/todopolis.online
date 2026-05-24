@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, ReactNode, useEffect, useRef, useState } from 'react';
 import { Product } from '@/lib/types';
 import { ProductCard } from './product-card';
 import { Package, Sparkles } from 'lucide-react';
@@ -8,11 +8,18 @@ import { Package, Sparkles } from 'lucide-react';
 interface ProductGridProps {
   products: Product[];
   searchQuery?: string;
+  // Slot opcional para insertar contenido (ej: banner promocional) después de la
+  // 2ª fila de productos. Se renderiza dos veces con clases responsive para que
+  // siempre aparezca cerca de la 2ª fila en cada breakpoint.
+  rowTwoSlot?: ReactNode;
 }
 
 const PAGE_SIZE = 24;
+// Posiciones donde insertar el slot. Mobile/sm: 2 cols → tras 4. lg+: 3-4 cols → tras 8.
+const SLOT_AFTER_MOBILE = 4;
+const SLOT_AFTER_DESKTOP = 8;
 
-export function ProductGrid({ products, searchQuery }: ProductGridProps) {
+export function ProductGrid({ products, searchQuery, rowTwoSlot }: ProductGridProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -65,9 +72,25 @@ export function ProductGrid({ products, searchQuery }: ProductGridProps) {
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-8">
-        {visibleProducts.map((product, index) => (
-          <ProductCard key={product.id} product={product} index={index} />
-        ))}
+        {visibleProducts.map((product, index) => {
+          // Solo emitimos los slots si tenemos slot y suficientes productos para no
+          // dejar el banner colgando arriba del contenido.
+          const showMobileSlot =
+            rowTwoSlot && index === SLOT_AFTER_MOBILE - 1 && visibleProducts.length > SLOT_AFTER_MOBILE;
+          const showDesktopSlot =
+            rowTwoSlot && index === SLOT_AFTER_DESKTOP - 1 && visibleProducts.length > SLOT_AFTER_DESKTOP;
+          return (
+            <Fragment key={product.id}>
+              <ProductCard product={product} index={index} />
+              {showMobileSlot && (
+                <div className="col-span-full lg:hidden my-2">{rowTwoSlot}</div>
+              )}
+              {showDesktopSlot && (
+                <div className="hidden lg:block col-span-full my-4">{rowTwoSlot}</div>
+              )}
+            </Fragment>
+          );
+        })}
       </div>
       {hasMore && (
         <div ref={sentinelRef} className="h-10 mt-6 flex items-center justify-center">

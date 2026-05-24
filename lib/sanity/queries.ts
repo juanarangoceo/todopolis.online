@@ -172,6 +172,79 @@ export async function getSanityTags(): Promise<TagTaxonomyEntry[]> {
   }
 }
 
+// ─── Campañas / Banner Temporada ─────────────────────────────────────────────
+
+const ACTIVE_PROMO_CAMPAIGN_QUERY = `*[_type == "promoCampaign" && isActive == true] | order(_updatedAt desc)[0] {
+  _id,
+  title,
+  imageAlt,
+  ctaLabel,
+  pageHeading,
+  pageSubheading,
+  tagMatchMode,
+  "desktopImage": desktopImage.asset->url,
+  "mobileImage": mobileImage.asset->url,
+  "tagSlugs": tags[]->slug.current,
+  "tags": tags[]->{ "slug": slug.current, name, icon }
+}`
+
+export interface PromoCampaign {
+  _id: string
+  title: string
+  imageAlt: string
+  ctaLabel?: string
+  pageHeading: string
+  pageSubheading?: string
+  tagMatchMode: 'any' | 'all'
+  desktopImage: string
+  mobileImage: string
+  tagSlugs: string[]
+  tags: { slug: string; name: string; icon?: string }[]
+}
+
+export async function getActivePromoCampaign(): Promise<PromoCampaign | null> {
+  try {
+    return await withRetry(() => getSanityClient().fetch<PromoCampaign | null>(ACTIVE_PROMO_CAMPAIGN_QUERY, {}, {
+      next: { revalidate: 3600, tags: ['promoCampaign'] },
+    }))
+  } catch {
+    return null
+  }
+}
+
+// Productos que matchean la campaña por tags. El modo "any" usa `in` (al menos un tag);
+// "all" verifica que todos los slugs solicitados estén dentro de los tags del producto.
+export async function getProductsByTags(slugs: string[], mode: 'any' | 'all'): Promise<any[]> {
+  if (!slugs.length) return []
+  const filter =
+    mode === 'all'
+      ? `*[_type == "product" && defined(slug.current) && count((tags[]->slug.current)[@ in $slugs]) == $required]`
+      : `*[_type == "product" && defined(slug.current) && count((tags[]->slug.current)[@ in $slugs]) > 0]`
+  const query = `${filter} | order(_createdAt desc) {
+    _id,
+    name,
+    "slug": slug.current,
+    shortDescription,
+    price,
+    originalPrice,
+    mastershopImageUrl,
+    "image": images[0].asset->url,
+    category,
+    isNew,
+    isBestSeller,
+    testimonials,
+    reviewsCount,
+    "tags": tags[]->{ "slug": slug.current, name, group, icon }
+  }`
+  try {
+    return await withRetry(() => getSanityClient().fetch(query, { slugs, required: slugs.length }, {
+      next: { revalidate: 3600, tags: ['products', 'promoCampaign'] },
+    }))
+  } catch {
+    return []
+  }
+}
+
 export async function getSanityHeroBanner() {
   try {
     return await withRetry(() => getSanityClient().fetch(HERO_BANNER_QUERY, {}, {
