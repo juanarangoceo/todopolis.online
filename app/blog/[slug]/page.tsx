@@ -78,7 +78,7 @@ function renderSection(section: ArticleSection, productSlug: string, index: numb
           <ul className="space-y-3">
             {section.items?.map((item, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="mt-2 w-2 h-2 rounded-full bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] shrink-0" />
+                <span className="mt-2 w-2 h-2 rounded-full bg-gradient-to-r from-todopolis-blue to-todopolis-lavender shrink-0" />
                 <span className="text-gray-700 leading-relaxed">{item}</span>
               </li>
             ))}
@@ -98,9 +98,9 @@ function renderSection(section: ArticleSection, productSlug: string, index: numb
                 key={faq._key ?? i}
                 className="border border-gray-200 rounded-xl overflow-hidden"
               >
-                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer font-semibold text-gray-800 list-none hover:bg-[#FFF8FA] transition-colors select-none">
+                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer font-semibold text-gray-800 list-none hover:bg-surface-soft transition-colors select-none">
                   <span>{faq.question}</span>
-                  <span className="ml-3 text-[#EDD2F3] text-lg shrink-0">＋</span>
+                  <span className="ml-3 text-todopolis-lavender text-lg shrink-0">＋</span>
                 </summary>
                 <p className="px-5 pb-4 pt-1 text-gray-600 leading-relaxed border-t border-gray-100">
                   {faq.answer}
@@ -115,7 +115,7 @@ function renderSection(section: ArticleSection, productSlug: string, index: numb
       return (
         <div
           key={key}
-          className="bg-gradient-to-br from-[#EDD2F3]/25 to-[#FFB4AC]/20 border border-[#EDD2F3]/50 rounded-2xl p-8 my-10 text-center"
+          className="bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl p-8 my-10 text-center"
         >
           {section.heading && (
             <h2 className="text-2xl font-bold text-gray-900 mb-3">{section.heading}</h2>
@@ -126,7 +126,7 @@ function renderSection(section: ArticleSection, productSlug: string, index: numb
           {productSlug && (
             <Link
               href={`/producto/${productSlug}`}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-gray-900 font-bold px-8 py-3 rounded-2xl hover:shadow-lg hover:scale-105 transition-all duration-200"
+              className="inline-flex items-center gap-2 bg-cta text-cta-fg font-bold px-8 py-3 rounded-2xl hover:bg-cta-hover hover:shadow-lg hover:scale-105 transition-all duration-200"
             >
               {section.buttonText || 'Ver producto'} →
             </Link>
@@ -200,17 +200,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
       <main className="flex-1">
         {/* Article header */}
-        <header className="bg-gradient-to-b from-[#FFF8FA] to-white pt-10 pb-8">
+        <header className="bg-surface-soft pt-10 pb-8">
           <div className="container mx-auto px-4 max-w-3xl">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
-              <Link href="/blog" className="hover:text-[#8b5cf6] transition-colors">Blog</Link>
+              <Link href="/blog" className="hover:text-todopolis-lavender-deep transition-colors">Blog</Link>
               <span>/</span>
-              <span className="text-[#8b5cf6] font-medium">{category}</span>
+              <span className="text-todopolis-lavender-deep font-medium">{category}</span>
             </nav>
 
             {/* Category badge */}
-            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EDD2F3]/30 text-[#8b5cf6] mb-4">
+            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-todopolis-lavender/30 text-todopolis-lavender-deep mb-4">
               {category}
             </span>
 
@@ -222,7 +222,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
               {article.topic && (
-                <span className="font-medium text-[#FFB4AC]">{article.topic}</span>
+                <span className="font-medium text-todopolis-pink-deep">{article.topic}</span>
               )}
               {article.readingTime && (
                 <span>{article.readingTime} min de lectura</span>
@@ -251,7 +251,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <div className="container mx-auto px-4 max-w-3xl pb-12">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-[#8b5cf6] transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-todopolis-lavender-deep transition-colors"
           >
             ← Volver al blog
           </Link>

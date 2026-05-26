@@ -105,10 +105,10 @@ export function LucyMagicForm({ sessionId, onBack, onClose }: LucyMagicFormProps
     return (
       <div className="flex flex-col items-center justify-center h-full gap-6 px-6 text-center">
         <div className="relative">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] flex items-center justify-center shadow-lg animate-pulse">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-todopolis-blue to-todopolis-lavender flex items-center justify-center shadow-lg animate-pulse">
             <Wand2 className="w-9 h-9 text-white animate-bounce" />
           </div>
-          <div className="absolute inset-0 rounded-full border-4 border-[#FFB4AC]/30 animate-ping" />
+          <div className="absolute inset-0 rounded-full border-4 border-todopolis-lavender/30 animate-ping" />
         </div>
         <div>
           <h3 className="font-serif font-bold text-xl text-foreground mb-1">La magia está ocurriendo...</h3>
@@ -122,10 +122,10 @@ export function LucyMagicForm({ sessionId, onBack, onClose }: LucyMagicFormProps
   if (formMode === 'result' && result) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#EDD2F3]/30 shrink-0">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-todopolis-lavender/30 shrink-0">
           <button
             onClick={onBack}
-            className="p-1.5 rounded-full hover:bg-[#FFD5E5]/40 text-foreground/60 hover:text-foreground transition-colors"
+            className="p-1.5 rounded-full hover:bg-todopolis-lavender/25 text-foreground/60 hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -136,16 +136,16 @@ export function LucyMagicForm({ sessionId, onBack, onClose }: LucyMagicFormProps
           {/* Lucy message */}
           <div className="flex gap-2 mb-4">
             <LucyAvatar size="sm" className="mt-1 shrink-0" />
-            <div className="bg-white border border-[#EDD2F3]/40 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm text-sm text-foreground leading-relaxed">
+            <div className="bg-white border border-todopolis-lavender/40 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm text-sm text-foreground leading-relaxed">
               {result.lucyMessage}
             </div>
           </div>
 
           {/* Product card */}
           {result.product && (
-            <div className="mt-3 rounded-2xl overflow-hidden border border-[#EDD2F3]/40 bg-white shadow-md">
+            <div className="mt-3 rounded-2xl overflow-hidden border border-todopolis-lavender/40 bg-white shadow-md">
               {result.product.image_url && (
-                <div className="relative w-full h-36 bg-gradient-to-br from-[#FFF0F5] to-[#F5F0FF]">
+                <div className="relative w-full h-36 bg-surface-muted">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={result.product.image_url} alt={result.product.name} className="w-full h-full object-contain p-2" />
                 </div>
@@ -156,13 +156,13 @@ export function LucyMagicForm({ sessionId, onBack, onClose }: LucyMagicFormProps
                   <p className="text-[11px] text-foreground/60 line-clamp-2 mb-2">{result.product.short_description}</p>
                 )}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[#F43F5E] font-black text-base">
+                  <span className="text-todopolis-lavender-deep font-black text-base">
                     {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(result.product.price)}
                   </span>
                   <a
                     href={`/producto/${result.product.slug}`}
                     onClick={onClose}
-                    className="flex items-center gap-1 text-[11px] font-bold text-white bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity shrink-0"
+                    className="flex items-center gap-1 text-[11px] font-bold text-white bg-gradient-to-r from-todopolis-blue to-todopolis-lavender px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity shrink-0"
                   >
                     Ver producto
                   </a>
@@ -180,7 +180,7 @@ export function LucyMagicForm({ sessionId, onBack, onClose }: LucyMagicFormProps
           {/* Reset */}
           <button
             onClick={handleReset}
-            className="w-full mt-4 py-2.5 rounded-full border border-[#EDD2F3]/60 text-sm text-foreground/60 hover:bg-[#FFF5F8] hover:text-foreground transition-colors"
+            className="w-full mt-4 py-2.5 rounded-full border border-todopolis-lavender/40 text-sm text-foreground/60 hover:bg-todopolis-lavender/15 hover:text-foreground transition-colors"
           >
             Repetir cuestionario
           </button>
@@ -193,22 +193,22 @@ export function LucyMagicForm({ sessionId, onBack, onClose }: LucyMagicFormProps
   return (
     <div className="flex flex-col h-full">
       {/* Header with progress */}
-      <div className="px-4 pt-4 pb-3 border-b border-[#EDD2F3]/30 shrink-0">
+      <div className="px-4 pt-4 pb-3 border-b border-todopolis-lavender/30 shrink-0">
         <div className="flex items-center gap-3 mb-3">
           <button
             onClick={step === 0 ? onBack : () => { setStep(step - 1); setAnswers(answers.slice(0, -1)); }}
-            className="p-1.5 rounded-full hover:bg-[#FFD5E5]/40 text-foreground/60 hover:text-foreground transition-colors"
+            className="p-1.5 rounded-full hover:bg-todopolis-lavender/25 text-foreground/60 hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <span className="text-xs font-bold text-[#F43F5E] uppercase tracking-wider">
+          <span className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wider">
             Cuestionario Mágico
           </span>
         </div>
         {/* Progress bar */}
-        <div className="w-full h-1.5 bg-[#EDD2F3]/30 rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-todopolis-lavender/30 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-todopolis-blue to-todopolis-lavender rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -234,10 +234,10 @@ export function LucyMagicForm({ sessionId, onBack, onClose }: LucyMagicFormProps
               <button
                 key={idx}
                 onClick={() => handleAnswer(option.text)}
-                className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white border-2 border-[#EDD2F3]/30 hover:border-[#FFB4AC] hover:bg-[#FFF5F8] transition-all duration-200 text-left"
+                className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface border-2 border-todopolis-lavender/30 hover:border-todopolis-lavender-deep hover:bg-todopolis-lavender/15 transition-all duration-200 text-left"
               >
-                <div className="w-9 h-9 shrink-0 rounded-xl bg-[#FFD5E5]/50 group-hover:bg-gradient-to-br group-hover:from-[#FFB4AC] group-hover:to-[#EDD2F3] flex items-center justify-center transition-all duration-200">
-                  <Icon className="w-4 h-4 text-[#F43F5E] group-hover:text-white transition-colors" />
+                <div className="w-9 h-9 shrink-0 rounded-xl bg-todopolis-lavender/40 group-hover:bg-gradient-to-br group-hover:from-todopolis-blue group-hover:to-todopolis-lavender flex items-center justify-center transition-all duration-200">
+                  <Icon className="w-4 h-4 text-todopolis-lavender-deep group-hover:text-white transition-colors" />
                 </div>
                 <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors">
                   {option.text}

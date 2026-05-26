@@ -91,18 +91,18 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
       {/* Panel: bottom-sheet mobile, side-drawer desktop */}
       <div className="relative ml-auto w-full md:w-[420px] bg-white shadow-2xl flex flex-col rounded-t-3xl md:rounded-none max-h-[88vh] md:max-h-none md:h-full mt-auto md:mt-0 animate-[slideUp_240ms_ease-out] md:animate-[slideLeft_240ms_ease-out]">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#EDD2F3]/40 flex items-center justify-between shrink-0">
+        <div className="px-5 py-4 border-b border-todopolis-lavender/40 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-foreground">Filtros</h2>
             {selectedCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-[#FFB4AC] text-white text-xs font-bold">
+              <span className="px-2 py-0.5 rounded-full bg-cta text-cta-fg text-xs font-bold">
                 {selectedCount}
               </span>
             )}
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-[#FFD5E5]/40 hover:bg-[#FFD5E5]/70 flex items-center justify-center transition-colors"
+            className="w-9 h-9 rounded-full bg-surface-muted hover:bg-todopolis-lavender/30 flex items-center justify-center transition-colors"
             aria-label="Cerrar"
           >
             <X className="w-4 h-4 text-foreground/70" />
@@ -110,7 +110,7 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
         </div>
 
         {/* Search dentro del panel */}
-        <div className="px-5 py-3 border-b border-[#EDD2F3]/30 shrink-0">
+        <div className="px-5 py-3 border-b border-todopolis-lavender/30 shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
             <input
@@ -118,7 +118,7 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar etiqueta…"
-              className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-[#FFF8FA] border border-[#EDD2F3]/40 text-sm focus:outline-none focus:border-[#FFB4AC] transition-colors"
+              className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-surface-muted border border-todopolis-lavender/40 text-sm focus:outline-none focus:border-todopolis-lavender-deep transition-colors"
             />
           </div>
         </div>
@@ -143,7 +143,7 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
                       {meta.label}
                     </span>
                     {activeInGroup > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full bg-[#FFB4AC]/20 text-[#E11D48] text-[10px] font-bold">
+                      <span className="px-1.5 py-0.5 rounded-full bg-tag-active-bg text-tag-active-fg text-[10px] font-bold">
                         {activeInGroup}
                       </span>
                     )}
@@ -166,16 +166,16 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
                           disabled={disabled}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all
                             ${isSelected
-                              ? 'bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-sm'
+                              ? 'bg-tag-active-bg text-tag-active-fg border border-todopolis-lavender-deep/20 shadow-sm'
                               : disabled
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
-                                : 'bg-[#FFD5E5]/40 text-foreground/70 hover:bg-[#FFD5E5]/70 hover:text-[#E11D48] border border-[#FFB4AC]/30'
+                                : 'bg-tag-inactive-bg text-tag-inactive-fg hover:bg-todopolis-lavender/25 hover:text-tag-active-fg border border-tag-inactive-border'
                             }`}
                         >
                           {tag.icon && <span>{tag.icon}</span>}
                           <span>{tag.name}</span>
                           {count > 0 && (
-                            <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-foreground/40'}`}>
+                            <span className={`text-[10px] ${isSelected ? 'text-tag-active-fg/70' : 'text-foreground/40'}`}>
                               {count}
                             </span>
                           )}
@@ -196,17 +196,17 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
         </div>
 
         {/* Footer con acciones */}
-        <div className="px-5 py-3 border-t border-[#EDD2F3]/40 flex gap-3 shrink-0 bg-white">
+        <div className="px-5 py-3 border-t border-todopolis-lavender/40 flex gap-3 shrink-0 bg-surface">
           <button
             onClick={onClear}
             disabled={selectedCount === 0}
-            className="flex-1 py-2.5 rounded-xl text-sm font-bold border border-[#FFB4AC]/40 text-foreground/70 hover:bg-[#FFD5E5]/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold border border-nav-inactive-border text-foreground/70 hover:bg-todopolis-lavender/25 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Limpiar
           </button>
           <button
             onClick={onClose}
-            className="flex-[2] py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-md hover:shadow-lg transition-all"
+            className="flex-[2] py-2.5 rounded-xl text-sm font-bold bg-cta text-cta-fg shadow-md hover:bg-cta-hover transition-colors"
           >
             Ver resultados
           </button>

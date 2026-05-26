@@ -66,14 +66,14 @@ export function ProductHero({ product }: ProductHeroProps) {
         <div className="lg:hidden space-y-4 mb-8">
           {/* Product name kicker (mobile, antes de la imagen) */}
           {showProductKicker && (
-            <p className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-[#C2185B] bg-[#FFE8EE] px-2.5 py-1 rounded-full">
+            <p className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-todopolis-pink-deep bg-todopolis-pink/30 px-2.5 py-1 rounded-full">
               {product.name}
             </p>
           )}
 
-          {/* Sale Banner */}
+          {/* Sale Banner — coral suave (sale), no pelea con el CTA salmón */}
           {discount > 0 && (
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#F43F5E] via-[#FF6B6B] to-[#F43F5E] p-2.5 sm:p-3 shadow-lg shadow-[#F43F5E]/30">
+            <div className="relative overflow-hidden rounded-xl bg-sale p-2.5 sm:p-3 shadow-md">
               <div className="relative flex items-center justify-between gap-1.5 sm:gap-3">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
@@ -91,7 +91,7 @@ export function ProductHero({ product }: ProductHeroProps) {
                   </div>
                   <button
                     onClick={() => setIsCheckoutOpen(true)}
-                    className="shrink-0 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-white text-[#F43F5E] text-[10px] sm:text-xs font-black rounded-lg sm:rounded-xl hover:bg-white/90 active:scale-95 transition-all shadow-md whitespace-nowrap"
+                    className="shrink-0 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-cta text-cta-fg text-[10px] sm:text-xs font-black rounded-lg sm:rounded-xl hover:bg-cta-hover active:scale-95 transition-all shadow-md whitespace-nowrap"
                   >
                     Comprar ya
                   </button>
@@ -111,7 +111,7 @@ export function ProductHero({ product }: ProductHeroProps) {
               priority
             />
             {discount > 0 && (
-              <span className="absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 bg-[#F43F5E]">
+              <span className="absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 bg-sale">
                 <Zap className="w-3.5 h-3.5" />
                 -{discount}%
               </span>
@@ -148,7 +148,7 @@ export function ProductHero({ product }: ProductHeroProps) {
           {/* Title block */}
           <div className="space-y-2">
             {showProductKicker && (
-              <p className="hidden lg:inline-block text-xs font-bold uppercase tracking-[0.18em] text-[#C2185B] bg-[#FFE8EE] px-2.5 py-1 rounded-full">
+              <p className="hidden lg:inline-block text-xs font-bold uppercase tracking-[0.18em] text-todopolis-pink-deep bg-todopolis-pink/30 px-2.5 py-1 rounded-full">
                 {product.name}
               </p>
             )}
@@ -226,14 +226,14 @@ export function ProductHero({ product }: ProductHeroProps) {
             )}
           </div>
 
-          {/* Contraentrega Badge */}
-          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#E7FBBE]/60 border border-[#86EFAC]/50">
-            <div className="w-9 h-9 shrink-0 rounded-full bg-[#10B981]/15 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-[#10B981]" />
+          {/* Contraentrega Badge — unificado al sistema de confianza */}
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-trust-bg border border-trust-border">
+            <div className="w-9 h-9 shrink-0 rounded-full bg-surface flex items-center justify-center shadow-sm">
+              <Shield className="w-5 h-5 text-trust-fg" />
             </div>
             <div>
-              <p className="font-bold text-sm text-[#065F46] leading-tight">Pago Contraentrega</p>
-              <p className="text-xs text-[#065F46]/70 leading-tight mt-0.5">Solo pagas cuando el pedido llegue a tu puerta</p>
+              <p className="font-bold text-sm text-trust-fg leading-tight">Pago Contraentrega</p>
+              <p className="text-xs text-trust-fg/75 leading-tight mt-0.5">Solo pagas cuando el pedido llegue a tu puerta</p>
             </div>
           </div>
 
@@ -252,8 +252,8 @@ export function ProductHero({ product }: ProductHeroProps) {
               onClick={() => setIsCheckoutOpen(true)}
               className={cn(
                 "flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300",
-                "bg-[#F43F5E] text-white hover:bg-[#E11D48] shadow-xl shadow-[#F43F5E]/30 hover:shadow-2xl hover:shadow-[#F43F5E]/40",
-                "hover:scale-[1.02] active:scale-[0.98] animate-[pulse_2s_ease-in-out_infinite]"
+                "bg-cta text-cta-fg hover:bg-cta-hover shadow-xl shadow-cta-ring hover:shadow-2xl",
+                "hover:scale-[1.02] active:scale-[0.98]"
               )}
             >
               <ShoppingBag className="w-5 h-5" />
@@ -264,8 +264,8 @@ export function ProductHero({ product }: ProductHeroProps) {
               className={cn(
                 "p-4 rounded-2xl border-2 transition-all duration-300",
                 isWishlisted
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary"
+                  ? "border-accent-feminine bg-accent-feminine/20 text-todopolis-pink-deep"
+                  : "border-border hover:border-accent-feminine/50 text-muted-foreground hover:text-todopolis-pink-deep"
               )}
               aria-label={isWishlisted ? "Quitar de favoritos" : "Agregar a favoritos"}
             >
@@ -273,18 +273,18 @@ export function ProductHero({ product }: ProductHeroProps) {
             </button>
           </div>
 
-          {/* Trust Badges */}
+          {/* Trust Badges — sistema único de confianza */}
           <div className="grid grid-cols-3 gap-3 md:gap-4 pt-4 md:pt-6">
-            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/50">
-              <Truck className="w-6 h-6 text-[#F43F5E]" />
+            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-trust-bg border border-trust-border">
+              <Truck className="w-6 h-6 text-trust-fg" />
               <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">Envío a todo Colombia</span>
             </div>
-            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/50">
-              <Shield className="w-6 h-6 text-[#10B981]" />
+            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-trust-bg border border-trust-border">
+              <Shield className="w-6 h-6 text-trust-fg" />
               <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">Compra segura</span>
             </div>
-            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/50">
-              <RotateCcw className="w-6 h-6 text-[#3B82F6]" />
+            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-trust-bg border border-trust-border">
+              <RotateCcw className="w-6 h-6 text-trust-fg" />
               <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">30 días devolución</span>
             </div>
           </div>
@@ -303,13 +303,13 @@ export function ProductHero({ product }: ProductHeroProps) {
     <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 animate-in slide-in-from-bottom-5">
       <button
         onClick={() => setIsCheckoutOpen(true)}
-        className="w-full flex items-center justify-between px-6 py-4 rounded-2xl font-bold text-lg bg-[#F43F5E] text-white shadow-2xl shadow-[#F43F5E]/40 active:scale-[0.98] transition-all"
+        className="w-full flex items-center justify-between px-6 py-4 rounded-2xl font-bold text-lg bg-cta text-cta-fg shadow-2xl shadow-cta-ring active:scale-[0.98] transition-all"
       >
         <div className="flex items-center gap-2">
-          <ShoppingBag className="w-5 h-5 animate-pulse" />
+          <ShoppingBag className="w-5 h-5" />
           <span>{heroCta}</span>
         </div>
-        <span className="text-white/90 font-medium whitespace-nowrap">
+        <span className="text-cta-fg/80 font-medium whitespace-nowrap">
           {formatPrice(product.price ?? 0)}
         </span>
       </button>

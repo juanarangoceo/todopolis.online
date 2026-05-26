@@ -19,12 +19,12 @@ export function SmartBanner({ banner, allProducts = [] }: SmartBannerProps) {
     <section className="w-full pt-4 md:pt-5 pb-2">
       <div className="container mx-auto px-4">
         <div className="relative w-full rounded-3xl overflow-hidden shadow-md"
-          style={{ background: 'linear-gradient(135deg, #FFF0F8 0%, #F5E9FF 55%, #FFE8F0 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #F0F7FF 0%, #F5E9FF 55%, #EBF4FF 100%)' }}
         >
-          {/* Decorative blobs */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#EDD2F3]/50 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-          <div className="absolute bottom-0 left-1/3 w-56 h-56 bg-[#FFB4AC]/30 rounded-full blur-3xl translate-y-1/2 pointer-events-none" />
-          <div className="absolute top-1/2 left-0 w-40 h-40 bg-[#EDD2F3]/25 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+          {/* Decorative blobs neutros (lila + azul) */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-todopolis-lavender/40 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+          <div className="absolute bottom-0 left-1/3 w-56 h-56 bg-todopolis-blue/30 rounded-full blur-3xl translate-y-1/2 pointer-events-none" />
+          <div className="absolute top-1/2 left-0 w-40 h-40 bg-todopolis-lavender/25 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
           <div className="relative z-10">
 
@@ -52,7 +52,7 @@ export function SmartBanner({ banner, allProducts = [] }: SmartBannerProps) {
                         <Link
                           key={product.id}
                           href={`/producto/${slug}`}
-                          className="group relative rounded-xl overflow-hidden aspect-square bg-white/60 border border-white hover:border-[#FFB4AC]/70 hover:shadow-md transition-all duration-200"
+                          className="group relative rounded-xl overflow-hidden aspect-square bg-white/60 border border-white hover:border-todopolis-blue hover:shadow-md transition-all duration-200"
                         >
                           <Image
                             src={product.image || '/placeholder.jpg'}

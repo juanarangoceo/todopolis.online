@@ -27,14 +27,15 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     return '$ ' + price.toLocaleString('es-CO');
   };
 
-  // Assign different brand colors based on index
-  const colorVariants = [
-    { bg: 'from-[#FFD5E5]/20 to-[#FFB4AC]/10', border: 'border-[#FFD5E5]/30', accent: '#FFB4AC' },
-    { bg: 'from-[#A2D2FF]/20 to-[#EDD2F3]/10', border: 'border-[#A2D2FF]/30', accent: '#A2D2FF' },
-    { bg: 'from-[#EDD2F3]/20 to-[#FFD5E5]/10', border: 'border-[#EDD2F3]/30', accent: '#EDD2F3' },
-    { bg: 'from-[#E7FBBE]/20 to-[#A2D2FF]/10', border: 'border-[#E7FBBE]/30', accent: '#E7FBBE' },
+  // Card neutra con un borde-top sutil rotando colores de marca como acento decorativo.
+  // Sale del modelo anterior (gradiente completo por card) que saturaba el grid.
+  const accentVariants = [
+    'var(--todopolis-blue)',
+    'var(--todopolis-lavender)',
+    'var(--todopolis-pink)',
+    'var(--todopolis-lime)',
   ];
-  const variant = colorVariants[index % colorVariants.length];
+  const accent = accentVariants[index % accentVariants.length];
 
   return (
     <>
@@ -48,18 +49,17 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       } : undefined}
     >
       <article className="relative h-full">
-        {/* Card with glassmorphism */}
-        <div 
+        {/* Card neutra con borde superior de acento por categoría visual */}
+        <div
           className={cn(
             "relative h-full rounded-3xl overflow-hidden transition-all duration-500",
-            "bg-gradient-to-br", variant.bg,
-            "md:backdrop-blur-xl bg-white/90 md:bg-transparent border-2", variant.border,
-            "shadow-lg hover:shadow-2xl",
+            "bg-surface border border-nav-inactive-border",
+            "shadow-sm hover:shadow-xl",
             "hover:scale-[1.03] hover:-translate-y-2",
-            "group-focus-visible:ring-2 group-focus-visible:ring-[#FFB4AC] group-focus-visible:ring-offset-2"
+            "group-focus-visible:ring-2 group-focus-visible:ring-cta group-focus-visible:ring-offset-2"
           )}
           style={{
-            boxShadow: `0 10px 40px -10px ${variant.accent}30`
+            borderTop: `3px solid ${accent}`,
           }}
         >
           {/* Shine effect on hover */}
@@ -82,18 +82,18 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             {/* Overlay gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
-            {/* Discount badge */}
+            {/* Discount badge — color de oferta, distinto del CTA */}
             {discount > 0 && (
-              <span 
-                className="absolute top-4 left-4 px-3 py-1.5 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1 bg-[#1a1a2e]/90 backdrop-blur-sm border border-white/20"
+              <span
+                className="absolute top-4 left-4 px-3 py-1.5 text-sale-fg text-xs font-bold rounded-full shadow-lg flex items-center gap-1 bg-sale backdrop-blur-sm"
               >
                 <Sparkles className="w-3 h-3" />
                 -{discount}%
               </span>
             )}
-            
+
             {/* Favorite button */}
-            <button 
+            <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -101,17 +101,17 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               }}
               className={cn(
                 "absolute top-4 right-4 p-2.5 rounded-2xl transition-all duration-300",
-                "bg-white/90 md:backdrop-blur-sm hover:bg-[#FFD5E5]",
+                "bg-white/95 md:backdrop-blur-sm hover:bg-accent-feminine/60",
                 "opacity-100 translate-y-0",
-                "shadow-lg"
+                "shadow-md"
               )}
               aria-label={isFavorited ? "Quitar de favoritos" : "Agregar a favoritos"}
             >
-              <Heart className={cn("w-4 h-4 text-[#FFB4AC]", isFavorited && "fill-current")} />
+              <Heart className={cn("w-4 h-4 text-todopolis-pink-deep", isFavorited && "fill-current")} />
             </button>
-            
-            {/* Quick add button */}
-            <button 
+
+            {/* Quick add button — CTA único en salmón */}
+            <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -119,22 +119,22 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               }}
               className={cn(
                 "absolute bottom-4 right-4 p-3.5 rounded-2xl transition-all duration-300",
-                "bg-[#FFB4AC] text-white hover:bg-[#FF9A8A]",
+                "bg-cta text-cta-fg hover:bg-cta-hover",
                 "opacity-100 translate-y-0",
-                "shadow-xl shadow-[#FFB4AC]/40"
+                "shadow-xl shadow-cta-ring"
               )}
               aria-label="Agregar al carrito"
             >
               <ShoppingBag className="w-5 h-5" />
             </button>
           </div>
-          
+
           {/* Content */}
-          <div className="p-3 sm:p-5 bg-white/95 md:bg-white/80 md:backdrop-blur-sm">
+          <div className="p-3 sm:p-5 bg-surface">
             <div className="flex items-center justify-between mb-2">
               {/* Category */}
-              <span 
-                className="text-xs font-bold uppercase tracking-wider text-[#C2185B]"
+              <span
+                className="text-xs font-bold uppercase tracking-wider text-todopolis-pink-deep"
               >
                 {product.category}
               </span>
@@ -148,22 +148,22 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
             
             {/* Name */}
-            <h3 className="mt-2 font-sans text-sm sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-[#FFB4AC] transition-colors leading-tight">
+            <h3 className="mt-2 font-sans text-sm sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-cta-fg transition-colors leading-tight">
               {product.name}
             </h3>
-            
+
             {/* Rating */}
             <div className="mt-3 flex items-center gap-1.5">
               <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
+                  <Star
+                    key={i}
                     className={cn(
                       "w-3.5 h-3.5",
-                      i < Math.floor(product.rating) 
-                        ? "fill-[#FFB4AC] text-[#FFB4AC]" 
+                      i < Math.floor(product.rating)
+                        ? "fill-yellow-400 text-yellow-400"
                         : "fill-gray-200 text-gray-200"
-                    )} 
+                    )}
                   />
                 ))}
               </div>

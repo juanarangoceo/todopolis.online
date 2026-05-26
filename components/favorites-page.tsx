@@ -22,7 +22,7 @@ export function FavoritesPage({ allProducts }: FavoritesPageProps) {
   if (!mounted || loading) {
     return (
       <div className="flex justify-center items-center min-h-[40vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-[#FFB4AC] border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-4 border-cta border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -59,9 +59,9 @@ export function FavoritesPage({ allProducts }: FavoritesPageProps) {
           ? Math.round((1 - product.price / product.originalPrice) * 100)
           : 0
         return (
-          <div key={product.id} className="group relative rounded-3xl overflow-hidden border border-[#FFD5E5]/30 bg-gradient-to-br from-[#FFD5E5]/20 to-[#FFB4AC]/10 shadow-lg hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500">
+          <div key={product.id} className="group relative rounded-3xl overflow-hidden border border-nav-inactive-border bg-surface shadow-sm hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500">
             {/* Image */}
-            <Link href={`/producto/${slug}`} className="block aspect-[4/5] relative bg-white/50">
+            <Link href={`/producto/${slug}`} className="block aspect-[4/5] relative bg-surface-soft">
               <Image
                 src={product.image}
                 alt={product.name}
@@ -70,19 +70,19 @@ export function FavoritesPage({ allProducts }: FavoritesPageProps) {
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
               {discount > 0 && (
-                <span className="absolute top-3 left-3 px-2 py-1 bg-[#F43F5E] text-white text-xs font-bold rounded-full">
+                <span className="absolute top-3 left-3 px-2 py-1 bg-sale text-sale-fg text-xs font-bold rounded-full">
                   -{discount}%
                 </span>
               )}
             </Link>
 
             {/* Info */}
-            <div className="p-3 md:p-4 bg-white/80">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#C2185B]">
+            <div className="p-3 md:p-4 bg-surface">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-todopolis-pink-deep">
                 {product.category}
               </span>
               <Link href={`/producto/${slug}`}>
-                <h3 className="mt-1 text-sm md:text-base font-bold text-foreground line-clamp-2 hover:text-[#FFB4AC] transition-colors">
+                <h3 className="mt-1 text-sm md:text-base font-bold text-foreground line-clamp-2 hover:text-cta-fg transition-colors">
                   {product.name}
                 </h3>
               </Link>
@@ -96,17 +96,17 @@ export function FavoritesPage({ allProducts }: FavoritesPageProps) {
                 <div className="flex gap-1.5">
                   <button
                     onClick={() => toggleFavorite(slug)}
-                    className="p-2 rounded-xl bg-[#FFD5E5]/60 hover:bg-[#FFD5E5] transition-colors"
+                    className="p-2 rounded-xl bg-accent-feminine/40 hover:bg-accent-feminine/70 transition-colors"
                     aria-label="Quitar de favoritos"
                   >
-                    <Heart className="w-4 h-4 text-[#FFB4AC] fill-[#FFB4AC]" />
+                    <Heart className="w-4 h-4 text-todopolis-pink-deep fill-todopolis-pink-deep" />
                   </button>
                   <Link
                     href={`/producto/${slug}`}
-                    className="p-2 rounded-xl bg-[#FFB4AC] hover:bg-[#FF9A8A] transition-colors"
+                    className="p-2 rounded-xl bg-cta hover:bg-cta-hover transition-colors"
                     aria-label="Ver producto"
                   >
-                    <ShoppingBag className="w-4 h-4 text-white" />
+                    <ShoppingBag className="w-4 h-4 text-cta-fg" />
                   </Link>
                 </div>
               </div>

@@ -31,18 +31,18 @@ export function ProductFaq({ faqs }: ProductFaqProps) {
             {faqs.map((faq, index) => (
               <details
                 key={faq._key ?? index}
-                className="group border border-[#EDD2F3]/40 rounded-2xl overflow-hidden bg-white hover:border-[#EDD2F3]/70 transition-colors"
+                className="group border border-todopolis-lavender/40 rounded-2xl overflow-hidden bg-white hover:border-todopolis-lavender/70 transition-colors"
               >
-                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none select-none hover:bg-[#FFF8FA] transition-colors">
+                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none select-none hover:bg-surface-soft transition-colors">
                   <span className="font-semibold text-foreground text-sm md:text-base pr-4 leading-snug">
                     {faq.question}
                   </span>
                   {/* Plus/minus indicator via CSS */}
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-[#EDD2F3]/40 flex items-center justify-center text-[#8b5cf6] font-bold text-sm transition-transform group-open:rotate-45">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-todopolis-lavender/30 flex items-center justify-center text-todopolis-lavender-deep font-bold text-sm transition-transform group-open:rotate-45">
                     +
                   </span>
                 </summary>
-                <div className="px-5 pb-5 pt-1 border-t border-[#EDD2F3]/30">
+                <div className="px-5 pb-5 pt-1 border-t border-todopolis-lavender/30">
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     {faq.answer}
                   </p>

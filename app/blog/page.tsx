@@ -39,21 +39,21 @@ function ArticleCard({ article }: { article: SanityArticle }) {
   const category = CATEGORY_LABELS[article.category ?? ''] ?? article.category ?? 'General'
 
   return (
-    <article className="group flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#EDD2F3]/60 transition-all duration-300">
+    <article className="group flex flex-col bg-surface border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-todopolis-lavender/60 transition-all duration-300">
       <div className="flex flex-col flex-1 p-6">
         {/* Category badge */}
-        <span className="inline-block w-fit text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EDD2F3]/30 text-[#8b5cf6] mb-3">
+        <span className="inline-block w-fit text-xs font-semibold px-2.5 py-1 rounded-full bg-todopolis-lavender/30 text-todopolis-lavender-deep mb-3">
           {category}
         </span>
 
         {/* Title */}
-        <h2 className="font-bold text-lg text-gray-900 leading-snug mb-2 group-hover:text-[#8b5cf6] transition-colors line-clamp-2">
+        <h2 className="font-bold text-lg text-gray-900 leading-snug mb-2 group-hover:text-todopolis-lavender-deep transition-colors line-clamp-2">
           {article.title}
         </h2>
 
         {/* Topic */}
         {article.topic && (
-          <p className="text-sm font-medium text-[#FFB4AC] mb-3">{article.topic}</p>
+          <p className="text-sm font-medium text-todopolis-pink-deep mb-3">{article.topic}</p>
         )}
 
         {/* Excerpt */}
@@ -73,7 +73,7 @@ function ArticleCard({ article }: { article: SanityArticle }) {
           </div>
           <Link
             href={`/blog/${article.slug}`}
-            className="text-sm font-semibold text-[#8b5cf6] hover:text-[#FFB4AC] transition-colors"
+            className="text-sm font-semibold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors"
           >
             Leer →
           </Link>
@@ -115,14 +115,14 @@ export default async function BlogPage() {
 
       <main className="flex-1">
         {/* Hero section */}
-        <section className="bg-gradient-to-b from-[#FFF8FA] to-white py-14 md:py-20">
+        <section className="bg-surface-soft py-14 md:py-20">
           <div className="container mx-auto px-4 text-center">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#8b5cf6] mb-4">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-todopolis-lavender-deep mb-4">
               Blog Todopolis
             </span>
             <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Guías y consejos para{' '}
-              <span className="bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-todopolis-blue-deep to-todopolis-lavender-deep bg-clip-text text-transparent">
                 comprar mejor
               </span>
             </h1>
@@ -134,11 +134,11 @@ export default async function BlogPage() {
 
         {/* Últimos productos — oportunidad de venta */}
         {latestProducts.length > 0 && (
-          <section className="border-b border-gray-100 bg-[#FFF8FA]/60 py-10 md:py-12">
+          <section className="border-b border-gray-100 bg-surface-soft py-10 md:py-12">
             <div className="container mx-auto px-4">
               <div className="flex items-end justify-between gap-4 mb-6">
                 <div>
-                  <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#FFB4AC] mb-1">
+                  <span className="inline-block text-xs font-bold uppercase tracking-widest text-todopolis-pink-deep mb-1">
                     Recién llegados
                   </span>
                   <h2 className="font-serif text-2xl md:text-3xl font-bold text-gray-900">
@@ -147,7 +147,7 @@ export default async function BlogPage() {
                 </div>
                 <Link
                   href="/"
-                  className="shrink-0 text-sm font-semibold text-[#8b5cf6] hover:text-[#FFB4AC] transition-colors whitespace-nowrap"
+                  className="shrink-0 text-sm font-semibold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors whitespace-nowrap"
                 >
                   Ver todo →
                 </Link>

@@ -75,7 +75,7 @@ export function LucyChatButton() {
           {showHint && !hintDismissed && !isOpen && (
             <div className="relative flex items-start gap-1.5 max-w-[210px]"
               style={{ animation: 'lucyFadeInUp 0.4s ease-out' }}>
-              <div className="bg-white text-foreground text-xs font-medium px-3.5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-[#EDD2F3]/50 leading-snug">
+              <div className="bg-surface text-foreground text-xs font-medium px-3.5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-todopolis-lavender/50 leading-snug">
                 ¡Hola! ¿Te ayudo a encontrar algo especial? ✨
               </div>
               <button
@@ -91,20 +91,20 @@ export function LucyChatButton() {
           <button
             onClick={handleOpen}
             aria-label="Abrir chat con Lucy"
-            className={`relative group w-14 h-14 rounded-full shadow-2xl shadow-[#FFB4AC]/40 transition-all duration-300 hover:scale-110 active:scale-95 ${
+            className={`relative group w-14 h-14 rounded-full shadow-2xl shadow-todopolis-lavender/40 transition-all duration-300 hover:scale-110 active:scale-95 ${
               isOpen ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100'
             }`}
           >
-            {/* Gradient bg */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3]" />
+            {/* Gradient bg — Lucy = aspiracional (azul + lila) */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-todopolis-blue to-todopolis-lavender" />
 
             {/* Pulse ring (while hint is active) */}
             {!hintDismissed && (
-              <div className="absolute inset-0 rounded-full border-4 border-[#FFB4AC]/40 animate-ping" />
+              <div className="absolute inset-0 rounded-full border-4 border-todopolis-lavender/40 animate-ping" />
             )}
 
             {/* Spinning dashed ring */}
-            <div className="absolute inset-[-3px] rounded-full border-2 border-dashed border-[#EDD2F3]/50 animate-spin"
+            <div className="absolute inset-[-3px] rounded-full border-2 border-dashed border-todopolis-blue/50 animate-spin"
               style={{ animationDuration: '10s' }} />
 
             {/* Icon */}

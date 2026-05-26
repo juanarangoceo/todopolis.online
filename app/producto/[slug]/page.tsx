@@ -297,7 +297,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 )}
                 {adaptedProduct.articleSlug && (
                   <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#EDD2F3]/20 to-[#FFB4AC]/15 border border-[#EDD2F3]/40 rounded-2xl px-6 py-4">
+                    <div className="flex items-center justify-between gap-4 bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl px-6 py-4">
                       <div>
                         <p className="text-xs text-muted-foreground mb-0.5">¿Aún tienes dudas?</p>
                         <p className="font-semibold text-sm text-foreground">
@@ -308,7 +308,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       </div>
                       <Link
                         href={`/blog/${adaptedProduct.articleSlug}`}
-                        className="shrink-0 text-sm font-bold text-[#8b5cf6] hover:text-[#FFB4AC] transition-colors whitespace-nowrap"
+                        className="shrink-0 text-sm font-bold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors whitespace-nowrap"
                       >
                         Leer artículo →
                       </Link>
@@ -353,7 +353,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
           {adaptedProduct.articleSlug && (
             <div className="container mx-auto px-4 py-4">
-              <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#EDD2F3]/20 to-[#FFB4AC]/15 border border-[#EDD2F3]/40 rounded-2xl px-6 py-4">
+              <div className="flex items-center justify-between gap-4 bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl px-6 py-4">
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">¿Aún tienes dudas?</p>
                   <p className="font-semibold text-sm text-foreground">
@@ -364,7 +364,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
                 <Link
                   href={`/blog/${adaptedProduct.articleSlug}`}
-                  className="shrink-0 text-sm font-bold text-[#8b5cf6] hover:text-[#FFB4AC] transition-colors whitespace-nowrap"
+                  className="shrink-0 text-sm font-bold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors whitespace-nowrap"
                 >
                   Leer artículo →
                 </Link>
@@ -382,7 +382,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* Second products section — below CTA, full width, both layouts */}
         {moreProducts.length > 0 && (
-          <section className="pt-6 pb-12 md:pb-16 bg-gradient-to-b from-[#FFF8FA] to-[#FFD5E5]/20">
+          <section className="pt-6 pb-12 md:pb-16 bg-surface-soft">
             <div className="container mx-auto px-4">
               <div className="text-center mb-8">
                 <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">

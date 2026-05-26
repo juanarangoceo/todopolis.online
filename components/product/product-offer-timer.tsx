@@ -55,7 +55,7 @@ export function ProductOfferTimer({ offerName, offerEndsAt }: ProductOfferTimerP
   const showDays = timeLeft.days > 0
 
   return (
-    <div className="w-full bg-gradient-to-r from-[#F43F5E] via-[#FF6B8A] to-[#FFB4AC] shadow-lg shadow-[#F43F5E]/20">
+    <div className="w-full bg-sale shadow-md">
       <div className="container mx-auto px-4 py-4">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8">
 

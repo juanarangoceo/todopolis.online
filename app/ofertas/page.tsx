@@ -43,14 +43,14 @@ export default async function OfertasPage() {
   }, 0)
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white via-[#FFFBFC] to-[#FFF8FA]">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
 
       <main className="flex-1">
         {/* Hero Banner */}
         <section className="relative overflow-hidden">
-          {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F43F5E] via-[#FF6B6B] to-[#E11D48]" />
+          {/* Background — coral suave de oferta (sale) */}
+          <div className="absolute inset-0 bg-sale" />
           <div className="absolute inset-0">
             <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
@@ -90,7 +90,7 @@ export default async function OfertasPage() {
             <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
               <path d="M0 60L1440 60L1440 20C1200 60 240 0 0 40L0 60Z" fill="white" fillOpacity="0.08"/>
               <path d="M0 60L1440 60L1440 0C1100 50 340 10 0 50L0 60Z" fill="white" fillOpacity="0.06"/>
-              <path d="M0 60L1440 60L1440 30C900 60 540 20 0 60Z" fill="#FFFBFC"/>
+              <path d="M0 60L1440 60L1440 30C900 60 540 20 0 60Z" fill="#FFFFFF"/>
             </svg>
           </div>
         </section>
@@ -101,9 +101,9 @@ export default async function OfertasPage() {
             {discountedProducts.length > 0 ? (
               <>
                 {/* Info bar */}
-                <div className="flex items-center gap-3 mb-8 p-4 rounded-2xl bg-[#FFF0F3] border border-[#FFB4AC]/30">
-                  <div className="w-10 h-10 rounded-xl bg-[#F43F5E]/10 flex items-center justify-center shrink-0">
-                    <Tag className="w-5 h-5 text-[#F43F5E]" />
+                <div className="flex items-center gap-3 mb-8 p-4 rounded-2xl bg-sale-soft border border-sale/25">
+                  <div className="w-10 h-10 rounded-xl bg-sale/10 flex items-center justify-center shrink-0">
+                    <Tag className="w-5 h-5 text-sale" />
                   </div>
                   <div>
                     <p className="font-bold text-foreground text-sm">
@@ -111,7 +111,7 @@ export default async function OfertasPage() {
                     </p>
                     <p className="text-xs text-muted-foreground">Ordenados por mayor descuento · Precios válidos por tiempo limitado</p>
                   </div>
-                  <div className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F43F5E] text-white text-xs font-bold">
+                  <div className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sale text-sale-fg text-xs font-bold">
                     <Percent className="w-3.5 h-3.5" />
                     Hasta {discountedProducts.length > 0 ? Math.max(...discountedProducts.map((p: any) => p._discount)) : 0}% off
                   </div>

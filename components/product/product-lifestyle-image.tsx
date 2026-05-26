@@ -25,7 +25,7 @@ export function ProductLifestyleImage({ product }: ProductLifestyleImageProps) {
       <div className="relative mx-auto max-w-sm md:max-w-md">
         <div
           aria-hidden
-          className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-[#FFD5E5]/60 via-[#FFF0F5]/40 to-[#f8b4d9]/30 blur-2xl"
+          className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-todopolis-lavender/50 via-todopolis-blue/30 to-todopolis-lavender/40 blur-2xl"
         />
         <div className="relative rounded-2xl overflow-hidden shadow-2xl">
           <Image

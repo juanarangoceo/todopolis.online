@@ -59,7 +59,7 @@ export function VariantSelector({ className, showHint = false }: VariantSelector
       </div>
 
       {showHint && !selectedVariant && (
-        <p className="text-xs font-medium text-[#C2185B]">
+        <p className="text-xs font-medium text-todopolis-pink-deep">
           Selecciona una opción para continuar.
         </p>
       )}

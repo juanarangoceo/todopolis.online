@@ -282,7 +282,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-24 right-4 sm:right-6 z-[60] flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg bg-gradient-to-r from-[#A2D2FF] to-[#EDD2F3] text-gray-800 font-semibold hover:shadow-xl hover:scale-105 transition-all duration-200"
+          className="fixed bottom-24 right-4 sm:right-6 z-[60] flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg bg-gradient-to-r from-todopolis-blue to-todopolis-lavender text-gray-800 font-semibold hover:shadow-xl hover:scale-105 transition-all duration-200"
           aria-label={`Hablar con Lucy sobre ${product.name}`}
         >
           <div className="relative shrink-0">
@@ -303,7 +303,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
 
           <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
-            <div className="bg-gradient-to-r from-[#A2D2FF] via-[#EDD2F3] to-[#FFB4AC] p-5">
+            <div className="bg-gradient-to-r from-todopolis-blue via-todopolis-lavender to-todopolis-blue p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className={`relative w-14 h-14 rounded-full bg-white/40 flex items-center justify-center text-2xl shadow-inner transition-transform duration-200 ${isLucySpeaking ? 'scale-110' : 'scale-100'}`}>
@@ -379,7 +379,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
                         {product.shortDescription}
                       </p>
                     )}
-                    <p className="text-[#F43F5E] font-bold text-sm mt-1">
+                    <p className="text-cta-fg font-bold text-sm mt-1">
                       {formatPrice(product.price)}
                     </p>
                     <p className="text-xs text-gray-400">+$12.000 envío · Contraentrega</p>
@@ -406,7 +406,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
               {(callStatus === 'idle' || callStatus === 'ended' || callStatus === 'error') && (
                 <button
                   onClick={startCall}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A2D2FF] to-[#EDD2F3] text-gray-800 font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-todopolis-blue to-todopolis-lavender text-gray-800 font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
                   <Phone className="w-4 h-4" />
                   {callStatus === 'idle' ? 'Iniciar llamada de voz' : 'Llamar de nuevo'}
@@ -486,9 +486,9 @@ function OrderForm({ orderData, onSuccess }: { orderData: OrderData; onSuccess: 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="bg-[#FFD5E5]/40 rounded-xl p-3">
+      <div className="bg-todopolis-lavender/30 rounded-xl p-3">
         <p className="font-semibold text-sm text-gray-800 leading-tight">{orderData.producto_nombre}</p>
-        <p className="text-[#F43F5E] font-bold text-base mt-0.5">
+        <p className="text-cta-fg font-bold text-base mt-0.5">
           Total: ${total.toLocaleString('es-CO')} COP
         </p>
         <p className="text-xs text-gray-500">Incluye $12.000 de envío · Pagas al recibir</p>
@@ -501,7 +501,7 @@ function OrderForm({ orderData, onSuccess }: { orderData: OrderData; onSuccess: 
           type={f.type}
           placeholder={f.label}
           required
-          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#A2D2FF] focus:ring-1 focus:ring-[#A2D2FF] bg-white transition-colors"
+          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-todopolis-blue focus:ring-1 focus:ring-todopolis-blue bg-white transition-colors"
         />
       ))}
 
@@ -512,7 +512,7 @@ function OrderForm({ orderData, onSuccess }: { orderData: OrderData; onSuccess: 
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A2D2FF] to-[#EDD2F3] text-gray-800 font-bold text-sm disabled:opacity-60 transition-opacity flex items-center justify-center gap-2"
+        className="w-full py-3 rounded-2xl bg-gradient-to-r from-todopolis-blue to-todopolis-lavender text-gray-800 font-bold text-sm disabled:opacity-60 transition-opacity flex items-center justify-center gap-2"
       >
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag className="w-4 h-4" />}
         {loading ? 'Procesando...' : 'Confirmar pedido'}

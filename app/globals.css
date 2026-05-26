@@ -11,17 +11,71 @@
   --todopolis-lime: #E7FBBE;
   --todopolis-pink: #FFD5E5;
   --todopolis-coral: #FFB4AC;
-  
-  --background: #FFFBFC;
+
+  /* Brand color darker variants (for icons/text on light backgrounds — pass WCAG) */
+  --todopolis-blue-deep: #1E5A9C;
+  --todopolis-lavender-deep: #6B3F8A;
+  --todopolis-lime-deep: #3F6E0C;
+  --todopolis-pink-deep: #B83A6E;
+  --todopolis-coral-deep: #C44A3F;
+
+  /* Semantic tokens — el contrato de uso para la app entera */
+  /* Surfaces */
+  --app-bg: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-soft: #FAFAFB;
+  --surface-muted: #F4F4F6;
+
+  /* Acción / Conversión — salmón es ÚNICO para "comprar / pedir / agregar" */
+  --cta: #FFB4AC;
+  --cta-hover: #FF9A91;
+  --cta-fg: #4A1B0C;
+  --cta-ring: rgba(255, 154, 145, 0.45);
+
+  /* Oferta — rojo coral suave, separado del CTA para mantener jerarquía */
+  --sale: #E55A6B;
+  --sale-soft: #FCE9EC;
+  --sale-fg: #FFFFFF;
+
+  /* Confianza — base unificada para badges de pago/garantía/envío */
+  --trust-bg: #EFF7FF;
+  --trust-fg: var(--todopolis-blue-deep);
+  --trust-border: #DCEBFB;
+
+  /* Navegación (categorías = ancla universal → azul) */
+  --nav-active-bg: var(--todopolis-blue);
+  --nav-active-fg: var(--todopolis-blue-deep);
+  --nav-active-ring: rgba(162, 210, 255, 0.55);
+  --nav-inactive-bg: var(--surface-muted);
+  --nav-inactive-fg: #4A4A4A;
+  --nav-inactive-border: #E5E5E8;
+  --nav-icon-active: var(--todopolis-blue-deep);
+  --nav-icon-inactive: #6B6B6B;
+
+  /* Tags (filtro fino = decisión personal → coral suave / lila) */
+  --tag-active-bg: var(--todopolis-lavender);
+  --tag-active-fg: var(--todopolis-lavender-deep);
+  --tag-active-ring: rgba(237, 210, 243, 0.6);
+  --tag-inactive-bg: transparent;
+  --tag-inactive-fg: #4A4A4A;
+  --tag-inactive-border: #E5E5E8;
+
+  /* Identidad emocional — protagonismos por contexto */
+  --accent-feminine: var(--todopolis-pink);          /* Moda, comunidad */
+  --accent-aspirational: var(--todopolis-lavender);  /* Belleza, premium, Lucy */
+  --accent-trust: var(--todopolis-blue);             /* Universal, técnica, navegación */
+  --accent-natural: var(--todopolis-lime);           /* Hogar, bienestar */
+
+  --background: #FFFFFF;
   --foreground: #2D2D2D;
   --card: #FFFFFF;
   --card-foreground: #2D2D2D;
   --popover: #FFFFFF;
   --popover-foreground: #2D2D2D;
-  --primary: #FFB4AC;
-  --primary-foreground: #2D2D2D;
-  --secondary: #FFD5E5;
-  --secondary-foreground: #2D2D2D;
+  --primary: var(--cta);
+  --primary-foreground: var(--cta-fg);
+  --secondary: var(--todopolis-lavender);
+  --secondary-foreground: var(--todopolis-lavender-deep);
   --muted: #F8F4F5;
   --muted-foreground: #6B6B6B;
   --accent: #EDD2F3;
@@ -123,6 +177,39 @@
   --color-todopolis-lime: var(--todopolis-lime);
   --color-todopolis-pink: var(--todopolis-pink);
   --color-todopolis-coral: var(--todopolis-coral);
+  --color-todopolis-blue-deep: var(--todopolis-blue-deep);
+  --color-todopolis-lavender-deep: var(--todopolis-lavender-deep);
+  --color-todopolis-lime-deep: var(--todopolis-lime-deep);
+  --color-todopolis-pink-deep: var(--todopolis-pink-deep);
+  --color-todopolis-coral-deep: var(--todopolis-coral-deep);
+
+  /* Semantic tokens (Tailwind utilities: bg-cta, text-cta-fg, bg-trust-bg, etc.) */
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-cta-fg: var(--cta-fg);
+  --color-sale: var(--sale);
+  --color-sale-soft: var(--sale-soft);
+  --color-sale-fg: var(--sale-fg);
+  --color-trust-bg: var(--trust-bg);
+  --color-trust-fg: var(--trust-fg);
+  --color-trust-border: var(--trust-border);
+  --color-nav-active-bg: var(--nav-active-bg);
+  --color-nav-active-fg: var(--nav-active-fg);
+  --color-nav-inactive-bg: var(--nav-inactive-bg);
+  --color-nav-inactive-fg: var(--nav-inactive-fg);
+  --color-nav-inactive-border: var(--nav-inactive-border);
+  --color-tag-active-bg: var(--tag-active-bg);
+  --color-tag-active-fg: var(--tag-active-fg);
+  --color-tag-inactive-bg: var(--tag-inactive-bg);
+  --color-tag-inactive-fg: var(--tag-inactive-fg);
+  --color-tag-inactive-border: var(--tag-inactive-border);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-muted: var(--surface-muted);
+  --color-accent-feminine: var(--accent-feminine);
+  --color-accent-aspirational: var(--accent-aspirational);
+  --color-accent-trust: var(--accent-trust);
+  --color-accent-natural: var(--accent-natural);
   
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

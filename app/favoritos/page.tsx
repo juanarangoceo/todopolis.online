@@ -31,14 +31,14 @@ export default async function FavoritosPage() {
   }))
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white via-[#FFFBFC] to-[#FFF8FA]">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
 
       <main className="flex-1">
         <div className="container mx-auto px-4 py-12 md:py-24 max-w-7xl">
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 bg-[#FFD5E5]/30 rounded-2xl">
-              <Heart className="w-8 h-8 text-[#FFB4AC] fill-[#FFB4AC]" />
+            <div className="p-3 bg-accent-feminine/30 rounded-2xl">
+              <Heart className="w-8 h-8 text-todopolis-pink-deep fill-todopolis-pink-deep" />
             </div>
             <div>
               <h1 className="text-3xl md:text-5xl font-black text-foreground font-serif text-balance">

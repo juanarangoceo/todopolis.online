@@ -21,7 +21,7 @@ export function LucyAvatar({ size = 'md', isTyping = false, className = '' }: Lu
   return (
     <div className={`relative flex-shrink-0 ${className}`}>
       <div
-        className={`${s.container} rounded-full bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] flex items-center justify-center shadow-md overflow-hidden`}
+        className={`${s.container} rounded-full bg-gradient-to-br from-todopolis-blue to-todopolis-lavender flex items-center justify-center shadow-md overflow-hidden`}
       >
         <Sparkles className="w-4 h-4 text-white" />
       </div>
@@ -31,7 +31,7 @@ export function LucyAvatar({ size = 'md', isTyping = false, className = '' }: Lu
 
       {/* Typing indicator overlay */}
       {isTyping && (
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FFB4AC]/80 to-[#EDD2F3]/80 flex items-center justify-center">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-todopolis-blue/80 to-todopolis-lavender/80 flex items-center justify-center">
           <div className="flex gap-0.5 items-center">
             <div className={`${s.dots} bg-white rounded-full animate-bounce`} style={{ animationDelay: '0ms' }} />
             <div className={`${s.dots} bg-white rounded-full animate-bounce`} style={{ animationDelay: '150ms' }} />

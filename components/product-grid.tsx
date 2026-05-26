@@ -48,10 +48,10 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot }: ProductGridPr
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4">
         <div className="relative">
-          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#FFD5E5]/50 to-[#EDD2F3]/50 flex items-center justify-center mb-6">
-            <Package className="w-12 h-12 text-[#FFB4AC]" />
+          <div className="w-24 h-24 rounded-3xl bg-surface-muted flex items-center justify-center mb-6">
+            <Package className="w-12 h-12 text-todopolis-blue-deep" />
           </div>
-          <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-[#A2D2FF]" />
+          <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-todopolis-lavender-deep" />
         </div>
         <h3 className="text-2xl font-sans font-bold text-foreground mb-3">
           No encontramos resultados

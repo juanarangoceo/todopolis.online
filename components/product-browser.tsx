@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, ReactNode, useEffect } from 'react';
+import { useState, useCallback, useMemo, ReactNode, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -12,7 +12,8 @@ import { TagFilterPanel } from './tag-filter-panel';
 import {
   Sparkles, Grid, Watch, HeartPulse,
   Laptop, Home, Shirt, Dumbbell, Gamepad2,
-  Droplets, Utensils, SlidersHorizontal, X
+  Droplets, Utensils, SlidersHorizontal, X,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { AgeGate } from '@/components/age-gate';
 
@@ -57,6 +58,24 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
   const [ageGatePending, setAgeGatePending] = useState(false);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const tagsScrollRef = useRef<HTMLDivElement | null>(null);
+  const [tagsScrollState, setTagsScrollState] = useState<{ left: boolean; right: boolean }>({ left: false, right: false });
+
+  // Recalcula si hay overflow visible a izquierda/derecha en el slider de tags,
+  // para mostrar fades + flechas solo cuando aplica.
+  const updateTagsScrollState = useCallback(() => {
+    const el = tagsScrollRef.current;
+    if (!el) return;
+    const left = el.scrollLeft > 4;
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
+    setTagsScrollState((prev) => (prev.left === left && prev.right === right ? prev : { left, right }));
+  }, []);
+
+  const scrollTagsBy = useCallback((delta: number) => {
+    const el = tagsScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: delta, behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     // Find the header search slot once it mounts
@@ -83,6 +102,13 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     window.addEventListener('todopolis:reset-home', handleResetHome);
     return () => window.removeEventListener('todopolis:reset-home', handleResetHome);
   }, []);
+
+  // Recalcular fades del slider cuando cambian las tags o el viewport.
+  useEffect(() => {
+    updateTagsScrollState();
+    window.addEventListener('resize', updateTagsScrollState);
+    return () => window.removeEventListener('resize', updateTagsScrollState);
+  }, [updateTagsScrollState, tagTaxonomy]);
 
   // Persistir selección de tags en la URL sin recargar (compartible/bookmarkable).
   useEffect(() => {
@@ -242,7 +268,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
       )}
 
       {/* Top Categories Navigation (Desktop & Mobile) */}
-      <div className="w-full relative z-30 bg-white/40 backdrop-blur-md border-b border-[#EDD2F3]/20">
+      <div className="w-full relative z-30 bg-surface/80 backdrop-blur-md border-b border-todopolis-blue/20">
         {/* Mobile Categories */}
         <div className="md:hidden w-full flex overflow-x-auto gap-3 pt-4 pb-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {categories.map((cat) => {
@@ -254,8 +280,8 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                 onClick={() => handleCategoryClick(cat)}
                 className="flex flex-col items-center gap-2 shrink-0"
               >
-                <div className={`w-15 h-15 md:w-16 md:h-16 rounded-full flex items-center justify-center border-[3px] p-0.5 transition-all ${isActive ? 'border-[#FFB4AC]' : 'border-transparent'}`}>
-                  <div className={`w-12 h-12 md:w-full md:h-full rounded-full flex items-center justify-center ${isActive ? 'bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] text-white shadow-md' : 'bg-[#FFD5E5]/40 text-[#F43F5E]'}`}>
+                <div className={`w-15 h-15 md:w-16 md:h-16 rounded-full flex items-center justify-center border-[3px] p-0.5 transition-all ${isActive ? 'border-todopolis-blue-deep' : 'border-transparent'}`}>
+                  <div className={`w-12 h-12 md:w-full md:h-full rounded-full flex items-center justify-center ${isActive ? 'bg-nav-active-bg text-nav-active-fg shadow-md' : 'bg-nav-inactive-bg text-nav-inactive-fg'}`}>
                     <Icon className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
                 </div>
@@ -280,14 +306,14 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                   onClick={() => handleCategoryClick(cat)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105 ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-lg shadow-[#FFB4AC]/40'
-                      : 'bg-[#FFD5E5]/40 text-foreground/70 border border-[#FFB4AC]/30 hover:border-[#FFB4AC]/70 hover:bg-[#FFD5E5]/70 hover:text-[#E11D48]'
+                      ? 'bg-nav-active-bg text-nav-active-fg shadow-md shadow-todopolis-blue/30'
+                      : 'bg-nav-inactive-bg text-nav-inactive-fg border border-nav-inactive-border hover:border-todopolis-blue hover:bg-todopolis-blue/15 hover:text-nav-active-fg'
                   }`}
                 >
                   <span className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${
-                    isActive ? 'bg-white/30' : 'bg-[#FFB4AC]/30'
+                    isActive ? 'bg-white/50' : 'bg-todopolis-blue/25'
                   }`}>
-                    <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-white' : 'text-[#F43F5E]'}`} />
+                    <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-nav-active-fg' : 'text-todopolis-blue-deep'}`} />
                   </span>
                   {cat}
                 </button>
@@ -304,39 +330,75 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
 
       {/* Featured tag chips + "Más filtros" — desktop y mobile */}
       {tagTaxonomy.length > 0 && (
-        <div className="w-full border-b border-[#EDD2F3]/20 bg-white/30 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <button
-              onClick={() => setFilterPanelOpen(true)}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-foreground/90 text-white hover:bg-foreground transition-colors shadow-sm"
+        <div className="w-full border-b border-todopolis-lavender/25 bg-surface-soft/60 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-2.5 relative">
+            {/* Slider de tags con fades laterales que indican que se puede deslizar */}
+            <div
+              ref={tagsScrollRef}
+              onScroll={updateTagsScrollState}
+              className="flex items-center gap-2 overflow-x-auto"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Filtros</span>
-              {selectedTags.size > 0 && (
-                <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-[#FFB4AC] text-white text-[10px] font-bold leading-none">
-                  {selectedTags.size}
-                </span>
-              )}
+              <button
+                onClick={() => setFilterPanelOpen(true)}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-foreground/90 text-white hover:bg-foreground transition-colors shadow-sm"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Filtros</span>
+                {selectedTags.size > 0 && (
+                  <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-cta text-cta-fg text-[10px] font-bold leading-none">
+                    {selectedTags.size}
+                  </span>
+                )}
+              </button>
+              <div className="shrink-0 h-5 w-px bg-foreground/10" />
+              {featuredTags.map((tag) => {
+                const isActive = selectedTags.has(tag.slug);
+                return (
+                  <button
+                    key={tag.slug}
+                    onClick={() => toggleTag(tag.slug)}
+                    className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                      isActive
+                        ? 'bg-tag-active-bg text-tag-active-fg border border-todopolis-lavender-deep/20 shadow-sm'
+                        : 'bg-tag-inactive-bg text-tag-inactive-fg border border-tag-inactive-border hover:border-todopolis-lavender hover:bg-todopolis-lavender/25 hover:text-tag-active-fg'
+                    }`}
+                  >
+                    {tag.icon && <span>{tag.icon}</span>}
+                    <span>{tag.name}</span>
+                  </button>
+                );
+              })}
+              <div className="shrink-0 w-2" />
+            </div>
+
+            {/* Fade izquierdo + flecha (solo cuando hay más tags a la izquierda) */}
+            <div
+              aria-hidden
+              className={`pointer-events-none absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-surface-soft to-transparent transition-opacity ${tagsScrollState.left ? 'opacity-100' : 'opacity-0'}`}
+            />
+            <button
+              type="button"
+              aria-label="Deslizar tags a la izquierda"
+              onClick={() => scrollTagsBy(-220)}
+              className={`hidden md:flex absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 items-center justify-center rounded-full bg-surface border border-nav-inactive-border shadow-sm hover:bg-todopolis-blue/15 hover:border-todopolis-blue text-foreground/70 transition-all ${tagsScrollState.left ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            >
+              <ChevronLeft className="w-4 h-4" />
             </button>
-            <div className="shrink-0 h-5 w-px bg-foreground/10" />
-            {featuredTags.map((tag) => {
-              const isActive = selectedTags.has(tag.slug);
-              return (
-                <button
-                  key={tag.slug}
-                  onClick={() => toggleTag(tag.slug)}
-                  className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-sm'
-                      : 'bg-[#FFD5E5]/40 text-foreground/70 hover:bg-[#FFD5E5]/70 border border-[#FFB4AC]/30'
-                  }`}
-                >
-                  {tag.icon && <span>{tag.icon}</span>}
-                  <span>{tag.name}</span>
-                </button>
-              );
-            })}
-            <div className="shrink-0 w-2" />
+
+            {/* Fade derecho + flecha */}
+            <div
+              aria-hidden
+              className={`pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-surface-soft to-transparent transition-opacity ${tagsScrollState.right ? 'opacity-100' : 'opacity-0'}`}
+            />
+            <button
+              type="button"
+              aria-label="Deslizar tags a la derecha"
+              onClick={() => scrollTagsBy(220)}
+              className={`hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 items-center justify-center rounded-full bg-surface border border-nav-inactive-border shadow-sm hover:bg-todopolis-blue/15 hover:border-todopolis-blue text-foreground/70 transition-all ${tagsScrollState.right ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
@@ -348,13 +410,13 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
       {(!searchQuery && activeCategory === 'Todos' && selectedTags.size === 0) && aiImages.length > 0 && (
         <div className="md:hidden px-4 pt-2 pb-4">
           <div className="flex items-center gap-1.5 mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-[#8b5cf6]" />
-            <p className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Inspiración</p>
+            <Sparkles className="w-3.5 h-3.5 text-todopolis-lavender-deep" />
+            <p className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wider">Inspiración</p>
           </div>
           <div className="flex overflow-x-auto snap-x snap-mandatory gap-2.5 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {aiImages.map((item) => (
               <Link key={item.slug} href={`/producto/${item.slug}`} className="shrink-0 snap-start w-[130px]">
-                <div className="rounded-xl overflow-hidden shadow-sm border border-[#EDD2F3]/40 hover:border-[#EDD2F3] transition-all">
+                <div className="rounded-xl overflow-hidden shadow-sm border border-todopolis-lavender/40 hover:border-todopolis-lavender transition-all">
                   <div className="relative w-[130px] h-[175px]">
                     <Image src={sanityOptimized(item.image, 280)} alt={item.name} fill className="object-cover" unoptimized />
                   </div>
@@ -373,7 +435,6 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
       <div className="md:flex md:items-start">
 
         <section id="productos" className="flex-1 pt-4 pb-16 px-4 relative">
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FFD5E5]/10 to-transparent pointer-events-none" />
           <div className="container mx-auto relative">
 
             {/* Desktop: sidebar + grid dentro del mismo contenedor */}
@@ -383,16 +444,16 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                 <aside className="hidden md:flex flex-col w-52 xl:w-60 shrink-0 sticky top-0 self-start max-h-screen overflow-y-auto pb-10">
                   {/* Sidebar header */}
                   <div className="flex items-center gap-1.5 mb-3 pt-1 px-1">
-                    <Sparkles className="w-3 h-3 text-[#8b5cf6]" />
-                    <p className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-[#8b5cf6] to-[#EC4899] bg-clip-text text-transparent">
+                    <Sparkles className="w-3 h-3 text-todopolis-lavender-deep" />
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-todopolis-lavender-deep">
                       Inspiración
                     </p>
                   </div>
                   {/* Cards */}
-                  <div className="flex flex-col gap-2 pr-2 border-r border-[#EDD2F3]/30">
+                  <div className="flex flex-col gap-2 pr-2 border-r border-todopolis-lavender/30">
                     {aiImages.map((item) => (
                       <Link key={item.slug} href={`/producto/${item.slug}`} className="group block">
-                        <div className="rounded-xl overflow-hidden border border-[#EDD2F3]/30 group-hover:border-[#EDD2F3] group-hover:shadow-sm transition-all duration-200">
+                        <div className="rounded-xl overflow-hidden border border-todopolis-lavender/30 group-hover:border-todopolis-lavender group-hover:shadow-sm transition-all duration-200">
                           <div className="relative w-full" style={{ aspectRatio: '3/4' }}>
                             <Image
                               src={sanityOptimized(item.image, 480)}
@@ -403,7 +464,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                             />
                           </div>
                           <div className="px-2 py-1.5 bg-white/95">
-                            <p className="text-[9px] font-medium text-foreground/70 leading-tight line-clamp-2 group-hover:text-[#8b5cf6] transition-colors">
+                            <p className="text-[9px] font-medium text-foreground/70 leading-tight line-clamp-2 group-hover:text-todopolis-lavender-deep transition-colors">
                               {item.name}
                             </p>
                           </div>
@@ -417,7 +478,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
               <div className="flex-1 min-w-0">
                 {/* Tags activos como chips removibles */}
                 {selectedTags.size > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-[#EDD2F3]/30">
+                  <div className="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-todopolis-lavender/30">
                     <span className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Filtros:</span>
                     {Array.from(selectedTags).map((slug) => {
                       const tag = taxonomyBySlug.get(slug);
@@ -427,7 +488,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                         <button
                           key={slug}
                           onClick={() => toggleTag(slug)}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white shadow-sm hover:opacity-90 transition-opacity"
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-tag-active-bg text-tag-active-fg border border-todopolis-lavender-deep/20 shadow-sm hover:bg-todopolis-lavender/80 transition-colors"
                         >
                           {icon && <span>{icon}</span>}
                           <span>{label}</span>
@@ -437,7 +498,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                     })}
                     <button
                       onClick={clearTags}
-                      className="text-xs font-bold text-[#E11D48] hover:underline ml-1"
+                      className="text-xs font-bold text-sale hover:underline ml-1"
                     >
                       Limpiar todo
                     </button>

@@ -65,7 +65,7 @@ export default async function Home() {
       ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white via-[#FFFBFC] to-[#FFF8FA]">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
 
       <main className="flex-1">

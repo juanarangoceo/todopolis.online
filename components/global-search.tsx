@@ -48,20 +48,20 @@ export function GlobalSearch({ products }: { products: any[] }) {
       
       {/* Dropdown Results */}
       {searchQuery && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-[#EDD2F3]/40 p-2 z-[60] flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-surface rounded-2xl shadow-2xl border border-nav-inactive-border p-2 z-[60] flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
           {filteredProducts.length > 0 ? (
             filteredProducts.map(p => (
-              <Link 
-                key={p.id || p.slug} 
+              <Link
+                key={p.id || p.slug}
                 href={`/producto/${p.slug}`}
-                className="flex items-center gap-3 p-2 hover:bg-gradient-to-r hover:from-[#FFD5E5]/20 hover:to-[#EDD2F3]/20 rounded-xl transition-all border border-transparent hover:border-[#FFB4AC]/30"
+                className="flex items-center gap-3 p-2 hover:bg-surface-muted rounded-xl transition-all border border-transparent hover:border-todopolis-blue/30"
               >
-                <div className="w-12 h-12 relative rounded-lg overflow-hidden shrink-0 bg-muted/30">
+                <div className="w-12 h-12 relative rounded-lg overflow-hidden shrink-0 bg-surface-muted">
                   <Image src={p.image} alt={p.name} fill className="object-cover" sizes="48px" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="font-bold text-sm text-foreground truncate">{p.name}</span>
-                  <span className="text-xs font-semibold text-[#F43F5E]">
+                  <span className="text-xs font-semibold text-foreground">
                     $ {(p.price ?? 0).toLocaleString('es-CO')}
                   </span>
                 </div>
@@ -86,7 +86,7 @@ export function GlobalSearch({ products }: { products: any[] }) {
       )}
       
       {/* Mobile Search Bar (inline below header) */}
-      <div className="md:hidden relative z-50 px-4 py-3 bg-white/40 backdrop-blur-md border-b border-[#EDD2F3]/20">
+      <div className="md:hidden relative z-50 px-4 py-3 bg-surface/80 backdrop-blur-md border-b border-todopolis-blue/15">
         {renderSearchContent(true)}
       </div>
 

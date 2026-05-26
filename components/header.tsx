@@ -2,12 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home } from 'lucide-react'
 import { useCart } from '@/app/providers/cart-provider'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useFavorites } from '@/app/providers/favorites-provider'
 
+// Cloudinary admite transforms en el URL para servir un tamaño optimizado.
+// w_X,q_auto,f_auto le pide ~X px de ancho, calidad auto y formato (webp/avif) auto.
+const LOGO_URL = 'https://res.cloudinary.com/dohwyszdj/image/upload/f_auto,q_auto,w_320/v1779768176/logo_nuevo_todopolis_1_ljlqn6.jpg'
+
 function Logo({ small = false }: { small?: boolean }) {
+  const height = small ? 32 : 40
+  const width = small ? 128 : 160
   return (
     <Link
       href="/"
@@ -18,11 +25,15 @@ function Logo({ small = false }: { small?: boolean }) {
         }
       }}
     >
-      <span className={`font-sans font-black tracking-tight text-foreground relative ${small ? 'text-2xl' : 'text-3xl'}`}>
-        Todo
-        <span className="bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] bg-clip-text text-transparent">polis</span>
-        <span className="absolute -top-1 -right-3 w-2 h-2 bg-[#FFB4AC] rounded-full group-hover:animate-ping" />
-      </span>
+      <Image
+        src={LOGO_URL}
+        alt="Todopolis"
+        width={width}
+        height={height}
+        priority
+        className="object-contain transition-transform duration-200 group-hover:scale-[1.03]"
+        style={{ height: `${height}px`, width: 'auto' }}
+      />
     </Link>
   )
 }
@@ -57,7 +68,7 @@ export function Header() {
     <>
       <header className="sticky top-0 z-40 w-full" id="site-header">
         {/* Glassmorphism background */}
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-xl border-b border-[#EDD2F3]/30" />
+        <div className="absolute inset-0 bg-surface/80 backdrop-blur-xl border-b border-nav-inactive-border" />
 
         <div className="container mx-auto px-4 relative">
           {/* ── Mobile layout ── */}
@@ -67,7 +78,7 @@ export function Header() {
               onClick={() => setMenuOpen(true)}
               aria-label="Abrir menú"
               aria-expanded={menuOpen}
-              className="p-2.5 rounded-2xl bg-gradient-to-br from-[#FFB4AC]/40 to-[#EDD2F3]/40 hover:from-[#FFB4AC]/70 hover:to-[#EDD2F3]/70 transition-all shadow-sm active:scale-95"
+              className="p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-blue hover:bg-todopolis-blue/10 transition-all shadow-sm active:scale-95"
               style={{ touchAction: 'manipulation' }}
             >
               <Menu className="w-5 h-5 text-foreground" />
@@ -78,30 +89,30 @@ export function Header() {
               <Logo small />
             </div>
 
-            {/* Favorites — acceso directo, fuera del menú hamburguesa */}
+            {/* Favorites — ícono rosa (semántica emocional) */}
             <Link
               href="/favoritos"
-              className="relative p-2.5 rounded-2xl bg-gradient-to-br from-[#FFD5E5]/50 to-[#EDD2F3]/50 hover:from-[#FFD5E5]/80 hover:to-[#EDD2F3]/80 transition-all shadow-sm active:scale-95"
+              className="relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-accent-feminine hover:bg-accent-feminine/20 transition-all shadow-sm active:scale-95"
               aria-label="Favoritos"
               style={{ touchAction: 'manipulation' }}
             >
-              <Heart className="w-5 h-5 text-foreground" />
+              <Heart className="w-5 h-5 text-todopolis-pink-deep" />
               {favoriteSlugs.length > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[#EDD2F3] text-foreground text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-accent-feminine text-todopolis-pink-deep text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                   {favoriteSlugs.length}
                 </span>
               )}
             </Link>
 
-            {/* Cart */}
+            {/* Cart — ícono salmón (semántica de compra) */}
             <button
               onClick={openCart}
-              className="relative p-2.5 rounded-2xl bg-gradient-to-br from-[#FFB4AC]/50 to-[#FFD5E5]/50 hover:from-[#FFB4AC]/80 hover:to-[#FFD5E5]/80 transition-all shadow-sm active:scale-95"
+              className="relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-cta hover:bg-cta/15 transition-all shadow-sm active:scale-95"
               aria-label="Carrito"
               style={{ touchAction: 'manipulation' }}
             >
-              <ShoppingBag className="w-5 h-5 text-foreground" />
-              <span className={`absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[#FFB4AC] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+              <ShoppingBag className="w-5 h-5 text-cta-fg" />
+              <span className={`absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-cta text-cta-fg text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
                 {totalItems}
               </span>
             </button>
@@ -121,54 +132,59 @@ export function Header() {
 
             {/* Right — actions */}
             <div className="flex items-center justify-end gap-2 shrink-0">
+              {/* Blog → lila (contenido / sabiduría) */}
               <Link
                 href="/blog"
-                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-gradient-to-br from-[#6366f1]/10 to-[#8b5cf6]/10 hover:from-[#6366f1]/25 hover:to-[#8b5cf6]/25 border border-[#6366f1]/20 hover:border-[#6366f1]/40 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-lavender hover:bg-todopolis-lavender/15 transition-all duration-300 shadow-sm hover:shadow-md"
                 aria-label="Blog"
               >
-                <BookOpen className="w-3.5 h-3.5 text-[#6366f1] group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-[#6366f1] uppercase tracking-wide">Blog</span>
+                <BookOpen className="w-3.5 h-3.5 text-todopolis-lavender-deep group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wide">Blog</span>
               </Link>
 
+              {/* Ofertas → coral suave (sale) */}
               <Link
                 href="/ofertas"
-                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-gradient-to-br from-[#F43F5E]/10 to-[#FFB4AC]/10 hover:from-[#F43F5E]/25 hover:to-[#FFB4AC]/25 border border-[#F43F5E]/20 hover:border-[#F43F5E]/40 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-sale hover:bg-sale-soft transition-all duration-300 shadow-sm hover:shadow-md"
                 aria-label="Ver ofertas"
               >
-                <Zap className="w-3.5 h-3.5 text-[#F43F5E] group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-[#F43F5E] uppercase tracking-wide">Ofertas</span>
+                <Zap className="w-3.5 h-3.5 text-sale group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-sale uppercase tracking-wide">Ofertas</span>
               </Link>
 
+              {/* Lucy → lila (IA aspiracional) */}
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('lucy:open-chat'))}
-                className="group relative p-2.5 rounded-2xl bg-gradient-to-br from-[#FFB4AC]/50 to-[#FFD5E5]/50 hover:from-[#FFB4AC]/80 hover:to-[#FFD5E5]/80 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="group relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-lavender hover:bg-todopolis-lavender/15 transition-all duration-300 shadow-sm hover:shadow-md"
                 aria-label="Chat con Lucy"
                 title="Hablar con Lucy"
               >
-                <MessageCircle className="w-4 h-4 text-foreground group-hover:scale-110 transition-transform" />
+                <MessageCircle className="w-4 h-4 text-todopolis-lavender-deep group-hover:scale-110 transition-transform" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full border border-white" />
               </button>
 
+              {/* Favoritos → rosa (emoción) */}
               <Link
                 href="/favoritos"
-                className="group relative p-2.5 rounded-2xl bg-gradient-to-br from-[#FFD5E5]/50 to-[#EDD2F3]/50 hover:from-[#FFD5E5]/80 hover:to-[#EDD2F3]/80 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="group relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-accent-feminine hover:bg-accent-feminine/20 transition-all duration-300 shadow-sm hover:shadow-md"
                 aria-label="Favoritos"
               >
-                <Heart className="w-4 h-4 text-foreground group-hover:scale-110 transition-transform" />
+                <Heart className="w-4 h-4 text-todopolis-pink-deep group-hover:scale-110 transition-transform" />
                 {favoriteSlugs.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#EDD2F3] text-foreground text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent-feminine text-todopolis-pink-deep text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                     {favoriteSlugs.length}
                   </span>
                 )}
               </Link>
 
+              {/* Carrito → salmón (compra) */}
               <button
                 onClick={openCart}
-                className="group relative p-2.5 rounded-2xl bg-gradient-to-br from-[#FFB4AC]/50 to-[#FFD5E5]/50 hover:from-[#FFB4AC]/80 hover:to-[#FFD5E5]/80 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="group relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-cta hover:bg-cta/15 transition-all duration-300 shadow-sm hover:shadow-md"
                 aria-label="Carrito"
               >
-                <ShoppingBag className="w-4 h-4 text-foreground group-hover:scale-110 transition-transform" />
-                <span className={`absolute -top-1 -right-1 w-4 h-4 bg-[#FFB4AC] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+                <ShoppingBag className="w-4 h-4 text-cta-fg group-hover:scale-110 transition-transform" />
+                <span className={`absolute -top-1 -right-1 w-4 h-4 bg-cta text-cta-fg text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
                   {totalItems}
                 </span>
               </button>
@@ -188,23 +204,23 @@ export function Header() {
           onClick={closeMenu}
         />
 
-        {/* Panel */}
+        {/* Panel — fondo neutro con un acento sutil aspiracional */}
         <aside
-          className={`absolute top-0 left-0 h-full w-[82%] max-w-sm bg-gradient-to-b from-[#FFF5F8] via-white to-[#FFF8FA] shadow-2xl border-r border-[#EDD2F3]/40 flex flex-col transition-transform duration-300 ease-out ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          className={`absolute top-0 left-0 h-full w-[82%] max-w-sm bg-surface shadow-2xl border-r border-nav-inactive-border flex flex-col transition-transform duration-300 ease-out ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
           role="dialog"
           aria-modal="true"
         >
-          {/* Decorative blobs */}
-          <div aria-hidden className="absolute top-0 right-0 w-48 h-48 bg-[#FFD5E5]/40 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-          <div aria-hidden className="absolute bottom-0 left-0 w-40 h-40 bg-[#EDD2F3]/40 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+          {/* Decorative blob discreto en lila */}
+          <div aria-hidden className="absolute top-0 right-0 w-48 h-48 bg-todopolis-lavender/25 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+          <div aria-hidden className="absolute bottom-0 left-0 w-40 h-40 bg-todopolis-blue/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 
           {/* Header del drawer */}
-          <div className="relative flex items-center justify-between px-5 pt-5 pb-4 border-b border-[#EDD2F3]/30">
+          <div className="relative flex items-center justify-between px-5 pt-5 pb-4 border-b border-nav-inactive-border">
             <Logo small />
             <button
               onClick={closeMenu}
               aria-label="Cerrar menú"
-              className="p-2 rounded-full bg-white/80 hover:bg-white border border-[#EDD2F3]/30 text-foreground/60 hover:text-foreground transition-all shadow-sm"
+              className="p-2 rounded-full bg-surface hover:bg-surface-muted border border-nav-inactive-border text-foreground/60 hover:text-foreground transition-all shadow-sm"
               style={{ touchAction: 'manipulation' }}
             >
               <X className="w-4 h-4" />
@@ -216,10 +232,10 @@ export function Header() {
             <Link
               href="/"
               onClick={closeMenu}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/70 hover:bg-white border border-transparent hover:border-[#FFB4AC]/40 transition-all shadow-sm"
+              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-surface-muted border border-nav-inactive-border hover:border-todopolis-blue transition-all shadow-sm"
             >
-              <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFB4AC]/30 to-[#FFD5E5]/30 flex items-center justify-center shrink-0">
-                <Home className="w-4 h-4 text-[#F43F5E]" />
+              <span className="w-9 h-9 rounded-xl bg-todopolis-blue/20 flex items-center justify-center shrink-0">
+                <Home className="w-4 h-4 text-todopolis-blue-deep" />
               </span>
               <span className="font-bold text-sm text-foreground">Inicio</span>
             </Link>
@@ -227,33 +243,33 @@ export function Header() {
             <Link
               href="/ofertas"
               onClick={closeMenu}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/70 hover:bg-white border border-transparent hover:border-[#F43F5E]/40 transition-all shadow-sm"
+              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-sale-soft border border-nav-inactive-border hover:border-sale transition-all shadow-sm"
             >
-              <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F43F5E]/15 to-[#FFB4AC]/15 flex items-center justify-center shrink-0">
-                <Zap className="w-4 h-4 text-[#F43F5E]" />
+              <span className="w-9 h-9 rounded-xl bg-sale-soft flex items-center justify-center shrink-0">
+                <Zap className="w-4 h-4 text-sale" />
               </span>
               <span className="font-bold text-sm text-foreground">Ofertas</span>
-              <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-[#F43F5E]">Hot</span>
+              <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-sale">Hot</span>
             </Link>
 
             <Link
               href="/blog"
               onClick={closeMenu}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/70 hover:bg-white border border-transparent hover:border-[#6366f1]/40 transition-all shadow-sm"
+              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-todopolis-lavender/15 border border-nav-inactive-border hover:border-todopolis-lavender transition-all shadow-sm"
             >
-              <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6366f1]/15 to-[#8b5cf6]/15 flex items-center justify-center shrink-0">
-                <BookOpen className="w-4 h-4 text-[#6366f1]" />
+              <span className="w-9 h-9 rounded-xl bg-todopolis-lavender/30 flex items-center justify-center shrink-0">
+                <BookOpen className="w-4 h-4 text-todopolis-lavender-deep" />
               </span>
               <span className="font-bold text-sm text-foreground">Blog</span>
             </Link>
 
             <button
               onClick={openLucy}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-br from-[#FFB4AC]/20 to-[#FFD5E5]/20 hover:from-[#FFB4AC]/40 hover:to-[#FFD5E5]/40 border border-[#FFB4AC]/40 transition-all shadow-sm text-left"
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-todopolis-lavender/15 border border-todopolis-lavender/40 transition-all shadow-sm text-left"
               style={{ touchAction: 'manipulation' }}
             >
-              <span className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] flex items-center justify-center shrink-0 shadow-md">
-                <MessageCircle className="w-4 h-4 text-white" />
+              <span className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-todopolis-blue to-todopolis-lavender flex items-center justify-center shrink-0 shadow-md">
+                <MessageCircle className="w-4 h-4 text-todopolis-blue-deep" />
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white" />
               </span>
               <span className="flex flex-col">
@@ -264,7 +280,7 @@ export function Header() {
           </nav>
 
           {/* Footer del drawer */}
-          <div className="relative px-5 py-4 border-t border-[#EDD2F3]/30 text-[11px] text-foreground/50 text-center">
+          <div className="relative px-5 py-4 border-t border-nav-inactive-border text-[11px] text-foreground/50 text-center">
             Envío contraentrega a todo Colombia
           </div>
         </aside>

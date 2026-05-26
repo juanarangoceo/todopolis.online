@@ -43,7 +43,7 @@ export default async function TemporadaPage() {
   // confuso porque la ruta sí existe, solo no hay contenido configurado todavía).
   if (!campaign || !campaign.tagSlugs?.length) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-white via-[#FFFBFC] to-[#FFF8FA]">
+      <div className="min-h-screen flex flex-col bg-surface">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-20 text-center">
           <h1 className="text-3xl font-bold text-foreground mb-3">Aún no hay campaña activa</h1>
@@ -52,7 +52,7 @@ export default async function TemporadaPage() {
           </p>
           <Link
             href="/"
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-[#FFB4AC] to-[#EDD2F3] text-white font-bold shadow-md hover:shadow-lg transition-all"
+            className="px-6 py-3 rounded-full bg-cta text-cta-fg font-bold shadow-md hover:bg-cta-hover transition-all"
           >
             Ir al catálogo
           </Link>
@@ -83,7 +83,7 @@ export default async function TemporadaPage() {
   }))
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white via-[#FFFBFC] to-[#FFF8FA]">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
 
       <main className="flex-1">
@@ -132,7 +132,7 @@ export default async function TemporadaPage() {
               {campaign.tags.map((t) => (
                 <span
                   key={t.slug}
-                  className="px-3 py-1 rounded-full text-xs font-semibold bg-[#FFD5E5]/40 text-foreground/70 border border-[#FFB4AC]/30"
+                  className="px-3 py-1 rounded-full text-xs font-semibold bg-tag-active-bg text-tag-active-fg border border-todopolis-lavender-deep/20"
                 >
                   {t.icon && <span className="mr-1">{t.icon}</span>}
                   {t.name}

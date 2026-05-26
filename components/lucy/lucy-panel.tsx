@@ -32,8 +32,8 @@ export function LucyPanel({ isOpen, onClose, sessionId }: LucyPanelProps) {
         className={`fixed bottom-0 right-0 z-50 flex flex-col transition-all duration-300 ease-out
           sm:bottom-6 sm:right-6 sm:rounded-3xl sm:shadow-2xl sm:shadow-black/20
           w-full sm:w-[380px] h-[85vh] sm:h-[600px]
-          bg-gradient-to-b from-[#FFF5F8] to-white
-          border border-[#EDD2F3]/30
+          bg-surface
+          border border-todopolis-lavender/30
           rounded-t-3xl
           ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-full sm:translate-y-8 opacity-0 pointer-events-none'}
         `}
@@ -41,7 +41,7 @@ export function LucyPanel({ isOpen, onClose, sessionId }: LucyPanelProps) {
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/80 hover:bg-white border border-[#EDD2F3]/30 text-foreground/50 hover:text-foreground transition-all shadow-sm"
+          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-surface/95 hover:bg-surface border border-todopolis-lavender/30 text-foreground/50 hover:text-foreground transition-all shadow-sm"
           aria-label="Cerrar"
         >
           <X className="w-4 h-4" />

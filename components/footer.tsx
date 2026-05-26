@@ -94,7 +94,7 @@ function SupportModal({ item, onClose }: { item: string; onClose: () => void }) 
       {/* Dialog */}
       <div className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full sm:zoom-in-95 duration-300 z-10 flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#FFB4AC]/10 to-[#EDD2F3]/10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-surface-soft">
           <h2 className="text-lg font-bold text-gray-900">{content.title}</h2>
           <button
             onClick={onClose}

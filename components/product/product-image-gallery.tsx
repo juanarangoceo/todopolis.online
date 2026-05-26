@@ -28,9 +28,9 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
 
   return (
     <div className="space-y-4">
-      {/* Sale Banner — only for discounted products */}
+      {/* Sale Banner — coral suave (sale), botón salmón (CTA) */}
       {discount > 0 && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#F43F5E] via-[#FF6B6B] to-[#F43F5E] p-3 md:p-4 shadow-lg shadow-[#F43F5E]/30">
+        <div className="relative overflow-hidden rounded-2xl bg-sale p-3 md:p-4 shadow-md">
           <div className="relative flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 shrink-0">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -54,7 +54,7 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
               </div>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('product:buy'))}
-                className="shrink-0 px-3 py-2 bg-white text-[#F43F5E] text-xs font-black rounded-xl hover:bg-white/90 active:scale-95 transition-all shadow-md whitespace-nowrap"
+                className="shrink-0 px-3 py-2 bg-cta text-cta-fg text-xs font-black rounded-xl hover:bg-cta-hover active:scale-95 transition-all shadow-md whitespace-nowrap"
               >
                 Comprar ya
               </button>
@@ -103,7 +103,7 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
             priority
           />
           {discount > 0 && (
-            <span className="absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 bg-[#F43F5E]">
+            <span className="absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 bg-sale">
               <Zap className="w-3.5 h-3.5" />
               -{discount}%
             </span>

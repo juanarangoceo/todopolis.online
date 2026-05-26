@@ -41,14 +41,14 @@ export function StorePolicies({ policies }: { policies?: StorePolicy[] }) {
   const displayPolicies = policies && policies.length > 0 ? policies : DEFAULT_POLICIES
 
   return (
-    <div className="w-full bg-white/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 mt-12 mb-8 border border-neutral-100 shadow-sm">
+    <div className="w-full bg-surface rounded-2xl p-6 md:p-8 mt-12 mb-8 border border-nav-inactive-border shadow-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {displayPolicies.map((policy, idx) => {
           const Icon = IconMap[policy.iconName] || CheckCircle
 
           return (
             <div key={idx} className="flex flex-col items-center text-center p-4">
-              <div className="w-14 h-14 rounded-full bg-yellow-100 flex items-center justify-center mb-4 text-yellow-600">
+              <div className="w-14 h-14 rounded-full bg-trust-bg border border-trust-border flex items-center justify-center mb-4 text-trust-fg">
                 <Icon className="w-7 h-7" />
               </div>
               <h3 className="font-semibold text-neutral-900 mb-2">{policy.title}</h3>

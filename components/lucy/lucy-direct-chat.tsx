@@ -122,10 +122,10 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-[#EDD2F3]/30 bg-white/80 backdrop-blur-sm shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-todopolis-lavender/30 bg-surface/95 backdrop-blur-sm shrink-0">
         <button
           onClick={onBack}
-          className="p-1.5 rounded-full hover:bg-[#FFD5E5]/40 text-foreground/60 hover:text-foreground transition-colors"
+          className="p-1.5 rounded-full hover:bg-todopolis-lavender/25 text-foreground/60 hover:text-foreground transition-colors"
           aria-label="Volver"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -133,7 +133,7 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
         <LucyAvatar size="sm" isTyping={isLoading} />
         <div>
           <p className="font-bold text-sm text-foreground leading-tight">Lucy</p>
-          <p className="text-[11px] text-[#F43F5E] font-medium">
+          <p className="text-[11px] text-todopolis-lavender-deep font-medium">
             {isLoading ? 'Escribiendo...' : 'Asesora Todopolis ✨'}
           </p>
         </div>
@@ -148,14 +148,14 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
               <div
                 className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] text-white rounded-br-sm'
-                    : 'bg-white border border-[#EDD2F3]/40 text-foreground rounded-bl-sm shadow-sm'
+                    ? 'bg-gradient-to-br from-todopolis-blue to-todopolis-lavender text-todopolis-blue-deep rounded-br-sm'
+                    : 'bg-surface border border-todopolis-lavender/40 text-foreground rounded-bl-sm shadow-sm'
                 }`}
               >
                 {msg.text}
               </div>
               {msg.imageUrl && (
-                <div className="mt-2 rounded-xl overflow-hidden border border-[#EDD2F3]/40 shadow-sm sm:max-w-[200px] max-w-[150px]">
+                <div className="mt-2 rounded-xl overflow-hidden border border-todopolis-lavender/40 shadow-sm sm:max-w-[200px] max-w-[150px]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={msg.imageUrl} alt="Producto recomendado" className="w-full h-auto object-cover" />
                 </div>
@@ -168,11 +168,11 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
         {isLoading && (
           <div className="flex gap-2 justify-start">
             <LucyAvatar size="sm" isTyping className="mt-1 shrink-0" />
-            <div className="bg-white border border-[#EDD2F3]/40 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+            <div className="bg-surface border border-todopolis-lavender/40 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
               <div className="flex gap-1 items-center h-4">
-                <div className="w-1.5 h-1.5 bg-[#FFB4AC] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 bg-[#FFB4AC] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 bg-[#FFB4AC] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-1.5 h-1.5 bg-todopolis-lavender-deep rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 bg-todopolis-lavender-deep rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 bg-todopolis-lavender-deep rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
       {/* Input */}
       <form
         onSubmit={sendMessage}
-        className="flex gap-2 p-3 border-t border-[#EDD2F3]/30 bg-white/80 backdrop-blur-sm shrink-0"
+        className="flex gap-2 p-3 border-t border-todopolis-lavender/30 bg-surface/95 backdrop-blur-sm shrink-0"
         style={{ touchAction: 'manipulation' }}
       >
         <input
@@ -198,7 +198,7 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
           autoCorrect="on"
           spellCheck
           inputMode="text"
-          className="flex-1 bg-[#FFF5F8] border border-[#EDD2F3]/50 rounded-full px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#FFB4AC]/50 placeholder:text-foreground/40"
+          className="flex-1 bg-surface-muted border border-todopolis-lavender/40 rounded-full px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-todopolis-lavender/50 placeholder:text-foreground/40"
           style={{ fontSize: '16px', touchAction: 'manipulation' }}
         />
         <button
@@ -209,7 +209,7 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
             // teclado y la reflow puede tragarse el click).
             if (document.activeElement === inputRef.current) e.preventDefault()
           }}
-          className="w-11 h-11 shrink-0 bg-gradient-to-br from-[#FFB4AC] to-[#EDD2F3] text-white rounded-full flex items-center justify-center active:scale-95 hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+          className="w-11 h-11 shrink-0 bg-gradient-to-br from-todopolis-blue to-todopolis-lavender text-todopolis-blue-deep rounded-full flex items-center justify-center active:scale-95 hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
           style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
           aria-label="Enviar mensaje"
         >
