@@ -35,6 +35,7 @@ export default async function Home() {
     rating: 4.8,
     isNew: p.isNew ?? false,
     isBestSeller: p.isBestSeller ?? false,
+    isVip: p.isVip ?? false,
     testimonials: p.testimonials ?? [],
     reviewsCount: p.reviewsCount,
     tags: p.tags ?? [],

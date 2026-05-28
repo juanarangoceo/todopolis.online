@@ -7,6 +7,7 @@ import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useFavorites } from '@/app/providers/favorites-provider';
 import { useCart } from '@/app/providers/cart-provider';
+import { VipBadge } from '@/components/vip-badge';
 
 interface ProductCardProps {
   product: Product;
@@ -89,6 +90,14 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               >
                 <Sparkles className="w-3 h-3" />
                 -{discount}%
+              </span>
+            )}
+
+            {/* VIP badge — coronita dorada, posicionada bajo el discount para
+                no chocar; si no hay discount sube al top-left. */}
+            {product.isVip && (
+              <span className={cn('absolute left-4 z-10', discount > 0 ? 'top-14' : 'top-4')}>
+                <VipBadge size="sm" />
               </span>
             )}
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home } from 'lucide-react'
+import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home, Crown } from 'lucide-react'
 import { useCart } from '@/app/providers/cart-provider'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useFavorites } from '@/app/providers/favorites-provider'
@@ -144,6 +144,21 @@ export function Header() {
                 <span className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wide">Blog</span>
               </Link>
 
+              {/* VIP → dorado (track propio, separado de la paleta brand) */}
+              <Link
+                href="/vip"
+                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+                  borderColor: '#F59E0B66',
+                }}
+                aria-label="Productos VIP"
+                title="Productos VIP — landings extendidas"
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-700 group-hover:scale-110 transition-transform" fill="currentColor" strokeWidth={1.5} />
+                <span className="text-xs font-bold uppercase tracking-wide text-amber-800">VIP</span>
+              </Link>
+
               {/* Ofertas → coral suave (sale) */}
               <Link
                 href="/ofertas"
@@ -245,6 +260,28 @@ export function Header() {
                 <Home className="w-4 h-4 text-todopolis-blue-deep" />
               </span>
               <span className="font-bold text-sm text-foreground">Inicio</span>
+            </Link>
+
+            <Link
+              href="/vip"
+              onClick={closeMenu}
+              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border transition-all shadow-sm"
+              style={{
+                background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+                borderColor: '#F59E0B66',
+              }}
+            >
+              <span
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
+                style={{
+                  background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)',
+                  borderColor: '#F59E0B',
+                }}
+              >
+                <Crown className="w-4 h-4 text-amber-900" fill="currentColor" strokeWidth={1.5} />
+              </span>
+              <span className="font-bold text-sm text-amber-900">VIP</span>
+              <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-amber-700">Premium</span>
             </Link>
 
             <Link
