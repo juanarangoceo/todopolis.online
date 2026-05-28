@@ -1,8 +1,8 @@
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { ProductGrid } from '@/components/product-grid'
+import { OffersBrowser } from '@/components/offers-browser'
 import { getSanityProducts } from '@/lib/sanity/queries'
-import { Zap, Percent, Tag } from 'lucide-react'
+import { Zap } from 'lucide-react'
 
 export const metadata = {
   title: 'Ofertas y Descuentos | Todopolis',
@@ -106,39 +106,11 @@ export default async function OfertasPage() {
           </div>
         </section>
 
-        {/* Products Section */}
+        {/* Products Section — búsqueda + grid manejados por OffersBrowser
+            (cliente que portea su barra al slot del header). */}
         <section className="pt-4 pb-16 px-4">
           <div className="container mx-auto">
-            {discountedProducts.length > 0 ? (
-              <>
-                {/* Info bar */}
-                <div className="flex items-center gap-3 mb-8 p-4 rounded-2xl bg-sale-soft border border-sale/25">
-                  <div className="w-10 h-10 rounded-xl bg-sale/10 flex items-center justify-center shrink-0">
-                    <Tag className="w-5 h-5 text-sale" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-foreground text-sm">
-                      {discountedProducts.length} {discountedProducts.length === 1 ? 'producto' : 'productos'} en oferta ahora mismo
-                    </p>
-                    <p className="text-xs text-muted-foreground">Ordenados por mayor descuento · Precios válidos por tiempo limitado</p>
-                  </div>
-                  <div className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sale text-sale-fg text-xs font-bold">
-                    <Percent className="w-3.5 h-3.5" />
-                    Hasta {discountedProducts.length > 0 ? Math.max(...discountedProducts.map((p: any) => p._discount)) : 0}% off
-                  </div>
-                </div>
-
-                <ProductGrid products={discountedProducts} />
-              </>
-            ) : (
-              <div className="text-center py-24 px-4 bg-muted/20 rounded-3xl border border-dashed border-border">
-                <Zap className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-foreground mb-2">No hay ofertas disponibles ahora</h2>
-                <p className="text-muted-foreground max-w-md mx-auto mb-8">
-                  Vuelve pronto, actualizamos nuestras ofertas constantemente con los mejores precios.
-                </p>
-              </div>
-            )}
+            <OffersBrowser products={discountedProducts} />
           </div>
         </section>
       </main>
