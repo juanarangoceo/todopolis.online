@@ -111,6 +111,9 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
   }, [updateTagsScrollState, tagTaxonomy]);
 
   // Persistir selección de tags en la URL sin recargar (compartible/bookmarkable).
+  // IMPORTANTE: preservar window.history.state — pasar null rompe el router de
+  // Next.js (back navigation sale del sitio). Y evitar replaceState innecesarios
+  // cuando la URL no cambió.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -121,7 +124,9 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     }
     const newSearch = params.toString();
     const newUrl = `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`;
-    window.history.replaceState(null, '', newUrl);
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl === newUrl) return;
+    window.history.replaceState(window.history.state, '', newUrl);
   }, [selectedTags]);
 
   const categories = useMemo(() => {
