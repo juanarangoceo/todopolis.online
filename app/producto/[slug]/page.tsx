@@ -10,6 +10,13 @@ import { ProductTestimonials } from '@/components/product/product-testimonials'
 import { ProductCTA } from '@/components/product/product-cta'
 import { ProductSubscription } from '@/components/product/product-subscription'
 import { SuggestedBlogs } from '@/components/product/suggested-blogs'
+import { VipHeroVideo } from '@/components/product/vip/vip-hero-video'
+import { VipBeforeAfter } from '@/components/product/vip/vip-before-after'
+import { VipSteps } from '@/components/product/vip/vip-steps'
+import { VipBoxContents } from '@/components/product/vip/vip-box-contents'
+import { VipTestimonials } from '@/components/product/vip/vip-testimonials'
+import { VipComparison } from '@/components/product/vip/vip-comparison'
+import { VipQuoteBlock } from '@/components/product/vip/vip-quote'
 import { ProductOfferTimer } from '@/components/product/product-offer-timer'
 import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
@@ -152,6 +159,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     offerEndsAt: (product as any).offerEndsAt ?? null,
     faqs: (product as any).faqs ?? [],
     variants: product.variants ?? [],
+    // VIP — contenido manual extendido
+    isVip: product.isVip ?? false,
+    vipHeroVideo: product.vipHeroVideo,
+    vipBeforeAfter: product.vipBeforeAfter ?? [],
+    vipSteps: product.vipSteps ?? [],
+    vipBoxContents: product.vipBoxContents,
+    vipTestimonials: product.vipTestimonials ?? [],
+    vipComparison: product.vipComparison,
+    vipQuotes: product.vipQuotes ?? [],
   }
 
   const SuggestedSection = ({ products, title, subtitle }: { products: typeof suggestedProducts, title: string, subtitle: string }) =>
@@ -388,6 +404,40 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <ProductCTA product={adaptedProduct} />
         </div>
         </ProductVariantProvider>
+
+        {/* VIP — secciones manuales del editor, full width tanto en desktop
+            como en mobile. Solo se renderiza si el producto está marcado VIP.
+            Cada sección decide internamente si tiene contenido para mostrarse. */}
+        {adaptedProduct.isVip && (
+          <div className="border-t border-amber-200/40">
+            {adaptedProduct.vipHeroVideo?.url && (
+              <VipHeroVideo video={adaptedProduct.vipHeroVideo} />
+            )}
+            {adaptedProduct.vipBeforeAfter.length > 0 && (
+              <VipBeforeAfter pairs={adaptedProduct.vipBeforeAfter} />
+            )}
+            {adaptedProduct.vipSteps.length > 0 && (
+              <VipSteps steps={adaptedProduct.vipSteps} />
+            )}
+            {adaptedProduct.vipBoxContents && (
+              <VipBoxContents data={adaptedProduct.vipBoxContents} />
+            )}
+            {adaptedProduct.vipQuotes[0] && (
+              <VipQuoteBlock quote={adaptedProduct.vipQuotes[0]} />
+            )}
+            {adaptedProduct.vipComparison && (
+              <VipComparison data={adaptedProduct.vipComparison} />
+            )}
+            {adaptedProduct.vipTestimonials.length > 0 && (
+              <VipTestimonials testimonials={adaptedProduct.vipTestimonials} />
+            )}
+            {/* Quotes adicionales (2do en adelante) van al final para cerrar la
+                narrativa antes de las políticas de tienda. */}
+            {adaptedProduct.vipQuotes.slice(1).map((q) => (
+              <VipQuoteBlock key={q._key ?? q.text} quote={q} />
+            ))}
+          </div>
+        )}
 
         {/* Global Store Policies */}
         <div className="container mx-auto px-4 mt-8">
