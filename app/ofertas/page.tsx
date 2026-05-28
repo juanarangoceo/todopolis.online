@@ -58,7 +58,7 @@ export default async function OfertasPage() {
         _discount: discount,
       }
     })
-    .sort((a, b) => b._discount - a._discount)
+    .sort((a: DiscountedProduct, b: DiscountedProduct) => b._discount - a._discount)
 
   // Hero compacto — el chip "Ofertas activas" y las dos bubbles de stats se
   // retiraron a propósito para reducir altura. El hero se renderiza dentro del
