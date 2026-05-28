@@ -76,7 +76,7 @@ export function LucyChatButton() {
             <div className="relative flex items-start gap-1.5 max-w-[210px]"
               style={{ animation: 'lucyFadeInUp 0.4s ease-out' }}>
               <div className="bg-surface text-foreground text-xs font-medium px-3.5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-todopolis-lavender/50 leading-snug">
-                ¡Hola! ¿Te ayudo a encontrar algo especial? ✨
+                ¡Hola! Soy Lucy, la IA de Todopolis. ¿Te ayudo? ✨
               </div>
               <button
                 onClick={dismissHint}
