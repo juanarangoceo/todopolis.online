@@ -7,7 +7,7 @@ import { MagicSearchBar } from './magic-search-bar'
 import { ProductGrid } from './product-grid'
 import { Product } from '@/lib/types'
 
-type DiscountedProduct = Product & { _discount: number }
+export type DiscountedProduct = Product & { _discount: number }
 
 interface OffersBrowserProps {
   products: DiscountedProduct[]

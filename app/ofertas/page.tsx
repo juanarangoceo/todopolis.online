@@ -1,29 +1,11 @@
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { OffersBrowser } from '@/components/offers-browser'
+import { OffersBrowser, type DiscountedProduct } from '@/components/offers-browser'
 import { getSanityProducts } from '@/lib/sanity/queries'
 
 export const metadata = {
   title: 'Ofertas y Descuentos | Todopolis',
   description: 'Descubre los mejores descuentos y ofertas de Todopolis. Productos premium a precios increíbles por tiempo limitado.',
-}
-
-type DiscountedProduct = {
-  id: string
-  name: string
-  slug: string
-  shortDescription: string
-  description: string
-  price: number
-  originalPrice: number
-  image: string
-  category: string
-  rating: number
-  isNew: boolean
-  isBestSeller: boolean
-  testimonials: unknown[]
-  reviewsCount?: number
-  _discount: number
 }
 
 export default async function OfertasPage() {
@@ -37,8 +19,10 @@ export default async function OfertasPage() {
     .map((p: {
       _id: string; name: string; slug: string; shortDescription?: string;
       price?: number; originalPrice: number; image?: string; category?: string;
-      isNew?: boolean; isBestSeller?: boolean; testimonials?: unknown[]; reviewsCount?: number;
-    }) => {
+      isNew?: boolean; isBestSeller?: boolean;
+      testimonials?: { name: string; role: string; rating: number; text: string }[];
+      reviewsCount?: number;
+    }): DiscountedProduct => {
       const discount = Math.round((1 - (p.price ?? 0) / p.originalPrice) * 100)
       return {
         id: p._id,
