@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Tag, Percent, Zap, SearchX } from 'lucide-react'
 import { MagicSearchBar } from './magic-search-bar'
@@ -11,12 +11,14 @@ type DiscountedProduct = Product & { _discount: number }
 
 interface OffersBrowserProps {
   products: DiscountedProduct[]
+  hero?: ReactNode
 }
 
 // Versión liviana de ProductBrowser específica para /ofertas: portea la barra
 // de búsqueda al slot del header (header-search-slot) y filtra el grid de
-// ofertas localmente sin recargar.
-export function OffersBrowser({ products }: OffersBrowserProps) {
+// ofertas localmente sin recargar. Recibe el hero como slot opcional para
+// poder ocultarlo cuando hay una búsqueda activa (que el grid quede arriba).
+export function OffersBrowser({ products, hero }: OffersBrowserProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null)
 
@@ -34,6 +36,7 @@ export function OffersBrowser({ products }: OffersBrowserProps) {
     })
   }, [products, searchQuery])
 
+  const isSearching = searchQuery.trim().length > 0
   const maxDiscount = filtered.length > 0 ? Math.max(...filtered.map((p) => p._discount)) : 0
 
   return (
@@ -49,50 +52,58 @@ export function OffersBrowser({ products }: OffersBrowserProps) {
           headerSlot,
         )}
 
-      {filtered.length > 0 ? (
-        <>
-          {/* Info bar */}
-          <div className="flex items-center gap-3 mb-8 p-4 rounded-2xl bg-sale-soft border border-sale/25">
-            <div className="w-10 h-10 rounded-xl bg-sale/10 flex items-center justify-center shrink-0">
-              <Tag className="w-5 h-5 text-sale" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-foreground text-sm">
-                {searchQuery
-                  ? `${filtered.length} ${filtered.length === 1 ? 'resultado' : 'resultados'} para "${searchQuery}"`
-                  : `${filtered.length} ${filtered.length === 1 ? 'producto' : 'productos'} en oferta ahora mismo`}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Ordenados por mayor descuento · Precios válidos por tiempo limitado
-              </p>
-            </div>
-            <div className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sale text-sale-fg text-xs font-bold shrink-0">
-              <Percent className="w-3.5 h-3.5" />
-              Hasta {maxDiscount}% off
-            </div>
-          </div>
+      {/* Hero solo cuando no hay búsqueda activa — al buscar, los productos
+          arrancan desde arriba para no obligar a hacer scroll. */}
+      {!isSearching && hero}
 
-          <ProductGrid products={filtered} />
-        </>
-      ) : searchQuery ? (
-        <div className="text-center py-20 px-4 bg-muted/20 rounded-3xl border border-dashed border-border">
-          <SearchX className="w-14 h-14 text-muted-foreground/30 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-foreground mb-2">
-            No encontramos ofertas para &ldquo;{searchQuery}&rdquo;
-          </h2>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Intenta con otra palabra o borra el buscador para ver todas las ofertas activas.
-          </p>
+      <section className="pt-4 pb-16 px-4">
+        <div className="container mx-auto">
+          {filtered.length > 0 ? (
+            <>
+              {/* Info bar */}
+              <div className="flex items-center gap-3 mb-8 p-4 rounded-2xl bg-sale-soft border border-sale/25">
+                <div className="w-10 h-10 rounded-xl bg-sale/10 flex items-center justify-center shrink-0">
+                  <Tag className="w-5 h-5 text-sale" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-foreground text-sm">
+                    {isSearching
+                      ? `${filtered.length} ${filtered.length === 1 ? 'resultado' : 'resultados'} para "${searchQuery}"`
+                      : `${filtered.length} ${filtered.length === 1 ? 'producto' : 'productos'} en oferta ahora mismo`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Ordenados por mayor descuento · Precios válidos por tiempo limitado
+                  </p>
+                </div>
+                <div className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sale text-sale-fg text-xs font-bold shrink-0">
+                  <Percent className="w-3.5 h-3.5" />
+                  Hasta {maxDiscount}% off
+                </div>
+              </div>
+
+              <ProductGrid products={filtered} />
+            </>
+          ) : isSearching ? (
+            <div className="text-center py-20 px-4 bg-muted/20 rounded-3xl border border-dashed border-border">
+              <SearchX className="w-14 h-14 text-muted-foreground/30 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-foreground mb-2">
+                No encontramos ofertas para &ldquo;{searchQuery}&rdquo;
+              </h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Intenta con otra palabra o borra el buscador para ver todas las ofertas activas.
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-24 px-4 bg-muted/20 rounded-3xl border border-dashed border-border">
+              <Zap className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-foreground mb-2">No hay ofertas disponibles ahora</h2>
+              <p className="text-muted-foreground max-w-md mx-auto mb-8">
+                Vuelve pronto, actualizamos nuestras ofertas constantemente con los mejores precios.
+              </p>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="text-center py-24 px-4 bg-muted/20 rounded-3xl border border-dashed border-border">
-          <Zap className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">No hay ofertas disponibles ahora</h2>
-          <p className="text-muted-foreground max-w-md mx-auto mb-8">
-            Vuelve pronto, actualizamos nuestras ofertas constantemente con los mejores precios.
-          </p>
-        </div>
-      )}
+      </section>
     </>
   )
 }
