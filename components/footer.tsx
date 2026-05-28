@@ -122,7 +122,7 @@ export function Footer() {
 
   return (
     <>
-      <footer className="relative mt-24 overflow-hidden">
+      <footer id="site-footer" className="relative mt-24 overflow-hidden">
         {/* Curved top decoration */}
         <div className="absolute top-0 left-0 right-0 h-24 -translate-y-full">
           <svg viewBox="0 0 1440 100" fill="none" className="w-full h-full" preserveAspectRatio="none">

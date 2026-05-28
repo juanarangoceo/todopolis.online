@@ -8,6 +8,7 @@ import { ProductBenefits } from '@/components/product/product-benefits'
 import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
 import { ProductCTA } from '@/components/product/product-cta'
+import { ProductSubscription } from '@/components/product/product-subscription'
 import { ProductOfferTimer } from '@/components/product/product-offer-timer'
 import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
@@ -396,6 +397,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
           </section>
         )}
+
+        {/* Suscripción — captura de email + WhatsApp con acceso prioritario */}
+        <ProductSubscription
+          productSlug={adaptedProduct.slug}
+          productName={adaptedProduct.name}
+        />
       </main>
 
       <VoiceLucyMount
