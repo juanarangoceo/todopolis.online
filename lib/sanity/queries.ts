@@ -35,6 +35,7 @@ const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | or
   category,
   isNew,
   isBestSeller,
+  isVip,
   heroTitle,
   testimonials,
   reviewsCount,
@@ -82,7 +83,51 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
     answer
   },
   "articleSlug": *[_type == "article" && relatedProduct._ref == ^._id][0].slug.current,
-  "articleTopic": *[_type == "article" && relatedProduct._ref == ^._id][0].topic
+  "articleTopic": *[_type == "article" && relatedProduct._ref == ^._id][0].topic,
+  // VIP — contenido manual extendido
+  isVip,
+  vipHeroVideo {
+    url,
+    "posterImage": posterImage.asset->url,
+    caption
+  },
+  vipBeforeAfter[] {
+    _key,
+    "beforeImage": beforeImage.asset->url,
+    "beforeImageAlt": beforeImage.alt,
+    "afterImage": afterImage.asset->url,
+    "afterImageAlt": afterImage.alt,
+    caption
+  },
+  vipSteps[] {
+    _key,
+    "image": image.asset->url,
+    "imageAlt": image.alt,
+    title,
+    description
+  },
+  vipBoxContents {
+    title,
+    "image": image.asset->url,
+    "imageAlt": image.alt,
+    intro,
+    items
+  },
+  vipTestimonials[] {
+    _key,
+    "photo": photo.asset->url,
+    "photoAlt": photo.alt,
+    quote,
+    name,
+    location
+  },
+  vipComparison {
+    title,
+    ourLabel,
+    theirLabel,
+    rows[] { _key, feature, ours, theirs }
+  },
+  vipQuotes[] { _key, text, author }
 }`
 
 const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {

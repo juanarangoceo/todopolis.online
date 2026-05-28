@@ -36,6 +36,69 @@ export interface ProductVariant {
   isEnable?: boolean
 }
 
+// ─── VIP — contenido manual extendido (editorial) ────────────────────────────
+// Estos tipos están en perfecta paridad con sanity/schemaTypes/product.ts.
+
+export interface VipHeroVideo {
+  url?: string
+  posterImage?: string
+  caption?: string
+}
+
+export interface VipBeforeAfterPair {
+  _key?: string
+  beforeImage?: string
+  beforeImageAlt?: string
+  afterImage?: string
+  afterImageAlt?: string
+  caption?: string
+}
+
+export interface VipStep {
+  _key?: string
+  image?: string
+  imageAlt?: string
+  title: string
+  description?: string
+}
+
+export interface VipBoxContents {
+  title?: string
+  image?: string
+  imageAlt?: string
+  intro?: string
+  items?: string[]
+}
+
+export interface VipVisualTestimonial {
+  _key?: string
+  photo?: string
+  photoAlt?: string
+  quote: string
+  name: string
+  location?: string
+}
+
+export interface VipComparisonRow {
+  _key?: string
+  feature: string
+  ours?: string
+  theirs?: string
+}
+
+export interface VipComparison {
+  title?: string
+  ourLabel?: string
+  theirLabel?: string
+  rows?: VipComparisonRow[]
+}
+
+export interface VipQuote {
+  _key?: string
+  text: string
+  author?: string
+}
+
 // Sanity product type (matches schema)
 export interface SanityProduct {
   _id: string
@@ -65,6 +128,15 @@ export interface SanityProduct {
   offerName?: string
   offerEndsAt?: string
   faqs?: Array<{ _key?: string; question: string; answer: string }>
+  // VIP — manual
+  isVip?: boolean
+  vipHeroVideo?: VipHeroVideo
+  vipBeforeAfter?: VipBeforeAfterPair[]
+  vipSteps?: VipStep[]
+  vipBoxContents?: VipBoxContents
+  vipTestimonials?: VipVisualTestimonial[]
+  vipComparison?: VipComparison
+  vipQuotes?: VipQuote[]
 }
 
 // Legacy mock type (keep for backward compat during transition)
@@ -97,6 +169,15 @@ export interface Product {
   ctaHeadline?: string
   ctaText?: string
   tags?: ProductTag[]
+  // VIP — manual (igual que SanityProduct, replicado aquí para el shape adaptado del producto)
+  isVip?: boolean
+  vipHeroVideo?: VipHeroVideo
+  vipBeforeAfter?: VipBeforeAfterPair[]
+  vipSteps?: VipStep[]
+  vipBoxContents?: VipBoxContents
+  vipTestimonials?: VipVisualTestimonial[]
+  vipComparison?: VipComparison
+  vipQuotes?: VipQuote[]
 }
 
 export interface ProductTag {

@@ -314,11 +314,240 @@ export const productType = defineType({
       group: 'offer',
       description: 'Fecha y hora exacta. El countdown desaparece automáticamente al llegar a cero.',
     }),
+
+    // ─── VIP — Contenido manual extendido (100% editorial) ───────────────────
+    // Estos campos NUNCA los toca la IA ni el sync de Mastershop. Decisión
+    // editorial: el editor activa isVip y llena los bloques que quiera. Los
+    // bloques vacíos no se renderizan.
+    defineField({
+      name: 'isVip',
+      title: '👑 ¿Producto VIP?',
+      type: 'boolean',
+      group: 'vip',
+      initialValue: false,
+      description: 'Activa la coronita en la tarjeta del producto y la entrada VIP en el header. Si lo activas, los bloques VIP de abajo se mostrarán en la landing (solo los que llenes).',
+    }),
+    defineField({
+      name: 'vipHeroVideo',
+      title: '🎬 Video / GIF secundario',
+      type: 'object',
+      group: 'vip',
+      description: 'Video corto del producto en uso. Se renderiza bajo el hero, alto impacto.',
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({
+          name: 'url',
+          title: 'URL del video o GIF',
+          type: 'url',
+          description: 'Cloudinary (recomendado), YouTube, Vimeo o GIF directo.',
+        }),
+        defineField({
+          name: 'posterImage',
+          title: 'Imagen previa (poster)',
+          type: 'image',
+          options: { hotspot: true },
+          description: 'Se muestra mientras carga el video.',
+        }),
+        defineField({
+          name: 'caption',
+          title: 'Caption corto (opcional)',
+          type: 'string',
+        }),
+      ],
+    }),
+    defineField({
+      name: 'vipBeforeAfter',
+      title: '🔄 Antes / Después (puedes agregar varios)',
+      type: 'array',
+      group: 'vip',
+      description: 'Pares de imágenes para mostrar transformación. Ideal para belleza, fitness, limpieza, organización.',
+      of: [
+        defineArrayMember({
+          name: 'beforeAfterPair',
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'beforeImage',
+              title: 'Imagen "Antes"',
+              type: 'image',
+              options: { hotspot: true },
+              validation: (rule) => rule.required(),
+              fields: [{ name: 'alt', title: 'Alt text', type: 'string' }],
+            }),
+            defineField({
+              name: 'afterImage',
+              title: 'Imagen "Después"',
+              type: 'image',
+              options: { hotspot: true },
+              validation: (rule) => rule.required(),
+              fields: [{ name: 'alt', title: 'Alt text', type: 'string' }],
+            }),
+            defineField({ name: 'caption', title: 'Caption (opcional)', type: 'string' }),
+          ],
+          preview: {
+            select: { title: 'caption', media: 'afterImage' },
+            prepare({ title, media }) {
+              return { title: title || 'Antes / Después', media }
+            },
+          },
+        }),
+      ],
+    }),
+    defineField({
+      name: 'vipSteps',
+      title: '👣 Cómo se usa — pasos (puedes agregar varios)',
+      type: 'array',
+      group: 'vip',
+      description: 'Pasos ilustrados que enseñan a usar el producto. Sugerido: 3-4 pasos.',
+      of: [
+        defineArrayMember({
+          name: 'step',
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'image',
+              title: 'Imagen del paso',
+              type: 'image',
+              options: { hotspot: true },
+              fields: [{ name: 'alt', title: 'Alt text', type: 'string' }],
+            }),
+            defineField({
+              name: 'title',
+              title: 'Título del paso',
+              type: 'string',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'description',
+              title: 'Descripción',
+              type: 'text',
+              rows: 2,
+            }),
+          ],
+          preview: { select: { title: 'title', media: 'image' } },
+        }),
+      ],
+    }),
+    defineField({
+      name: 'vipBoxContents',
+      title: '📦 Qué viene en la caja',
+      type: 'object',
+      group: 'vip',
+      description: 'Para reducir la duda de "¿qué exactamente recibo?". Mostrar imagen del kit + lista de items.',
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({ name: 'title', title: 'Título de la sección', type: 'string', initialValue: 'Qué viene en la caja' }),
+        defineField({
+          name: 'image',
+          title: 'Imagen del kit completo',
+          type: 'image',
+          options: { hotspot: true },
+          fields: [{ name: 'alt', title: 'Alt text', type: 'string' }],
+        }),
+        defineField({ name: 'intro', title: 'Texto introductorio (opcional)', type: 'text', rows: 2 }),
+        defineField({
+          name: 'items',
+          title: 'Items incluidos',
+          type: 'array',
+          of: [{ type: 'string' }],
+          description: 'Una línea por item.',
+        }),
+      ],
+    }),
+    defineField({
+      name: 'vipTestimonials',
+      title: '💬 Testimonios visuales (con foto)',
+      type: 'array',
+      group: 'vip',
+      description: 'Diferentes a los testimonios de texto generados por IA. Estos llevan foto real y convierten mucho mejor.',
+      of: [
+        defineArrayMember({
+          name: 'visualTestimonial',
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'photo',
+              title: 'Foto del cliente',
+              type: 'image',
+              options: { hotspot: true },
+              validation: (rule) => rule.required(),
+              fields: [{ name: 'alt', title: 'Alt text', type: 'string' }],
+            }),
+            defineField({
+              name: 'quote',
+              title: 'Frase / testimonio',
+              type: 'text',
+              rows: 3,
+              validation: (rule) => rule.required(),
+            }),
+            defineField({ name: 'name', title: 'Nombre', type: 'string', validation: (rule) => rule.required() }),
+            defineField({ name: 'location', title: 'Ciudad / contexto (opcional)', type: 'string' }),
+          ],
+          preview: {
+            select: { title: 'name', subtitle: 'quote', media: 'photo' },
+          },
+        }),
+      ],
+    }),
+    defineField({
+      name: 'vipComparison',
+      title: '⚖️ Comparativa con alternativas',
+      type: 'object',
+      group: 'vip',
+      description: 'Tabla simple: nuestra opción vs lo común. Reposiciona el precio y diferencia.',
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({ name: 'title', title: 'Título', type: 'string', initialValue: 'Cómo nos comparamos' }),
+        defineField({ name: 'ourLabel', title: 'Etiqueta nuestra columna', type: 'string', initialValue: 'Con Todopolis' }),
+        defineField({ name: 'theirLabel', title: 'Etiqueta columna comparación', type: 'string', initialValue: 'Otros' }),
+        defineField({
+          name: 'rows',
+          title: 'Filas de la comparación',
+          type: 'array',
+          of: [
+            defineArrayMember({
+              name: 'comparisonRow',
+              type: 'object',
+              fields: [
+                defineField({ name: 'feature', title: 'Característica', type: 'string', validation: (rule) => rule.required() }),
+                defineField({ name: 'ours', title: 'Nuestra opción', type: 'string' }),
+                defineField({ name: 'theirs', title: 'Otros', type: 'string' }),
+              ],
+              preview: {
+                select: { title: 'feature', ours: 'ours', theirs: 'theirs' },
+                prepare({ title, ours, theirs }) {
+                  return { title: title || 'Fila', subtitle: `${ours ?? '—'} vs ${theirs ?? '—'}` }
+                },
+              },
+            }),
+          ],
+        }),
+      ],
+    }),
+    defineField({
+      name: 'vipQuotes',
+      title: '✨ Quotes destacadas (puedes agregar varios)',
+      type: 'array',
+      group: 'vip',
+      description: 'Frases sueltas grandes que dan respiro a la landing. Se intercalan entre secciones.',
+      of: [
+        defineArrayMember({
+          name: 'vipQuote',
+          type: 'object',
+          fields: [
+            defineField({ name: 'text', title: 'Texto del quote', type: 'text', rows: 3, validation: (rule) => rule.required() }),
+            defineField({ name: 'author', title: 'Autor (opcional)', type: 'string' }),
+          ],
+          preview: { select: { title: 'text', subtitle: 'author' } },
+        }),
+      ],
+    }),
   ],
 
   groups: [
     { name: 'landing', title: '🚀 Landing Page (Contenido IA)' },
     { name: 'offer', title: '⏱️ Oferta / Countdown' },
+    { name: 'vip', title: '👑 VIP — Contenido manual extendido' },
     { name: 'variants', title: '🎨 Variantes' },
     { name: 'tags', title: '🏷️ Etiquetas' },
   ],
