@@ -127,6 +127,22 @@ export async function getSanityProductBySlug(slug: string) {
   }))
 }
 
+// Conteo total de productos publicados. Usa GROQ count() para no traer documentos
+// ni metadata — devuelve un entero. Cachéa 60s con tag 'products' para que se
+// revalide en el mismo flujo que el catálogo (importaciones manuales o cron).
+const PRODUCTS_COUNT_QUERY = `count(*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**"))])`
+
+export async function getSanityProductsCount(): Promise<number> {
+  try {
+    const n = await withRetry(() => getSanityClient().fetch<number>(PRODUCTS_COUNT_QUERY, {}, {
+      next: { revalidate: 60, tags: ['products'] },
+    }))
+    return typeof n === 'number' && Number.isFinite(n) ? n : 0
+  } catch {
+    return 0
+  }
+}
+
 export async function getAllProductSlugs(): Promise<{ slug: string; category?: string; _updatedAt?: string }[]> {
   try {
     return await withRetry(() => getSanityClient().fetch(ALL_SLUGS_QUERY, {}, {

@@ -7,10 +7,11 @@ import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home } from 
 import { useCart } from '@/app/providers/cart-provider'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useFavorites } from '@/app/providers/favorites-provider'
+import { ProductsCounter } from '@/components/products-counter'
 
 // Cloudinary admite transforms en el URL para servir un tamaño optimizado.
 // w_X,q_auto,f_auto le pide ~X px de ancho, calidad auto y formato (webp/avif) auto.
-const LOGO_URL = 'https://res.cloudinary.com/dohwyszdj/image/upload/f_auto,q_auto,w_320/v1779768176/logo_nuevo_todopolis_1_ljlqn6.jpg'
+const LOGO_URL = 'https://res.cloudinary.com/dohwyszdj/image/upload/f_auto,q_auto,w_320/v1779801383/logo_nuevo_todopolis_1_ljlqn6.png'
 
 function Logo({ small = false }: { small?: boolean }) {
   const height = small ? 32 : 40
@@ -120,9 +121,10 @@ export function Header() {
 
           {/* ── Desktop layout ── */}
           <div className="hidden md:flex h-16 items-center justify-between gap-3">
-            {/* Left — Brand Logo */}
-            <div className="flex shrink-0 w-40 justify-start">
+            {/* Left — Brand Logo + contador de productos */}
+            <div className="flex shrink-0 items-center gap-3 justify-start">
               <Logo />
+              <ProductsCounter variant="desktop" />
             </div>
 
             {/* Center — desktop search slot */}
@@ -227,6 +229,11 @@ export function Header() {
             </button>
           </div>
 
+          {/* Contador de productos en el drawer móvil */}
+          <div className="relative px-4 pt-4">
+            <ProductsCounter variant="mobile-drawer" />
+          </div>
+
           {/* Menú */}
           <nav className="relative flex-1 overflow-y-auto px-4 py-5 space-y-1.5">
             <Link
@@ -273,8 +280,13 @@ export function Header() {
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white" />
               </span>
               <span className="flex flex-col">
-                <span className="font-bold text-sm text-foreground leading-tight">Hablar con Lucy</span>
-                <span className="text-[11px] text-foreground/60 leading-tight">Asesora 24/7</span>
+                <span className="font-bold text-sm text-foreground leading-tight flex items-center gap-1.5">
+                  Hablar con Lucy
+                  <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md bg-gradient-to-r from-todopolis-blue/20 to-todopolis-lavender/30 text-todopolis-lavender-deep">
+                    IA
+                  </span>
+                </span>
+                <span className="text-[11px] text-foreground/60 leading-tight">Asistente IA disponible 24/7</span>
               </span>
             </button>
           </nav>
