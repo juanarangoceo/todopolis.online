@@ -1,16 +1,16 @@
 import { StorePolicy } from '@/lib/types'
-import { Truck, ShieldCheck, Lock, WalletCards, Star, RefreshCw, Box, CheckCircle } from 'lucide-react'
+import { Truck, ShieldCheck, WalletCards, Star, RefreshCw, Box, CheckCircle, Headphones } from 'lucide-react'
 
 // Icon mapper from string to actual Lucide component
 const IconMap: Record<string, React.ElementType> = {
   Truck,
   ShieldCheck,
-  Lock,
   WalletCards,
   Star,
   RefreshCw,
   Box,
   CheckCircle,
+  Headphones,
 }
 
 // Fallback policies in case Sanity document is missing
@@ -31,9 +31,9 @@ const DEFAULT_POLICIES: StorePolicy[] = [
     description: 'Todos nuestros productos pasan por un estricto control. Garantía total por defectos de fábrica.',
   },
   {
-    iconName: 'Lock',
-    title: 'Privacidad Protegida',
-    description: 'Tus datos están 100% seguros con nosotros y no los compartimos con terceros.',
+    iconName: 'Headphones',
+    title: 'Atención Cercana',
+    description: 'Lucy, nuestra IA, te acompaña 24/7. Y si necesitas un humano, también estamos.',
   },
 ]
 

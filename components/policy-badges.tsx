@@ -1,8 +1,8 @@
-import { Truck, ShieldCheck, Lock, WalletCards, Star, RefreshCw, Box, CheckCircle } from 'lucide-react'
+import { Truck, ShieldCheck, WalletCards, Star, RefreshCw, Box, CheckCircle, Headphones } from 'lucide-react'
 import { StorePolicy } from '@/lib/types'
 
 const IconMap: Record<string, React.ElementType> = {
-  Truck, ShieldCheck, Lock, WalletCards, Star, RefreshCw, Box, CheckCircle,
+  Truck, ShieldCheck, WalletCards, Star, RefreshCw, Box, CheckCircle, Headphones,
 }
 
 interface PolicyBadgesProps {
@@ -10,6 +10,7 @@ interface PolicyBadgesProps {
 }
 
 export function PolicyBadges({ policies }: PolicyBadgesProps) {
+  // Filtramos legacy 'Lock' (privacidad) que ya no aplica para contraentrega.
   const displayPolicies = (policies?.length > 0 ? policies : [])
     .filter(p => p.iconName !== 'Lock')
     .slice(0, 3)

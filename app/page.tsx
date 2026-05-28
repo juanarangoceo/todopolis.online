@@ -61,7 +61,7 @@ export default async function Home() {
         { iconName: 'Truck', title: 'Envío Rápido', description: 'A toda Colombia' },
         { iconName: 'WalletCards', title: 'Pago en Casa', description: 'Contra entrega' },
         { iconName: 'ShieldCheck', title: 'Garantía', description: 'Calidad 100%' },
-        { iconName: 'Lock', title: 'Privacidad', description: 'Compra segura' }
+        { iconName: 'Headphones', title: 'Atención 24/7', description: 'Lucy IA + humanos' }
       ];
 
   return (
