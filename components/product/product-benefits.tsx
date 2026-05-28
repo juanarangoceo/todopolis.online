@@ -1,4 +1,4 @@
-import { Check, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Product } from '@/lib/types';
 
 interface ProductBenefitsProps {
@@ -11,31 +11,27 @@ export function ProductBenefits({ product }: ProductBenefitsProps) {
   if (benefits.length === 0) return null;
 
   return (
-    <section className="py-8 md:py-12 bg-muted/30">
+    <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Por qué te encantará</span>
-          </div>
+        <div className="text-center mb-10">
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
             Beneficios principales
           </h2>
+          <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-gradient-to-r from-todopolis-blue to-todopolis-lavender" />
         </div>
 
-        {/* Mobile: single column / Desktop: 2 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 max-w-4xl mx-auto">
           {benefits.map((b, index) => (
             <div
               key={index}
-              className="flex items-start gap-4 p-5 md:p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-white/20 shadow-sm shadow-primary/5"
+              className="group relative flex items-start gap-4 p-5 md:p-6 rounded-2xl bg-surface border border-nav-inactive-border shadow-sm hover:shadow-md hover:border-todopolis-lavender/40 hover:-translate-y-0.5 transition-all duration-300"
             >
-              <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Check className="w-6 h-6 text-primary" />
+              <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-todopolis-blue/15 to-todopolis-lavender/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Check className="w-5 h-5 text-todopolis-lavender-deep" strokeWidth={2.5} />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-foreground font-medium leading-relaxed text-sm md:text-base">
-                  {(b as any).description ?? b}
+                  {(b as { description?: string }).description ?? String(b)}
                 </p>
               </div>
             </div>

@@ -47,46 +47,57 @@ export default async function OfertasPage() {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Banner */}
+        {/* Hero Banner — gradiente coral → lila alineado a la paleta */}
         <section className="relative overflow-hidden">
-          {/* Background — coral suave de oferta (sale) */}
-          <div className="absolute inset-0 bg-sale" />
-          <div className="absolute inset-0">
-            <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
-            {/* Shimmer */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_4s_ease-in-out_infinite]" />
-          </div>
+          {/* Background gradient: sale → lavender (paleta Todopolis) */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(120deg, var(--sale, #FF6B6B) 0%, var(--sale, #FF6B6B) 40%, #C77DFF 100%)',
+            }}
+          />
+          {/* Blobs decorativos */}
+          <div aria-hidden className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
+          <div aria-hidden className="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-todopolis-lavender/40 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
+          <div aria-hidden className="absolute top-1/3 right-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Shimmer */}
+          <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_4s_ease-in-out_infinite] pointer-events-none" />
 
-          <div className="relative container mx-auto px-4 py-10 md:py-16 text-center">
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 text-balance leading-tight">
-              Grandes descuentos en un solo lugar.
+          <div className="relative container mx-auto px-4 py-12 md:py-20 text-center">
+            {/* Eyebrow chip */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 mb-5 shadow-sm">
+              <Zap className="w-3.5 h-3.5 text-white" />
+              <span className="text-white text-xs font-bold uppercase tracking-widest">Ofertas activas</span>
+            </div>
+
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black text-white mb-5 text-balance leading-tight drop-shadow-sm">
+              Lo bueno, ahora con descuento.
             </h1>
 
-            <p className="text-white/80 text-lg md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
-              Productos seleccionados con los mejores precios del mercado. ¡No dejes pasar estas oportunidades únicas!
+            <p className="text-white/85 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+              Selección curada del catálogo Todopolis a precios que solo duran lo que dura el cronómetro. Pago contraentrega, envío a toda Colombia.
             </p>
 
             {/* Stats */}
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
-              <div className="flex flex-col items-center">
-                <span className="text-3xl md:text-4xl font-black text-white">{discountedProducts.length}</span>
-                <span className="text-white/70 text-sm font-medium mt-1">productos en oferta</span>
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+              <div className="flex flex-col items-center px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-sm">
+                <span className="text-3xl md:text-4xl font-black text-white tabular-nums">{discountedProducts.length}</span>
+                <span className="text-white/80 text-xs font-semibold uppercase tracking-wider mt-1">en oferta</span>
               </div>
-              <div className="w-px h-10 bg-white/20 hidden md:block" />
-              <div className="flex flex-col items-center">
-                <span className="text-3xl md:text-4xl font-black text-white">
+              <div className="flex flex-col items-center px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-sm">
+                <span className="text-3xl md:text-4xl font-black text-white tabular-nums">
                   {discountedProducts.length > 0
-                    ? `${Math.max(...discountedProducts.map((p: any) => p._discount))}%`
+                    ? `${Math.max(...discountedProducts.map((p: { _discount: number }) => p._discount))}%`
                     : '0%'}
                 </span>
-                <span className="text-white/70 text-sm font-medium mt-1">descuento máximo</span>
+                <span className="text-white/80 text-xs font-semibold uppercase tracking-wider mt-1">máximo</span>
               </div>
             </div>
           </div>
 
           {/* Bottom wave */}
-          <div className="absolute bottom-0 left-0 right-0">
+          <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
             <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
               <path d="M0 60L1440 60L1440 20C1200 60 240 0 0 40L0 60Z" fill="white" fillOpacity="0.08"/>
               <path d="M0 60L1440 60L1440 0C1100 50 340 10 0 50L0 60Z" fill="white" fillOpacity="0.06"/>
