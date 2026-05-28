@@ -28,33 +28,43 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
 
   return (
     <div className="space-y-4">
-      {/* Sale Banner — coral suave (sale), botón salmón (CTA) */}
+      {/* Sale Banner — gradiente sale → coral-deep (paleta de marca, alta jerarquía) */}
       {discount > 0 && (
-        <div className="relative overflow-hidden rounded-2xl bg-sale p-3 md:p-4 shadow-md">
+        <div
+          className="relative overflow-hidden rounded-2xl p-3.5 md:p-4 shadow-md"
+          style={{
+            background:
+              'linear-gradient(110deg, var(--sale) 0%, var(--sale) 45%, var(--todopolis-coral-deep) 100%)',
+          }}
+        >
+          {/* Blobs decorativos para profundidad */}
+          <div aria-hidden className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <div aria-hidden className="absolute -bottom-10 left-1/3 w-32 h-32 bg-white/8 rounded-full blur-2xl pointer-events-none" />
+
           <div className="relative flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-inner">
                 <Zap className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <p className="text-white font-black text-sm md:text-base uppercase tracking-wider">
-                  Oferta -{discount}%
+              <div className="leading-tight">
+                <p className="text-white font-black text-sm md:text-base uppercase tracking-wider drop-shadow-sm">
+                  −{discount}% en oferta
                 </p>
-                <p className="text-white/80 text-xs font-medium">
-                  ¡Por tiempo limitado!
+                <p className="text-white/85 text-[11px] md:text-xs font-medium">
+                  Por tiempo limitado
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right shrink-0">
-                <p className="text-white/70 text-xs font-medium">Ahorras</p>
-                <p className="text-white font-black text-lg md:text-xl">
+            <div className="flex items-center gap-2.5 md:gap-3">
+              <div className="text-right shrink-0 leading-tight">
+                <p className="text-white/75 text-[10px] md:text-xs font-semibold uppercase tracking-wider">Ahorras</p>
+                <p className="text-white font-black text-lg md:text-xl tabular-nums drop-shadow-sm">
                   {formatPrice(savings)}
                 </p>
               </div>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('product:buy'))}
-                className="shrink-0 px-3 py-2 bg-cta text-cta-fg text-xs font-black rounded-xl hover:bg-cta-hover active:scale-95 transition-all shadow-md whitespace-nowrap"
+                className="shrink-0 px-3.5 py-2 bg-white text-todopolis-coral-deep text-xs font-black rounded-xl hover:bg-white/95 hover:scale-[1.03] active:scale-95 transition-all shadow-md whitespace-nowrap uppercase tracking-wider"
               >
                 Comprar ya
               </button>
