@@ -2,13 +2,13 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
 import { getSanityProducts } from '@/lib/sanity/queries'
-import { Crown, Sparkles } from 'lucide-react'
+import { Crown, Sparkles, Truck, Zap } from 'lucide-react'
 import { Product } from '@/lib/types'
 
 export const metadata = {
   title: 'Productos VIP | Todopolis',
   description:
-    'Selección VIP de Todopolis: productos con landings extendidas, contenido visual, antes/después, demos y comparativas. Lo mejor curado para ti.',
+    'Productos VIP de Todopolis: selección exclusiva con envío gratis, despacho prioritario y contenido extendido (video en uso, antes/después, comparativas). Lo mejor, primero para ti.',
 }
 
 export default async function VipPage() {
@@ -62,22 +62,29 @@ export default async function VipPage() {
           <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_4s_ease-in-out_infinite] pointer-events-none" />
 
           <div className="relative container mx-auto px-4 py-10 md:py-14 text-center">
-            <span
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border border-amber-200/60 mb-4 shadow-sm"
-              style={{
-                background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-                color: '#92400E',
-              }}
-            >
-              <Crown className="w-3 h-3" fill="currentColor" strokeWidth={1.5} />
-              Selección VIP
-            </span>
-            <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 text-balance leading-tight drop-shadow-sm">
-              Lo mejor del catálogo, contado en detalle.
+            <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 text-balance leading-[1.1] tracking-tight drop-shadow-sm">
+              Exclusivos. Con envío gratis y despacho prioritario.
             </h1>
             <p className="text-amber-50/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Productos con landing extendida: video del producto en uso, antes y después, comparativas y testimonios visuales. Las decisiones se toman con menos dudas.
+              Una selección curada de Todopolis: productos premium con envío 100% gratis, despacho prioritario y landing extendida —video en uso, antes y después, comparativas—. Lo mejor, primero para ti.
             </p>
+
+            {/* Píldoras de valor VIP */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+              {[
+                { icon: Truck, label: 'Envío gratis' },
+                { icon: Zap, label: 'Despacho prioritario' },
+                { icon: Sparkles, label: 'Contenido extendido' },
+              ].map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 border border-white/25 text-white text-xs font-bold backdrop-blur-sm shadow-sm"
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
@@ -107,7 +114,7 @@ export default async function VipPage() {
                       {vipProducts.length} {vipProducts.length === 1 ? 'producto VIP' : 'productos VIP'} disponibles
                     </p>
                     <p className="text-xs text-foreground/55">
-                      Cada uno con contenido visual extra · Pago contraentrega · Envío a toda Colombia
+                      Envío gratis · Despacho prioritario · Pago contraentrega · Contenido visual extra
                     </p>
                   </div>
                 </div>

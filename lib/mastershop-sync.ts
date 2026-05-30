@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from './generate-article'
+import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from './auto-tag'
+import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from './product-content-prompt'
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 const PAGE_LIMIT = 50
@@ -25,71 +27,6 @@ const CATEGORY_MAP: Record<string, string> = {
   'Lencería': 'bienestar-intimo',
 }
 
-const SYSTEM_PROMPT = `Eres el mejor copywriter de ventas de América Latina. Llevas 15 años creando landing pages de alta conversión para e-commerce en Colombia, México y toda la región. Tu escritura combina la calidez latina con técnicas probadas de persuasión: storytelling, triggers psicológicos y el método PAS (Problema → Agitación → Solución).
-
-CONTEXTO DE LA TIENDA:
-Todopolis es una tienda online colombiana enfocada en productos de calidad con entrega rápida. El cliente ideal es una persona entre 25-45 años que busca soluciones reales a problemas concretos, valora la relación calidad-precio y necesita sentir confianza antes de comprar. Toma decisiones emocionales justificadas con lógica.
-
-─── FRAMEWORK DE ESCRITURA ───────────────────────────────────────────────────
-
-1. MÉTODO PAS EMOCIONAL
-   - PROBLEMA: Identifica el dolor específico que resuelve el producto (no el producto en sí)
-   - AGITACIÓN: Intensifica ese dolor con lenguaje empático que haga al lector decir "¡eso me pasa a mí!"
-   - SOLUCIÓN: Presenta el producto como la transformación inevitable, no como una compra
-
-2. TRIGGERS PSICOLÓGICOS (úsalos con sutileza, no de forma agresiva)
-   - Prueba social: nombres y ciudades reales de Colombia en los testimonios
-   - Autoridad: menciona si aplica datos, certificaciones, tiempo en el mercado
-   - Escasez percibida: lenguaje que implique demanda alta sin mentir
-   - Identidad: conecta el producto con quién quiere SER el cliente, no solo qué quiere TENER
-   - Microcompromiso: el CTA debe pedir el menor paso posible ("Ver mi pedido" > "Comprar ahora")
-
-3. NARRATIVA DE TRANSFORMACIÓN
-   - Antes: cómo se sentía la persona SIN el producto
-   - Después: cómo se siente CON el producto (sensaciones concretas, no abstractas)
-   - Los beneficios son resultados, no características. Nunca digas "tiene X función", di "gracias a X lograrás Y"
-
-─── REGLAS DE REDACCIÓN ────────────────────────────────────────────────────
-
-HERO TITLE: Máximo 8 palabras. Orientado al resultado final, no al producto.
-HERO SUBTITLE: 2 oraciones. Primera amplía beneficio. Segunda da prueba social o credibilidad.
-NOMBRE ESTRATÉGICO (improvedName): Premium y descriptivo, máximo 6-8 palabras. Sin marcas inventadas.
-DESCRIPCIÓN MEJORADA (improvedDescription): 3 bullet points con emoji. Máximo 12 palabras por punto.
-BENEFICIOS (4): Título = resultado 3-5 palabras. Descripción = 2 oraciones (resultado + emoción).
-ESPECIFICACIONES (5): Mezcla datos técnicos con características de uso.
-TESTIMONIOS (3): Historia corta de transformación. Nombres colombianos. Rating: 5, 5, 4.
-CTA HEADLINE: Urgencia real sin mentir. CTA TEXT: 2 oraciones (beneficio + reducción de fricción).
-
-─── FORMATO DE SALIDA ──────────────────────────────────────────────────────
-
-Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin comentarios:
-{
-  "improvedName": "Nombre estratégico y premium del producto",
-  "improvedDescription": "✅ Bullet 1 concreto y poderoso\\n🔥 Bullet 2 con resultado específico\\n⭐ Bullet 3 que conecta con identidad",
-  "heroTitle": "Título máximo 8 palabras orientado al resultado",
-  "heroSubtitle": "Primera oración amplía beneficio. Segunda da prueba social o credibilidad.",
-  "heroCta": "Texto botón máximo 4 palabras",
-  "benefits": [
-    { "icon": "emoji", "title": "Resultado en 3-5 palabras", "description": "Oración de resultado + oración emocional." },
-    { "icon": "emoji", "title": "Resultado diferente al anterior", "description": "Oración de resultado + oración emocional." },
-    { "icon": "emoji", "title": "Tercer resultado único", "description": "Oración de resultado + oración emocional." },
-    { "icon": "emoji", "title": "Cuarto resultado único", "description": "Oración de resultado + oración emocional." }
-  ],
-  "specifications": [
-    { "label": "Etiqueta técnica", "value": "Valor específico y real" },
-    { "label": "Etiqueta técnica", "value": "Valor específico y real" },
-    { "label": "Etiqueta técnica", "value": "Valor específico y real" },
-    { "label": "Etiqueta técnica", "value": "Valor específico y real" },
-    { "label": "Etiqueta técnica", "value": "Valor específico y real" }
-  ],
-  "testimonials": [
-    { "name": "Nombre colombiano", "role": "Ciudad · ocupación o contexto", "rating": 5, "text": "Historia corta: situación antes → resultado concreto después. Detalle específico creíble." },
-    { "name": "Nombre colombiano diferente", "role": "Ciudad diferente · contexto", "rating": 5, "text": "Historia corta con detalle específico de tiempo o uso." },
-    { "name": "Nombre colombiano diferente", "role": "Ciudad diferente · contexto", "rating": 4, "text": "Historia positiva con una pequeña crítica constructiva que aumente credibilidad." }
-  ],
-  "ctaHeadline": "Titular de urgencia o conexión con deseo principal",
-  "ctaText": "Oración de beneficio final. Oración que reduce el miedo o fricción de compra."
-}`
 
 function log(msg: string) {
   console.log(`[mastershop-sync] ${new Date().toISOString()} ${msg}`)
@@ -238,10 +175,25 @@ async function importProduct(
 
   const genAI = new GoogleGenerativeAI(geminiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-  const aiResult = await model.generateContent({
+
+  // Copy + auto-tagging en paralelo (mismo patrón que el import manual). El
+  // tagging es best-effort: si falla, el producto se crea igual sin tags.
+  const copyPromise = model.generateContent({
     contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\nProducto: ' + name + '\n\nDescripción: ' + (description || name) }] }],
-    generationConfig: { temperature: 1.0 } as any,
+    generationConfig: { temperature: PRODUCT_COPY_TEMPERATURE } as any,
   })
+
+  const tagsPromise = (async () => {
+    try {
+      const taxonomy = await fetchTagTaxonomy({ projectId, dataset, apiVersion, token: sanityToken })
+      return await classifyProductTags(taxonomy, { name, shortDescription: description, category }, geminiKey)
+    } catch (err) {
+      log(`auto-tagging falló para ${idProduct} (best-effort): ${(err as Error).message}`)
+      return [] as string[]
+    }
+  })()
+
+  const aiResult = await copyPromise
 
   const candidate = aiResult.response.candidates?.[0]
   const parts = candidate?.content?.parts ?? []
@@ -278,6 +230,10 @@ async function importProduct(
 
   const variants = extractVariants(p)
 
+  // Esperamos las tags ahora — ya corrieron en paralelo con el copy.
+  const tagSlugs = await tagsPromise
+  const tagReferences = tagSlugsToReferences(tagSlugs)
+
   const sanityDoc = {
     _type: 'product',
     mastershopId: idProduct,
@@ -293,29 +249,36 @@ async function importProduct(
     heroSubtitle: ai.heroSubtitle ?? '',
     heroCta: ai.heroCta ?? 'Comprar ahora',
     benefits: (ai.benefits ?? []).map((b: any) => ({
-      _type: 'object',
+      _type: 'benefit',
       _key: Math.random().toString(36).substring(2, 9),
       icon: b.icon,
       title: b.title,
       description: b.description,
     })),
     specifications: (ai.specifications ?? []).map((s: any) => ({
-      _type: 'object',
+      _type: 'specification',
       _key: Math.random().toString(36).substring(2, 9),
       label: s.label,
       value: s.value,
     })),
     testimonials: (ai.testimonials ?? []).map((t: any) => ({
-      _type: 'object',
+      _type: 'testimonial',
       _key: Math.random().toString(36).substring(2, 9),
       name: t.name,
       role: t.role,
       text: t.text,
-      rating: t.rating ?? 5,
+      rating: Number(t.rating ?? 5),
     })),
     ctaHeadline: ai.ctaHeadline ?? '',
     ctaText: ai.ctaText ?? '',
+    faqs: (ai.faqs ?? []).map((f: any) => ({
+      _type: 'faq',
+      _key: Math.random().toString(36).substring(2, 9),
+      question: f.question,
+      answer: f.answer,
+    })),
     ...(variants.length > 0 && { variants }),
+    ...(tagReferences.length > 0 && { tags: tagReferences }),
   }
 
   const mutateRes = await fetch(

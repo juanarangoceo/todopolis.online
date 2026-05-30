@@ -115,15 +115,21 @@ export function ProductHero({ product }: ProductHeroProps) {
         {/* Product Info — full width, desktop version gets its own column from page layout */}
         <div className="space-y-6">
           {/* Title block */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {showProductKicker && (
               <p className="hidden lg:inline-block text-xs font-bold uppercase tracking-[0.18em] text-todopolis-pink-deep bg-todopolis-pink/30 px-2.5 py-1 rounded-full">
                 {product.name}
               </p>
             )}
-            <h1 className="font-serif text-xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
+            <h1 className="font-serif text-2xl md:text-4xl lg:text-[2.75rem] font-extrabold text-foreground leading-[1.1] tracking-tight text-balance">
               {heroTitle}
             </h1>
+            {/* Acento de marca — regla corta con gradiente coral → lavanda */}
+            <span
+              aria-hidden
+              className="block h-1 w-16 rounded-full"
+              style={{ background: 'linear-gradient(90deg, var(--todopolis-coral-deep), var(--todopolis-lavender-deep))' }}
+            />
           </div>
 
           {/* Category & Rating */}
@@ -139,7 +145,11 @@ export function ProductHero({ product }: ProductHeroProps) {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <a
+              href="#resenas"
+              className="flex items-center gap-1 group"
+              aria-label="Ver reseñas"
+            >
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
@@ -152,10 +162,10 @@ export function ProductHero({ product }: ProductHeroProps) {
                 />
               ))}
               <span className="ml-2 text-sm font-medium">{product.rating ?? 5.0}</span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground group-hover:text-primary group-hover:underline transition-colors">
                 ({(product as any).reviewsCount ?? (product as any).testimonials?.length ?? product.reviews?.length ?? 15} reseñas)
               </span>
-            </div>
+            </a>
           </div>
 
           {/* Subtitle */}
@@ -215,10 +225,18 @@ export function ProductHero({ product }: ProductHeroProps) {
             </div>
           </div>
 
-          {/* In Stock */}
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-sm text-muted-foreground">En stock - Envío inmediato</span>
+          {/* In Stock + señal de demanda honesta (solo si es best seller) */}
+          <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-sm text-muted-foreground">En stock - Envío inmediato</span>
+            </div>
+            {product.isBestSeller && (
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-todopolis-coral-deep">
+                <Zap className="w-4 h-4 fill-current" />
+                Entre los más vendidos
+              </span>
+            )}
           </div>
 
           {/* Variant Selector — solo aparece si el producto tiene variantes */}

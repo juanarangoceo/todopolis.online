@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingBag, X, MapPin, Phone, User, CheckCircle2, Truck } from 'lucide-react';
+import { ShoppingBag, X, MapPin, Phone, User, CheckCircle2, Truck, Crown } from 'lucide-react';
 import { createOrder } from '@/app/actions/create-order';
 import { cn } from '@/lib/utils';
 import { Product } from '@/lib/types';
@@ -39,7 +39,9 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
     return '$ ' + price.toLocaleString('es-CO');
   };
 
-  const shippingCost = 12000;
+  // Productos VIP → envío gratis.
+  const isVip = (product as any).isVip === true;
+  const shippingCost = isVip ? 0 : 12000;
   const totalPrice = ((product.price ?? 0) * quantity) + shippingCost;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -119,6 +121,28 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
         <div className="overflow-y-auto p-5 sm:p-6 flex-1">
           {step === 1 ? (
             <div className="space-y-6">
+              {/* Banner VIP — envío gratis */}
+              {isVip && (
+                <div
+                  className="flex items-center gap-3 p-3.5 rounded-2xl border shadow-sm"
+                  style={{
+                    background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+                    borderColor: '#F59E0B66',
+                  }}
+                >
+                  <span
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-amber-300"
+                    style={{ background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)' }}
+                  >
+                    <Crown className="w-4 h-4 text-amber-900" fill="currentColor" strokeWidth={1.5} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm text-amber-900 leading-tight">Producto VIP · Envío GRATIS</p>
+                    <p className="text-xs text-amber-800/80 leading-tight mt-0.5">El envío va por nuestra cuenta y con despacho prioritario.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Product Summary */}
               <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
                 <div className="w-20 h-20 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
@@ -141,7 +165,14 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                   </div>
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-gray-500 text-sm">Envío:</span>
-                    <span className="font-medium text-gray-900">{formatPrice(shippingCost)}</span>
+                    {isVip ? (
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-gray-400 text-xs line-through">{formatPrice(12000)}</span>
+                        <span className="font-bold text-amber-700">GRATIS</span>
+                      </span>
+                    ) : (
+                      <span className="font-medium text-gray-900">{formatPrice(shippingCost)}</span>
+                    )}
                   </div>
                   <div className="flex justify-between items-center mt-3">
                     <span className="text-gray-500 text-sm">Cantidad:</span>
@@ -248,6 +279,12 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                 <Truck className="w-5 h-5" />
                 ¡Pagas al recibir en casa! 🏡
               </div>
+              {isVip && (
+                <div className="mt-3 p-3 rounded-2xl flex items-center justify-center gap-2 w-full text-sm font-bold text-amber-800 border border-amber-200" style={{ background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' }}>
+                  <Crown className="w-4 h-4 text-amber-600" fill="currentColor" strokeWidth={1.5} />
+                  Tu envío VIP va por nuestra cuenta 🎁
+                </div>
+              )}
             </div>
           )}
         </div>

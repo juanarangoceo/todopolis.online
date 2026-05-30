@@ -18,7 +18,7 @@ export function ProductFaq({ faqs }: ProductFaqProps) {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="font-serif text-2xl md:text-3xl font-bold text-foreground mb-2">
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-2">
               Preguntas frecuentes
             </h2>
             <p className="text-muted-foreground text-sm">

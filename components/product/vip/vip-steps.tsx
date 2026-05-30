@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { VipStep } from '@/lib/types'
 import { VipSectionHeader } from './vip-section-header'
 import { VipSlider } from './vip-slider'
+import { ExpandableText } from '../expandable-text'
 
 interface Props {
   steps: VipStep[]
@@ -50,11 +51,7 @@ export function VipSteps({ steps }: Props) {
                 <h3 className="font-bold text-lg text-foreground leading-snug mb-1.5">
                   {step.title}
                 </h3>
-                {step.description && (
-                  <p className="text-sm text-foreground/65 leading-relaxed">
-                    {step.description}
-                  </p>
-                )}
+                <ExpandableText text={step.description} threshold={90} />
               </div>
             </div>
           ))}

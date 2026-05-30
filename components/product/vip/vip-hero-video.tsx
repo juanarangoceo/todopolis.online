@@ -42,7 +42,7 @@ export function VipHeroVideo({ video }: Props) {
   return (
     <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
-        <div className="relative max-w-3xl mx-auto rounded-3xl overflow-hidden shadow-xl border border-amber-200/60 aspect-video bg-black">
+        <div className="relative max-w-sm md:max-w-md mx-auto rounded-3xl overflow-hidden shadow-xl border border-amber-200/60 aspect-[4/5] bg-black">
           {/* MP4 / GIF: render directo inline, sin click-to-play */}
           {source === 'mp4' && (
             // eslint-disable-next-line jsx-a11y/media-has-caption

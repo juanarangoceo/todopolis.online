@@ -33,7 +33,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 className={cn(
                   "flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300",
                   activeTab === id
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                    ? "bg-secondary text-secondary-foreground shadow-lg shadow-todopolis-lavender/30"
                     : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >

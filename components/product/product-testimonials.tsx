@@ -97,11 +97,11 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
   ];
 
   return (
-    <section className="py-8 md:py-12 bg-gradient-to-b from-transparent via-muted/30 to-transparent">
+    <section id="resenas" className="scroll-mt-24 py-8 md:py-12 bg-gradient-to-b from-transparent via-muted/30 to-transparent">
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Lo que dicen nuestras clientas
+            Reseñas
           </h2>
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <div className="flex">

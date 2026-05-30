@@ -234,15 +234,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       {adaptedProduct.vipComparison && (
         <VipComparison data={adaptedProduct.vipComparison} />
       )}
-      <ProductTestimonials product={adaptedProduct} />
       {adaptedProduct.vipTestimonials.length > 0 && (
         <VipTestimonials testimonials={adaptedProduct.vipTestimonials} />
       )}
       {adaptedProduct.vipQuotes.slice(1).map((q) => (
         <VipQuoteBlock key={q._key ?? q.text} quote={q} />
       ))}
-      {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
       {articleLink}
+      {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
       <ProductCTA product={adaptedProduct} />
     </>
   ) : (
@@ -255,9 +254,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         title="También te podría interesar"
         subtitle="Productos seleccionados especialmente para ti que complementan perfectamente tu elección."
       />
-      <ProductTestimonials product={adaptedProduct} />
-      {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
       {articleLink}
+      {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
       <ProductCTA product={adaptedProduct} />
     </>
   )
@@ -402,6 +400,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {funnelBody}
         </div>
         </ProductVariantProvider>
+
+        {/* Reseñas — full width, debajo del último CTA, tanto en VIP como no-VIP */}
+        <ProductTestimonials product={adaptedProduct} />
 
         {/* Global Store Policies */}
         <div className="container mx-auto px-4 mt-8">

@@ -45,12 +45,21 @@ export function OfferCountdownInline({ offerName, offerEndsAt }: OfferCountdownI
     `${pad(timeLeft.hours)}:${pad(timeLeft.minutes)}:${pad(timeLeft.seconds)}`;
 
   return (
-    <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--sale)' }}>
-      <Flame className="w-4 h-4 shrink-0 animate-pulse" />
-      <span>
-        {offerName} · termina en{' '}
-        <span className="font-mono font-bold tabular-nums tracking-tight">{clock}</span>
+    <span
+      className="inline-flex items-center gap-2 rounded-full border border-sale/25 bg-sale/10 pl-2 pr-3 py-1.5"
+      style={{ color: 'var(--sale)' }}
+    >
+      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-sale/15 shrink-0">
+        <Flame className="w-3.5 h-3.5 animate-pulse" />
       </span>
-    </p>
+      <span className="text-[13px] font-extrabold uppercase tracking-wide leading-none">
+        {offerName}
+      </span>
+      <span className="text-sale/40 leading-none">·</span>
+      <span className="text-xs font-semibold leading-none">termina en</span>
+      <span className="font-mono text-sm font-bold tabular-nums tracking-tight leading-none">
+        {clock}
+      </span>
+    </span>
   );
 }

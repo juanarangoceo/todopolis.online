@@ -73,7 +73,7 @@ export function Header() {
 
         <div className="container mx-auto px-4 relative">
           {/* ── Mobile layout ── */}
-          <div className="md:hidden grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 h-16">
+          <div className="md:hidden grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-1.5 h-16">
             {/* Hamburger */}
             <button
               onClick={() => setMenuOpen(true)}
@@ -89,6 +89,20 @@ export function Header() {
             <div className="flex justify-center">
               <Logo small />
             </div>
+
+            {/* VIP → corona dorada, acceso directo a la selección VIP */}
+            <Link
+              href="/vip"
+              className="relative p-2.5 rounded-2xl border shadow-sm active:scale-95 transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+                borderColor: '#F59E0B66',
+                touchAction: 'manipulation',
+              }}
+              aria-label="Productos VIP"
+            >
+              <Crown className="w-5 h-5 text-amber-700" fill="currentColor" strokeWidth={1.5} />
+            </Link>
 
             {/* Favorites — ícono rosa (semántica emocional) */}
             <Link
