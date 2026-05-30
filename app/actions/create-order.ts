@@ -1,6 +1,8 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { cookies, headers } from 'next/headers';
+import { sendCapiEvent } from '@/lib/meta-capi';
 
 export async function createOrder(formData: FormData) {
   try {
@@ -46,6 +48,40 @@ export async function createOrder(formData: FormData) {
     if (error) {
       console.error('Error insertando orden:', error);
       return { success: false, error: 'Ocurrió un error al procesar tu pedido' };
+    }
+
+    // ── Meta Conversions API: Purchase server-side (deduplicado por event_id) ──
+    // Best-effort: nunca debe romper la confirmación del pedido.
+    try {
+      const fbEventId = formData.get('fbEventId') as string | null;
+      if (fbEventId) {
+        const cookieStore = await cookies();
+        const headerStore = await headers();
+        const xff = headerStore.get('x-forwarded-for');
+        await sendCapiEvent({
+          eventName: 'Purchase',
+          eventId: fbEventId,
+          eventSourceUrl: headerStore.get('referer') ?? undefined,
+          customData: {
+            content_ids: [orderData.product_id],
+            content_type: 'product',
+            num_items: orderData.quantity,
+            value: orderData.price,
+            currency: 'COP',
+          },
+          userData: {
+            phone: orderData.customer_phone,
+            name: orderData.customer_name,
+            city: orderData.customer_city,
+          },
+          fbp: cookieStore.get('_fbp')?.value,
+          fbc: cookieStore.get('_fbc')?.value,
+          clientIp: xff ? xff.split(',')[0].trim() : headerStore.get('x-real-ip') ?? undefined,
+          clientUserAgent: headerStore.get('user-agent') ?? undefined,
+        });
+      }
+    } catch (capiErr) {
+      console.error('[create-order] CAPI Purchase falló (no crítico):', capiErr);
     }
 
     return { success: true };

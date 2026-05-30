@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Product } from '@/lib/types';
 import { useProductVariant } from '@/components/product/product-variant-context';
 import { VariantSelector } from '@/components/product/variant-selector';
+import { trackInitiateCheckout, trackPurchase, newEventId } from '@/lib/fbpixel';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -25,13 +26,16 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
   const variantRequired = variants.length > 0;
   const variantMissing = variantRequired && !selectedVariant;
 
-  // Reset state when opened
+  const productId = (product as any).slug || (product as any)._id || product.id || '';
+
+  // Reset state + evento InitiateCheckout cuando se abre el modal.
   useEffect(() => {
     if (isOpen) {
       setStep(1);
       setError(null);
       setLoading(false);
       setQuantity(1);
+      trackInitiateCheckout({ id: productId, value: product.price ?? 0, quantity: 1 });
     }
   }, [isOpen]);
 
@@ -59,10 +63,14 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
       return;
     }
 
-    formData.append('productId', (product as any).slug || (product as any)._id || '');
+    formData.append('productId', productId);
     formData.append('productName', product.name);
     formData.append('price', totalPrice.toString());
     formData.append('quantity', quantity.toString());
+
+    // event_id compartido navegador↔CAPI para deduplicar el Purchase.
+    const fbEventId = newEventId();
+    formData.append('fbEventId', fbEventId);
 
     if (variantRequired) {
       if (!selectedVariant) {
@@ -79,6 +87,20 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
     setLoading(false);
 
     if (result.success) {
+      // Purchase del navegador (el espejo CAPI lo envía createOrder con el mismo eventId).
+      trackPurchase(
+        {
+          id: productId,
+          value: totalPrice,
+          quantity,
+          userData: {
+            phone: (formData.get('customerPhone') as string) || undefined,
+            name: (formData.get('customerName') as string) || undefined,
+            city: (formData.get('customerCity') as string) || undefined,
+          },
+        },
+        fbEventId,
+      );
       setStep(2); // Show success step
     } else {
       setError(result.error || 'Algo salió mal, intenta de nuevo.');

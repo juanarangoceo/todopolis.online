@@ -22,6 +22,7 @@ import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 import { GlobalSearch } from '@/components/global-search'
 import { StorePolicies } from '@/components/store-policies'
+import { TrackViewContent } from '@/components/analytics/track-view-content'
 import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings, getArticles } from '@/lib/sanity/queries'
 import Link from 'next/link'
 import { SanityProduct } from '@/lib/types'
@@ -366,6 +367,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         />
       )}
       <Header />
+      <TrackViewContent
+        id={adaptedProduct.slug}
+        name={adaptedProduct.name}
+        price={adaptedProduct.price}
+        category={adaptedProduct.category}
+      />
       {product.category === 'bienestar-intimo' && <AgeGate />}
       <GlobalSearch products={searchableProducts} />
 

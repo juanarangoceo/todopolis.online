@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { Product } from '@/lib/types'
+import { trackAddToCart } from '@/lib/fbpixel'
 
 export interface CartItem {
   product: Product
@@ -29,6 +30,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
 
   const addToCart = useCallback((product: Product) => {
+    trackAddToCart({
+      id: (product as any).slug || product.id,
+      name: product.name,
+      price: product.price,
+    })
     setItems(prev => {
       const id = (product as any).slug || product.id
       const existing = prev.find(i => ((i.product as any).slug || i.product.id) === id)
