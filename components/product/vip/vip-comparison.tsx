@@ -47,15 +47,15 @@ export function VipComparison({ data }: Props) {
   const theirLabel = data.theirLabel || 'Otros'
 
   return (
-    <section className="py-10 md:py-14 bg-surface-soft">
+    <section className="py-8 md:py-10 bg-surface-soft">
       <div className="container mx-auto px-4">
         <VipSectionHeader
           eyebrow="Cómo nos comparamos"
           title={data.title || 'No es lo mismo'}
         />
 
-        <div className="max-w-3xl mx-auto rounded-2xl overflow-hidden border border-amber-200/60 shadow-md bg-surface">
-          <table className="w-full text-left">
+        <div className="max-w-3xl mx-auto rounded-2xl overflow-x-auto border border-amber-200/60 shadow-md bg-surface">
+          <table className="w-full min-w-[420px] text-left">
             <thead>
               <tr className="border-b border-amber-200/50">
                 <th className="px-4 md:px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground/55">

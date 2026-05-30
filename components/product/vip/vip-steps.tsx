@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { VipStep } from '@/lib/types'
 import { VipSectionHeader } from './vip-section-header'
+import { VipSlider } from './vip-slider'
 
 interface Props {
   steps: VipStep[]
@@ -11,7 +12,7 @@ export function VipSteps({ steps }: Props) {
   if (valid.length === 0) return null
 
   return (
-    <section className="py-10 md:py-14">
+    <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
         <VipSectionHeader
           eyebrow="Cómo se usa"
@@ -19,11 +20,11 @@ export function VipSteps({ steps }: Props) {
           subtitle="Sin manual, sin curva de aprendizaje. Lo agarras y lo usas."
         />
 
-        <ol className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto">
+        <VipSlider slideClassName="w-[80%] sm:w-[280px]">
           {valid.map((step, i) => (
-            <li
+            <div
               key={step._key ?? i}
-              className="relative flex flex-col bg-surface rounded-2xl border border-amber-200/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              className="relative flex flex-col h-full bg-surface rounded-2xl border border-amber-200/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
             >
               {step.image && (
                 <div className="relative aspect-[4/3] bg-muted overflow-hidden">
@@ -31,7 +32,7 @@ export function VipSteps({ steps }: Props) {
                     src={step.image}
                     alt={step.imageAlt || step.title}
                     fill
-                    sizes="(min-width: 768px) 33vw, 100vw"
+                    sizes="290px"
                     className="object-cover"
                   />
                 </div>
@@ -55,9 +56,9 @@ export function VipSteps({ steps }: Props) {
                   </p>
                 )}
               </div>
-            </li>
+            </div>
           ))}
-        </ol>
+        </VipSlider>
       </div>
     </section>
   )

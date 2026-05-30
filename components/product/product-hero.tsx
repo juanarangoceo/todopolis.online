@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { CheckoutModal } from '@/components/checkout-modal';
 import { useFavorites } from '@/app/providers/favorites-provider';
 import { VariantSelector } from './variant-selector';
+import { OfferCountdownInline } from './offer-countdown-inline';
 
 interface ProductHeroProps {
   product: Product;
@@ -45,11 +46,8 @@ export function ProductHero({ product }: ProductHeroProps) {
     ? 'Comprar ahora'
     : rawHeroCta;
   
-  const discount = (product as any).originalPrice 
-    ? Math.round((1 - product.price / (product as any).originalPrice) * 100) 
-    : 0;
-  const savings = (product as any).originalPrice 
-    ? (product as any).originalPrice - product.price 
+  const discount = (product as any).originalPrice
+    ? Math.round((1 - product.price / (product as any).originalPrice) * 100)
     : 0;
 
   return (
@@ -69,35 +67,6 @@ export function ProductHero({ product }: ProductHeroProps) {
             <p className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-todopolis-pink-deep bg-todopolis-pink/30 px-2.5 py-1 rounded-full">
               {product.name}
             </p>
-          )}
-
-          {/* Sale Banner — coral suave (sale), no pelea con el CTA salmón */}
-          {discount > 0 && (
-            <div className="relative overflow-hidden rounded-xl bg-sale p-2.5 sm:p-3 shadow-md">
-              <div className="relative flex items-center justify-between gap-1.5 sm:gap-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                    <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-white font-black text-[11px] sm:text-sm uppercase tracking-wider truncate">Oferta -{discount}%</p>
-                    <p className="text-white/80 text-[9px] sm:text-xs font-medium truncate">¡Por tiempo limitado!</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                  <div className="text-right shrink-0 hidden min-[380px]:block">
-                    <p className="text-white/70 text-[9px] sm:text-xs font-medium">Ahorras</p>
-                    <p className="text-white font-black text-[11px] sm:text-base">{formatPrice(savings)}</p>
-                  </div>
-                  <button
-                    onClick={() => setIsCheckoutOpen(true)}
-                    className="shrink-0 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-cta text-cta-fg text-[10px] sm:text-xs font-black rounded-lg sm:rounded-xl hover:bg-cta-hover active:scale-95 transition-all shadow-md whitespace-nowrap"
-                  >
-                    Comprar ya
-                  </button>
-                </div>
-              </div>
-            </div>
           )}
 
           {/* Main Image */}
@@ -215,14 +184,23 @@ export function ProductHero({ product }: ProductHeroProps) {
           </div>
 
           {/* Price */}
-          <div className="flex items-baseline gap-4 py-4 border-t border-border/50">
-            <span className="text-4xl font-bold text-foreground">
-              {formatPrice(product.price ?? 0)}
-            </span>
-            {(product as any).originalPrice && (
-              <span className="text-xl text-muted-foreground line-through">
-                {formatPrice((product as any).originalPrice)}
+          <div className="space-y-2 py-4 border-t border-border/50">
+            <div className="flex items-baseline gap-4">
+              <span className="text-4xl font-bold text-foreground">
+                {formatPrice(product.price ?? 0)}
               </span>
+              {(product as any).originalPrice && (
+                <span className="text-xl text-muted-foreground line-through">
+                  {formatPrice((product as any).originalPrice)}
+                </span>
+              )}
+            </div>
+            {/* Countdown de oferta — texto compacto, justo bajo el precio */}
+            {(product as any).offerName && (product as any).offerEndsAt && (
+              <OfferCountdownInline
+                offerName={(product as any).offerName}
+                offerEndsAt={(product as any).offerEndsAt}
+              />
             )}
           </div>
 

@@ -17,7 +17,7 @@ import { VipBoxContents } from '@/components/product/vip/vip-box-contents'
 import { VipTestimonials } from '@/components/product/vip/vip-testimonials'
 import { VipComparison } from '@/components/product/vip/vip-comparison'
 import { VipQuoteBlock } from '@/components/product/vip/vip-quote'
-import { ProductOfferTimer } from '@/components/product/product-offer-timer'
+import { OfferBanner } from '@/components/product/offer-banner'
 import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 import { GlobalSearch } from '@/components/global-search'
@@ -185,6 +185,83 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </section>
     ) : null
 
+  // Link al artículo — compartido por ambos layouts y por el embudo VIP.
+  const articleLink = adaptedProduct.articleSlug ? (
+    <div className="container mx-auto px-4 py-4">
+      <div className="flex items-center justify-between gap-4 bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl px-6 py-4">
+        <div>
+          <p className="text-xs text-muted-foreground mb-0.5">¿Aún tienes dudas?</p>
+          <p className="font-semibold text-sm text-foreground">
+            {adaptedProduct.articleTopic
+              ? `Lee: ${adaptedProduct.articleTopic}`
+              : 'Lee nuestro artículo completo'}
+          </p>
+        </div>
+        <Link
+          href={`/blog/${adaptedProduct.articleSlug}`}
+          className="shrink-0 text-sm font-bold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors whitespace-nowrap"
+        >
+          Leer artículo →
+        </Link>
+      </div>
+    </div>
+  ) : null
+
+  // Cuerpo del embudo (todo lo que va después del hero). Se renderiza igual en
+  // desktop (columna derecha que scrollea) y mobile. En productos VIP los
+  // bloques manuales se intercalan estratégicamente con el contenido IA para
+  // armar el embudo y se ocultan los carruseles de productos que distraen.
+  const funnelBody = adaptedProduct.isVip ? (
+    <>
+      {adaptedProduct.vipHeroVideo?.url && (
+        <VipHeroVideo video={adaptedProduct.vipHeroVideo} />
+      )}
+      <ProductLifestyleImage product={adaptedProduct} />
+      {adaptedProduct.vipQuotes[0] && (
+        <VipQuoteBlock quote={adaptedProduct.vipQuotes[0]} />
+      )}
+      <ProductBenefits product={adaptedProduct} />
+      {adaptedProduct.vipBeforeAfter.length > 0 && (
+        <VipBeforeAfter pairs={adaptedProduct.vipBeforeAfter} />
+      )}
+      <ProductDetails product={adaptedProduct} />
+      {adaptedProduct.vipSteps.length > 0 && (
+        <VipSteps steps={adaptedProduct.vipSteps} />
+      )}
+      {adaptedProduct.vipBoxContents && (
+        <VipBoxContents data={adaptedProduct.vipBoxContents} />
+      )}
+      {adaptedProduct.vipComparison && (
+        <VipComparison data={adaptedProduct.vipComparison} />
+      )}
+      <ProductTestimonials product={adaptedProduct} />
+      {adaptedProduct.vipTestimonials.length > 0 && (
+        <VipTestimonials testimonials={adaptedProduct.vipTestimonials} />
+      )}
+      {adaptedProduct.vipQuotes.slice(1).map((q) => (
+        <VipQuoteBlock key={q._key ?? q.text} quote={q} />
+      ))}
+      {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
+      {articleLink}
+      <ProductCTA product={adaptedProduct} />
+    </>
+  ) : (
+    <>
+      <ProductLifestyleImage product={adaptedProduct} />
+      <ProductBenefits product={adaptedProduct} />
+      <ProductDetails product={adaptedProduct} />
+      <SuggestedSection
+        products={suggestedProducts}
+        title="También te podría interesar"
+        subtitle="Productos seleccionados especialmente para ti que complementan perfectamente tu elección."
+      />
+      <ProductTestimonials product={adaptedProduct} />
+      {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
+      {articleLink}
+      <ProductCTA product={adaptedProduct} />
+    </>
+  )
+
   const searchableProducts = sanityProducts
     .filter((p: any) => p.category?.toLowerCase() !== 'bienestar-intimo')
     .map((p: any) => ({
@@ -305,47 +382,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <ProductImageGallery product={adaptedProduct} />
               </div>
 
-              {/* Right column — all content flows naturally */}
+              {/* Right column — banner de oferta arriba, luego hero y el
+                  embudo (contenido IA + bloques VIP intercalados). */}
               <div className="space-y-0">
+                <OfferBanner product={adaptedProduct} />
                 <ProductHero product={adaptedProduct} />
-                {adaptedProduct.offerName && adaptedProduct.offerEndsAt && (
-                  <ProductOfferTimer offerName={adaptedProduct.offerName} offerEndsAt={adaptedProduct.offerEndsAt} />
-                )}
-                <ProductLifestyleImage product={adaptedProduct} />
-                <ProductBenefits product={adaptedProduct} />
-                <ProductDetails product={adaptedProduct} />
-                
-                <SuggestedSection
-                  products={suggestedProducts}
-                  title="También te podría interesar"
-                  subtitle="Productos seleccionados especialmente para ti que complementan perfectamente tu elección."
-                />
-
-                <ProductTestimonials product={adaptedProduct} />
-                {adaptedProduct.faqs?.length > 0 && (
-                  <ProductFaq faqs={adaptedProduct.faqs} />
-                )}
-                {adaptedProduct.articleSlug && (
-                  <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between gap-4 bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl px-6 py-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-0.5">¿Aún tienes dudas?</p>
-                        <p className="font-semibold text-sm text-foreground">
-                          {adaptedProduct.articleTopic
-                            ? `Lee: ${adaptedProduct.articleTopic}`
-                            : 'Lee nuestro artículo completo'}
-                        </p>
-                      </div>
-                      <Link
-                        href={`/blog/${adaptedProduct.articleSlug}`}
-                        className="shrink-0 text-sm font-bold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors whitespace-nowrap"
-                      >
-                        Leer artículo →
-                      </Link>
-                    </div>
-                  </div>
-                )}
-                <ProductCTA product={adaptedProduct} />
+                {funnelBody}
               </div>
             </div>
           </div>
@@ -353,99 +395,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* Mobile: Normal stacked layout */}
         <div className="lg:hidden">
+          <div className="container mx-auto px-4 pt-4">
+            <OfferBanner product={adaptedProduct} />
+          </div>
           <ProductHero product={adaptedProduct} />
-          {adaptedProduct.offerName && adaptedProduct.offerEndsAt && (
-            <ProductOfferTimer offerName={adaptedProduct.offerName} offerEndsAt={adaptedProduct.offerEndsAt} />
-          )}
-          <ProductLifestyleImage product={adaptedProduct} />
-          <ProductBenefits product={adaptedProduct} />
-          <ProductDetails product={adaptedProduct} />
-
-          {suggestedProducts.length > 0 && (
-            <section className="py-8 bg-white">
-              <div className="container mx-auto px-4">
-                <div className="text-center mb-10">
-                  <h2 className="font-serif text-3xl font-bold text-foreground mb-4">
-                    También te podría interesar
-                  </h2>
-                  <p className="text-muted-foreground max-w-2xl mx-auto">
-                    Productos seleccionados especialmente para ti.
-                  </p>
-                </div>
-                <SuggestedProductsCarousel products={suggestedProducts} />
-              </div>
-            </section>
-          )}
-
-          <ProductTestimonials product={adaptedProduct} />
-          {adaptedProduct.faqs?.length > 0 && (
-            <ProductFaq faqs={adaptedProduct.faqs} />
-          )}
-          {adaptedProduct.articleSlug && (
-            <div className="container mx-auto px-4 py-4">
-              <div className="flex items-center justify-between gap-4 bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl px-6 py-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">¿Aún tienes dudas?</p>
-                  <p className="font-semibold text-sm text-foreground">
-                    {adaptedProduct.articleTopic
-                      ? `Lee: ${adaptedProduct.articleTopic}`
-                      : 'Lee nuestro artículo completo'}
-                  </p>
-                </div>
-                <Link
-                  href={`/blog/${adaptedProduct.articleSlug}`}
-                  className="shrink-0 text-sm font-bold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors whitespace-nowrap"
-                >
-                  Leer artículo →
-                </Link>
-              </div>
-            </div>
-          )}
-          <ProductCTA product={adaptedProduct} />
+          {funnelBody}
         </div>
         </ProductVariantProvider>
-
-        {/* VIP — secciones manuales del editor, full width tanto en desktop
-            como en mobile. Solo se renderiza si el producto está marcado VIP.
-            Cada sección decide internamente si tiene contenido para mostrarse. */}
-        {adaptedProduct.isVip && (
-          <div className="border-t border-amber-200/40">
-            {adaptedProduct.vipHeroVideo?.url && (
-              <VipHeroVideo video={adaptedProduct.vipHeroVideo} />
-            )}
-            {adaptedProduct.vipBeforeAfter.length > 0 && (
-              <VipBeforeAfter pairs={adaptedProduct.vipBeforeAfter} />
-            )}
-            {adaptedProduct.vipSteps.length > 0 && (
-              <VipSteps steps={adaptedProduct.vipSteps} />
-            )}
-            {adaptedProduct.vipBoxContents && (
-              <VipBoxContents data={adaptedProduct.vipBoxContents} />
-            )}
-            {adaptedProduct.vipQuotes[0] && (
-              <VipQuoteBlock quote={adaptedProduct.vipQuotes[0]} />
-            )}
-            {adaptedProduct.vipComparison && (
-              <VipComparison data={adaptedProduct.vipComparison} />
-            )}
-            {adaptedProduct.vipTestimonials.length > 0 && (
-              <VipTestimonials testimonials={adaptedProduct.vipTestimonials} />
-            )}
-            {/* Quotes adicionales (2do en adelante) van al final para cerrar la
-                narrativa antes de las políticas de tienda. */}
-            {adaptedProduct.vipQuotes.slice(1).map((q) => (
-              <VipQuoteBlock key={q._key ?? q.text} quote={q} />
-            ))}
-          </div>
-        )}
 
         {/* Global Store Policies */}
         <div className="container mx-auto px-4 mt-8">
           <StorePolicies policies={storeSettings?.policies} />
         </div>
 
-        {/* Second products section — below CTA, full width, both layouts */}
-        {moreProducts.length > 0 && (
+        {/* Second products section — below CTA, full width, both layouts.
+            En productos VIP se oculta para no romper el embudo. */}
+        {!adaptedProduct.isVip && moreProducts.length > 0 && (
           <section className="pt-6 pb-12 md:pb-16 bg-surface-soft">
             <div className="container mx-auto px-4">
               <div className="text-center mb-8">

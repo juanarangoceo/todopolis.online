@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { VipBeforeAfterPair } from '@/lib/types'
 import { VipSectionHeader } from './vip-section-header'
+import { VipSlider } from './vip-slider'
 
 interface Props {
   pairs: VipBeforeAfterPair[]
@@ -91,7 +92,7 @@ export function VipBeforeAfter({ pairs }: Props) {
   if (valid.length === 0) return null
 
   return (
-    <section className="py-10 md:py-14 bg-surface-soft">
+    <section className="py-8 md:py-10 bg-surface-soft">
       <div className="container mx-auto px-4">
         <VipSectionHeader
           eyebrow="Resultados reales"
@@ -99,11 +100,17 @@ export function VipBeforeAfter({ pairs }: Props) {
           subtitle="Desliza la línea para ver el cambio. Sin filtros, sin retoques."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {valid.map((pair) => (
-            <BeforeAfterSlider key={pair._key ?? `${pair.beforeImage}-${pair.afterImage}`} pair={pair} />
-          ))}
-        </div>
+        {valid.length === 1 ? (
+          <div className="max-w-xl mx-auto">
+            <BeforeAfterSlider pair={valid[0]} />
+          </div>
+        ) : (
+          <VipSlider slideClassName="w-[90%] sm:w-[420px]">
+            {valid.map((pair) => (
+              <BeforeAfterSlider key={pair._key ?? `${pair.beforeImage}-${pair.afterImage}`} pair={pair} />
+            ))}
+          </VipSlider>
+        )}
       </div>
     </section>
   )

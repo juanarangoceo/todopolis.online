@@ -12,7 +12,7 @@ export function VipBoxContents({ data }: Props) {
   if (!data.image && items.length === 0) return null
 
   return (
-    <section className="py-10 md:py-14 bg-surface-soft">
+    <section className="py-8 md:py-10 bg-surface-soft">
       <div className="container mx-auto px-4">
         <VipSectionHeader
           eyebrow="Qué viene en la caja"
@@ -20,7 +20,7 @@ export function VipBoxContents({ data }: Props) {
           subtitle={data.intro}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-center max-w-5xl mx-auto">
+        <div className="space-y-6 max-w-xl mx-auto">
           {data.image ? (
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-amber-200/60 shadow-md bg-muted">
               <Image

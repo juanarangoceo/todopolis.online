@@ -11,10 +11,10 @@ export function VipQuoteBlock({ quote }: Props) {
   if (!quote.text) return null
 
   return (
-    <section className="py-10 md:py-14">
+    <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
         <figure
-          className="relative max-w-3xl mx-auto rounded-3xl p-8 md:p-12 text-center overflow-hidden border border-amber-200/60 shadow-md"
+          className="relative max-w-3xl mx-auto rounded-3xl p-7 md:p-10 text-center overflow-hidden border border-amber-200/60 shadow-md"
           style={{
             background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
           }}

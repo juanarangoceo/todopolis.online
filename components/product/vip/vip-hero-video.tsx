@@ -40,9 +40,9 @@ export function VipHeroVideo({ video }: Props) {
   const source = detectSource(video.url)
 
   return (
-    <section className="py-10 md:py-14">
+    <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
-        <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden shadow-xl border border-amber-200/60 aspect-video bg-black">
+        <div className="relative max-w-3xl mx-auto rounded-3xl overflow-hidden shadow-xl border border-amber-200/60 aspect-video bg-black">
           {/* MP4 / GIF: render directo inline, sin click-to-play */}
           {source === 'mp4' && (
             // eslint-disable-next-line jsx-a11y/media-has-caption

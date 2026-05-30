@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { Quote } from 'lucide-react'
 import { VipVisualTestimonial } from '@/lib/types'
 import { VipSectionHeader } from './vip-section-header'
+import { VipSlider } from './vip-slider'
 
 interface Props {
   testimonials: VipVisualTestimonial[]
@@ -12,19 +13,19 @@ export function VipTestimonials({ testimonials }: Props) {
   if (valid.length === 0) return null
 
   return (
-    <section className="py-10 md:py-14">
+    <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
         <VipSectionHeader
           eyebrow="Voces reales"
-          title="Lo que dicen quienes lo usaron"
+          title="Lo que dicen nuestros clientes"
           subtitle="Clientes reales, fotos reales. Sin actores ni stock."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+        <VipSlider slideClassName="w-[80%] sm:w-[290px]">
           {valid.map((t) => (
             <figure
               key={t._key ?? `${t.name}-${t.quote.slice(0, 20)}`}
-              className="relative flex flex-col bg-surface rounded-2xl border border-amber-200/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              className="relative flex flex-col h-full bg-surface rounded-2xl border border-amber-200/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
             >
               {t.photo && (
                 <div className="relative aspect-square bg-muted overflow-hidden">
@@ -32,7 +33,7 @@ export function VipTestimonials({ testimonials }: Props) {
                     src={t.photo}
                     alt={t.photoAlt || t.name}
                     fill
-                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    sizes="300px"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -57,7 +58,7 @@ export function VipTestimonials({ testimonials }: Props) {
               </figcaption>
             </figure>
           ))}
-        </div>
+        </VipSlider>
       </div>
     </section>
   )
