@@ -79,6 +79,9 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 
 El sidebar y el grid comparten el mismo `container mx-auto`. No moverlos a contenedores separados o se rompe el marco.
 
+### Banner sobre el grid de productos nuevos — texto fijo
+El banner que va encima del grid de productos nuevos es `components/new-arrivals-banner.tsx` (`NewArrivalsBanner`): **copy fijo** ("Lo nuevo en Todopolis"), NO generado por IA. Se eliminó el antiguo "Banner Mágico": ya no existe el schema `heroBanner`, ni `getSanityHeroBanner`, ni `app/api/banners/generate`, ni `SmartBanner`. No buscar un "generador de banner" — si quieres cambiar el texto, edítalo en el componente.
+
 ### Query de productos — campo `aiLifestyleImage`
 El campo `aiLifestyleImage` está en **ambos** queries de Sanity:
 - `PRODUCTS_LIST_QUERY` → para el sidebar/carrusel de la home
@@ -101,4 +104,24 @@ Para que un producto nuevo salga al instante en el home, quien lo crea debe reva
 (Nota Next: `revalidateTag` lleva 2 argumentos — `(tag, 'max')`.)
 
 ### Queries de detalle lanzan error, no devuelven `null`
-`getSanityProductBySlug` y `getArticleBySlug` lanzan error si la consulta falla tras los reintentos. NO volver a envolverlas en `catch { return null }`: eso convierte un fallo de red transitorio en un 404 permanente cacheado. `null` solo debe significar "el documento no existe".
+`getSanityProductBySlug`, `getArticleBySlug` y `getCollectionLandingBySlug` lanzan error si la consulta falla tras los reintentos. NO volver a envolverlas en `catch { return null }`: eso convierte un fallo de red transitorio en un 404 permanente cacheado. `null` solo debe significar "el documento no existe".
+
+## Generación de contenido con IA — reglas
+
+### Modelo único: `gemini-3.5-flash`
+Todo el contenido generado por IA usa `gemini-3.5-flash`: copy de producto (`generate-product-content`, `mastershop/import`, `mastershop/sync`), auto-tagging (`lib/auto-tag.ts`), blog (`lib/generate-article.ts`) y colecciones (`generate-collection-content`). No mezclar versiones de Gemini entre flujos.
+
+### Etiquetas (tags) — convención de `_id` determinista
+Las referencias de etiqueta se construyen con `tagSlugsToReferences` (`lib/auto-tag.ts`) usando `_id` determinista `tag-<slug>`. Las etiquetas DEBEN existir con ese `_id` o la referencia queda rota (no se ve la etiqueta). Lo usan tanto el import de Mastershop como el botón "🤖 Generar Contenido con IA" del documento Producto en el Studio. Si agregas otra vía de tagging, reutiliza ese helper.
+
+### Botón "Generar Landing" del producto = paridad con el import
+`app/api/generate-product-content` + `GenerateContentButton.tsx` tienen la **misma capacidad** que `mastershop/import`: llenan todos los campos de la landing **incluyendo FAQs y etiquetas** (auto-tagging), con el prompt único `lib/product-content-prompt.ts`. Si cambias el shape de salida del prompt, actualiza ambos consumidores.
+
+## Colecciones de Marca (`collectionLanding`) — no romper
+
+Documento que agrupa 3–6 productos de un segmento y genera con IA una landing paraguas. Flujo: schema `collectionLanding` → botón `GenerateCollectionButton` → `/api/generate-collection-content` → landing pública `/coleccion/[slug]` + índice `/colecciones`.
+
+- **`comparisonRows.values` está alineado al ORDEN del array `products`.** Si reordenas, agregas o quitas productos después de generar, la tabla comparativa se desalinea → hay que **regenerar con IA** (no editar valores a mano salvo que sepas el orden).
+- `COLLECTION_DETAIL_QUERY` resuelve los `products`. Si agregas un campo al schema que la landing necesite, inclúyelo también en ese query (misma regla que `aiLifestyleImage`).
+- Publicar/despublicar una colección revalida `/coleccion/[slug]` **y** el índice `/colecciones` (caso `collectionLanding` en `app/api/revalidate/route.ts`). Cualquier ajuste a colecciones debe mantener esa revalidación.
+- La landing de detalle reutiliza componentes de marca (`ProductGrid`, `ProductFaq`, `SuggestedProductsCarousel`, `GlobalSearch`) — no duplicar su markup.
