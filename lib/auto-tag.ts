@@ -4,7 +4,7 @@
 // Usa la REST API directa (no el SDK) porque el script batch corre fuera del
 // runtime de Next y mantener un solo camino simplifica la mantención.
 
-const GEMINI_MODEL = 'gemini-2.0-flash'
+const GEMINI_MODEL = 'gemini-3.5-flash'
 const MIN_TAGS = 3
 const MAX_TAGS = 6
 const TAG_RETRIES = 2

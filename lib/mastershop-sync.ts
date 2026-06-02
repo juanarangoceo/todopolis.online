@@ -174,7 +174,7 @@ async function importProduct(
   const category = CATEGORY_MAP[categoryRaw] ?? 'otros'
 
   const genAI = new GoogleGenerativeAI(geminiKey)
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' })
 
   // Copy + auto-tagging en paralelo (mismo patrón que el import manual). El
   // tagging es best-effort: si falla, el producto se crea igual sin tags.

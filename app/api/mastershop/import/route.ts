@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
 
     // ── STEP 2: Generate AI content with Gemini (en paralelo con auto-tagging) ──
     const genAI = new GoogleGenerativeAI(geminiKey)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' })
 
     const userPrompt = `Producto: ${name}\n\nDescripción: ${description || name}`
 
