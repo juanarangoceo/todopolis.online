@@ -70,6 +70,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ revalidated: true, type: 'promoCampaign', timestamp: new Date().toISOString() })
     }
 
+    // Colección de Marca: al publicar/despublicar, refrescamos su landing dedicada.
+    if (payload._type === 'collectionLanding') {
+      const collectionSlug: string | undefined = payload.slug?.current
+      revalidateTag('collections', 'max')
+      if (collectionSlug) {
+        revalidateTag(`collection-${collectionSlug}`, 'max')
+        revalidatePath(`/coleccion/${collectionSlug}`)
+      }
+      return NextResponse.json({ revalidated: true, type: 'collectionLanding', timestamp: new Date().toISOString() })
+    }
+
     // Etiquetas: cambios en la taxonomía afectan los filtros del home y /temporada.
     if (payload._type === 'tag') {
       revalidateTag('tags', 'max')

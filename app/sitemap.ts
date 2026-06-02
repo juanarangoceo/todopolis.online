@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { getAllProductSlugs, getAllArticleSlugs } from '@/lib/sanity/queries'
+import { getAllProductSlugs, getAllArticleSlugs, getAllCollectionSlugs } from '@/lib/sanity/queries'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
 
@@ -33,9 +33,10 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
 export const revalidate = 3600 // re-generate every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [productSlugs, articleSlugs] = await Promise.all([
+  const [productSlugs, articleSlugs, collectionSlugs] = await Promise.all([
     getAllProductSlugs().catch(() => []),
     getAllArticleSlugs().catch(() => []),
+    getAllCollectionSlugs().catch(() => []),
   ])
 
   const productRoutes: MetadataRoute.Sitemap = productSlugs
@@ -54,5 +55,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...STATIC_ROUTES, ...productRoutes, ...articleRoutes]
+  const collectionRoutes: MetadataRoute.Sitemap = collectionSlugs.map(({ slug, _updatedAt }) => ({
+    url: `${BASE_URL}/coleccion/${slug}`,
+    lastModified: _updatedAt ? new Date(_updatedAt) : new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }))
+
+  return [...STATIC_ROUTES, ...productRoutes, ...articleRoutes, ...collectionRoutes]
 }

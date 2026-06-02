@@ -12,6 +12,7 @@ export function GenerateContentButton(props: any) {
   // Read current document values
   const name = useFormValue(['name']) as string
   const shortDescription = useFormValue(['shortDescription']) as string
+  const category = useFormValue(['category']) as string | undefined
   const images = useFormValue(['images']) as any[]
   const docId = useFormValue(['_id']) as string
   const client = useClient({ apiVersion: '2023-01-01' })
@@ -34,6 +35,7 @@ export function GenerateContentButton(props: any) {
         body: JSON.stringify({
           name,
           shortDescription,
+          category,
           imageAssetId: firstImageRef,
         }),
       })
@@ -64,7 +66,7 @@ export function GenerateContentButton(props: any) {
           }
         }) : []
 
-      const patchData = {
+      const patchData: Record<string, any> = {
         shortDescription: generated.improvedDescription || shortDescription,
         heroTitle: generated.heroTitle,
         heroSubtitle: generated.heroSubtitle,
@@ -74,6 +76,14 @@ export function GenerateContentButton(props: any) {
         testimonials: mapArray(generated.testimonials, 'testimonial'),
         ctaHeadline: generated.ctaHeadline,
         ctaText: generated.ctaText,
+        faqs: mapArray(generated.faqs, 'faq'),
+      }
+
+      // Etiquetas (best-effort): la API devuelve referencias listas (_type/_ref/_key).
+      // Solo las escribimos si el auto-tagging devolvió algo, para no borrar las
+      // etiquetas existentes cuando la clasificación falla.
+      if (Array.isArray(generated.tags) && generated.tags.length > 0) {
+        patchData.tags = generated.tags
       }
 
       let draftId = docId
@@ -117,7 +127,7 @@ export function GenerateContentButton(props: any) {
         🤖 Generación de Contenido con Gemini AI
       </p>
       <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '16px', fontSize: '13px' }}>
-        Sube la imagen del producto y completa la Descripción Breve arriba, luego presiona el botón para generar automáticamente todo el contenido persuasivo de tu landing page.
+        Sube la imagen del producto y completa la Descripción Breve arriba, luego presiona el botón para generar automáticamente toda la landing page: hero, beneficios, especificaciones, testimonios, preguntas frecuentes y etiquetas — igual que al importar desde Mastershop.
       </p>
       <button
         onClick={handleGenerate}
@@ -139,7 +149,7 @@ export function GenerateContentButton(props: any) {
       </button>
       {status === 'success' && (
         <p style={{ color: '#a8ff78', marginTop: '12px', fontSize: '13px', fontWeight: 600 }}>
-          ✅ Contenido generado. Revisa los campos del grupo "🚀 Landing Page" y guarda el documento.
+          ✅ Contenido generado (incluye FAQs y etiquetas). Revisa los campos de "🚀 Landing Page" y "🏷️ Etiquetas" y guarda el documento.
         </p>
       )}
       {status === 'error' && (

@@ -389,3 +389,88 @@ export async function getAllArticleSlugs(): Promise<{ slug: string; _updatedAt?:
     return []
   }
 }
+
+// ─── Colecciones de Marca ──────────────────────────────────────────────────
+// Landing paraguas que agrupa 3-6 productos de un segmento con contenido IA.
+// Los productos se resuelven conservando el orden del array de referencias.
+const COLLECTION_DETAIL_QUERY = `*[_type == "collectionLanding" && slug.current == $slug][0] {
+  _id,
+  title,
+  "slug": slug.current,
+  segmentHint,
+  heroEyebrow,
+  heroTitle,
+  heroSubtitle,
+  heroCta,
+  brandIntro,
+  segmentBenefits,
+  buyersGuide,
+  comparisonRows,
+  faqs[] { _key, question, answer },
+  ctaHeadline,
+  ctaText,
+  seoTitle,
+  seoDescription,
+  "products": products[]->{
+    _id,
+    name,
+    "slug": slug.current,
+    shortDescription,
+    price,
+    originalPrice,
+    mastershopImageUrl,
+    "image": images[0].asset->url,
+    "aiLifestyleImage": aiLifestyleImage.asset->url,
+    category,
+    isNew,
+    isBestSeller,
+    isVip,
+    testimonials,
+    reviewsCount,
+    "tags": tags[]->{ "slug": slug.current, name, group, icon }
+  }
+}`
+
+const ALL_COLLECTION_SLUGS_QUERY = `*[_type == "collectionLanding" && defined(slug.current)] {
+  "slug": slug.current,
+  _updatedAt
+}`
+
+export interface CollectionLanding {
+  _id: string
+  title: string
+  slug: string
+  segmentHint?: string
+  heroEyebrow?: string
+  heroTitle?: string
+  heroSubtitle?: string
+  heroCta?: string
+  brandIntro?: string
+  segmentBenefits?: { _key?: string; icon?: string; title?: string; description?: string }[]
+  buyersGuide?: { _key?: string; title?: string; body?: string }[]
+  comparisonRows?: { _key?: string; feature?: string; values?: string[] }[]
+  faqs?: { _key?: string; question: string; answer: string }[]
+  ctaHeadline?: string
+  ctaText?: string
+  seoTitle?: string
+  seoDescription?: string
+  products: any[]
+}
+
+// Lanza error si la consulta falla tras los reintentos — NUNCA devuelve null por
+// un error transitorio. null solo significa "la colección no existe".
+export async function getCollectionLandingBySlug(slug: string): Promise<CollectionLanding | null> {
+  return withRetry(() => getSanityClient().fetch<CollectionLanding | null>(COLLECTION_DETAIL_QUERY, { slug }, {
+    next: { revalidate: 86400, tags: ['collections', `collection-${slug}`] },
+  }))
+}
+
+export async function getAllCollectionSlugs(): Promise<{ slug: string; _updatedAt?: string }[]> {
+  try {
+    return await withRetry(() => getSanityClient().fetch(ALL_COLLECTION_SLUGS_QUERY, {}, {
+      next: { revalidate: 3600, tags: ['collections'] },
+    }))
+  } catch {
+    return []
+  }
+}
