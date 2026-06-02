@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/header';
-import { SmartBanner } from '@/components/smart-banner';
+import { NewArrivalsBanner } from '@/components/new-arrivals-banner';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
 import { PromoBanner } from '@/components/promo-banner';
-import { getSanityProducts, getSanityStoreSettings, getSanityHeroBanner, getSanityTags, getActivePromoCampaign } from '@/lib/sanity/queries';
+import { getSanityProducts, getSanityStoreSettings, getSanityTags, getActivePromoCampaign } from '@/lib/sanity/queries';
 
 export const metadata: Metadata = {
   title: 'Todopolis - Tu Destino de Belleza',
@@ -49,9 +49,8 @@ export default async function Home() {
       slug: p.slug as string,
     }));
 
-  const [storeSettings, heroBanner, tagTaxonomy, promoCampaign] = await Promise.all([
+  const [storeSettings, tagTaxonomy, promoCampaign] = await Promise.all([
     getSanityStoreSettings(),
-    getSanityHeroBanner(),
     getSanityTags(),
     getActivePromoCampaign(),
   ]);
@@ -87,9 +86,7 @@ export default async function Home() {
             ) : undefined
           }
         >
-          {heroBanner && (
-            <SmartBanner banner={heroBanner} allProducts={initialProducts} />
-          )}
+          <NewArrivalsBanner products={initialProducts} />
 
           <PolicyBadges policies={policies} />
         </ProductBrowser>

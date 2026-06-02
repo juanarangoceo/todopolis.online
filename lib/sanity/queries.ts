@@ -135,21 +135,6 @@ const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {
   policies
 }`
 
-const HERO_BANNER_QUERY = `*[_type == "heroBanner"] | order(_updatedAt desc)[0] {
-  _id,
-  title,
-  subtitle,
-  backgroundColor,
-  products[]->{
-    _id,
-    name,
-    "slug": slug.current,
-    price,
-    mastershopImageUrl,
-    "image": images[0].asset->url
-  }
-}`
-
 // GROQ query to get all slugs (for generateStaticParams + sitemap)
 const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current, category, _updatedAt }`
 
@@ -306,16 +291,6 @@ export async function getProductsByTags(slugs: string[], mode: 'any' | 'all'): P
   }
 }
 
-export async function getSanityHeroBanner() {
-  try {
-    return await withRetry(() => getSanityClient().fetch(HERO_BANNER_QUERY, {}, {
-      next: { revalidate: 3600, tags: ['heroBanner'] },
-    }))
-  } catch {
-    return null
-  }
-}
-
 // ─── Article queries ──────────────────────────────────────────────────────────
 
 const ARTICLES_LIST_QUERY = `*[_type == "article"] | order(publishedAt desc) {
@@ -468,6 +443,42 @@ export async function getCollectionLandingBySlug(slug: string): Promise<Collecti
 export async function getAllCollectionSlugs(): Promise<{ slug: string; _updatedAt?: string }[]> {
   try {
     return await withRetry(() => getSanityClient().fetch(ALL_COLLECTION_SLUGS_QUERY, {}, {
+      next: { revalidate: 3600, tags: ['collections'] },
+    }))
+  } catch {
+    return []
+  }
+}
+
+// Lista de colecciones para la página índice /colecciones. Solo las que tienen
+// productos. Trae portadas (primeras imágenes de producto) para el collage del card.
+const COLLECTIONS_LIST_QUERY = `*[_type == "collectionLanding" && defined(slug.current) && count(products) > 0] | order(_createdAt desc) {
+  _id,
+  title,
+  "slug": slug.current,
+  heroEyebrow,
+  heroTitle,
+  heroSubtitle,
+  seoDescription,
+  "productCount": count(products),
+  "covers": products[0...4]->{ "image": coalesce(mastershopImageUrl, images[0].asset->url) }
+}`
+
+export interface CollectionListItem {
+  _id: string
+  title: string
+  slug: string
+  heroEyebrow?: string
+  heroTitle?: string
+  heroSubtitle?: string
+  seoDescription?: string
+  productCount: number
+  covers: { image: string | null }[]
+}
+
+export async function getCollectionsList(): Promise<CollectionListItem[]> {
+  try {
+    return await withRetry(() => getSanityClient().fetch<CollectionListItem[]>(COLLECTIONS_LIST_QUERY, {}, {
       next: { revalidate: 3600, tags: ['collections'] },
     }))
   } catch {
