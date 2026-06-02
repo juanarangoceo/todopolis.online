@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home, Crown } from 'lucide-react'
+import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home, Crown, LayoutGrid } from 'lucide-react'
 import { useCart } from '@/app/providers/cart-provider'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useFavorites } from '@/app/providers/favorites-provider'
@@ -158,6 +158,16 @@ export function Header() {
                 <span className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wide">Blog</span>
               </Link>
 
+              {/* Colecciones → azul (navegación / curaduría) */}
+              <Link
+                href="/colecciones"
+                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-blue hover:bg-todopolis-blue/10 transition-all duration-300 shadow-sm hover:shadow-md"
+                aria-label="Colecciones"
+              >
+                <LayoutGrid className="w-3.5 h-3.5 text-todopolis-blue-deep group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-todopolis-blue-deep uppercase tracking-wide">Colecciones</span>
+              </Link>
+
               {/* VIP → dorado (track propio, separado de la paleta brand) */}
               <Link
                 href="/vip"
@@ -274,6 +284,17 @@ export function Header() {
                 <Home className="w-4 h-4 text-todopolis-blue-deep" />
               </span>
               <span className="font-bold text-sm text-foreground">Inicio</span>
+            </Link>
+
+            <Link
+              href="/colecciones"
+              onClick={closeMenu}
+              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-todopolis-blue/10 border border-nav-inactive-border hover:border-todopolis-blue transition-all shadow-sm"
+            >
+              <span className="w-9 h-9 rounded-xl bg-todopolis-blue/20 flex items-center justify-center shrink-0">
+                <LayoutGrid className="w-4 h-4 text-todopolis-blue-deep" />
+              </span>
+              <span className="font-bold text-sm text-foreground">Colecciones</span>
             </Link>
 
             <Link

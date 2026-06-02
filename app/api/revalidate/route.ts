@@ -70,10 +70,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ revalidated: true, type: 'promoCampaign', timestamp: new Date().toISOString() })
     }
 
-    // Colección de Marca: al publicar/despublicar, refrescamos su landing dedicada.
+    // Colección de Marca: al publicar/despublicar, refrescamos su landing dedicada
+    // y el índice /colecciones que la lista.
     if (payload._type === 'collectionLanding') {
       const collectionSlug: string | undefined = payload.slug?.current
       revalidateTag('collections', 'max')
+      revalidatePath('/colecciones')
       if (collectionSlug) {
         revalidateTag(`collection-${collectionSlug}`, 'max')
         revalidatePath(`/coleccion/${collectionSlug}`)

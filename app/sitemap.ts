@@ -28,6 +28,12 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
     changeFrequency: 'daily',
     priority: 0.8,
   },
+  {
+    url: `${BASE_URL}/colecciones`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  },
 ]
 
 export const revalidate = 3600 // re-generate every hour
