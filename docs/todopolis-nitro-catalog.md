@@ -24,6 +24,23 @@ cambios.
   conexión solo se habilita cuando el catálogo, el prompt y el flujo de pedidos
   del tenant correspondan al mismo negocio.
 
+## Validación de producción
+
+La puesta en marcha se comprobó con datos reales y sin exponer el bot vivo:
+
+- El backfill leyó y proyectó 568 de 568 documentos publicados válidos.
+- Sanity entregó una actualización real al webhook firmado y recibió HTTP 200;
+  el resultado fue `changed = false` porque el contenido comercial no cambió.
+- Un tenant técnico inactivo recibió un producto seleccionado sin variantes.
+  Nitro lo guardó `active`, generó su embedding y dejó `sync_guard` vacío.
+- La reentrega del mismo `event_id` conservó una sola fila de evento y no
+  modificó nuevamente el producto.
+- El tenant técnico se eliminó después de la prueba. El tenant
+  `coffeemakerpro` conservó su producto nativo activo, cero productos Todopolis
+  y una conexión `selected` desactivada y sin ítems.
+- Los smoke tests públicos comprobaron HTTP 200 en ambos servicios y HTTP 401
+  en el cron, el webhook y el receptor cuando faltan sus credenciales.
+
 ## Seguridad operativa
 
 - Las conexiones nacen con `enabled = false`.
