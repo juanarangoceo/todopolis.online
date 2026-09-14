@@ -3,6 +3,10 @@
     {
       "path": "/api/mastershop/sync",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/catalog-dispatch",
+      "schedule": "* * * * *"
     }
   ]
 }

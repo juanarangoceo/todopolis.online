@@ -108,6 +108,19 @@ export const productType = defineType({
       description: 'Opcional. Si el producto está en oferta, escribe aquí el precio anterior.',
     }),
     defineField({
+      name: 'brand',
+      title: 'Marca',
+      type: 'string',
+      description: 'Marca comercial que el asesor puede usar al recomendar el producto.',
+    }),
+    defineField({
+      name: 'trackStock',
+      title: '¿El stock de variantes es autoritativo?',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Actívalo solo si Mastershop mantiene el inventario al día. Apagado evita que un stock incompleto bloquee ventas en Nitro.',
+    }),
+    defineField({
       name: 'category',
       title: 'Categoría',
       type: 'string',

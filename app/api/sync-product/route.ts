@@ -1,6 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { after, type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createHmac } from 'crypto'
+import { parseBody } from 'next-sanity/webhook'
+import { dispatchCatalogOutbox } from '@/lib/catalog/outbox'
+import { syncSanityCatalogProduct } from '@/lib/catalog/sync-sanity-product'
+
+export const runtime = 'nodejs'
+export const maxDuration = 300
 
 // Initialize dynamically to avoid build-time errors if env vars are missing
 function getSupabaseAdmin() {
@@ -10,45 +15,43 @@ function getSupabaseAdmin() {
   )
 }
 
-function validateSanityWebhook(req: NextRequest, body: string): boolean {
-  const secret = process.env.SANITY_WEBHOOK_SECRET
-  if (!secret) return true
-
-  const signature = req.headers.get('sanity-webhook-signature')
-  if (!signature) return false
-
-  const parts = signature.split(',')
-  const timestamp = parts.find(p => p.startsWith('t='))?.split('=')[1]
-  const hash = parts.find(p => p.startsWith('v1='))?.split('=')[1]
-
-  if (!timestamp || !hash) return false
-
-  const expectedHash = createHmac('sha256', secret)
-    .update(`${timestamp}.${body}`)
-    .digest('hex')
-
-  return hash === expectedHash
-}
-
 export async function POST(request: NextRequest) {
-  const body = await request.text()
+  const secret = process.env.SANITY_CATALOG_WEBHOOK_SECRET
+  if (!secret) return NextResponse.json({ error: 'Catalog webhook is not configured' }, { status: 503 })
+  if (Number(request.headers.get('content-length') ?? 0) > 1_000_000) {
+    return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+  }
 
-  if (!validateSanityWebhook(request, body)) {
+  const { body: payload, isValidSignature } = await parseBody<Record<string, unknown>>(request, secret, true)
+  if (!isValidSignature) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const payload = JSON.parse(body)
-
-    if (payload._type !== 'product') {
+    if (!payload || (payload._type && payload._type !== 'product')) {
       return NextResponse.json({ skipped: true, reason: 'Not a product document' })
     }
+
+    const cleanId = String(payload._id ?? request.headers.get('sanity-document-id') ?? '').replace(/^drafts\./, '')
+    if (!cleanId) return NextResponse.json({ error: 'Missing product id' }, { status: 400 })
+
+    const catalogResult = await syncSanityCatalogProduct({
+      externalId: cleanId,
+      sourceUpdatedAt: typeof payload._updatedAt === 'string' ? payload._updatedAt : null,
+    })
+
+    after(async () => {
+      try {
+        await dispatchCatalogOutbox(20)
+      } catch (error) {
+        console.error('[catalog-outbox] opportunistic dispatch failed', error)
+      }
+    })
 
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
 
     // Verify if product still exists in Sanity to handle deletions
-    const cleanId = payload._id?.replace('drafts.', '')
     if (cleanId) {
       const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2025-01-01'
       const sanityToken = process.env.SANITY_API_TOKEN
@@ -67,14 +70,19 @@ export async function POST(request: NextRequest) {
           
           if (error) throw error
           console.log(`🗑️ Producto eliminado de Supabase: ${cleanId}`)
-          return NextResponse.json({ synced: true, deleted: true, id: cleanId })
+          return NextResponse.json({ synced: true, deleted: true, id: cleanId, catalog: catalogResult })
         }
       }
     }
 
     // Build image URL: prefer la primera imagen subida a Sanity; si no hay,
     // caer en mastershopImageUrl (productos importados que nadie ha tocado).
-    const imageRef = payload.images?.[0]?.asset?._ref
+    const images = Array.isArray(payload.images) ? payload.images : []
+    const firstImage = images[0] && typeof images[0] === 'object' ? images[0] as Record<string, unknown> : null
+    const asset = firstImage?.asset && typeof firstImage.asset === 'object'
+      ? firstImage.asset as Record<string, unknown>
+      : null
+    const imageRef = typeof asset?._ref === 'string' ? asset._ref : null
     let imageUrl: string | null = null
 
     if (imageRef) {
@@ -86,8 +94,10 @@ export async function POST(request: NextRequest) {
     }
 
     const productRow = {
-      id: payload._id,
-      slug: payload.slug?.current,
+      id: cleanId,
+      slug: payload.slug && typeof payload.slug === 'object'
+        ? (payload.slug as Record<string, unknown>).current
+        : null,
       name: payload.name,
       short_description: payload.shortDescription,
       price: payload.price ?? null,
@@ -116,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Producto sincronizado en Supabase: ${payload.name}`)
 
-    return NextResponse.json({ synced: true, id: payload._id })
+    return NextResponse.json({ synced: true, id: cleanId, catalog: catalogResult })
   } catch (error) {
     console.error('Error syncing product to Supabase:', error)
     return NextResponse.json({ error: 'Error syncing product' }, { status: 500 })
