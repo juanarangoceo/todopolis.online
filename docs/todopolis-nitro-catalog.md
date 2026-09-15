@@ -58,9 +58,11 @@ La puesta en marcha se comprobó con datos reales y sin exponer el bot vivo:
 
 ## Instalación y despliegue
 
-1. Aplicar primero la migración de Nitro
-   `20260914185742_todopolis_catalog_provider.sql` y después la de Todopolis
-   `20260914185740_catalog_integration.sql` en sus respectivos proyectos.
+1. Aplicar primero las migraciones de Nitro
+   `20260914185742_todopolis_catalog_provider.sql` y
+   `20260915033000_catalog_connection_items_fk_index.sql`, y después la de
+   Todopolis `20260914185740_catalog_integration.sql` en sus respectivos
+   proyectos.
 2. Configurar el mismo `TODOPOLIS_NITRO_INTEGRATION_SECRET` largo y aleatorio en
    ambos servicios. En Todopolis configurar además `NITRO_CATALOG_ENDPOINT`,
    `SUPABASE_SERVICE_ROLE_KEY`, `SANITY_CATALOG_WEBHOOK_SECRET` y `CRON_SECRET`.
