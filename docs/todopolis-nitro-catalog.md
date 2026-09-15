@@ -84,6 +84,12 @@ La puesta en marcha se comprobó con datos reales y sin exponer el bot vivo:
 La activación requiere el UUID real del tenant y el `_id` publicado de Sanity.
 No se deben sustituir con valores inferidos.
 
+La operación habitual se hace desde la ficha del cliente en Nitro Admin, tarjeta
+**Fuente del catálogo · Todopolis**. Nitro consulta este catálogo y solicita la
+reentrega mediante `/api/integrations/nitro/catalog`; ambas operaciones requieren
+una firma HMAC de cinco minutos y nunca exponen el secreto compartido al navegador.
+El SQL siguiente queda como procedimiento de recuperación.
+
 ```sql
 begin;
 
