@@ -189,6 +189,7 @@ export async function getSanityStoreSettings() {
       _id,
       heroTitle,
       heroSubtitle,
+      whatsappPhone,
       policies
     }`, {}, {
       next: { revalidate: 86400, tags: ['storeSettings'] },

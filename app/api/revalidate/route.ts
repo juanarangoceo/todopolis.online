@@ -84,6 +84,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Etiquetas: cambios en la taxonomía afectan los filtros del home y /temporada.
+    // Los ajustes de tienda los lee el layout raíz (políticas, hero y el
+    // WhatsApp de la burbuja) con `next: { tags: ['storeSettings'] }` y 24 h de
+    // revalidación. Sin invalidar ESE tag, cambiar el número en el Studio no se
+    // vería hasta un día después: `revalidatePath('/')` rehace la página pero
+    // le sirve el mismo fetch cacheado, y además no alcanza a las demás rutas.
+    if (payload._type === 'storeSettings') {
+      revalidateTag('storeSettings', 'max')
+      revalidatePath('/', 'layout')
+      return NextResponse.json({ revalidated: true, type: 'storeSettings', timestamp: new Date().toISOString() })
+    }
+
     if (payload._type === 'tag') {
       revalidateTag('tags', 'max')
       revalidatePath('/')

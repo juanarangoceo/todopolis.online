@@ -6,6 +6,7 @@ import {
   normalizeWhatsAppPhone,
   pathHasNamedSubject,
   productNameFromTitle,
+  resolveWhatsAppPhone,
 } from './whatsapp'
 
 test('el número se limpia a dígitos y se rechaza si no sirve', () => {
@@ -66,4 +67,13 @@ test('solo producto y colección tienen un sujeto con nombre en el title', () =>
   assert.equal(pathHasNamedSubject('/coleccion/belleza'), true)
   assert.equal(pathHasNamedSubject('/'), false)
   assert.equal(pathHasNamedSubject('/ofertas'), false)
+})
+
+test('manda Sanity, luego la variable de Vercel, y si no hay nada no se pinta', () => {
+  assert.equal(resolveWhatsAppPhone('+57 300 1112233', '573127511852'), '573001112233')
+  assert.equal(resolveWhatsAppPhone(null, '573127511852'), '573127511852')
+  assert.equal(resolveWhatsAppPhone('   ', '573127511852'), '573127511852')
+  // Un valor inservible en Sanity NO debe dejar la tienda sin burbuja.
+  assert.equal(resolveWhatsAppPhone('123', '573127511852'), '573127511852')
+  assert.equal(resolveWhatsAppPhone(null, undefined), null)
 })

@@ -37,6 +37,22 @@ export function buildWhatsAppPrefill(pageUrl: string, productName?: string | nul
     : `Hola, vengo de la tienda y quiero más información.\n${pageUrl}`
 }
 
+/**
+ * De dónde sale el número, en orden: lo que el cliente escribe en «Ajustes de
+ * Tienda» del Studio manda; si ese campo está vacío, la variable de Vercel; si
+ * tampoco hay, `null` y la burbuja no se pinta.
+ *
+ * El respaldo existe para que borrar el campo en Sanity no deje la tienda sin
+ * burbuja de golpe, y para conservar el interruptor: quitar la variable Y
+ * dejar el campo vacío es la forma de apagarla.
+ */
+export function resolveWhatsAppPhone(
+  fromSanity: string | null | undefined,
+  fromEnv: string | null | undefined
+): string | null {
+  return normalizeWhatsAppPhone(fromSanity) ?? normalizeWhatsAppPhone(fromEnv)
+}
+
 export function buildWhatsAppUrl(params: {
   phone: string | null | undefined
   pageUrl: string

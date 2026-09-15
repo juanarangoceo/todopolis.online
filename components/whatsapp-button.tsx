@@ -14,10 +14,16 @@
 
 import { useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
-import { buildWhatsAppUrl, pathHasNamedSubject, productNameFromTitle } from '@/lib/whatsapp'
+import {
+  buildWhatsAppUrl,
+  pathHasNamedSubject,
+  productNameFromTitle,
+  resolveWhatsAppPhone,
+} from '@/lib/whatsapp'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
-const PHONE = process.env.NEXT_PUBLIC_WHATSAPP_PHONE
+// Respaldo: lo que manda es el campo de Sanity que llega por prop.
+const PHONE_FALLBACK = process.env.NEXT_PUBLIC_WHATSAPP_PHONE
 
 // El `<title>` es estado EXTERNO a React y lo escribe el router al navegar, así
 // que se lee con `useSyncExternalStore` y no con un efecto: el observador
@@ -32,7 +38,7 @@ function subscribeToTitle(onChange: () => void): () => void {
   return () => observer.disconnect()
 }
 
-export function WhatsAppButton() {
+export function WhatsAppButton({ phone }: { phone?: string | null }) {
   const pathname = usePathname()
   const title = useSyncExternalStore(
     subscribeToTitle,
@@ -42,7 +48,7 @@ export function WhatsAppButton() {
   const productName = pathHasNamedSubject(pathname) ? productNameFromTitle(title) : null
 
   const href = buildWhatsAppUrl({
-    phone: PHONE,
+    phone: resolveWhatsAppPhone(phone, PHONE_FALLBACK),
     pageUrl: `${BASE_URL}${pathname}`,
     productName,
   })

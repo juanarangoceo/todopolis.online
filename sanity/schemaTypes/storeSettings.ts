@@ -18,6 +18,20 @@ export const storeSettingsType = defineType({
       description: 'Texto secundario debajo del título gigante',
     }),
     defineField({
+      name: 'whatsappPhone',
+      title: 'WhatsApp de la tienda',
+      type: 'string',
+      description:
+        'Número al que escribe la burbuja de WhatsApp, con indicativo y solo dígitos (ej: 573001234567). ' +
+        'Si lo dejas vacío se usa el configurado en Vercel; si tampoco hay, la burbuja no se muestra.',
+      validation: (Rule) =>
+        Rule.custom((value) =>
+          !value || /^\d{8,15}$/.test(String(value).replace(/\D/g, ''))
+            ? true
+            : 'Debe ser un número con indicativo, entre 8 y 15 dígitos'
+        ),
+    }),
+    defineField({
       name: 'policies',
       title: 'Políticas de la Tienda',
       type: 'array',

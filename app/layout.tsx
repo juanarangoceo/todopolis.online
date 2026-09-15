@@ -7,6 +7,7 @@ import { CartProvider } from '@/app/providers/cart-provider'
 import { LucyChatButton } from '@/components/lucy/lucy-chat-button'
 import { WhatsAppButton } from '@/components/whatsapp-button'
 import { MetaPixel } from '@/components/analytics/meta-pixel'
+import { getSanityStoreSettings } from '@/lib/sanity/queries'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
@@ -85,11 +86,17 @@ const orgJsonLd = {
   ],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // El fetch está cacheado (revalidate + tag `storeSettings`), así que esto no
+  // vuelve dinámicas las páginas estáticas. `getSanityStoreSettings` ya devuelve
+  // `null` si Sanity falla: la burbuja cae entonces al número de la variable en
+  // vez de desaparecer.
+  const storeSettings = await getSanityStoreSettings()
+
   return (
     <html lang="es" className={`${nunito.variable} ${montserrat.variable} h-full antialiased`}>
       {GA_ID && (
@@ -113,7 +120,7 @@ export default function RootLayout({
           <CartProvider>
             {children}
             <LucyChatButton />
-            <WhatsAppButton />
+            <WhatsAppButton phone={storeSettings?.whatsappPhone ?? null} />
           </CartProvider>
         </FavoritesProvider>
       </body>
