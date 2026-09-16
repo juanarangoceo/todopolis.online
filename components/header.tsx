@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home, Crown, LayoutGrid } from 'lucide-react'
+import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home, Star, LayoutGrid } from 'lucide-react'
 import { useCart } from '@/app/providers/cart-provider'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useFavorites } from '@/app/providers/favorites-provider'
@@ -90,18 +90,18 @@ export function Header() {
               <Logo small />
             </div>
 
-            {/* VIP → corona dorada, acceso directo a la selección VIP */}
+            {/* Destacados → estrella dorada, acceso directo a la selección */}
             <Link
-              href="/vip"
+              href="/destacados"
               className="relative p-2.5 rounded-2xl border shadow-sm active:scale-95 transition-all"
               style={{
                 background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
                 borderColor: '#F59E0B66',
                 touchAction: 'manipulation',
               }}
-              aria-label="Productos VIP"
+              aria-label="Productos Destacados"
             >
-              <Crown className="w-5 h-5 text-amber-700" fill="currentColor" strokeWidth={1.5} />
+              <Star className="w-5 h-5 text-amber-700" fill="currentColor" strokeWidth={1.5} />
             </Link>
 
             {/* Favorites — ícono rosa (semántica emocional) */}
@@ -168,19 +168,19 @@ export function Header() {
                 <span className="text-xs font-bold text-todopolis-blue-deep uppercase tracking-wide">Colecciones</span>
               </Link>
 
-              {/* VIP → dorado (track propio, separado de la paleta brand) */}
+              {/* Destacados → dorado (track propio, separado de la paleta brand) */}
               <Link
-                href="/vip"
+                href="/destacados"
                 className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300"
                 style={{
                   background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
                   borderColor: '#F59E0B66',
                 }}
-                aria-label="Productos VIP"
-                title="Productos VIP — landings extendidas"
+                aria-label="Productos Destacados"
+                title="Productos Destacados — landings extendidas"
               >
-                <Crown className="w-3.5 h-3.5 text-amber-700 group-hover:scale-110 transition-transform" fill="currentColor" strokeWidth={1.5} />
-                <span className="text-xs font-bold uppercase tracking-wide text-amber-800">VIP</span>
+                <Star className="w-3.5 h-3.5 text-amber-700 group-hover:scale-110 transition-transform" fill="currentColor" strokeWidth={1.5} />
+                <span className="text-xs font-bold uppercase tracking-wide text-amber-800">Destacados</span>
               </Link>
 
               {/* Ofertas → coral suave (sale) */}
@@ -298,7 +298,7 @@ export function Header() {
             </Link>
 
             <Link
-              href="/vip"
+              href="/destacados"
               onClick={closeMenu}
               className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border transition-all shadow-sm"
               style={{
@@ -313,10 +313,10 @@ export function Header() {
                   borderColor: '#F59E0B',
                 }}
               >
-                <Crown className="w-4 h-4 text-amber-900" fill="currentColor" strokeWidth={1.5} />
+                <Star className="w-4 h-4 text-amber-900" fill="currentColor" strokeWidth={1.5} />
               </span>
-              <span className="font-bold text-sm text-amber-900">VIP</span>
-              <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-amber-700">Premium</span>
+              <span className="font-bold text-sm text-amber-900">Destacados</span>
+              <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-amber-700">Envío gratis</span>
             </Link>
 
             <Link

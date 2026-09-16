@@ -1,18 +1,18 @@
-import { Crown } from 'lucide-react'
+import { Star } from 'lucide-react'
 
-interface VipSectionHeaderProps {
+interface DestacadoSectionHeaderProps {
   eyebrow?: string
   title: string
   subtitle?: string
 }
 
-// Header reutilizable para todas las secciones VIP: chip dorado + título +
+// Header reutilizable para todas las secciones de Destacados: chip dorado + título +
 // subtítulo opcional. Mantiene consistencia visual entre los 7 bloques.
-export function VipSectionHeader({ eyebrow = 'Solo en VIP', title, subtitle }: VipSectionHeaderProps) {
+export function DestacadoSectionHeader({ eyebrow = 'Solo en Destacados', title, subtitle }: DestacadoSectionHeaderProps) {
   return (
     <div className="text-center mb-6 md:mb-7">
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] bg-amber-50 border border-amber-200/70 text-amber-700 mb-3">
-        <Crown className="w-3 h-3 text-amber-500" fill="currentColor" strokeWidth={1.5} />
+        <Star className="w-3 h-3 text-amber-500" fill="currentColor" strokeWidth={1.5} />
         {eyebrow}
       </span>
       <h2 className="font-serif text-2xl md:text-3xl font-bold text-foreground leading-tight text-balance">

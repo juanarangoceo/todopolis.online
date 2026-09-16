@@ -19,7 +19,7 @@ export default async function OfertasPage() {
     .map((p: {
       _id: string; name: string; slug: string; shortDescription?: string;
       price?: number; originalPrice: number; image?: string; category?: string;
-      isNew?: boolean; isBestSeller?: boolean; isVip?: boolean;
+      isNew?: boolean; isBestSeller?: boolean; isDestacado?: boolean;
       testimonials?: { name: string; role: string; rating: number; text: string }[];
       reviewsCount?: number;
     }): DiscountedProduct => {
@@ -37,7 +37,7 @@ export default async function OfertasPage() {
         rating: 4.8,
         isNew: p.isNew ?? false,
         isBestSeller: p.isBestSeller ?? false,
-        isVip: p.isVip ?? false,
+        isDestacado: p.isDestacado ?? false,
         testimonials: p.testimonials ?? [],
         reviewsCount: p.reviewsCount,
         _discount: discount,

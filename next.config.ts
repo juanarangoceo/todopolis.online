@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   async redirects() {
     return [
+      // /vip pasó a llamarse /destacados (sep 2026). Permanente para no perder
+      // los enlaces ya compartidos ni el posicionamiento de la vieja ruta.
+      { source: '/vip', destination: '/destacados', permanent: true },
       { source: '/producto/dildo-dave-flesh-hiper-realista', destination: '/producto/masajeador-intimo-dave-edicion-natural', permanent: true },
       { source: '/producto/conjunto-de-dos-piezas', destination: '/producto/conjunto-lenceria-intima-dos-piezas', permanent: true },
       { source: '/producto/dildo-ultra-realista-abel-7', destination: '/producto/masajeador-intimo-abel-7-pulgadas', permanent: true },

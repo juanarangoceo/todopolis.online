@@ -1,13 +1,13 @@
 import { Quote } from 'lucide-react'
-import { VipQuote as VipQuoteData } from '@/lib/types'
+import { DestacadoQuote as VipQuoteData } from '@/lib/types'
 
 interface Props {
   quote: VipQuoteData
 }
 
 // Quote individual destacada. La página puede intercalar varios entre otras
-// secciones para dar respiro. No usa header VIP para mantenerse ligera.
-export function VipQuoteBlock({ quote }: Props) {
+// secciones para dar respiro. No usa header de Destacados para mantenerse ligera.
+export function DestacadoQuoteBlock({ quote }: Props) {
   if (!quote.text) return null
 
   return (

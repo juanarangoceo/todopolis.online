@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { Play } from 'lucide-react'
-import { VipHeroVideo as VipHeroVideoData } from '@/lib/types'
+import { DestacadoHeroVideo as VipHeroVideoData } from '@/lib/types'
 
 interface Props {
   video: VipHeroVideoData
@@ -33,7 +33,7 @@ function toEmbed(url: string, source: 'youtube' | 'vimeo'): string {
   return `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1`
 }
 
-export function VipHeroVideo({ video }: Props) {
+export function DestacadoHeroVideo({ video }: Props) {
   const [playing, setPlaying] = useState(false)
 
   if (!video?.url) return null

@@ -328,23 +328,28 @@ export const productType = defineType({
       description: 'Fecha y hora exacta. El countdown desaparece automáticamente al llegar a cero.',
     }),
 
-    // ─── VIP — Contenido manual extendido (100% editorial) ───────────────────
+    // ─── Destacados — Contenido manual extendido (100% editorial) ────────────
+    // OJO: los `name` de estos campos conservan el prefijo `vip*` a propósito.
+    // Son los nombres ALMACENADOS en el dataset; renombrarlos exigiría migrar
+    // los documentos existentes. Lo que ve el editor son los `title`, y el
+    // código de la app los lee alias-eados como `destacado*` desde
+    // lib/sanity/queries.ts. Ver CLAUDE.md.
     // Estos campos NUNCA los toca la IA ni el sync de Mastershop. Decisión
     // editorial: el editor activa isVip y llena los bloques que quiera. Los
     // bloques vacíos no se renderizan.
     defineField({
       name: 'isVip',
-      title: '👑 ¿Producto VIP?',
+      title: '⭐ ¿Producto Destacado?',
       type: 'boolean',
-      group: 'vip',
+      group: 'destacados',
       initialValue: false,
-      description: 'Activa la coronita en la tarjeta del producto y la entrada VIP en el header. Si lo activas, los bloques VIP de abajo se mostrarán en la landing (solo los que llenes).',
+      description: 'Activa la estrellita en la tarjeta del producto y lo incluye en /destacados. Si lo activas, los bloques de abajo se mostrarán en la landing (solo los que llenes). También activa envío gratis en el checkout.',
     }),
     defineField({
       name: 'vipHeroVideo',
       title: '🎬 Video / GIF secundario',
       type: 'object',
-      group: 'vip',
+      group: 'destacados',
       description: 'Video corto del producto en uso. Se renderiza bajo el hero, alto impacto.',
       options: { collapsible: true, collapsed: true },
       fields: [
@@ -372,7 +377,7 @@ export const productType = defineType({
       name: 'vipBeforeAfter',
       title: '🔄 Antes / Después (puedes agregar varios)',
       type: 'array',
-      group: 'vip',
+      group: 'destacados',
       description: 'Pares de imágenes para mostrar transformación. Ideal para belleza, fitness, limpieza, organización.',
       of: [
         defineArrayMember({
@@ -410,7 +415,7 @@ export const productType = defineType({
       name: 'vipSteps',
       title: '👣 Cómo se usa — pasos (puedes agregar varios)',
       type: 'array',
-      group: 'vip',
+      group: 'destacados',
       description: 'Pasos ilustrados que enseñan a usar el producto. Sugerido: 3-4 pasos.',
       of: [
         defineArrayMember({
@@ -445,7 +450,7 @@ export const productType = defineType({
       name: 'vipBoxContents',
       title: '📦 Qué viene en la caja',
       type: 'object',
-      group: 'vip',
+      group: 'destacados',
       description: 'Para reducir la duda de "¿qué exactamente recibo?". Mostrar imagen del kit + lista de items.',
       options: { collapsible: true, collapsed: true },
       fields: [
@@ -471,7 +476,7 @@ export const productType = defineType({
       name: 'vipTestimonials',
       title: '💬 Testimonios visuales (con foto)',
       type: 'array',
-      group: 'vip',
+      group: 'destacados',
       description: 'Diferentes a los testimonios de texto generados por IA. Estos llevan foto real y convierten mucho mejor.',
       of: [
         defineArrayMember({
@@ -506,7 +511,7 @@ export const productType = defineType({
       name: 'vipComparison',
       title: '⚖️ Comparativa con alternativas',
       type: 'object',
-      group: 'vip',
+      group: 'destacados',
       description: 'Tabla simple: nuestra opción vs lo común. Reposiciona el precio y diferencia.',
       options: { collapsible: true, collapsed: true },
       fields: [
@@ -541,7 +546,7 @@ export const productType = defineType({
       name: 'vipQuotes',
       title: '✨ Quotes destacadas (puedes agregar varios)',
       type: 'array',
-      group: 'vip',
+      group: 'destacados',
       description: 'Frases sueltas grandes que dan respiro a la landing. Se intercalan entre secciones.',
       of: [
         defineArrayMember({
@@ -560,7 +565,7 @@ export const productType = defineType({
   groups: [
     { name: 'landing', title: '🚀 Landing Page (Contenido IA)' },
     { name: 'offer', title: '⏱️ Oferta / Countdown' },
-    { name: 'vip', title: '👑 VIP — Contenido manual extendido' },
+    { name: 'destacados', title: '⭐ Destacados — Contenido manual extendido' },
     { name: 'variants', title: '🎨 Variantes' },
     { name: 'tags', title: '🏷️ Etiquetas' },
   ],

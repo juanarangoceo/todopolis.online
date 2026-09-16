@@ -2,17 +2,17 @@
 
 import { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { VipBeforeAfterPair } from '@/lib/types'
-import { VipSectionHeader } from './vip-section-header'
-import { VipSlider } from './vip-slider'
+import { DestacadoBeforeAfterPair } from '@/lib/types'
+import { DestacadoSectionHeader } from './destacado-section-header'
+import { DestacadoSlider } from './destacado-slider'
 
 interface Props {
-  pairs: VipBeforeAfterPair[]
+  pairs: DestacadoBeforeAfterPair[]
 }
 
 // Slider de comparación antes/después. Drag de la línea revela más o menos
 // de la imagen "después" sobre la "antes". Funciona con mouse y touch.
-function BeforeAfterSlider({ pair }: { pair: VipBeforeAfterPair }) {
+function BeforeAfterSlider({ pair }: { pair: DestacadoBeforeAfterPair }) {
   const [position, setPosition] = useState(50)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -87,14 +87,14 @@ function BeforeAfterSlider({ pair }: { pair: VipBeforeAfterPair }) {
   )
 }
 
-export function VipBeforeAfter({ pairs }: Props) {
+export function DestacadoBeforeAfter({ pairs }: Props) {
   const valid = pairs.filter((p) => p.beforeImage && p.afterImage)
   if (valid.length === 0) return null
 
   return (
     <section className="py-8 md:py-10 bg-surface-soft">
       <div className="container mx-auto px-4">
-        <VipSectionHeader
+        <DestacadoSectionHeader
           eyebrow="Resultados reales"
           title="Antes y después"
           subtitle="Desliza la línea para ver el cambio. Sin filtros, sin retoques."
@@ -105,11 +105,11 @@ export function VipBeforeAfter({ pairs }: Props) {
             <BeforeAfterSlider pair={valid[0]} />
           </div>
         ) : (
-          <VipSlider slideClassName="w-[90%] sm:w-[420px]">
+          <DestacadoSlider slideClassName="w-[90%] sm:w-[420px]">
             {valid.map((pair) => (
               <BeforeAfterSlider key={pair._key ?? `${pair.beforeImage}-${pair.afterImage}`} pair={pair} />
             ))}
-          </VipSlider>
+          </DestacadoSlider>
         )}
       </div>
     </section>

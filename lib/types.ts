@@ -36,16 +36,16 @@ export interface ProductVariant {
   isEnable?: boolean
 }
 
-// ─── VIP — contenido manual extendido (editorial) ────────────────────────────
+// ─── Destacados — contenido manual extendido (editorial) ────────────────────────────
 // Estos tipos están en perfecta paridad con sanity/schemaTypes/product.ts.
 
-export interface VipHeroVideo {
+export interface DestacadoHeroVideo {
   url?: string
   posterImage?: string
   caption?: string
 }
 
-export interface VipBeforeAfterPair {
+export interface DestacadoBeforeAfterPair {
   _key?: string
   beforeImage?: string
   beforeImageAlt?: string
@@ -54,7 +54,7 @@ export interface VipBeforeAfterPair {
   caption?: string
 }
 
-export interface VipStep {
+export interface DestacadoStep {
   _key?: string
   image?: string
   imageAlt?: string
@@ -62,7 +62,7 @@ export interface VipStep {
   description?: string
 }
 
-export interface VipBoxContents {
+export interface DestacadoBoxContents {
   title?: string
   image?: string
   imageAlt?: string
@@ -70,7 +70,7 @@ export interface VipBoxContents {
   items?: string[]
 }
 
-export interface VipVisualTestimonial {
+export interface DestacadoVisualTestimonial {
   _key?: string
   photo?: string
   photoAlt?: string
@@ -86,14 +86,14 @@ export interface VipComparisonRow {
   theirs?: string
 }
 
-export interface VipComparison {
+export interface DestacadoComparison {
   title?: string
   ourLabel?: string
   theirLabel?: string
   rows?: VipComparisonRow[]
 }
 
-export interface VipQuote {
+export interface DestacadoQuote {
   _key?: string
   text: string
   author?: string
@@ -128,15 +128,15 @@ export interface SanityProduct {
   offerName?: string
   offerEndsAt?: string
   faqs?: Array<{ _key?: string; question: string; answer: string }>
-  // VIP — manual
-  isVip?: boolean
-  vipHeroVideo?: VipHeroVideo
-  vipBeforeAfter?: VipBeforeAfterPair[]
-  vipSteps?: VipStep[]
-  vipBoxContents?: VipBoxContents
-  vipTestimonials?: VipVisualTestimonial[]
-  vipComparison?: VipComparison
-  vipQuotes?: VipQuote[]
+  // Destacados — manual
+  isDestacado?: boolean
+  destacadoHeroVideo?: DestacadoHeroVideo
+  destacadoBeforeAfter?: DestacadoBeforeAfterPair[]
+  destacadoSteps?: DestacadoStep[]
+  destacadoBoxContents?: DestacadoBoxContents
+  destacadoTestimonials?: DestacadoVisualTestimonial[]
+  destacadoComparison?: DestacadoComparison
+  destacadoQuotes?: DestacadoQuote[]
 }
 
 // Legacy mock type (keep for backward compat during transition)
@@ -169,15 +169,15 @@ export interface Product {
   ctaHeadline?: string
   ctaText?: string
   tags?: ProductTag[]
-  // VIP — manual (igual que SanityProduct, replicado aquí para el shape adaptado del producto)
-  isVip?: boolean
-  vipHeroVideo?: VipHeroVideo
-  vipBeforeAfter?: VipBeforeAfterPair[]
-  vipSteps?: VipStep[]
-  vipBoxContents?: VipBoxContents
-  vipTestimonials?: VipVisualTestimonial[]
-  vipComparison?: VipComparison
-  vipQuotes?: VipQuote[]
+  // Destacados — manual (igual que SanityProduct, replicado aquí para el shape adaptado del producto)
+  isDestacado?: boolean
+  destacadoHeroVideo?: DestacadoHeroVideo
+  destacadoBeforeAfter?: DestacadoBeforeAfterPair[]
+  destacadoSteps?: DestacadoStep[]
+  destacadoBoxContents?: DestacadoBoxContents
+  destacadoTestimonials?: DestacadoVisualTestimonial[]
+  destacadoComparison?: DestacadoComparison
+  destacadoQuotes?: DestacadoQuote[]
 }
 
 export interface ProductTag {

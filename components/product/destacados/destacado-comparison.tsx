@@ -1,6 +1,6 @@
 import { Check, X } from 'lucide-react'
-import { VipComparison as VipComparisonData } from '@/lib/types'
-import { VipSectionHeader } from './vip-section-header'
+import { DestacadoComparison as VipComparisonData } from '@/lib/types'
+import { DestacadoSectionHeader } from './destacado-section-header'
 
 interface Props {
   data: VipComparisonData
@@ -39,7 +39,7 @@ function renderCell(value: string | undefined, accent: 'positive' | 'neutral'): 
   return <span className="text-foreground/85 text-sm">{value}</span>
 }
 
-export function VipComparison({ data }: Props) {
+export function DestacadoComparison({ data }: Props) {
   const rows = data.rows?.filter((r) => r.feature) ?? []
   if (rows.length === 0) return null
 
@@ -49,7 +49,7 @@ export function VipComparison({ data }: Props) {
   return (
     <section className="py-8 md:py-10 bg-surface-soft">
       <div className="container mx-auto px-4">
-        <VipSectionHeader
+        <DestacadoSectionHeader
           eyebrow="Cómo nos comparamos"
           title={data.title || 'No es lo mismo'}
         />

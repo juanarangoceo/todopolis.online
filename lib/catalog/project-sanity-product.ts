@@ -70,8 +70,8 @@ export function projectSanityProduct(document: SanityCatalogDocument): Canonical
     document.aiLifestyleImage,
   ])
   const videoUrls = compactStrings([
-    document.vipHeroVideo && typeof document.vipHeroVideo === 'object'
-      ? (document.vipHeroVideo as Record<string, unknown>).url
+    document.destacadoHeroVideo && typeof document.destacadoHeroVideo === 'object'
+      ? (document.destacadoHeroVideo as Record<string, unknown>).url
       : null,
   ])
   const specifications = objectList(document.specifications, (item) => {
@@ -140,7 +140,9 @@ export function projectSanityProduct(document: SanityCatalogDocument): Canonical
       cta_text: text(document.ctaText),
       offer_name: text(document.offerName),
       offer_ends_at: text(document.offerEndsAt),
-      is_vip: document.isVip === true,
+      // La clave del feed sigue siendo `is_vip`: es contrato con Nitro (externo).
+      // Internamente el campo se llama Destacado. No renombrar sin coordinar.
+      is_vip: document.isDestacado === true,
     },
     status: 'active' as const,
     source_updated_at: sourceUpdatedAt,
@@ -180,6 +182,6 @@ export const SANITY_CATALOG_PRODUCT_PROJECTION = `{
   ctaText,
   offerName,
   offerEndsAt,
-  isVip,
-  vipHeroVideo{url}
+  isDestacado,
+  destacadoHeroVideo{url}
 }`

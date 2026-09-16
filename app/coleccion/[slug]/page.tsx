@@ -88,7 +88,7 @@ export default async function CollectionPage({
     rating: 4.8,
     isNew: p.isNew ?? false,
     isBestSeller: p.isBestSeller ?? false,
-    isVip: p.isVip ?? false,
+    isDestacado: p.isDestacado ?? false,
     testimonials: p.testimonials ?? [],
     reviewsCount: p.reviewsCount,
     tags: p.tags ?? [],

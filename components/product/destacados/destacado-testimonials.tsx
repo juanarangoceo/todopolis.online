@@ -1,27 +1,27 @@
 import Image from 'next/image'
 import { Quote } from 'lucide-react'
-import { VipVisualTestimonial } from '@/lib/types'
-import { VipSectionHeader } from './vip-section-header'
-import { VipSlider } from './vip-slider'
+import { DestacadoVisualTestimonial } from '@/lib/types'
+import { DestacadoSectionHeader } from './destacado-section-header'
+import { DestacadoSlider } from './destacado-slider'
 
 interface Props {
-  testimonials: VipVisualTestimonial[]
+  testimonials: DestacadoVisualTestimonial[]
 }
 
-export function VipTestimonials({ testimonials }: Props) {
+export function DestacadoTestimonials({ testimonials }: Props) {
   const valid = testimonials.filter((t) => t.quote && t.name)
   if (valid.length === 0) return null
 
   return (
     <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
-        <VipSectionHeader
+        <DestacadoSectionHeader
           eyebrow="Voces reales"
           title="Lo que dicen nuestros clientes"
           subtitle="Clientes reales, fotos reales. Sin actores ni stock."
         />
 
-        <VipSlider slideClassName="w-[80%] sm:w-[290px]">
+        <DestacadoSlider slideClassName="w-[80%] sm:w-[290px]">
           {valid.map((t) => (
             <figure
               key={t._key ?? `${t.name}-${t.quote.slice(0, 20)}`}
@@ -58,7 +58,7 @@ export function VipTestimonials({ testimonials }: Props) {
               </figcaption>
             </figure>
           ))}
-        </VipSlider>
+        </DestacadoSlider>
       </div>
     </section>
   )

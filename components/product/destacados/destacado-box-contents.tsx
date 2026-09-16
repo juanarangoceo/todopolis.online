@@ -1,20 +1,20 @@
 import Image from 'next/image'
 import { Package, Check } from 'lucide-react'
-import { VipBoxContents as VipBoxContentsData } from '@/lib/types'
-import { VipSectionHeader } from './vip-section-header'
+import { DestacadoBoxContents as VipBoxContentsData } from '@/lib/types'
+import { DestacadoSectionHeader } from './destacado-section-header'
 
 interface Props {
   data: VipBoxContentsData
 }
 
-export function VipBoxContents({ data }: Props) {
+export function DestacadoBoxContents({ data }: Props) {
   const items = data.items?.filter((i) => i && i.trim().length > 0) ?? []
   if (!data.image && items.length === 0) return null
 
   return (
     <section className="py-8 md:py-10 bg-surface-soft">
       <div className="container mx-auto px-4">
-        <VipSectionHeader
+        <DestacadoSectionHeader
           eyebrow="Qué viene en la caja"
           title={data.title || 'Todo lo que recibes'}
           subtitle={data.intro}

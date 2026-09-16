@@ -1,27 +1,27 @@
 import Image from 'next/image'
-import { VipStep } from '@/lib/types'
-import { VipSectionHeader } from './vip-section-header'
-import { VipSlider } from './vip-slider'
+import { DestacadoStep } from '@/lib/types'
+import { DestacadoSectionHeader } from './destacado-section-header'
+import { DestacadoSlider } from './destacado-slider'
 import { ExpandableText } from '../expandable-text'
 
 interface Props {
-  steps: VipStep[]
+  steps: DestacadoStep[]
 }
 
-export function VipSteps({ steps }: Props) {
+export function DestacadoSteps({ steps }: Props) {
   const valid = steps.filter((s) => s.title)
   if (valid.length === 0) return null
 
   return (
     <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
-        <VipSectionHeader
+        <DestacadoSectionHeader
           eyebrow="Cómo se usa"
           title="Tan fácil como esto"
           subtitle="Sin manual, sin curva de aprendizaje. Lo agarras y lo usas."
         />
 
-        <VipSlider slideClassName="w-[80%] sm:w-[280px]">
+        <DestacadoSlider slideClassName="w-[80%] sm:w-[280px]">
           {valid.map((step, i) => (
             <div
               key={step._key ?? i}
@@ -55,7 +55,7 @@ export function VipSteps({ steps }: Props) {
               </div>
             </div>
           ))}
-        </VipSlider>
+        </DestacadoSlider>
       </div>
     </section>
   )

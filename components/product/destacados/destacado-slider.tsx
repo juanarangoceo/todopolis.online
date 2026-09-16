@@ -9,10 +9,10 @@ interface VipSliderProps {
   slideClassName?: string
 }
 
-// Slider horizontal con scroll-snap para las secciones VIP que viven dentro de
+// Slider horizontal con scroll-snap para las secciones de Destacados que viven dentro de
 // la columna de contenido (más angosta). Cada hijo se envuelve como slide.
 // Flechas prev/next solo en desktop; en mobile se desliza con el dedo.
-export function VipSlider({
+export function DestacadoSlider({
   children,
   slideClassName = 'w-[85%] sm:w-[300px]',
 }: VipSliderProps) {

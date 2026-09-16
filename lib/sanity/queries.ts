@@ -35,7 +35,7 @@ const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | or
   category,
   isNew,
   isBestSeller,
-  isVip,
+  "isDestacado": isVip,
   heroTitle,
   testimonials,
   reviewsCount,
@@ -84,14 +84,16 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
   },
   "articleSlug": *[_type == "article" && relatedProduct._ref == ^._id][0].slug.current,
   "articleTopic": *[_type == "article" && relatedProduct._ref == ^._id][0].topic,
-  // VIP — contenido manual extendido
-  isVip,
-  vipHeroVideo {
+  // Destacados — contenido manual extendido.
+  // Los campos ALMACENADOS conservan el prefijo vip* (no se migró el dataset);
+  // aquí se alias-ean al nombre de marca actual. Ver CLAUDE.md.
+  "isDestacado": isVip,
+  "destacadoHeroVideo": vipHeroVideo {
     url,
     "posterImage": posterImage.asset->url,
     caption
   },
-  vipBeforeAfter[] {
+  "destacadoBeforeAfter": vipBeforeAfter[] {
     _key,
     "beforeImage": beforeImage.asset->url,
     "beforeImageAlt": beforeImage.alt,
@@ -99,21 +101,21 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
     "afterImageAlt": afterImage.alt,
     caption
   },
-  vipSteps[] {
+  "destacadoSteps": vipSteps[] {
     _key,
     "image": image.asset->url,
     "imageAlt": image.alt,
     title,
     description
   },
-  vipBoxContents {
+  "destacadoBoxContents": vipBoxContents {
     title,
     "image": image.asset->url,
     "imageAlt": image.alt,
     intro,
     items
   },
-  vipTestimonials[] {
+  "destacadoTestimonials": vipTestimonials[] {
     _key,
     "photo": photo.asset->url,
     "photoAlt": photo.alt,
@@ -121,13 +123,13 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
     name,
     location
   },
-  vipComparison {
+  "destacadoComparison": vipComparison {
     title,
     ourLabel,
     theirLabel,
     rows[] { _key, feature, ours, theirs }
   },
-  vipQuotes[] { _key, text, author }
+  "destacadoQuotes": vipQuotes[] { _key, text, author }
 }`
 
 const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {
@@ -400,7 +402,7 @@ const COLLECTION_DETAIL_QUERY = `*[_type == "collectionLanding" && slug.current 
     category,
     isNew,
     isBestSeller,
-    isVip,
+    "isDestacado": isVip,
     testimonials,
     reviewsCount,
     "tags": tags[]->{ "slug": slug.current, name, group, icon }
