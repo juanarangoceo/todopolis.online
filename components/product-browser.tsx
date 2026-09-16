@@ -17,6 +17,20 @@ import {
 } from 'lucide-react';
 import { AgeGate } from '@/components/age-gate';
 
+// Cuántas imágenes de inspiración se muestran. No es un capricho:
+//
+// ESCRITORIO — la columna es `sticky`, así que solo es útil lo que cabe en
+// pantalla. Con tarjetas de ~208px y relación 3/4 cada una ocupa ~300px, y en
+// un portátil quedan ~900px bajo el header: caben 3. Antes se pintaban las 39
+// dentro de un `max-h-screen overflow-y-auto`, que producía un scroll anidado
+// con barra nativa (la barra fea) y, peor, contenido inalcanzable: una vez que
+// el sticky se pega, su parte baja no se puede ver.
+//
+// MÓVIL — es un carrusel horizontal, así que sí admite más, pero 39 tarjetas
+// son ~6 metros de deslizamiento y otras tantas imágenes cargando en la home.
+const AI_RAIL_DESKTOP = 3;
+const AI_RAIL_MOBILE = 12;
+
 function sanityOptimized(url: string, width: number): string {
   if (!url || !url.includes('cdn.sanity.io')) return url;
   return `${url}?w=${width}&auto=format&q=80`;
@@ -413,25 +427,47 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
 
       {/* Mobile AI carousel — solo en home sin filtro */}
       {(!searchQuery && activeCategory === 'Todos' && selectedTags.size === 0) && aiImages.length > 0 && (
-        <div className="md:hidden px-4 pt-2 pb-4">
-          <div className="flex items-center gap-1.5 mb-3">
+        <div className="md:hidden pt-2 pb-5">
+          <div className="flex items-center gap-1.5 mb-3 px-4">
             <Sparkles className="w-3.5 h-3.5 text-todopolis-lavender-deep" />
             <p className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wider">Inspiración</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-2.5 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {aiImages.map((item) => (
-              <Link key={item.slug} href={`/producto/${item.slug}`} className="shrink-0 snap-start w-[130px]">
-                <div className="rounded-xl overflow-hidden shadow-sm border border-todopolis-lavender/40 hover:border-todopolis-lavender transition-all">
-                  <div className="relative w-[130px] h-[175px]">
-                    <Image src={sanityOptimized(item.image, 280)} alt={item.name} fill className="object-cover" unoptimized />
+          {/* El carrusel sangra hasta el borde de la pantalla (`px-4` propio en
+              vez de en el padre): así la última tarjeta se corta en el borde y
+              se ve que hay más, en vez de terminar alineada y parecer que se
+              acabó. `snap-start` + `scroll-pl-4` hacen que cada parada quede a
+              ras del margen y no pegada al filo. */}
+          <div
+            className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 scroll-pl-4 pb-1"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {aiImages.slice(0, AI_RAIL_MOBILE).map((item) => (
+              <Link
+                key={item.slug}
+                href={`/producto/${item.slug}`}
+                className="shrink-0 snap-start w-[152px] active:scale-[0.98] transition-transform"
+              >
+                <div className="rounded-2xl overflow-hidden shadow-sm border border-todopolis-lavender/40">
+                  <div className="relative w-[152px] h-[203px]">
+                    <Image
+                      src={sanityOptimized(item.image, 320)}
+                      alt={item.name}
+                      fill
+                      sizes="152px"
+                      className="object-cover"
+                      unoptimized
+                    />
                   </div>
-                  <div className="px-1.5 py-1.5 bg-white/95">
-                    <p className="text-[9px] font-medium text-foreground/70 leading-tight line-clamp-2">{item.name}</p>
+                  <div className="px-2.5 py-2 bg-white/95">
+                    <p className="text-[11px] font-medium text-foreground/75 leading-snug line-clamp-2">
+                      {item.name}
+                    </p>
                   </div>
                 </div>
               </Link>
             ))}
-            <div className="shrink-0 w-2" />
+            {/* Respiro final: sin esto la última tarjeta queda pegada al filo. */}
+            <div className="shrink-0 w-1" aria-hidden />
           </div>
         </div>
       )}
@@ -446,7 +482,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
             <div className="md:flex md:items-start md:gap-4">
 
               {aiImages.length > 0 && (
-                <aside className="hidden md:flex flex-col w-52 xl:w-60 shrink-0 sticky top-0 self-start max-h-screen overflow-y-auto pb-10">
+                <aside className="hidden md:flex flex-col w-52 xl:w-60 shrink-0 sticky top-24 self-start pb-10">
                   {/* Sidebar header */}
                   <div className="flex items-center gap-1.5 mb-3 pt-1 px-1">
                     <Sparkles className="w-3 h-3 text-todopolis-lavender-deep" />
@@ -456,7 +492,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                   </div>
                   {/* Cards */}
                   <div className="flex flex-col gap-2 pr-2 border-r border-todopolis-lavender/30">
-                    {aiImages.map((item) => (
+                    {aiImages.slice(0, AI_RAIL_DESKTOP).map((item) => (
                       <Link key={item.slug} href={`/producto/${item.slug}`} className="group block">
                         <div className="rounded-xl overflow-hidden border border-todopolis-lavender/30 group-hover:border-todopolis-lavender group-hover:shadow-sm transition-all duration-200">
                           <div className="relative w-full" style={{ aspectRatio: '3/4' }}>
@@ -468,8 +504,8 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                               unoptimized
                             />
                           </div>
-                          <div className="px-2 py-1.5 bg-white/95">
-                            <p className="text-[9px] font-medium text-foreground/70 leading-tight line-clamp-2 group-hover:text-todopolis-lavender-deep transition-colors">
+                          <div className="px-2 py-2 bg-white/95">
+                            <p className="text-[11px] font-medium text-foreground/75 leading-snug line-clamp-2 group-hover:text-todopolis-lavender-deep transition-colors">
                               {item.name}
                             </p>
                           </div>
