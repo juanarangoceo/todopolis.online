@@ -1,6 +1,7 @@
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
+import { GlobalSearch } from '@/components/global-search'
 import { getSanityProducts } from '@/lib/sanity/queries'
 import { Star } from 'lucide-react'
 import { Product } from '@/lib/types'
@@ -13,6 +14,18 @@ export const metadata = {
 
 export default async function DestacadosPage() {
   const sanityProducts = await getSanityProducts().catch(() => [])
+
+  const searchableProducts = sanityProducts
+    .filter((p: { category?: string }) => p.category?.toLowerCase() !== 'bienestar-intimo')
+    .map((p: { _id: string; name: string; slug: string; shortDescription?: string; price?: number; mastershopImageUrl?: string; image?: string; category?: string }) => ({
+      id: p._id,
+      name: p.name,
+      slug: p.slug,
+      shortDescription: p.shortDescription ?? '',
+      price: p.price ?? 0,
+      image: p.mastershopImageUrl ?? p.image ?? '/placeholder.jpg',
+      category: p.category ?? '',
+    }))
 
   const destacadoProducts: Product[] = sanityProducts
     .filter((p: { isDestacado?: boolean; category?: string }) =>
@@ -46,6 +59,10 @@ export default async function DestacadosPage() {
   return (
     <div className="min-h-screen flex flex-col bg-surface">
       <Header />
+      {/* Rellena el hueco de búsqueda del header (#header-search-slot). Sin
+          esto, en escritorio la página se queda sin buscador: el hueco lo
+          monta Header pero lo llena cada página. */}
+      <GlobalSearch products={searchableProducts} />
 
       <main className="flex-1">
         <section className="pt-8 md:pt-10 pb-16 px-4">
