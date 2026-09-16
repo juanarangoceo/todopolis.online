@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Instagram, Facebook, Sparkles, Heart, X } from 'lucide-react';
+import { Instagram, Facebook, Sparkles, Heart, X, ShieldCheck } from 'lucide-react';
+import { advancePaymentVisible } from '@/components/payment-methods';
 
 // ── Modal content ────────────────────────────────────────────────────────────
 
@@ -21,7 +22,11 @@ const supportContent: Record<string, { title: string; body: React.ReactNode }> =
         </div>
         <div>
           <h4 className="font-bold text-gray-800 mb-1">¿Cómo pago?</h4>
-          <p className="text-gray-600 text-sm">Manejamos pago contra entrega (pagas cuando recibes tu producto en casa). No se requiere tarjeta de crédito.</p>
+          {advancePaymentVisible() ? (
+            <p className="text-gray-600 text-sm">Tú eliges. <strong>Contraentrega:</strong> pagas en efectivo cuando recibes el producto en casa. <strong>Pago protegido:</strong> pagas ahora con PSE, Nequi o Bancolombia y tu dinero queda en custodia de Confío hasta que confirmes que el pedido llegó. No manejamos tarjeta de crédito ni débito.</p>
+          ) : (
+            <p className="text-gray-600 text-sm">Manejamos pago contra entrega (pagas cuando recibes tu producto en casa). No se requiere tarjeta de crédito.</p>
+          )}
         </div>
         <div>
           <h4 className="font-bold text-gray-800 mb-1">¿Puedo hacer seguimiento a mi pedido?</h4>
@@ -36,7 +41,10 @@ const supportContent: Record<string, { title: string; body: React.ReactNode }> =
       <div className="space-y-5">
         <div>
           <h4 className="font-bold text-gray-800 mb-1">Costo de envío</h4>
-          <p className="text-gray-600 text-sm">El costo de envío es de $12.000 COP. Pedidos mayores a $150.000 tienen envío gratis.</p>
+          {/* Antes prometía envío gratis sobre $150.000. Ese umbral NO existe en
+              el código: el checkout cobra $12.000 salvo en productos destacados
+              (components/checkout-modal.tsx). Era una promesa falsa sobre dinero. */}
+          <p className="text-gray-600 text-sm">El costo de envío es de $12.000 COP a todo el país. Los productos marcados como <strong>Destacados</strong> tienen envío gratis.</p>
         </div>
         <div>
           <h4 className="font-bold text-gray-800 mb-1">Tiempo de entrega</h4>
@@ -202,6 +210,64 @@ export function Footer() {
               </div>
             </div>
             
+            {/* Pago protegido — la parte de tranquilidad. Solo se pinta si el
+                pago anticipado está encendido: si no, prometeríamos una
+                custodia que el checkout no puede ofrecer. Mismo criterio que
+                PaymentMethods y los prompts de Lucy. */}
+            {advancePaymentVisible() && (
+              <div className="mt-14 rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
+                <div className="flex items-start gap-3 mb-6">
+                  <span className="w-11 h-11 shrink-0 rounded-2xl bg-white/10 flex items-center justify-center">
+                    <ShieldCheck className="w-6 h-6 text-[#FFB4AC]" />
+                  </span>
+                  <div>
+                    <h4 className="font-sans font-bold text-lg leading-tight">
+                      Si pagas por adelantado, tu dinero no nos llega todavía
+                    </h4>
+                    <p className="text-white/60 text-sm leading-relaxed mt-1 max-w-2xl">
+                      Lo guarda <strong className="text-white/90">Confío</strong>, un
+                      servicio independiente de pagos protegidos. Nosotros solo lo
+                      recibimos cuando tú confirmas que el pedido llegó.
+                    </p>
+                  </div>
+                </div>
+
+                <ol className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    {
+                      n: '1',
+                      t: 'Pagas en Confío',
+                      d: 'Con PSE, Nequi o Bancolombia. Nunca pasas tus datos bancarios por Todópolis.',
+                    },
+                    {
+                      n: '2',
+                      t: 'Confío retiene el dinero',
+                      d: 'Queda en custodia mientras preparamos y enviamos tu pedido. No podemos tocarlo.',
+                    },
+                    {
+                      n: '3',
+                      t: 'Confirmas que llegó',
+                      d: 'Ahí, y solo ahí, Confío nos entrega el pago. Si no llega, te lo devuelven a ti.',
+                    },
+                  ].map((step) => (
+                    <li key={step.n} className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#FFB4AC] text-[#2D2D2D] text-sm font-black mb-3">
+                        {step.n}
+                      </span>
+                      <p className="font-bold text-sm mb-1">{step.t}</p>
+                      <p className="text-white/55 text-xs leading-relaxed">{step.d}</p>
+                    </li>
+                  ))}
+                </ol>
+
+                <p className="text-white/40 text-xs mt-5 leading-relaxed">
+                  El cobro vence a los 3 días si no lo pagas, y no se genera ningún
+                  cargo. ¿Prefieres no pagar por adelantado? La contraentrega sigue
+                  disponible en todos los productos.
+                </p>
+              </div>
+            )}
+
             {/* Bottom bar */}
             <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-sm text-white/40 font-serif">
