@@ -261,6 +261,46 @@
   animation: marquee 20s linear infinite;
 }
 
+/* ── Carril de inspiración ────────────────────────────────────────────────
+   Marquesina lenta que solo anima `transform`, así que corre en el
+   compositor y no provoca layout ni repaint.
+
+   Arranca PAUSADA a propósito: `InspirationRail` la activa con un
+   IntersectionObserver cuando el carril entra en pantalla y la vuelve a
+   pausar al salir. Una animación infinita fuera de la vista sigue
+   consumiendo, y en la home puede haber varios carriles a la vez.
+
+   Se pausa también al pasar el ratón o al enfocar con teclado, para poder
+   leer y hacer clic sin perseguir la tarjeta. */
+.rail-marquee {
+  animation: marquee 60s linear infinite;
+  animation-play-state: paused;
+  will-change: transform;
+}
+.rail-marquee[data-running='true'] {
+  animation-play-state: running;
+}
+/* Después de la regla de arriba: a igual especificidad, gana la última. */
+.rail-marquee:hover,
+.rail-marquee:focus-within {
+  animation-play-state: paused;
+}
+
+/* Sin movimiento: el carril vuelve a ser un carrusel que se desliza a mano y
+   se esconde la copia duplicada que solo existe para el bucle. */
+@media (prefers-reduced-motion: reduce) {
+  .rail-marquee {
+    animation: none;
+  }
+  /* La segunda tanda solo existe para el bucle; sin animación sobra. */
+  .rail-marquee-dup {
+    display: none;
+  }
+  .rail-viewport {
+    overflow-x: auto;
+  }
+}
+
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
   50% { transform: translateX(100%); }

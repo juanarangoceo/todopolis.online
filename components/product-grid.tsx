@@ -12,14 +12,25 @@ interface ProductGridProps {
   // 2ª fila de productos. Se renderiza dos veces con clases responsive para que
   // siempre aparezca cerca de la 2ª fila en cada breakpoint.
   rowTwoSlot?: ReactNode;
+  // Slot REPETIDO (ej: carriles de inspiración). Recibe el número de aparición,
+  // empezando en 0, para que el llamador decida qué contenido va en cada uno.
+  // Existe porque `rowTwoSlot` solo cubre una posición fija, y con scroll
+  // infinito sobre 574 productos hace falta algo que siga apareciendo.
+  repeatingSlot?: (occurrence: number) => ReactNode;
 }
 
 const PAGE_SIZE = 24;
 // Posiciones donde insertar el slot. Mobile/sm: 2 cols → tras 4. lg+: 3-4 cols → tras 8.
 const SLOT_AFTER_MOBILE = 4;
 const SLOT_AFTER_DESKTOP = 8;
+// El slot repetido. El PRIMERO va alto a propósito —es inspiración, tiene que
+// verse pronto—: tras 4 productos, que con 4 columnas es justo después de la
+// primera fila y con 2 columnas después de la segunda. Luego cada 12, o sea una
+// fila de inspiración cada ~3 filas de productos.
+const REPEAT_FIRST_AFTER = 4;
+const REPEAT_EVERY = 12;
 
-export function ProductGrid({ products, searchQuery, rowTwoSlot }: ProductGridProps) {
+export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot }: ProductGridProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -79,6 +90,15 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot }: ProductGridPr
             rowTwoSlot && index === SLOT_AFTER_MOBILE - 1 && visibleProducts.length > SLOT_AFTER_MOBILE;
           const showDesktopSlot =
             rowTwoSlot && index === SLOT_AFTER_DESKTOP - 1 && visibleProducts.length > SLOT_AFTER_DESKTOP;
+
+          // Slot repetido: solo si quedan productos DESPUÉS, para no dejar un
+          // carril colgando al final de lo cargado.
+          const sinceFirst = index + 1 - REPEAT_FIRST_AFTER;
+          const occurrence =
+            repeatingSlot && sinceFirst >= 0 && sinceFirst % REPEAT_EVERY === 0 && visibleProducts.length > index + 1
+              ? sinceFirst / REPEAT_EVERY
+              : null;
+
           return (
             <Fragment key={product.id}>
               <ProductCard product={product} index={index} />
@@ -87,6 +107,11 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot }: ProductGridPr
               )}
               {showDesktopSlot && (
                 <div className="hidden lg:block col-span-full my-4">{rowTwoSlot}</div>
+              )}
+              {occurrence !== null && (
+                <div className="col-span-full my-3 md:my-5 -mx-4 md:mx-0">
+                  {repeatingSlot!(occurrence)}
+                </div>
               )}
             </Fragment>
           );
