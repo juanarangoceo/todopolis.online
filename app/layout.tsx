@@ -30,13 +30,16 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Todopolis - Tu Destino de Belleza',
-    template: '%s | Todopolis',
+    default: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
+    // Las páginas internas ponen solo su nombre; el sufijo lo añade esta
+    // plantilla. Antes varias repetían "| Todopolis" en su propio título y el
+    // resultado salía duplicado: "Ofertas | Todopolis | Todopolis".
+    template: '%s | Todópolis',
   },
-  description: 'Descubre productos exclusivos de belleza y bienestar en Todopolis. Tu tienda de confianza con los mejores productos seleccionados para ti.',
+  description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
   generator: 'Todopolis',
   applicationName: 'Todopolis',
-  keywords: ['belleza', 'bienestar', 'productos', 'tienda online', 'colombia', 'ofertas'],
+  keywords: ['tienda online colombia', 'hogar', 'moda', 'tecnología', 'belleza', 'contraentrega', 'ofertas'],
   authors: [{ name: 'Todopolis', url: BASE_URL }],
   creator: 'Todopolis',
   publisher: 'Todopolis',
@@ -49,14 +52,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'es_CO',
     url: BASE_URL,
-    siteName: 'Todopolis',
-    title: 'Todopolis - Tu Destino de Belleza',
-    description: 'Descubre productos exclusivos de belleza y bienestar en Todopolis.',
+    siteName: 'Todópolis',
+    title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
+    description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Todopolis - Tu Destino de Belleza',
-    description: 'Descubre productos exclusivos de belleza y bienestar en Todopolis.',
+    title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
+    description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
   },
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],

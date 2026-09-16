@@ -11,7 +11,7 @@ import { admin } from '@/lib/payments/confio-orders'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Tu pedido | Todopolis',
+  title: 'Tu pedido',
   robots: { index: false, follow: false },
 }
 

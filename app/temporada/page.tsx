@@ -13,12 +13,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const campaign = await getActivePromoCampaign()
   if (!campaign) {
     return {
-      title: 'Temporada — Todopolis',
+      title: 'Temporada',
       description: 'Productos seleccionados para esta temporada.',
     }
   }
   return {
-    title: `${campaign.pageHeading} — Todopolis`,
+    title: campaign.pageHeading,
     description: campaign.pageSubheading ?? `Productos seleccionados para ${campaign.pageHeading}.`,
     alternates: { canonical: '/temporada' },
     openGraph: {

@@ -4,7 +4,7 @@ import { OffersBrowser, type DiscountedProduct } from '@/components/offers-brows
 import { getSanityProducts } from '@/lib/sanity/queries'
 
 export const metadata = {
-  title: 'Ofertas y Descuentos | Todopolis',
+  title: 'Ofertas y Descuentos',
   description: 'Descubre los mejores descuentos y ofertas de Todopolis. Productos premium a precios increíbles por tiempo limitado.',
 }
 

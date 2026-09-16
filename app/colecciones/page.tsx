@@ -8,7 +8,7 @@ import { getCollectionsList, type CollectionListItem } from '@/lib/sanity/querie
 export const revalidate = 3600
 
 export const metadata: Metadata = {
-  title: 'Colecciones — Todopolis',
+  title: 'Colecciones',
   description:
     'Colecciones curadas por segmento: encuentra los mejores productos agrupados y comparados para acertar con tu compra.',
   alternates: { canonical: '/colecciones' },

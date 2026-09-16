@@ -5,17 +5,18 @@ import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
 import { PromoBanner } from '@/components/promo-banner';
+import { advancePaymentEnabled } from '@/lib/payments/config';
 import { getSanityProducts, getSanityStoreSettings, getSanityTags, getActivePromoCampaign } from '@/lib/sanity/queries';
 
 export const metadata: Metadata = {
-  title: 'Todopolis - Tu Destino de Belleza',
-  description: 'Descubre productos exclusivos de belleza y bienestar en Todopolis. Tu tienda de confianza con los mejores productos seleccionados para ti.',
+  title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
+  description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     url: '/',
-    title: 'Todopolis - Tu Destino de Belleza',
-    description: 'Descubre productos exclusivos de belleza y bienestar en Todopolis.',
+    title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
+    description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
   },
 }
 
@@ -59,7 +60,13 @@ export default async function Home() {
     ? storeSettings.policies 
     : [
         { iconName: 'Truck', title: 'Envío Rápido', description: 'A toda Colombia' },
-        { iconName: 'WalletCards', title: 'Pago en Casa', description: 'Contra entrega' },
+        {
+          iconName: 'WalletCards',
+          title: 'Paga como prefieras',
+          // Solo se anuncia el prepago si está encendido; si no, la promesa
+          // sería falsa. Mismo criterio que lib/payments/narrative.ts.
+          description: advancePaymentEnabled() ? 'Contraentrega o PSE, Nequi y Bancolombia' : 'Contra entrega',
+        },
         { iconName: 'ShieldCheck', title: 'Garantía', description: 'Calidad 100%' },
         { iconName: 'Headphones', title: 'Atención 24/7', description: 'Lucy IA + humanos' }
       ];

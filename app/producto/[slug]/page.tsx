@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return { title: 'Producto no encontrado' }
   }
 
-  const title = `${product.name} | Todopolis`
+  const title = product.name
   const description = product.shortDescription ?? `Compra ${product.name} en Todopolis. Envío rápido y los mejores precios.`
   const uploadedImages: string[] = (product.images ?? []).filter((u: any): u is string => typeof u === 'string' && !!u)
   const mastershopImage: string | undefined = product.mastershopImageUrl ?? product.image

@@ -6,7 +6,7 @@ import { Star } from 'lucide-react'
 import { Product } from '@/lib/types'
 
 export const metadata = {
-  title: 'Productos Destacados | Todopolis',
+  title: 'Productos Destacados',
   description:
     'Productos Destacados de Todopolis: ficha extendida con video en uso, antes y después, paso a paso y comparativas, más envío gratis y despacho prioritario.',
 }

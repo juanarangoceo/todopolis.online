@@ -5,7 +5,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 
 export const metadata = {
-  title: 'Tus Favoritos | Todopolis',
+  title: 'Tus Favoritos',
   description: 'Explora y guarda tus productos favoritos en Todopolis. Tus selecciones guardadas localmente.',
 }
 
