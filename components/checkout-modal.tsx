@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingBag, X, MapPin, Phone, User, CheckCircle2, Truck, Crown } from 'lucide-react';
+import { ShoppingBag, X, MapPin, Phone, User, CheckCircle2, Truck, Star, ShieldCheck } from 'lucide-react';
 import { createOrder } from '@/app/actions/create-order';
 import { cn } from '@/lib/utils';
 import { Product } from '@/lib/types';
@@ -17,6 +17,8 @@ interface CheckoutModalProps {
 
 export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) {
   const [step, setStep] = useState(1);
+  // 'cod' = contraentrega (el de siempre). 'confio' = pago anticipado protegido.
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'confio'>('cod');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -35,6 +37,7 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
       setError(null);
       setLoading(false);
       setQuantity(1);
+      setPaymentMethod('cod');
       trackInitiateCheckout({ id: productId, value: product.price ?? 0, quantity: 1 });
     }
   }, [isOpen]);
@@ -43,10 +46,17 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
     return '$ ' + price.toLocaleString('es-CO');
   };
 
-  // Productos VIP → envío gratis.
-  const isVip = (product as any).isVip === true;
-  const shippingCost = isVip ? 0 : 12000;
+  // Pago anticipado con Confío. Se muestra solo si está encendido Y el total
+  // llega al mínimo de la pasarela ($10.000): ofrecer un botón que va a
+  // responder 409 es peor que no ofrecerlo.
+  const confioEnabled = process.env.NEXT_PUBLIC_CONFIO_ENABLED === 'true';
+
+  // Productos Destacados → envío gratis.
+  const isDestacado = (product as any).isDestacado === true;
+  const shippingCost = isDestacado ? 0 : 12000;
   const totalPrice = ((product.price ?? 0) * quantity) + shippingCost;
+  // Mínimo de Confío. Debajo de eso la pasarela rechaza con 400.
+  const canPayUpfront = confioEnabled && totalPrice >= 10000;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,16 +78,57 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
     formData.append('price', totalPrice.toString());
     formData.append('quantity', quantity.toString());
 
+    if (variantRequired && !selectedVariant) {
+      setError('Por favor selecciona una opción del producto.');
+      setLoading(false);
+      return;
+    }
+
+    // ── Pago anticipado: se crea el pedido y el cobro en el servidor y el
+    //    navegador se va a Confío. NO se dispara Purchase aquí: todavía no ha
+    //    pagado nadie, y contarlo ahora ensuciaría la optimización de anuncios.
+    //    El pedido se confirma cuando la reconciliación ve FUNDED.
+    if (paymentMethod === 'confio') {
+      try {
+        const res = await fetch('/api/checkout/confio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId,
+            quantity,
+            customerName: formData.get('customerName'),
+            customerPhone: formData.get('customerPhone'),
+            customerAddress: formData.get('customerAddress'),
+            customerCity: formData.get('customerCity'),
+            ...(selectedVariant
+              ? { variantId: selectedVariant.idVariant, variantName: selectedVariant.name }
+              : {}),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.checkoutUrl) {
+          // Se queda en el modal con la contraentrega disponible: un fallo de
+          // la pasarela no puede costar la venta.
+          setError(data.error || 'No pudimos generar el link de pago. Puedes pedirlo contraentrega.');
+          setPaymentMethod('cod');
+          setLoading(false);
+          return;
+        }
+        window.location.href = data.checkoutUrl;
+        return;
+      } catch {
+        setError('No pudimos conectar con la pasarela. Puedes pedirlo contraentrega.');
+        setPaymentMethod('cod');
+        setLoading(false);
+        return;
+      }
+    }
+
     // event_id compartido navegador↔CAPI para deduplicar el Purchase.
     const fbEventId = newEventId();
     formData.append('fbEventId', fbEventId);
 
-    if (variantRequired) {
-      if (!selectedVariant) {
-        setError('Por favor selecciona una opción del producto.');
-        setLoading(false);
-        return;
-      }
+    if (variantRequired && selectedVariant) {
       formData.append('variantId', String(selectedVariant.idVariant));
       formData.append('variantName', selectedVariant.name);
     }
@@ -143,8 +194,8 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
         <div className="overflow-y-auto p-5 sm:p-6 flex-1">
           {step === 1 ? (
             <div className="space-y-6">
-              {/* Banner VIP — envío gratis */}
-              {isVip && (
+              {/* Banner Destacado — envío gratis */}
+              {isDestacado && (
                 <div
                   className="flex items-center gap-3 p-3.5 rounded-2xl border shadow-sm"
                   style={{
@@ -156,10 +207,10 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                     className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-amber-300"
                     style={{ background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)' }}
                   >
-                    <Crown className="w-4 h-4 text-amber-900" fill="currentColor" strokeWidth={1.5} />
+                    <Star className="w-4 h-4 text-amber-900" fill="currentColor" strokeWidth={1.5} />
                   </span>
                   <div className="min-w-0">
-                    <p className="font-bold text-sm text-amber-900 leading-tight">Producto VIP · Envío GRATIS</p>
+                    <p className="font-bold text-sm text-amber-900 leading-tight">Producto Destacado · Envío GRATIS</p>
                     <p className="text-xs text-amber-800/80 leading-tight mt-0.5">El envío va por nuestra cuenta y con despacho prioritario.</p>
                   </div>
                 </div>
@@ -187,7 +238,7 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                   </div>
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-gray-500 text-sm">Envío:</span>
-                    {isVip ? (
+                    {isDestacado ? (
                       <span className="flex items-center gap-1.5">
                         <span className="text-gray-400 text-xs line-through">{formatPrice(12000)}</span>
                         <span className="font-bold text-amber-700">GRATIS</span>
@@ -215,6 +266,64 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
               {variantRequired && (
                 <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
                   <VariantSelector showHint />
+                </div>
+              )}
+
+              {/* Método de pago. Solo aparece si el pago anticipado está
+                  disponible; si no, el checkout es el de siempre. */}
+              {canPayUpfront && (
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
+                    ¿Cómo prefieres pagar?
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('cod')}
+                      className={cn(
+                        'text-left p-3.5 rounded-xl border-2 transition-all',
+                        paymentMethod === 'cod'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-gray-200 bg-white hover:border-gray-300',
+                      )}
+                    >
+                      <span className="flex items-center gap-2 font-bold text-sm text-gray-900">
+                        <Truck className="w-4 h-4 shrink-0" />
+                        Contraentrega
+                      </span>
+                      <span className="block mt-1 text-xs text-gray-500 leading-snug">
+                        Pagas en efectivo cuando lo recibes en casa.
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('confio')}
+                      className={cn(
+                        'text-left p-3.5 rounded-xl border-2 transition-all',
+                        paymentMethod === 'confio'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-gray-200 bg-white hover:border-gray-300',
+                      )}
+                    >
+                      <span className="flex items-center gap-2 font-bold text-sm text-gray-900">
+                        <ShieldCheck className="w-4 h-4 shrink-0" />
+                        Pago protegido
+                      </span>
+                      <span className="block mt-1 text-xs text-gray-500 leading-snug">
+                        PSE, Nequi o Bancolombia. Tu dinero queda en custodia
+                        hasta que recibas el pedido.
+                      </span>
+                    </button>
+                  </div>
+
+                  {paymentMethod === 'confio' && (
+                    <p className="mt-3 text-xs text-gray-600 leading-relaxed bg-white border border-gray-200 rounded-xl p-3">
+                      Te llevamos a <span className="font-semibold">Confío</span>,
+                      que retiene tu dinero y solo nos lo entrega cuando confirmas
+                      que recibiste el pedido. Si no llega, te devuelven.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -301,10 +410,10 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                 <Truck className="w-5 h-5" />
                 ¡Pagas al recibir en casa! 🏡
               </div>
-              {isVip && (
+              {isDestacado && (
                 <div className="mt-3 p-3 rounded-2xl flex items-center justify-center gap-2 w-full text-sm font-bold text-amber-800 border border-amber-200" style={{ background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' }}>
-                  <Crown className="w-4 h-4 text-amber-600" fill="currentColor" strokeWidth={1.5} />
-                  Tu envío VIP va por nuestra cuenta 🎁
+                  <Star className="w-4 h-4 text-amber-600" fill="currentColor" strokeWidth={1.5} />
+                  Tu envío va por nuestra cuenta 🎁
                 </div>
               )}
             </div>
@@ -329,6 +438,8 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                 <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
               ) : variantMissing ? (
                 <>Elige una opción para continuar</>
+              ) : paymentMethod === 'confio' ? (
+                <>Ir a pagar <span className="opacity-80 font-normal">({formatPrice(totalPrice)})</span></>
               ) : (
                 <>Completar Pedido <span className="opacity-80 font-normal">({formatPrice(totalPrice)})</span></>
               )}

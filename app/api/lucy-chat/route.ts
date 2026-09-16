@@ -1,3 +1,4 @@
+import { paymentPolicyForPrompt } from '@/lib/payments/narrative'
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
@@ -99,7 +100,7 @@ ${productContext}
 
 ## POLÍTICAS DE ENVÍO Y PAGO
 - Envío fijo: $12.000 COP a todo Colombia. Entrega en 3 a 7 días hábiles.
-- Pago 100% contraentrega: paga al recibir el producto en su casa. Esto es tu mejor arma para vencer la desconfianza — recuérdalo siempre que dude.
+${paymentPolicyForPrompt()}
 
 ## EMBUDO DE VENTA QUE DEBES SEGUIR
 1. Apertura neutra: saluda, pregunta qué busca o qué problema quiere resolver.

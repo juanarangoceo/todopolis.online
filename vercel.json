@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/catalog-dispatch",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/confio-reconcile",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
