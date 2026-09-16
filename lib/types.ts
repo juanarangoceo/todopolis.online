@@ -102,6 +102,8 @@ export interface DestacadoQuote {
 // Sanity product type (matches schema)
 export interface SanityProduct {
   _id: string
+  /** Fecha de creación en Sanity. La usa la sección de novedades. */
+  _createdAt?: string
   name: string
   slug: string
   shortDescription?: string

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/header';
 import { NewArrivalsBanner } from '@/components/new-arrivals-banner';
+import { newestCreatedAt, recentProductIds, NEW_ARRIVALS_WINDOW_DAYS } from '@/lib/new-arrivals';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
@@ -42,6 +43,12 @@ export default async function Home() {
     tags: p.tags ?? [],
   }));
 
+  // Productos realmente nuevos: los de la ventana definida en lib/new-arrivals.
+  // Si la semana no trajo nada, la sección no se pinta — y eso es correcto.
+  const recentIds = recentProductIds(sanityProducts);
+  const newArrivals = initialProducts.filter((p: { id: string }) => recentIds.has(p.id));
+  const newestAt = newestCreatedAt(sanityProducts);
+
   const aiImages = sanityProducts
     .filter((p: any) => p.aiLifestyleImage)
     .map((p: any) => ({
@@ -59,16 +66,21 @@ export default async function Home() {
   const policies = storeSettings?.policies && storeSettings.policies.length > 0 
     ? storeSettings.policies 
     : [
-        { iconName: 'Truck', title: 'Envío Rápido', description: 'A toda Colombia' },
+        // Cada recuadro responde UNA objeción concreta con un DATO, no con un
+        // adjetivo. "Envío rápido" y "Calidad 100%" no significaban nada y no
+        // resolvían ninguna duda; un plazo y un número de días de devolución sí.
+        // Todos los datos son ciertos: el envío y el plazo salen del checkout y
+        // de los prompts de venta, y los 30 días de devolución del footer.
+        { iconName: 'Truck', title: 'Llega en 3 a 7 días', description: '$12.000 a todo el país. Gratis en Destacados.' },
         {
           iconName: 'WalletCards',
-          title: 'Paga como prefieras',
-          // Solo se anuncia el prepago si está encendido; si no, la promesa
-          // sería falsa. Mismo criterio que lib/payments/narrative.ts.
-          description: advancePaymentEnabled() ? 'Contraentrega o PSE, Nequi y Bancolombia' : 'Contra entrega',
+          title: advancePaymentEnabled() ? 'No pagas hasta recibir' : 'Pagas cuando lo recibes',
+          description: advancePaymentEnabled()
+            ? 'En efectivo al recibir, o con PSE, Nequi o Bancolombia y tu plata queda en custodia.'
+            : 'En efectivo, en la puerta de tu casa. Sin tarjetas ni adelantos.',
         },
-        { iconName: 'ShieldCheck', title: 'Garantía', description: 'Calidad 100%' },
-        { iconName: 'Headphones', title: 'Atención 24/7', description: 'Lucy IA + humanos' }
+        { iconName: 'RefreshCw', title: '30 días para devolver', description: 'Si llega con un defecto, lo reponemos o te devolvemos.' },
+        { iconName: 'Headphones', title: 'Te contestamos por WhatsApp', description: 'Lucy responde 24/7 y un humano cuando lo necesites.' }
       ];
 
   return (
@@ -80,6 +92,9 @@ export default async function Home() {
           initialProducts={initialProducts}
           aiImages={aiImages}
           tagTaxonomy={tagTaxonomy}
+          // Lo que ya sale en "Llegaron N productos nuevos" no se repite en la
+          // cuadrícula limpia. Con búsqueda o filtros vuelve a aparecer.
+          featuredIds={newArrivals.map((p: { id: string }) => p.id)}
           rowTwoSlot={
             promoCampaign ? (
               <>
@@ -93,7 +108,7 @@ export default async function Home() {
             ) : undefined
           }
         >
-          <NewArrivalsBanner products={initialProducts} />
+          <NewArrivalsBanner products={newArrivals} newestAt={newestAt} windowDays={NEW_ARRIVALS_WINDOW_DAYS} />
 
           <PolicyBadges policies={policies} />
         </ProductBrowser>

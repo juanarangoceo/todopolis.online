@@ -306,3 +306,13 @@
   50% { transform: translateX(100%); }
   100% { transform: translateX(100%); }
 }
+
+/* Rejilla de novedades: en escritorio el número de columnas lo decide
+   `bestColumns` (lib/new-arrivals.ts) según cuántas novedades haya, para que
+   la última fila nunca quede coja. Tailwind no puede generar `grid-cols-N`
+   dinámico, así que la variable llega por `style` y se aplica aquí. */
+@media (min-width: 1024px) {
+  .na-grid {
+    grid-template-columns: repeat(var(--na-cols, 4), minmax(0, 1fr));
+  }
+}

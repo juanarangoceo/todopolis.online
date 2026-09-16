@@ -19,8 +19,8 @@ function defaultPolicies(): StorePolicy[] {
   return [
   {
     iconName: 'Truck',
-    title: 'Envío Rápido y Seguro',
-    description: 'Despachamos tu pedido en tiempo récord. Entregas a toda Colombia con transportadoras aliadas.',
+    title: 'Llega en 3 a 7 días hábiles',
+    description: 'Envío de $12.000 a todo el país, gratis en los productos Destacados. Te mandamos la guía por WhatsApp al despachar.',
   },
   {
     iconName: 'WalletCards',
@@ -28,15 +28,17 @@ function defaultPolicies(): StorePolicy[] {
     // "Paga en efectivo ÚNICAMENTE cuando recibas", que con Confío activo
     // contradice al bloque de medios de pago que está más arriba en la misma
     // página. Un comprador que lea las dos cosas no sabe cuál creer.
-    title: advancePaymentEnabled() ? 'Paga Como Prefieras' : 'Pago Contra Entrega',
+    title: advancePaymentEnabled() ? 'No pagas hasta recibir' : 'Pagas cuando lo recibes',
     description: advancePaymentEnabled()
       ? 'Paga en efectivo al recibir, o paga ahora con PSE, Nequi o Bancolombia: tu dinero queda en custodia hasta que el pedido llegue.'
       : 'Compra con total confianza. Paga en efectivo únicamente cuando recibas el producto en casa.',
   },
   {
-    iconName: 'ShieldCheck',
-    title: 'Garantía de Calidad',
-    description: 'Todos nuestros productos pasan por un estricto control. Garantía total por defectos de fábrica.',
+    // "Garantía de Calidad / control estricto" no decía nada comprobable ni
+    // resolvía una duda. El plazo real de devolución sí, y está en el footer.
+    iconName: 'RefreshCw',
+    title: '30 días para devolver',
+    description: 'Si el producto llega con un defecto, escríbenos con fotos por WhatsApp y lo reponemos o te devolvemos el dinero.',
   },
   {
     iconName: 'Headphones',

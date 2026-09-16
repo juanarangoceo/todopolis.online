@@ -24,6 +24,7 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 8): Promise<T> {
 // GROQ query for a list of products (for home page cards)
 const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | order(_createdAt desc) {
   _id,
+  _createdAt,
   name,
   "slug": slug.current,
   shortDescription,
@@ -45,6 +46,7 @@ const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | or
 // GROQ query for a single product (for landing page)
 const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] {
   _id,
+  _createdAt,
   name,
   "slug": slug.current,
   shortDescription,
