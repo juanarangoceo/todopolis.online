@@ -3,16 +3,19 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@11.0.8 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+# strict-dep-builds=false: los build scripts de sharp/esbuild/msw/unrs-resolver
+# están ignorados a propósito (ver pnpm-workspace.yaml). pnpm 11+ los convierte
+# en error fatal salvo que se relaje aquí.
+RUN pnpm install --frozen-lockfile --config.strict-dep-builds=false
 
 # ── Stage 2: Build ────────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@11.0.8 --activate
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
