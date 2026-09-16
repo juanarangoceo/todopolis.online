@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { getArticleBySlug, getAllArticleSlugs } from '@/lib/sanity/queries'
-import { SanityArticle, ArticleSection } from '@/lib/types'
+import { ArticleSections } from '@/components/blog/article-sections'
+import { SanityArticle } from '@/lib/types'
 
 export const revalidate = 86400
 
@@ -48,95 +49,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
-}
-
-function renderSection(section: ArticleSection, productSlug: string, index: number) {
-  const key = section._key ?? String(index)
-
-  switch (section.type) {
-    case 'intro':
-      return (
-        <p key={key} className="text-lg leading-relaxed text-gray-700 mb-8 font-light">
-          {section.content}
-        </p>
-      )
-
-    case 'h2':
-      return (
-        <div key={key} className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">{section.heading}</h2>
-          <p className="text-base leading-relaxed text-gray-700">{section.content}</p>
-        </div>
-      )
-
-    case 'list':
-      return (
-        <div key={key} className="mb-8">
-          {section.heading && (
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">{section.heading}</h2>
-          )}
-          <ul className="space-y-3">
-            {section.items?.map((item, i) => (
-              <li key={i} className="flex items-start gap-3">
-                <span className="mt-2 w-2 h-2 rounded-full bg-gradient-to-r from-todopolis-blue to-todopolis-lavender shrink-0" />
-                <span className="text-gray-700 leading-relaxed">{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )
-
-    case 'faq':
-      return (
-        <div key={key} className="mb-8">
-          {section.heading && (
-            <h2 className="text-2xl font-bold text-gray-900 mb-5">{section.heading}</h2>
-          )}
-          <div className="space-y-3">
-            {section.faqs?.map((faq, i) => (
-              <details
-                key={faq._key ?? i}
-                className="border border-gray-200 rounded-xl overflow-hidden"
-              >
-                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer font-semibold text-gray-800 list-none hover:bg-surface-soft transition-colors select-none">
-                  <span>{faq.question}</span>
-                  <span className="ml-3 text-todopolis-lavender text-lg shrink-0">＋</span>
-                </summary>
-                <p className="px-5 pb-4 pt-1 text-gray-600 leading-relaxed border-t border-gray-100">
-                  {faq.answer}
-                </p>
-              </details>
-            ))}
-          </div>
-        </div>
-      )
-
-    case 'cta':
-      return (
-        <div
-          key={key}
-          className="bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl p-8 my-10 text-center"
-        >
-          {section.heading && (
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">{section.heading}</h2>
-          )}
-          {section.content && (
-            <p className="text-gray-700 mb-6 max-w-lg mx-auto leading-relaxed">{section.content}</p>
-          )}
-          {productSlug && (
-            <Link
-              href={`/producto/${productSlug}`}
-              className="inline-flex items-center gap-2 bg-cta text-cta-fg font-bold px-8 py-3 rounded-2xl hover:bg-cta-hover hover:shadow-lg hover:scale-105 transition-all duration-200"
-            >
-              {section.buttonText || 'Ver producto'} →
-            </Link>
-          )}
-        </div>
-      )
-
-    default:
-      return null
-  }
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -242,9 +154,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
         {/* Article body */}
         <article className="container mx-auto px-4 max-w-3xl pb-16">
-          {article.sections?.map((section, index) =>
-            renderSection(section, article.productSlug ?? '', index)
-          )}
+          <ArticleSections
+            sections={article.sections}
+            productSlug={article.productSlug ?? ''}
+          />
         </article>
 
         {/* Back to blog */}

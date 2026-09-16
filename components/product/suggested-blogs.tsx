@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { BookOpen, ArrowRight, Clock } from 'lucide-react'
+import { ArticleTrigger } from '@/components/product/article-modal'
 import { SanityArticle } from '@/lib/types'
 
 interface SuggestedBlogsProps {
@@ -49,8 +50,8 @@ export function SuggestedBlogs({ articles }: SuggestedBlogsProps) {
             const category = CATEGORY_LABELS[article.category ?? ''] ?? article.category ?? 'General'
             return (
               <li key={article._id}>
-                <Link
-                  href={`/blog/${article.slug}`}
+                <ArticleTrigger
+                  slug={article.slug}
                   className="group flex items-start gap-3 p-3.5 rounded-2xl bg-surface/80 backdrop-blur-sm border border-todopolis-blue/25 hover:border-todopolis-blue-deep/50 hover:bg-surface hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                 >
                   <span className="shrink-0 w-9 h-9 rounded-xl bg-todopolis-blue/25 border border-todopolis-blue/40 flex items-center justify-center group-hover:bg-todopolis-blue/40 transition-colors">
@@ -73,7 +74,7 @@ export function SuggestedBlogs({ articles }: SuggestedBlogsProps) {
                     </p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-todopolis-blue-deep/50 shrink-0 mt-1 group-hover:translate-x-0.5 group-hover:text-todopolis-blue-deep transition-all" />
-                </Link>
+                </ArticleTrigger>
               </li>
             )
           })}
