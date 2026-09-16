@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useClient, useFormValue } from 'sanity'
+import { ensureDraftId } from '../lib/draft'
 
 export function MultiImageUploader(props: any) {
   const [uploading, setUploading] = useState(false)
@@ -39,10 +40,14 @@ export function MultiImageUploader(props: any) {
         })
       )
 
-      // Append to existing images keeping any already uploaded
+      // Append to existing images keeping any already uploaded.
+      // Siempre sobre el BORRADOR: parchear el publicado subía las fotos a
+      // producción sin pasar por Publish y, si había un borrador abierto,
+      // publicarlo después las borraba.
       const existing = Array.isArray(images) ? images : []
+      const draftId = await ensureDraftId(client, docId)
       await client
-        .patch(docId)
+        .patch(draftId)
         .set({ images: [...existing, ...newItems] })
         .commit()
 

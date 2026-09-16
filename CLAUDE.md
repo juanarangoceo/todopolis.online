@@ -120,8 +120,34 @@ Lucy (`lucy-chat`, `lucy-recommend`, `generate-voice-prompt`) va aparte con `gem
 ### Etiquetas (tags) — convención de `_id` determinista
 Las referencias de etiqueta se construyen con `tagSlugsToReferences` (`lib/auto-tag.ts`) usando `_id` determinista `tag-<slug>`. Las etiquetas DEBEN existir con ese `_id` o la referencia queda rota (no se ve la etiqueta). Lo usan tanto el import de Mastershop como el botón "🤖 Generar Contenido con IA" del documento Producto en el Studio. Si agregas otra vía de tagging, reutiliza ese helper.
 
-### Botón "Generar Landing" del producto = paridad con el import
-`app/api/generate-product-content` + `GenerateContentButton.tsx` tienen la **misma capacidad** que `mastershop/import`: llenan todos los campos de la landing **incluyendo FAQs y etiquetas** (auto-tagging), con el prompt único `lib/product-content-prompt.ts`. Si cambias el shape de salida del prompt, actualiza ambos consumidores.
+### Botón "Generar Landing" del producto = creación manual con IA
+`app/api/generate-product-content` + `GenerateContentButton.tsx` son la vía para subir productos **a mano** con la misma potencia que el import. Llenan toda la landing (hero, beneficios, specs, testimonios, FAQs), las etiquetas (auto-tagging), el **nombre estratégico** (`improvedName`), el **slug** cuando está vacío y la **categoría** cuando el editor no la eligió. Prompt único: `lib/product-content-prompt.ts`. Si cambias el shape de salida del prompt, actualiza ambos consumidores.
+
+Diferencias que quedan con `mastershop/import`, a propósito:
+- **Precio**: manual. No hay costo de proveedor del cual sacar el markup 30/50/70%.
+- **Artículo de blog**: no se genera. `generateAndSaveArticle` solo lo llama el import.
+- El slug **no se reescribe** si ya existe: cambiarle la URL a un producto publicado pierde el tráfico que tenga.
+
+#### La IA SÍ mira las fotos — no quitarlo
+La ruta baja las **3 primeras fotos** del producto (o `mastershopImageUrl` si no hay assets en Sanity), las manda a Gemini como `inlineData` y añade `buildImageAnalysisBlock()` al prompt. De ahí salen material, color, piezas del kit y medidas legibles en el empaque.
+
+Antes el botón mandaba `imageAssetId` y la ruta lo descartaba: el copy se escribía solo con el texto mientras el prompt autorizaba a "INVENTAR especificaciones plausibles". Producto sin descripción detallada = specs inventadas.
+
+- Las fotos se piden a **1024 px y JPG** (`urlForImage(...).width(1024)`), no el original: el PNG de 4 MB que sube el editor se come el presupuesto del `maxDuration = 60`.
+- Bajarlas es **best-effort**: si una falla, se genera con las que haya. Si no baja ninguna, el bloque de fotos **no se añade** — instruirle al modelo que "mire las fotos" cuando no hay ninguna lo empuja a describir lo que cree ver.
+- El import de Mastershop **no** lleva estos bloques: manda solo texto, como siempre.
+
+### Categorías — fuente única en `lib/categories.ts`
+`PRODUCT_CATEGORIES` alimenta el dropdown del schema, el bloque de clasificación del prompt y el script de limpieza. **Cualquier vía que escriba `category` valida contra esa lista.**
+
+Existe porque el dataset acumuló 66 productos con la categoría vacía, con tilde (`electrónica`), en mayúscula (`Otros`) o con la etiqueta cruda de Mastershop (`Hogar, Muebles, Cocina`, que no cae en ninguna pestaña del home salvo "Todos"). El fallback de `normalizeCategory` en `components/product-browser.tsx` salvaba las dos primeras de casualidad.
+
+Limpieza: `node scripts/fix-product-categories.ts` (dry-run) y `--apply` para escribir. Normaliza lo que solo cambia de forma y clasifica el resto con Gemini, validando contra la lista.
+
+### Los botones del Studio escriben en el BORRADOR, siempre
+`ensureDraftId` (`sanity/lib/draft.ts`) es la única forma en que los componentes del Studio resuelven a qué documento parchear. Lo usan `GenerateContentButton`, `MultiImageUploader` y `GenerateAIImageButton`.
+
+`useFormValue(['_id'])` devuelve el id **publicado** cuando estás viendo un producto publicado. Parchear ese id tiene dos efectos: el cambio sale a producción sin pasar por Publish, y si había un borrador abierto, publicarlo después lo pisa con la versión vieja — era lo que hacía desaparecer fotos recién subidas. Si agregas otro botón que escriba en el documento, pásalo por ese helper.
 
 ## Pago anticipado con Confío — no romper
 

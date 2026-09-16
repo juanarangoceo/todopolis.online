@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useFormValue, useClient } from 'sanity'
+import { ensureDraftId } from '../lib/draft'
 
 type Status = 'idle' | 'generating' | 'preview' | 'confirming' | 'confirmed' | 'error'
 
@@ -58,7 +59,10 @@ export function GenerateAIImageButton(props: any) {
     setStatus('confirming')
 
     try {
-      await client.patch(docId).set({
+      // El botón promete "guardar borrador" — hay que escribir en el borrador.
+      // Parchear el id publicado publicaba la imagen sin pasar por Publish.
+      const draftId = await ensureDraftId(client, docId)
+      await client.patch(draftId).set({
         aiLifestyleImage: {
           _type: 'image',
           asset: { _type: 'reference', _ref: previewAssetId },

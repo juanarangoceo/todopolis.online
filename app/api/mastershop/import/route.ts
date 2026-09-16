@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from '@/lib/product-content-prompt'
+import { slugifyProductName } from '@/lib/slugify'
 
 // Allow up to 60s — import includes AI generation + Sanity write
 export const maxDuration = 60
@@ -186,13 +187,7 @@ export async function POST(request: NextRequest) {
     const finalName = ai.improvedName || name
 
     // Auto-generate a slug from the final name
-    const slug = finalName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '')
-      .substring(0, 96)
+    const slug = slugifyProductName(finalName)
 
     // ── STEP 4: Create document in Sanity ────────────────────────────────────
     // Calculate strategic price based on profitability rules

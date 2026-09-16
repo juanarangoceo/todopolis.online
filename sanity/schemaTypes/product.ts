@@ -2,26 +2,147 @@ import { defineType, defineField, defineArrayMember } from 'sanity'
 import { GenerateContentButton } from '../components/GenerateContentButton'
 import { GenerateAIImageButton } from '../components/GenerateAIImageButton'
 import { MultiImageUploader } from '../components/MultiImageUploader'
+import { PRODUCT_CATEGORIES } from '../../lib/categories'
 
 export const productType = defineType({
   name: 'product',
   title: 'Producto',
   type: 'document',
   fields: [
+    // ─── Datos básicos del producto ─────────────────────────────────────────
+    // El orden importa: es la secuencia real de trabajo al crear un producto a
+    // mano (nombre → fotos → texto → botones de IA → precio). Los botones van
+    // justo debajo de sus insumos, no al final del formulario.
+    defineField({
+      name: 'name',
+      title: 'Nombre del Producto',
+      type: 'string',
+      group: 'basics',
+      description: 'Escribe uno provisional si quieres: la IA lo reemplaza por un nombre estratégico al generar la landing.',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'slug',
+      title: 'Slug (URL)',
+      type: 'slug',
+      group: 'basics',
+      options: { source: 'name', maxLength: 96 },
+      description: 'Si lo dejas vacío, la IA lo genera a partir del nombre final. En un producto ya publicado nunca se toca solo.',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'images',
+      title: 'Galería de Imágenes',
+      type: 'array',
+      group: 'basics',
+      description: 'La IA lee las 3 primeras para sacar material, color, piezas incluidas y medidas legibles. Entre mejores las fotos, mejor el copy.',
+      of: [{ type: 'image', options: { hotspot: true } }],
+      options: {
+        layout: 'grid',
+      },
+      components: {
+        input: MultiImageUploader,
+      },
+    }),
+    defineField({
+      name: 'shortDescription',
+      title: 'Descripción Breve (input para la IA)',
+      type: 'text',
+      rows: 4,
+      group: 'basics',
+      description: 'Pega aquí la descripción del producto. La IA la usará junto con las fotos para generar el contenido de la landing page.',
+    }),
+
+    // ─── Botones de generación con IA ──────────────────────────────────────
+    defineField({
+      name: 'generateContent',
+      title: '🤖 Generar Contenido con IA',
+      type: 'string',
+      group: 'basics',
+      components: {
+        input: GenerateContentButton,
+      },
+      description: 'Sube las fotos y llena la descripción arriba, luego haz clic en el botón para generar el contenido de la landing page.',
+    }),
+    defineField({
+      name: 'generateAIImage',
+      title: '🎨 Generar Imagen Lifestyle con IA',
+      type: 'string',
+      group: 'basics',
+      components: {
+        input: GenerateAIImageButton,
+      },
+      description: 'Genera una imagen hiperrealista de una persona usando el producto. Se mostrará antes de la sección de beneficios en la landing page.',
+    }),
+
+    // ─── Precio y clasificación ─────────────────────────────────────────────
+    defineField({
+      name: 'price',
+      title: 'Precio Venta',
+      type: 'number',
+      group: 'basics',
+      description: 'Precio actual del producto. En productos manuales lo pones tú: no hay costo de proveedor del cual calcular el margen.',
+    }),
+    defineField({
+      name: 'originalPrice',
+      title: 'Precio Original (Tachado)',
+      type: 'number',
+      group: 'basics',
+      description: 'Opcional. Si el producto está en oferta, escribe aquí el precio anterior.',
+    }),
+    defineField({
+      name: 'category',
+      title: 'Categoría',
+      type: 'string',
+      group: 'basics',
+      description: 'Si la dejas vacía, la IA la sugiere al generar la landing. Los valores salen de lib/categories.ts.',
+      options: {
+        list: PRODUCT_CATEGORIES.map((c) => ({ title: c.title, value: c.value })),
+      },
+    }),
+    defineField({
+      name: 'brand',
+      title: 'Marca',
+      type: 'string',
+      group: 'basics',
+      description: 'Marca comercial que el asesor puede usar al recomendar el producto.',
+    }),
+    defineField({
+      name: 'isNew',
+      title: '¿Producto Nuevo?',
+      type: 'boolean',
+      group: 'basics',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'isBestSeller',
+      title: '¿Más Vendido?',
+      type: 'boolean',
+      group: 'basics',
+      initialValue: false,
+    }),
+
     // ─── Vinculación con Mastershop ──────────────────────────────────────────
+    // Van al final y se esconden en los productos creados a mano: dos campos
+    // readOnly y vacíos como primera pantalla del formulario no le dicen nada
+    // al editor, y eran lo primero que veía al crear un producto.
     defineField({
       name: 'mastershopId',
       title: 'ID en Mastershop',
       type: 'number',
+      group: 'basics',
       description: 'ID numérico del producto en Mastershop (idProduct). Se asigna automáticamente al importar.',
       readOnly: true,
+      hidden: ({ document }) => !document?.mastershopId,
     }),
     defineField({
       name: 'mastershopImageUrl',
       title: 'Imagen de Mastershop (URL externa)',
       type: 'url',
+      group: 'basics',
       description: 'URL de la imagen original del proveedor en cdn.bemaster.com. Se usa como imagen principal si no hay imágenes subidas.',
       readOnly: true,
+      hidden: ({ document }) => !document?.mastershopId,
     }),
 
     // ─── Variantes (sincronizadas desde Mastershop) ─────────────────────────
@@ -61,95 +182,13 @@ export const productType = defineType({
         }),
       ],
     }),
-
-    // ─── Datos básicos del producto ─────────────────────────────────────────
-    defineField({
-      name: 'name',
-      title: 'Nombre del Producto',
-      type: 'string',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'slug',
-      title: 'Slug (URL)',
-      type: 'slug',
-      options: { source: 'name', maxLength: 96 },
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'images',
-      title: 'Galería de Imágenes',
-      type: 'array',
-      of: [{ type: 'image', options: { hotspot: true } }],
-      options: {
-        layout: 'grid',
-      },
-      components: {
-        input: MultiImageUploader,
-      },
-    }),
-    defineField({
-      name: 'shortDescription',
-      title: 'Descripción Breve (input para la IA)',
-      type: 'text',
-      rows: 4,
-      description: 'Pega aquí la descripción del producto. La IA la usará para generar el contenido de la landing page.',
-    }),
-    defineField({
-      name: 'price',
-      title: 'Precio Venta',
-      type: 'number',
-      description: 'Precio actual del producto.',
-    }),
-    defineField({
-      name: 'originalPrice',
-      title: 'Precio Original (Tachado)',
-      type: 'number',
-      description: 'Opcional. Si el producto está en oferta, escribe aquí el precio anterior.',
-    }),
-    defineField({
-      name: 'brand',
-      title: 'Marca',
-      type: 'string',
-      description: 'Marca comercial que el asesor puede usar al recomendar el producto.',
-    }),
     defineField({
       name: 'trackStock',
       title: '¿El stock de variantes es autoritativo?',
       type: 'boolean',
+      group: 'variants',
       initialValue: false,
       description: 'Actívalo solo si Mastershop mantiene el inventario al día. Apagado evita que un stock incompleto bloquee ventas en Nitro.',
-    }),
-    defineField({
-      name: 'category',
-      title: 'Categoría',
-      type: 'string',
-      options: {
-        list: [
-          { title: 'Electrónica', value: 'electronica' },
-          { title: 'Hogar', value: 'hogar' },
-          { title: 'Moda', value: 'moda' },
-          { title: 'Deportes', value: 'deportes' },
-          { title: 'Juguetes', value: 'juguetes' },
-          { title: 'Belleza', value: 'belleza' },
-          { title: 'Alimentos', value: 'alimentos' },
-          { title: 'Accesorios', value: 'accesorios' },
-          { title: 'Bienestar Íntimo', value: 'bienestar-intimo' },
-          { title: 'Otros', value: 'otros' },
-        ],
-      },
-    }),
-    defineField({
-      name: 'isNew',
-      title: '¿Producto Nuevo?',
-      type: 'boolean',
-      initialValue: true,
-    }),
-    defineField({
-      name: 'isBestSeller',
-      title: '¿Más Vendido?',
-      type: 'boolean',
-      initialValue: false,
     }),
 
     // ─── Etiquetas (multi-tag para filtros y campañas) ────────────────────────
@@ -158,7 +197,7 @@ export const productType = defineType({
       title: '🏷️ Etiquetas',
       type: 'array',
       group: 'tags',
-      description: 'Etiquetas que cruzan categorías (audiencia, ocasión, beneficio, nicho, promo). Se asignan automáticamente al importar y se pueden ajustar manualmente. Filtros del home se construyen con esto.',
+      description: 'Etiquetas que cruzan categorías (audiencia, ocasión, beneficio, nicho, promo). Las asigna la IA al generar la landing o al importar, y se pueden ajustar manualmente. Los filtros del home se construyen con esto.',
       of: [
         {
           type: 'reference',
@@ -172,26 +211,6 @@ export const productType = defineType({
       options: {
         layout: 'tags',
       },
-    }),
-
-    // ─── Botones de generación con IA ──────────────────────────────────────
-    defineField({
-      name: 'generateContent',
-      title: '🤖 Generar Contenido con IA',
-      type: 'string',
-      components: {
-        input: GenerateContentButton,
-      },
-      description: 'Sube la imagen y llena la descripción arriba, luego haz clic en el botón para generar el contenido de la landing page.',
-    }),
-    defineField({
-      name: 'generateAIImage',
-      title: '🎨 Generar Imagen Lifestyle con IA',
-      type: 'string',
-      components: {
-        input: GenerateAIImageButton,
-      },
-      description: 'Genera una imagen hiperrealista de una persona usando el producto con DALL-E 3. Se mostrará antes de la sección de beneficios en la landing page.',
     }),
 
     // ─── Contenido Landing Page (generado por IA) ───────────────────────────
@@ -563,6 +582,9 @@ export const productType = defineType({
   ],
 
   groups: [
+    // `default: true` hace que el Studio abra en esta pestaña. Sin ella, los
+    // campos base caían en la pestaña "All fields" mezclados con los otros 40.
+    { name: 'basics', title: '📝 Básicos', default: true },
     { name: 'landing', title: '🚀 Landing Page (Contenido IA)' },
     { name: 'offer', title: '⏱️ Oferta / Countdown' },
     { name: 'destacados', title: '⭐ Destacados — Contenido manual extendido' },

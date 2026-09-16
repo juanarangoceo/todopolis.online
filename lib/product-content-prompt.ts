@@ -187,3 +187,64 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin co
     { "question": "¿Quinta pregunta?", "answer": "Respuesta directa." }
   ]
 }`
+
+// ─── Bloques que se AÑADEN al SYSTEM_PROMPT según el camino ──────────────────
+//
+// El import de Mastershop manda solo texto y no lleva estos bloques. El botón
+// del Studio sí: ahí el editor sube fotos y elige categoría, y esos dos datos
+// son justamente los que el prompt base no sabe pedir.
+//
+// Van aparte y no dentro de SYSTEM_PROMPT a propósito: instruirle al modelo que
+// "mire las fotos" cuando no hay fotos adjuntas lo empuja a inventar lo que
+// supuestamente ve, que es peor que no tener la instrucción.
+
+/**
+ * Reglas para leer las fotos adjuntas. Solo se añade cuando de verdad viajan
+ * imágenes en el mismo mensaje.
+ */
+export function buildImageAnalysisBlock(imageCount: number): string {
+  if (imageCount < 1) return ''
+
+  const cuantas =
+    imageCount === 1 ? 'una foto real' : `${imageCount} fotos reales`
+
+  return `
+
+─── FOTOS DEL PRODUCTO (adjuntas a este mensaje) ────────────────────────────
+
+Con este mensaje viaja ${cuantas} del producto. Las fotos son la fuente de verdad sobre lo que el producto ES; el texto es la fuente de verdad sobre lo que HACE.
+
+ANTES de escribir, obsérvalas y anota mentalmente:
+- Material y acabado: madera, acero cepillado, silicona mate, ABS brillante, tela, vidrio
+- Color o colores exactos, y si se ofrecen varias opciones
+- Forma, proporción y tamaño relativo a lo que aparezca al lado (una mano, una mesa, un celular)
+- Qué incluye el kit: cuenta las piezas visibles — accesorios, cables, estuche, repuestos
+- Controles: botones, perillas, pantalla, puertos, indicadores luminosos
+- Texto legible sobre el producto o el empaque: medidas, capacidad, voltaje, referencias
+
+REGLAS DE USO DE LAS FOTOS:
+- Lo que la foto contradice NO se escribe. Si ves tres piezas, no digas cinco.
+- Un dato observado gana siempre a un dato plausible. La autorización de inventar especificaciones sigue vigente SOLO para lo que ni la foto ni el texto revelan.
+- Al menos DOS de los cinco campos de "specifications" deben salir de algo que se ve en las fotos.
+- No describas el fondo, la luz ni el estilo fotográfico. Al comprador le importa el producto, no el estudio.
+- Si las fotos muestran algo que el texto no menciona (un accesorio incluido, un segundo color), úsalo: es lo que el texto se dejó por fuera.`
+}
+
+/**
+ * Pide una categoría del catálogo como campo extra del MISMO JSON.
+ * El import no lo necesita: ya mapea la categoría de Mastershop con CATEGORY_MAP.
+ */
+export function buildCategoryBlock(categories: { value: string; title: string }[]): string {
+  const lista = categories.map((c) => `- ${c.value} → ${c.title}`).join('\n')
+
+  return `
+
+─── CAMPO ADICIONAL: CATEGORÍA ──────────────────────────────────────────────
+
+Esta instrucción MODIFICA el formato de salida de arriba: el objeto JSON lleva UNA clave más.
+
+Agrega "suggestedCategory" con EXACTAMENTE uno de estos valores (el slug de la izquierda, nunca el título):
+${lista}
+
+Elige la categoría donde un comprador colombiano iría a buscar este producto, no la que describe su material. Si ninguna encaja de verdad, usa "otros".`
+}
