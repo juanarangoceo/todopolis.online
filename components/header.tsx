@@ -126,7 +126,7 @@ export function Header() {
               aria-label="Carrito"
               style={{ touchAction: 'manipulation' }}
             >
-              <ShoppingBag className="w-5 h-5 text-cta-fg" />
+              <ShoppingBag className="w-5 h-5 text-cta" />
               <span className={`absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-cta text-cta-fg text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
                 {totalItems}
               </span>
@@ -224,7 +224,7 @@ export function Header() {
                 className="group relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-cta hover:bg-cta/15 transition-all duration-300 shadow-sm hover:shadow-md"
                 aria-label="Carrito"
               >
-                <ShoppingBag className="w-4 h-4 text-cta-fg group-hover:scale-110 transition-transform" />
+                <ShoppingBag className="w-4 h-4 text-cta group-hover:scale-110 transition-transform" />
                 <span className={`absolute -top-1 -right-1 w-4 h-4 bg-cta text-cta-fg text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
                   {totalItems}
                 </span>

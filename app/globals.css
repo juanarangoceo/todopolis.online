@@ -26,11 +26,19 @@
   --surface-soft: #FAFAFB;
   --surface-muted: #F4F4F6;
 
-  /* Acción / Conversión — salmón es ÚNICO para "comprar / pedir / agregar" */
-  --cta: #FFB4AC;
-  --cta-hover: #FF9A91;
-  --cta-fg: #4A1B0C;
-  --cta-ring: rgba(255, 154, 145, 0.45);
+  /* Acción / Conversión — coral saturado, ÚNICO para "comprar / pedir / agregar".
+     El resto de la paleta son pasteles: este es el único color que compite con
+     ellos, y por eso tiene que estar saturado.
+
+     Antes era #FFB4AC (salmón pastel), que daba 1.70:1 contra el fondo blanco:
+     el botón que debía gritar "compra" se confundía con una tarjeta gris. El
+     valor actual da 4.55:1 contra blanco y 4.55:1 con texto blanco encima
+     (AA). Si cambias este color, comprueba las DOS cosas: que el botón se
+     separe del fondo y que su texto siga siendo legible. */
+  --cta: #D93B2B;
+  --cta-hover: #C0301F;
+  --cta-fg: #FFFFFF;
+  --cta-ring: rgba(217, 59, 43, 0.35);
 
   /* Oferta — rojo coral suave, separado del CTA para mantener jerarquía */
   --sale: #E55A6B;

@@ -82,7 +82,7 @@ export function FavoritesPage({ allProducts }: FavoritesPageProps) {
                 {product.category}
               </span>
               <Link href={`/producto/${slug}`}>
-                <h3 className="mt-1 text-sm md:text-base font-bold text-foreground line-clamp-2 hover:text-cta-fg transition-colors">
+                <h3 className="mt-1 text-sm md:text-base font-bold text-foreground line-clamp-2 hover:text-cta transition-colors">
                   {product.name}
                 </h3>
               </Link>

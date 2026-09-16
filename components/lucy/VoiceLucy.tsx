@@ -379,7 +379,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
                         {product.shortDescription}
                       </p>
                     )}
-                    <p className="text-cta-fg font-bold text-sm mt-1">
+                    <p className="text-cta font-bold text-sm mt-1">
                       {formatPrice(product.price)}
                     </p>
                     <p className="text-xs text-gray-400">+$12.000 envío · Contraentrega</p>
@@ -488,7 +488,7 @@ function OrderForm({ orderData, onSuccess }: { orderData: OrderData; onSuccess: 
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="bg-todopolis-lavender/30 rounded-xl p-3">
         <p className="font-semibold text-sm text-gray-800 leading-tight">{orderData.producto_nombre}</p>
-        <p className="text-cta-fg font-bold text-base mt-0.5">
+        <p className="text-cta font-bold text-base mt-0.5">
           Total: ${total.toLocaleString('es-CO')} COP
         </p>
         <p className="text-xs text-gray-500">Incluye $12.000 de envío · Pagas al recibir</p>

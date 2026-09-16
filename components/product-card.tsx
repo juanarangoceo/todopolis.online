@@ -157,7 +157,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
             
             {/* Name */}
-            <h3 className="mt-2 font-sans text-sm sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-cta-fg transition-colors leading-tight">
+            <h3 className="mt-2 font-sans text-sm sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-cta transition-colors leading-tight">
               {product.name}
             </h3>
 
