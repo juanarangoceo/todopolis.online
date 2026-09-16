@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Star, Heart, ShoppingBag, Truck, Shield, RotateCcw, Zap } from 'lucide-react';
+import { PaymentMethods } from '@/components/payment-methods';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { CheckoutModal } from '@/components/checkout-modal';
@@ -149,10 +150,7 @@ export function ProductHero({ product }: ProductHeroProps) {
                 Se reemplaza por la señal que de verdad cierra la venta en
                 Colombia; las estrellas vuelven con reseñas reales atadas a un
                 pedido (ver "Reseñas reales — pendiente" en CLAUDE.md). */}
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-trust-bg border border-trust-border text-trust-fg text-xs font-bold">
-              <Shield className="w-3.5 h-3.5 shrink-0" />
-              Pago contraentrega
-            </span>
+            <PaymentMethods variant="inline" />
           </div>
 
           {/* Subtitle */}
@@ -201,16 +199,8 @@ export function ProductHero({ product }: ProductHeroProps) {
             )}
           </div>
 
-          {/* Contraentrega Badge — unificado al sistema de confianza */}
-          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-trust-bg border border-trust-border">
-            <div className="w-9 h-9 shrink-0 rounded-full bg-surface flex items-center justify-center shadow-sm">
-              <Shield className="w-5 h-5 text-trust-fg" />
-            </div>
-            <div>
-              <p className="font-bold text-sm text-trust-fg leading-tight">Pago Contraentrega</p>
-              <p className="text-xs text-trust-fg/75 leading-tight mt-0.5">Solo pagas cuando el pedido llegue a tu puerta</p>
-            </div>
-          </div>
+          {/* Medios de pago — el texto cambia solo según haya o no prepago. */}
+          <PaymentMethods variant="block" />
 
           {/* In Stock + señal de demanda honesta (solo si es best seller) */}
           <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">

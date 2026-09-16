@@ -406,6 +406,8 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
               <p className="text-gray-600 mb-6 max-w-sm">
                 Hemos recibido tu pedido de <span className="font-semibold text-gray-900">{product.name}</span>. Pronto nos contactaremos por WhatsApp para confirmar el envío.
               </p>
+              {/* A este paso SOLO se llega por contraentrega: el pago con
+                  Confío redirige a la pasarela antes de mostrarlo. */}
               <div className="p-4 bg-primary/5 rounded-2xl flex items-center gap-3 text-primary font-medium w-full justify-center">
                 <Truck className="w-5 h-5" />
                 ¡Pagas al recibir en casa! 🏡
