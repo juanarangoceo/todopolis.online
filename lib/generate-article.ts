@@ -107,9 +107,9 @@ export async function generateAndSaveArticle({
     }
   }
 
-  // Generate article content with Gemini 3.5 Flash
+  // Generate article content with Gemini 3.8 Flash
   const genAI = new GoogleGenerativeAI(geminiKey)
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' })
 
   const benefitsText = productBenefits.length > 0
     ? `\nBeneficios del producto: ${productBenefits.join(', ')}`

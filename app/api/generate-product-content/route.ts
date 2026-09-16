@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
     })
 
     const userPrompt = `Producto: ${name}\n\nDescripción: ${shortDescription}`
