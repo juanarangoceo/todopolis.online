@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
   return {
-    title: `${article.title} | Blog Todopolis`,
+    title: `${article.title} | Blog`,
     description: article.seoDescription,
     keywords: article.seoKeywords?.join(', '),
     alternates: { canonical: `/blog/${slug}` },
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: 'article',
       url: `${BASE_URL}/blog/${slug}`,
       locale: 'es_CO',
-      siteName: 'Todopolis',
+      siteName: 'Todópolis',
       publishedTime: article.publishedAt,
     },
     twitter: {
@@ -70,8 +70,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     keywords: article.seoKeywords?.join(', '),
     datePublished: article.publishedAt,
     dateModified: article._updatedAt ?? article.publishedAt,
-    author: { '@type': 'Organization', name: 'Todopolis', url: BASE_URL },
-    publisher: { '@type': 'Organization', name: 'Todopolis', url: BASE_URL },
+    author: { '@type': 'Organization', name: 'Todópolis', url: BASE_URL },
+    publisher: { '@type': 'Organization', name: 'Todópolis', url: BASE_URL },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE_URL}/blog/${slug}` },
   }
 
@@ -142,7 +142,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               {article.publishedAt && (
                 <span>{formatDate(article.publishedAt)}</span>
               )}
-              <span>Por Equipo Todopolis</span>
+              <span>Por Equipo Todópolis</span>
             </div>
           </div>
         </header>

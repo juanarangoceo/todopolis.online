@@ -5,7 +5,7 @@ import { getSanityProducts } from '@/lib/sanity/queries'
 
 export const metadata = {
   title: 'Ofertas y Descuentos',
-  description: 'Descubre los mejores descuentos y ofertas de Todopolis. Productos premium a precios increíbles por tiempo limitado.',
+  description: 'Descubre los mejores descuentos y ofertas de Todópolis. Productos premium a precios increíbles por tiempo limitado.',
 }
 
 export default async function OfertasPage() {

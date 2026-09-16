@@ -7,7 +7,7 @@ REGLAS OBLIGATORIAS:
 - Español colombiano: cálido, claro y directo
 - Ángulo INFORMATIVO/EDUCATIVO ("Cómo hacer X", "Guía de Y", "Beneficios de Z") — NO artículo de venta directa
 - El producto aparece naturalmente al final como solución recomendada
-- Firmado por "Equipo Todopolis"
+- Firmado por "Equipo Todópolis"
 - FAQ: 4 preguntas con respuestas directas de 30-50 palabras (clave para GEO y featured snippets)
 
 ESTRUCTURA (~700 palabras distribuidas):
@@ -41,7 +41,7 @@ OUTPUT: SOLO JSON válido, sin markdown, sin texto adicional:
       { "question": "¿Tercera pregunta?", "answer": "Respuesta directa." },
       { "question": "¿Cuarta pregunta?", "answer": "Respuesta directa." }
     ]},
-    { "type": "cta", "heading": "Afirmación que conecta el artículo con el deseo del lector (ej: 'La solución que buscabas ya está en Todopolis')", "content": "Oración 1: refuerza el beneficio principal del artículo y lo conecta con el producto. Oración 2: micro-compromiso — el primer paso es solo 'ver el producto', sin presión. Oración 3 (opcional): garantía implícita o facilidad de compra (contraentrega, envío gratis).", "buttonText": "Texto de acción específico — NO 'Ver producto'. Opciones: 'Quiero este producto →' | 'Ver precio y envío →' | 'Lo quiero ahora →' | 'Llevarlo a mi casa →' | 'Sí, lo quiero →'. Elige el más natural para el producto." }
+    { "type": "cta", "heading": "Afirmación que conecta el artículo con el deseo del lector (ej: 'La solución que buscabas ya está en Todópolis')", "content": "Oración 1: refuerza el beneficio principal del artículo y lo conecta con el producto. Oración 2: micro-compromiso — el primer paso es solo 'ver el producto', sin presión. Oración 3 (opcional): garantía implícita o facilidad de compra (contraentrega, envío gratis).", "buttonText": "Texto de acción específico — NO 'Ver producto'. Opciones: 'Quiero este producto →' | 'Ver precio y envío →' | 'Lo quiero ahora →' | 'Llevarlo a mi casa →' | 'Sí, lo quiero →'. Elige el más natural para el producto." }
   ]
 }
 

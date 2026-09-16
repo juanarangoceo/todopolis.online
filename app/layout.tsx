@@ -32,17 +32,17 @@ export const metadata: Metadata = {
   title: {
     default: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
     // Las páginas internas ponen solo su nombre; el sufijo lo añade esta
-    // plantilla. Antes varias repetían "| Todopolis" en su propio título y el
-    // resultado salía duplicado: "Ofertas | Todopolis | Todopolis".
+    // plantilla. Antes varias repetían "| Todópolis" en su propio título y el
+    // resultado salía duplicado: "Ofertas | Todópolis | Todópolis".
     template: '%s | Todópolis',
   },
   description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
-  generator: 'Todopolis',
-  applicationName: 'Todopolis',
+  generator: 'Todópolis',
+  applicationName: 'Todópolis',
   keywords: ['tienda online colombia', 'hogar', 'moda', 'tecnología', 'belleza', 'contraentrega', 'ofertas'],
-  authors: [{ name: 'Todopolis', url: BASE_URL }],
-  creator: 'Todopolis',
-  publisher: 'Todopolis',
+  authors: [{ name: 'Todópolis', url: BASE_URL }],
+  creator: 'Todópolis',
+  publisher: 'Todópolis',
   robots: {
     index: true,
     follow: true,
@@ -73,7 +73,7 @@ const orgJsonLd = {
     {
       '@type': 'Organization',
       '@id': `${BASE_URL}/#organization`,
-      name: 'Todopolis',
+      name: 'Todópolis',
       url: BASE_URL,
       description:
         'Tienda online colombiana de productos de belleza, hogar, tecnología, moda y bienestar. Pago contraentrega en toda Colombia.',
@@ -81,7 +81,7 @@ const orgJsonLd = {
     {
       '@type': 'WebSite',
       '@id': `${BASE_URL}/#website`,
-      name: 'Todopolis',
+      name: 'Todópolis',
       url: BASE_URL,
       inLanguage: 'es-CO',
       publisher: { '@id': `${BASE_URL}/#organization` },

@@ -46,7 +46,7 @@ export default function AdminLoginPage() {
         <div className="login-header">
           <div className="login-logo">🔒</div>
           <h1>Acceso Restringido</h1>
-          <p>Área de administración de Todopolis</p>
+          <p>Área de administración de Todópolis</p>
         </div>
 
         <form onSubmit={handleLogin} className="login-form">

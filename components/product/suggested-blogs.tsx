@@ -40,7 +40,7 @@ export function SuggestedBlogs({ articles }: SuggestedBlogsProps) {
             Lecturas que aclaran dudas.
           </h3>
           <p className="text-foreground/65 text-sm leading-relaxed">
-            Guías cortas y honestas del equipo Todopolis para que compres con criterio.
+            Guías cortas y honestas del equipo Todópolis para que compres con criterio.
           </p>
         </div>
 

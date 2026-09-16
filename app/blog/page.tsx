@@ -8,15 +8,15 @@ import { SuggestedProductsCarousel } from '@/components/product/suggested-produc
 export const revalidate = 3600
 
 export const metadata = {
-  title: 'Blog Todopolis | Guías y Consejos de Compra',
-  description: 'Descubre artículos informativos, guías de compra y consejos prácticos para elegir los mejores productos. Contenido de calidad del equipo Todopolis.',
+  title: 'Blog — Guías y Consejos de Compra',
+  description: 'Descubre artículos informativos, guías de compra y consejos prácticos para elegir los mejores productos. Contenido de calidad del equipo Todópolis.',
   alternates: { canonical: '/blog' },
   openGraph: {
-    title: 'Blog Todopolis | Guías y Consejos de Compra',
-    description: 'Artículos informativos, guías de compra y consejos prácticos del equipo Todopolis.',
+    title: 'Blog — Guías y Consejos de Compra',
+    description: 'Artículos informativos, guías de compra y consejos prácticos del equipo Todópolis.',
     type: 'website',
     locale: 'es_CO',
-    siteName: 'Todopolis',
+    siteName: 'Todópolis',
   },
 }
 
@@ -118,7 +118,7 @@ export default async function BlogPage() {
         <section className="bg-surface-soft py-14 md:py-20">
           <div className="container mx-auto px-4 text-center">
             <span className="inline-block text-xs font-bold uppercase tracking-widest text-todopolis-lavender-deep mb-4">
-              Blog Todopolis
+              Blog Todópolis
             </span>
             <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Guías y consejos para{' '}
@@ -127,7 +127,7 @@ export default async function BlogPage() {
               </span>
             </h1>
             <p className="text-gray-500 max-w-xl mx-auto text-lg">
-              Artículos informativos del equipo Todopolis para ayudarte a tomar las mejores decisiones de compra.
+              Artículos informativos del equipo Todópolis para ayudarte a tomar las mejores decisiones de compra.
             </p>
           </div>
         </section>
@@ -142,7 +142,7 @@ export default async function BlogPage() {
                     Recién llegados
                   </span>
                   <h2 className="font-serif text-2xl md:text-3xl font-bold text-gray-900">
-                    Lo último en Todopolis
+                    Lo último en Todópolis
                   </h2>
                 </div>
                 <Link

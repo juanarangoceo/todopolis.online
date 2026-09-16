@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   const title = product.name
-  const description = product.shortDescription ?? `Compra ${product.name} en Todopolis. Envío rápido y los mejores precios.`
+  const description = product.shortDescription ?? `Compra ${product.name} en Todópolis. Envío rápido y los mejores precios.`
   const uploadedImages: string[] = (product.images ?? []).filter((u: any): u is string => typeof u === 'string' && !!u)
   const mastershopImage: string | undefined = product.mastershopImageUrl ?? product.image
   const allImageUrls: string[] = mastershopImage
@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       images,
       locale: 'es_CO',
-      siteName: 'Todopolis',
+      siteName: 'Todópolis',
     },
     twitter: {
       card: 'summary_large_image',
@@ -296,7 +296,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     description: adaptedProduct.shortDescription,
     image: adaptedProduct.images,
     url: productUrl,
-    brand: { '@type': 'Brand', name: 'Todopolis' },
+    brand: { '@type': 'Brand', name: 'Todópolis' },
     offers: {
       '@type': 'Offer',
       priceCurrency: 'COP',

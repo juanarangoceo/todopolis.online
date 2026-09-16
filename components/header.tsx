@@ -28,7 +28,7 @@ function Logo({ small = false }: { small?: boolean }) {
     >
       <Image
         src={LOGO_URL}
-        alt="Todopolis"
+        alt="Todópolis"
         width={width}
         height={height}
         priority

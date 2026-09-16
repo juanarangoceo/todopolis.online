@@ -1,8 +1,8 @@
-// Orquestación del pago anticipado en Todopolis: crear el cobro y aplicarle a
+// Orquestación del pago anticipado en Todópolis: crear el cobro y aplicarle a
 // un pedido lo que Confío diga de él.
 //
 // Es el equivalente recortado de nitro_bot/lib/payments/advance-payment.ts
-// (942 líneas). Todopolis no tiene tenants, ni subagentes, ni conversaciones:
+// (942 líneas). Todópolis no tiene tenants, ni subagentes, ni conversaciones:
 // un pedido es una fila de `orders` y el cobro vive en esa misma fila.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
@@ -103,7 +103,7 @@ export async function openConfioCharge(params: {
         totalCop,
         idempotencyKey,
         title: order.product_name.slice(0, 120),
-        description: `${order.product_name} x${order.quantity} — pedido Todopolis`,
+        description: `${order.product_name} x${order.quantity} — pedido Todópolis`,
         buyerFirstName: firstName,
         buyerPhone: toE164(order.customer_phone),
         mediaAssets: params.mediaAssets,

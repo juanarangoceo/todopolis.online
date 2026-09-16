@@ -7,7 +7,7 @@ import {
   pathHasNamedSubject,
   productNameFromTitle,
   resolveWhatsAppPhone,
-} from './whatsapp'
+} from './whatsapp.ts'
 
 test('el número se limpia a dígitos y se rechaza si no sirve', () => {
   assert.equal(normalizeWhatsAppPhone('+57 312 7511852'), '573127511852')
@@ -57,6 +57,9 @@ test('el nombre sale del title y descarta los que no nombran nada', () => {
     'Conjunto de Blonda Elástica'
   )
   assert.equal(productNameFromTitle('Todopolis'), null)
+  // La marca lleva tilde desde sep-2026; ambas formas tienen que limpiarse.
+  assert.equal(productNameFromTitle('Audífonos M10 | Todópolis'), 'Audífonos M10')
+  assert.equal(productNameFromTitle('Todópolis'), null)
   assert.equal(productNameFromTitle('Producto no encontrado'), null)
   assert.equal(productNameFromTitle(''), null)
   assert.equal(productNameFromTitle(undefined), null)

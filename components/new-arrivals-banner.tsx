@@ -4,9 +4,9 @@ import Link from 'next/link';
 
 // Banner FIJO que presenta la sección de productos nuevos del home.
 // Reemplaza al antiguo "Banner Mágico" generado por IA: copy estático con la
-// narrativa y el visual de Todopolis (gradiente lila→azul, blobs, título serif).
+// narrativa y el visual de Todópolis (gradiente lila→azul, blobs, título serif).
 // Conserva la franja de miniaturas como preview de lo recién agregado.
-const BANNER_TITLE = 'Lo nuevo en Todopolis';
+const BANNER_TITLE = 'Lo nuevo en Todópolis';
 const BANNER_SUBTITLE =
   'Los productos que acabamos de sumar, listos para pedir hoy con pago contraentrega.';
 

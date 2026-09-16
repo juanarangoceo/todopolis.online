@@ -89,14 +89,14 @@ export async function POST(req: NextRequest) {
 
     // Build prompt context
     const productContext = matchedProduct
-      ? `El producto más relevante del catálogo es: "${matchedProduct.name}" ($${Number(matchedProduct.price).toLocaleString('es-CO')} COP) — ${matchedProduct.short_description ?? 'Un producto especial de Todopolis'}`
+      ? `El producto más relevante del catálogo es: "${matchedProduct.name}" ($${Number(matchedProduct.price).toLocaleString('es-CO')} COP) — ${matchedProduct.short_description ?? 'Un producto especial de Todópolis'}`
       : `No hay un producto perfecto en este momento, pero el catálogo incluye: ${products.map((p) => p.name).join(', ')}`;
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
     const prompt = `
-Eres Lucy, la asesora mágica de Todopolis, una tienda colombiana que vende de todo.
+Eres Lucy, la asesora mágica de Todópolis, una tienda colombiana que vende de todo.
 
 La clienta respondió este cuestionario mágico:
 1. ¿Cómo te sientes hoy?: ${answers[0]}

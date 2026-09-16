@@ -65,7 +65,7 @@ const supportContent: Record<string, { title: string; body: React.ReactNode }> =
     title: 'Política de Privacidad',
     body: (
       <div className="space-y-4 text-gray-600 text-sm leading-relaxed">
-        <p>En Todopolis nos comprometemos a proteger tu información personal. Los datos que recopilamos (nombre, teléfono, dirección) se usan exclusivamente para procesar y entregar tu pedido.</p>
+        <p>En Todópolis nos comprometemos a proteger tu información personal. Los datos que recopilamos (nombre, teléfono, dirección) se usan exclusivamente para procesar y entregar tu pedido.</p>
         <p>No vendemos ni compartimos tu información con terceros salvo las transportadoras necesarias para el envío.</p>
         <p>Puedes solicitar la eliminación de tus datos en cualquier momento contactándonos por WhatsApp.</p>
         <p>Al realizar un pedido aceptas esta política de privacidad.</p>
@@ -76,10 +76,10 @@ const supportContent: Record<string, { title: string; body: React.ReactNode }> =
     title: 'Términos y Condiciones',
     body: (
       <div className="space-y-4 text-gray-600 text-sm leading-relaxed">
-        <p><strong className="text-gray-800">Uso del sitio:</strong> Al navegar en Todopolis aceptas que el contenido es de carácter informativo y comercial.</p>
+        <p><strong className="text-gray-800">Uso del sitio:</strong> Al navegar en Todópolis aceptas que el contenido es de carácter informativo y comercial.</p>
         <p><strong className="text-gray-800">Pedidos:</strong> Un pedido se confirma solo cuando es verificado por nuestro equipo vía WhatsApp. Nos reservamos el derecho de cancelar pedidos con información incompleta.</p>
         <p><strong className="text-gray-800">Precios:</strong> Los precios pueden cambiar sin previo aviso. El precio válido es el mostrado al momento de realizar el pedido.</p>
-        <p><strong className="text-gray-800">Responsabilidad:</strong> Todopolis no se hace responsable por retrasos causados por la transportadora una vez despachado el paquete.</p>
+        <p><strong className="text-gray-800">Responsabilidad:</strong> Todópolis no se hace responsable por retrasos causados por la transportadora una vez despachado el paquete.</p>
         <p><strong className="text-gray-800">Jurisdicción:</strong> Estos términos se rigen por las leyes de Colombia.</p>
       </div>
     ),
@@ -144,7 +144,7 @@ export function Footer() {
               {/* Brand */}
               <div>
                 <h3 className="font-sans text-3xl font-black mb-2">
-                  Todo<span className="text-[#FFB4AC]">polis</span>
+                  Todó<span className="text-[#FFB4AC]">polis</span>
                 </h3>
                 <p className="text-white/60 text-sm leading-relaxed font-serif mb-6">
                   Tu tienda online favorita con todo lo que necesitas. Moda, tecnologia, hogar, belleza y mucho mas en un solo lugar.
@@ -271,7 +271,7 @@ export function Footer() {
             {/* Bottom bar */}
             <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-sm text-white/40 font-serif">
-                2024 Todopolis. Todos los derechos reservados.
+                2024 Todópolis. Todos los derechos reservados.
               </p>
               <p className="text-sm text-white/40 font-serif flex items-center gap-2">
                 Hecho con <Heart className="w-4 h-4 text-[#FFB4AC] fill-[#FFB4AC]" /> en Colombia

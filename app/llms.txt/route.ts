@@ -23,7 +23,7 @@ export async function GET() {
   )
 
   const lines: string[] = [
-    '# Todopolis',
+    '# Todópolis',
     '',
     '> Tienda online colombiana de productos de belleza, hogar, tecnología, moda, deportes y más. Pago contraentrega en toda Colombia con envío rápido.',
     '',

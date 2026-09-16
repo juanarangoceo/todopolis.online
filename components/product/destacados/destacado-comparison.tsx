@@ -43,7 +43,7 @@ export function DestacadoComparison({ data }: Props) {
   const rows = data.rows?.filter((r) => r.feature) ?? []
   if (rows.length === 0) return null
 
-  const ourLabel = data.ourLabel || 'Con Todopolis'
+  const ourLabel = data.ourLabel || 'Con Todópolis'
   const theirLabel = data.theirLabel || 'Otros'
 
   return (

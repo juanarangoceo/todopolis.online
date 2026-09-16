@@ -157,7 +157,7 @@ export function ProductSubscription({ productSlug, productName }: ProductSubscri
               className="mt-0.5 w-4 h-4 rounded border-todopolis-lavender/50 text-todopolis-lavender-deep focus:ring-todopolis-lavender-deep/30 cursor-pointer accent-current"
             />
             <span className="text-[11px] text-foreground/65 leading-relaxed">
-              Acepto recibir comunicaciones de Todopolis y la{' '}
+              Acepto recibir comunicaciones de Todópolis y la{' '}
               <a
                 href="#site-footer"
                 className="text-todopolis-lavender-deep hover:underline font-semibold"

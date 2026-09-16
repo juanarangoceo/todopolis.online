@@ -36,7 +36,7 @@ function buildPrompt(tags: TagDef[], product: ProductInput): string {
     )
     .join('\n\n')
 
-  return `Eres un experto en e-commerce que clasifica productos con etiquetas para una tienda colombiana (Todopolis).
+  return `Eres un experto en e-commerce que clasifica productos con etiquetas para una tienda colombiana (Todópolis).
 
 Tu trabajo: leer un producto y devolver entre ${MIN_TAGS} y ${MAX_TAGS} etiquetas (slugs) de la taxonomía siguiente.
 

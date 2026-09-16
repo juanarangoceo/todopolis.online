@@ -6,7 +6,7 @@ import { Footer } from '@/components/footer'
 
 export const metadata = {
   title: 'Tus Favoritos',
-  description: 'Explora y guarda tus productos favoritos en Todopolis. Tus selecciones guardadas localmente.',
+  description: 'Explora y guarda tus productos favoritos en Todópolis. Tus selecciones guardadas localmente.',
 }
 
 export default async function FavoritosPage() {

@@ -30,9 +30,9 @@ export async function generateMetadata({
   const { slug } = await params
   const collection = await getCollectionLandingBySlug(slug)
   if (!collection) {
-    return { title: 'Colección — Todopolis' }
+    return { title: 'Colección' }
   }
-  const title = collection.seoTitle || `${collection.heroTitle ?? collection.title} — Todopolis`
+  const title = collection.seoTitle || (collection.heroTitle ?? collection.title)
   const description =
     collection.seoDescription || collection.heroSubtitle || collection.brandIntro || ''
   return {

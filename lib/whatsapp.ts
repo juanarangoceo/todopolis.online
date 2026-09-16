@@ -76,8 +76,11 @@ export function buildWhatsAppUrl(params: {
  * se le mandaría al comprador con un « | Todopolis» pegado detrás.
  */
 export function productNameFromTitle(title: string | null | undefined): string | null {
-  const clean = (title ?? '').replace(/(?:\s*\|\s*Todopolis\s*)+$/i, '').trim()
-  if (!clean || /^todopolis$/i.test(clean)) return null
+  // Acepta 'Todopolis' y 'Todópolis': la marca lleva tilde desde sep-2026, pero
+  // un título cacheado o un enlace viejo puede traer la forma sin tilde y el
+  // nombre del producto no puede quedarse con el sufijo pegado.
+  const clean = (title ?? '').replace(/(?:\s*\|\s*Tod[oó]polis\s*)+$/i, '').trim()
+  if (!clean || /^tod[oó]polis$/i.test(clean)) return null
   if (/producto no encontrado/i.test(clean)) return null
   return clean
 }

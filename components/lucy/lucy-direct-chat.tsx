@@ -17,7 +17,7 @@ interface LucyDirectChatProps {
 
 const WELCOME_MSG: Message = {
   role: 'model',
-  text: 'Hola, soy Lucy, la asistente IA de Todopolis. Estoy aquí 24/7 para ayudarte a encontrar lo que buscas. ¿Qué te gustaría resolver hoy?',
+  text: 'Hola, soy Lucy, la asistente IA de Todópolis. Estoy aquí 24/7 para ayudarte a encontrar lo que buscas. ¿Qué te gustaría resolver hoy?',
 };
 
 export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
@@ -139,7 +139,7 @@ export function LucyDirectChat({ sessionId, onBack }: LucyDirectChatProps) {
             </span>
           </p>
           <p className="text-[11px] text-todopolis-lavender-deep font-medium">
-            {isLoading ? 'Escribiendo...' : 'Asistente IA de Todopolis ✨'}
+            {isLoading ? 'Escribiendo...' : 'Asistente IA de Todópolis ✨'}
           </p>
         </div>
       </div>
