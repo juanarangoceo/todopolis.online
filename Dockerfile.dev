@@ -5,7 +5,12 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@11.0.8 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install
+# Mismo arreglo que el Dockerfile de producción: los build scripts de
+# sharp/esbuild/msw/unrs-resolver están ignorados a propósito (ver
+# pnpm-workspace.yaml) y pnpm 11+ los convierte en error fatal salvo que se
+# relaje aquí. Sin esta bandera la imagen dev no construye y toca iterar
+# reconstruyendo la de producción, que deja ~2.4 GB de caché por vuelta.
+RUN pnpm install --frozen-lockfile --config.strict-dep-builds=false
 
 EXPOSE 3000
 ENV PORT=3000

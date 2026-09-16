@@ -4,9 +4,11 @@
 
 ## Arranque obligatorio al iniciar sesión
 
-1. **Levantar Docker** antes de cualquier tarea:
+1. **Levantar Docker** antes de cualquier tarea. Hay DOS modos y elegir mal cuesta
+   horas — lee "Modo dev vs. modo producción" abajo antes de decidir:
    ```bash
-   docker compose up -d
+   docker compose --profile dev up -d web-dev   # iterando código (hot reload)
+   docker compose up -d                          # revisando el build real
    ```
 
 2. **Abrir túnel SSH** para exponer el servidor local al entorno remoto:
@@ -29,12 +31,100 @@ La app se ve en: **http://100.107.182.42:3001**
 
 ## Docker — reglas importantes
 
-### Reconstruir imagen después de cambios
-Cualquier cambio en código fuente requiere reconstruir la imagen Docker y reiniciar el contenedor:
+### Modo dev vs. modo producción — ELIGE ANTES DE EMPEZAR
+`docker-compose.yml` define dos servicios. **Los dos usan el puerto 3001, así que
+no pueden correr a la vez.** El túnel SSH es el mismo para ambos: no hay que
+tocarlo al cambiar de modo.
+
+| | `web-dev` (desarrollo) | `web` (producción) |
+|---|---|---|
+| Arranque | `docker compose --profile dev up -d web-dev` | `docker compose up -d` |
+| Imagen | `Dockerfile.dev` → `pnpm dev` | `Dockerfile` (target `runner`) |
+| Cambios en código | **Al instante**, hot reload | Requiere reconstruir |
+| Caché de build por iteración | **0** | ~2.4 GB |
+
+**Por defecto, iterando código, usa `web-dev`.** El servicio monta tu carpeta
+(`.:/app`) dentro del contenedor: editas un archivo y el navegador se actualiza
+solo. No hay que reconstruir nada.
+
+`web-dev` vive detrás de `profiles: [dev]`, lo que en Compose significa que
+**`docker compose up -d` a secas NO lo levanta** — levanta `web`, el de
+producción. Por eso es fácil pasar una sesión entera reconstruyendo sin
+necesidad; ya pasó (16-sep-2026).
+
+Cambiar de modo:
+```bash
+docker compose down                            # baja el que esté corriendo
+docker compose --profile dev up -d web-dev     # …o `docker compose up -d`
+```
+
+Cuándo SÍ usar `web`:
+- **Trabajar en el Studio (`/studio`) — ver abajo, en dev revienta.**
+- Verificar que el build de producción compila antes de hacer push (es lo mismo
+  que corre Vercel).
+- Revisar comportamiento que solo existe en build: prerenderizado, ISR,
+  optimización de imágenes.
+
+#### `/studio` NO abre en modo dev: esta máquina tiene 3.2 GB de RAM
+Compilar el bundle de Sanity Studio con Turbopack **mata el contenedor por falta
+de memoria** (`OOMKilled=true`, y sale con código 0, que despista: parece un
+apagado limpio). Comprobado el 16-sep-2026.
+
+El resto de la tienda va perfecto en dev — home, `/destacados`, `/ofertas`,
+`/colecciones` y las landings de producto compilan en segundos. Es solo el
+Studio.
+
+Tres salidas, en orden de preferencia:
+1. **Usar el Studio desplegado: https://todopolis.online/studio.** Apunta al
+   MISMO dataset de Sanity, así que para trabajo de contenido (crear productos,
+   generar landings con IA, etiquetas) da exactamente igual. Es la opción
+   normal.
+2. Si tocaste el *schema* o un componente del Studio y necesitas verlo local,
+   cambia a modo producción (`docker compose up -d`) — ahí sí abre, porque el
+   bundle ya viene compilado de la imagen.
+3. Cerrar cosas para liberar RAM no alcanza: el stack de Supabase que suele
+   estar arriba consume ~95 MB en total, no es el problema. El problema es el
+   tamaño del bundle contra 3.2 GB de RAM.
+
+Reconstruir el de producción tras un cambio:
 ```bash
 docker compose build web && docker compose down && docker compose up -d
 ```
-No usar `--no-cache` a menos que sea estrictamente necesario — falla por errores de red al bajar paquetes.
+No usar `--no-cache` a menos que sea estrictamente necesario — falla por errores
+de red al bajar paquetes.
+
+**Si cambias `package.json`, hay que reconstruir también la imagen dev**
+(`docker compose --profile dev build web-dev`): `node_modules` vive en un
+volumen anónimo que viene de la imagen, no de tu carpeta.
+
+### El disco se llena solo — `docker builder prune -a -f`
+**Cada `docker compose build web` deja ~2.4 GB de caché de construcción que no se
+suelta sola.** El 16-sep-2026 diez builds en una tarde dejaron 24 GB y llenaron
+el disco al 100%.
+
+El modo de fallo es traicionero: con el disco a 0 no sale un error claro, sino
+que **las escrituras se vacían en silencio** — `echo "x" > archivo` crea el
+archivo con 0 bytes y devuelve éxito. Si ves comandos que "funcionan" sin
+escribir nada, o un build que muere con ENOSPC, mira el disco antes que nada:
+
+```bash
+df -h /                 # ¿arriba del 90%?
+docker system df        # ¿cuánto es "Build cache"?
+docker builder prune -a -f
+```
+
+`-a` es obligatorio: sin él solo borra la caché *no usada*, que suele ser una
+fracción (en aquel caso 1.5 GB de 24 GB). `prune` de caché **no toca imágenes,
+contenedores ni volúmenes** — el contenedor que esté corriendo ni se entera. El
+único costo es que el siguiente build empieza de cero (~2 min más).
+
+Lo que NO conviene borrar a la ligera en esta máquina:
+- Imágenes del stack local de **Supabase** (~8 GB huérfanas): volver a bajarlas
+  cuesta ~6 GB en el próximo `supabase start` de otro proyecto.
+- `node:22-alpine`: parece huérfana pero es la base de `Dockerfile.dev`.
+- Volúmenes: son datos de bases locales de otros proyectos.
+
+Trabajar en `web-dev` evita el problema de raíz: no genera caché de build.
 
 ### Imágenes que no se ven localmente
 Dos causas frecuentes:
@@ -142,12 +232,27 @@ Antes el botón mandaba `imageAssetId` y la ruta lo descartaba: el copy se escri
 
 Existe porque el dataset acumuló 66 productos con la categoría vacía, con tilde (`electrónica`), en mayúscula (`Otros`) o con la etiqueta cruda de Mastershop (`Hogar, Muebles, Cocina`, que no cae en ninguna pestaña del home salvo "Todos"). El fallback de `normalizeCategory` en `components/product-browser.tsx` salvaba las dos primeras de casualidad.
 
-Limpieza: `node scripts/fix-product-categories.ts` (dry-run) y `--apply` para escribir. Normaliza lo que solo cambia de forma y clasifica el resto con Gemini, validando contra la lista.
+Limpieza: `node scripts/fix-product-categories.ts` (dry-run) y `--apply` para escribir. Normaliza lo que solo cambia de forma y clasifica el resto con Gemini, validando contra la lista. **Ya se corrió el 16-sep-2026**: los 66 quedaron limpios y el dataset no tiene ni una categoría fuera de la lista. Si vuelve a aparecer alguna, es que se coló una vía de escritura que no valida.
 
 ### Los botones del Studio escriben en el BORRADOR, siempre
 `ensureDraftId` (`sanity/lib/draft.ts`) es la única forma en que los componentes del Studio resuelven a qué documento parchear. Lo usan `GenerateContentButton`, `MultiImageUploader` y `GenerateAIImageButton`.
 
 `useFormValue(['_id'])` devuelve el id **publicado** cuando estás viendo un producto publicado. Parchear ese id tiene dos efectos: el cambio sale a producción sin pasar por Publish, y si había un borrador abierto, publicarlo después lo pisa con la versión vieja — era lo que hacía desaparecer fotos recién subidas. Si agregas otro botón que escriba en el documento, pásalo por ese helper.
+
+### Creación de productos — pendientes conocidos
+Detectados el 16-sep-2026 al revisar el flujo manual. Ninguno está resuelto:
+
+- **Las rutas de IA no tienen autenticación.** `/api/generate-product-content` y
+  `/api/generate-ai-image` son públicas: quien sepa la URL puede quemar cuota de
+  Gemini/OpenAI y, la segunda, subir assets a Sanity. Se llaman desde el
+  navegador del Studio, así que protegerlas exige algo que viaje con esa sesión
+  — la cookie de `/api/admin/auth` NO sirve, el Studio no la tiene.
+- **No hay validación de publicación.** Solo `name` y `slug` son `required`. Se
+  puede publicar un producto sin precio, sin foto y sin landing, y sale al home.
+- **184 productos manuales sin FAQs.** Los creados antes de que el botón las
+  generara. La landing simplemente no pinta la sección; se arreglan regenerando
+  con el botón, producto por producto, o con un script equivalente al de
+  categorías.
 
 ## Pago anticipado con Confío — no romper
 
