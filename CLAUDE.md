@@ -108,14 +108,116 @@ Para que un producto nuevo salga al instante en el home, quien lo crea debe reva
 
 ## Generación de contenido con IA — reglas
 
-### Modelo único: `gemini-3.5-flash`
-Todo el contenido generado por IA usa `gemini-3.5-flash`: copy de producto (`generate-product-content`, `mastershop/import`, `mastershop/sync`), auto-tagging (`lib/auto-tag.ts`), blog (`lib/generate-article.ts`) y colecciones (`generate-collection-content`). No mezclar versiones de Gemini entre flujos.
+### Modelo único: `gemini-3.8-flash`
+Todo el contenido generado por IA usa `gemini-3.8-flash`: copy de producto (`generate-product-content`, `mastershop/import`, `mastershop/sync`), auto-tagging (`lib/auto-tag.ts`), blog (`lib/generate-article.ts`) y colecciones (`generate-collection-content`). No mezclar versiones de Gemini entre flujos.
+
+Se migró desde `gemini-3.5-flash` (sep 2026): mitad de tarifa ($0.75/$3.75 por 1M vs $1.50/$9.00) y menos thinking tokens → ~3.4× más barato por producto (~$88 COP vs ~$300 COP) y el import baja de ~38 s a ~26 s, lo que da margen frente al `maxDuration = 60`. Ojo: la tarifa de 3.8 sube a $1.50/$7.50 el 1-ene-2027 (sigue siendo más barata que 3.5).
+
+Lucy (`lucy-chat`, `lucy-recommend`, `generate-voice-prompt`) va aparte con `gemini-3-flash-preview` — no es contenido de catálogo.
 
 ### Etiquetas (tags) — convención de `_id` determinista
 Las referencias de etiqueta se construyen con `tagSlugsToReferences` (`lib/auto-tag.ts`) usando `_id` determinista `tag-<slug>`. Las etiquetas DEBEN existir con ese `_id` o la referencia queda rota (no se ve la etiqueta). Lo usan tanto el import de Mastershop como el botón "🤖 Generar Contenido con IA" del documento Producto en el Studio. Si agregas otra vía de tagging, reutiliza ese helper.
 
 ### Botón "Generar Landing" del producto = paridad con el import
 `app/api/generate-product-content` + `GenerateContentButton.tsx` tienen la **misma capacidad** que `mastershop/import`: llenan todos los campos de la landing **incluyendo FAQs y etiquetas** (auto-tagging), con el prompt único `lib/product-content-prompt.ts`. Si cambias el shape de salida del prompt, actualiza ambos consumidores.
+
+## Pago anticipado con Confío — no romper
+
+Segundo método de pago en el checkout, junto a la contraentrega. El comprador paga por PSE, Nequi o Bancolombia, **Confío retiene el dinero en custodia** y solo lo libera cuando el comprador confirma que recibió. Portado de `nitro_bot`, donde este módulo ya está desplegado.
+
+### La regla que lo sostiene todo: compartimos tienda con el bot de Nitro
+La tienda de Confío (`stores/01M28…`, «Nitro Ecom») es **la misma** que usa el bot de Nitro, y Confío admite **una sola URL de webhook por tienda**, que ya apunta a Nitro. De ahí salen dos reglas que no se tocan:
+
+1. **Todopolis NO tiene webhook de Confío.** Se entera de los pagos por `GET`, en `/api/cron/confio-reconcile` cada 5 min. Es el mismo camino con el que Nitro operó mientras no tuvo `WEBHOOK_KEY`. Si algún día se quiere webhook aquí, hay que pedirle a Confío una **segunda tienda**, no una segunda URL.
+2. **El `correlationId` lleva prefijo `todopolis:`**, nunca `nitro:`. Es lo único que impide que un sistema mueva un pedido del otro: el webhook de Nitro recibe nuestros eventos, no los reconoce, los marca `unmatched` y responde 200 sin tocar una fila. Está fijado en `lib/payments/confio/isolation.test.ts` contra la implementación real de los dos lados. **Si cambias el prefijo, ese test se cae — hazle caso.**
+
+### Restricciones de la API (verificadas contra la API real, no la doc)
+- Mínimo **$10.000 COP** · montos en **centavos** · solo COP
+- `description` mínimo **24 caracteres** (`padDescription` lo rellena)
+- **`mediaAssets` es OBLIGATORIO** aunque la doc lo liste opcional. Un producto sin foto usable no se puede cobrar: se corta antes de la red y el checkout ofrece contraentrega.
+- Esta tienda acepta **PSE, Nequi y Bancolombia. NO tarjeta.**
+- El cobro **expira a los 3 días**
+- **`FUNDED` confirma el pedido, no `APPROVED`.** APPROVED es la liberación de fondos, que ocurre DESPUÉS de entregar; esperarlo sería un bloqueo mutuo.
+- **La `Idempotency-Key` se conserva ante timeout/429 y se ROTA ante 400/401/404.** Ante un rechazo definitivo Confío no creó nada y el reintento lleva otro cuerpo; reutilizar la clave respondería 409 y dejaría el cobro atascado para siempre. Esto rompió el primer cobro real en Nitro.
+
+### Invariantes del código
+- `lib/payments/confio/client.ts` es la **única** puerta HTTP a Confío. El token no sale de ahí.
+- `applyConfioSnapshot` es la **única** función que confirma un pago. Si mañana se añade un webhook, tiene que entrar por ahí: dos caminos podrían divergir, uno solo no.
+- Exactamente-una-vez es un **CAS sobre `payment_status`** (`awaiting → funded`), no un flag. Dos pasadas del cron a la vez no pueden confirmar dos veces.
+- **Monto distinto = no se confirma nada**: pasa a `mismatch` y lo mira una persona.
+- El precio se resuelve **en el servidor desde Sanity** (`app/api/checkout/confio/route.ts`), nunca del formulario. Es el número que va a una pasarela.
+- El pedido se crea **antes** del cobro, con `status = 'pending_payment'`. Si el POST falla, el pedido NO se borra: si llegó a Confío, borrarlo dejaría un cobro huérfano cobrable.
+- **No se dispara `Purchase` de Meta al enviar el formulario** en un pago Confío: todavía no ha pagado nadie. (Pendiente: dispararlo vía CAPI al confirmar.)
+
+### La narrativa NO se escribe a mano en los prompts
+`lib/payments/narrative.ts` es la única fuente, y decide según haya o no proveedor configurado. Existe por un fallo documentado en Nitro: estuvieron un día con Confío activo mientras el bot contestaba «solo manejamos contraentrega», porque el texto del negocio lo negaba y el asesor obedece esa frase antes que a cualquier compuerta. Lo consumen `lucy-chat` y `voice-session`. **Si añades otro prompt que hable de pagos, pídeselo a ese módulo.**
+
+El ángulo es «tu dinero queda en custodia hasta que recibas», no «paga por adelantado»: es una garantía MÁS fuerte que la contraentrega, no más débil.
+
+### Encender y apagar
+Se enciende con dos variables; **sin ellas Todopolis solo cobra contraentrega** y el botón no se muestra. Borrar `CONFIO_ACCESS_TOKEN` es el freno de emergencia, sin desplegar.
+
+```
+CONFIO_ACCESS_TOKEN=...            # servidor. Vive cifrado en la BD de Nitro (tenant_secrets)
+CONFIO_STORE_NAME=stores/01M28...  # servidor. Nombre COMPLETO del recurso
+NEXT_PUBLIC_CONFIO_ENABLED=true    # cliente. Muestra el botón en el checkout
+CRON_SECRET=...                    # ya existente, lo usa la reconciliación
+```
+
+Las tres primeras van juntas: con `NEXT_PUBLIC_CONFIO_ENABLED=true` y sin token, el comprador ve el botón y recibe un 503 (el checkout cae a contraentrega y avisa, pero es una configuración a medias que no debe quedarse así).
+
+### Lo que falta
+- **Avisarle a Confío que el pedido se despachó y se entregó** (`pushLogisticsStatus`, ya escrita, sin llamador). **Confío no se entera solo: sin ese aviso los fondos se quedan en custodia indefinidamente.**
+- **Recuperación por WhatsApp**: Todopolis solo tiene enlaces `wa.me` de click-to-chat, **no puede enviar mensajes**. Requiere la API de Meta o que lo mande Nitro.
+- **Panel de pedidos**: no existe. Con prepago, quien empaca tiene que distinguir `payment_method` o el comprador paga dos veces.
+- **Prueba punta a punta con dinero real.** El flujo nunca ha cobrado, ni aquí ni en Nitro.
+
+## Calificaciones y reseñas — estado actual
+
+### Lo que se quitó (sep 2026) y por qué
+El `rating` estaba **hardcodeado en `4.8` en 10 archivos** (`app/page.tsx`, `app/destacados`, `app/ofertas`, `app/favoritos`, `app/temporada`, `app/coleccion/[slug]`, `app/producto/[slug]` ×2, `app/blog`). Los 574 productos mostraban el mismo número. Además:
+
+- `Math.floor(4.8)` pintaba **4 estrellas llenas + 1 gris** en todas las tarjetas, contradiciendo al número.
+- `reviewsCount` existe en **2 de 574** productos; el resto caía al fallback `testimonials.length`, y el prompt de IA genera **siempre 3** testimonios → "(3 reseñas)" en 572 productos.
+- La landing emitía `AggregateRating` y `Review` en JSON-LD construidos con esos testimonios IA (nombres y ciudades inventados). Eso incumple la política de reseñas de Google —se pierden los rich results— y en Colombia la SIC lo trata como publicidad engañosa.
+
+Se eliminaron las estrellas de la tarjeta (`components/product-card.tsx`), del hero (`components/product/product-hero.tsx`) y el promedio de `product-testimonials.tsx`, y se sacaron `aggregateRating` y `review` del JSON-LD.
+
+**NO volver a pintar estrellas con un rating que no venga de reseñas reales**, y en particular no "variar" el número con un hash del slug para que parezca orgánico: eso esconde la fabricación sin resolverla y mantiene el riesgo con Google y la SIC.
+
+El campo `rating` sigue en los tipos y en los mapeos porque `lib/products.ts` (mocks legacy) lo usa; simplemente ya no se renderiza.
+
+### Reseñas reales — pendiente
+Diseñado, sin implementar. La infraestructura ya existe:
+
+1. Pedido entregado (tabla `orders` en Supabase: `customer_phone`, `product_id`).
+2. WhatsApp automático con link `/resena/<token>` — reutiliza la burbuja de WhatsApp ya montada.
+3. Token de un solo uso atado al pedido → sin login, y habilita el sello **"Compra verificada"**.
+4. Guardar en `product_reviews` (Supabase) y agregar por producto.
+5. **Con menos de 3 reseñas reales no se muestran estrellas**, solo las señales de confianza. Que unos productos tengan 4.6, otros 5.0 y otros nada es lo que se ve auténtico.
+6. Recién ahí se puede reactivar `aggregateRating` en el JSON-LD, ya legítimo.
+
+### Testimonios IA de la landing — pendiente
+Siguen mostrándose bajo el encabezado "Reseñas" en `product-testimonials.tsx`, pero los genera la IA con nombres inventados. Pendiente: cambiar el encabezado a algo que no afirme ser un cliente real (p. ej. "Para qué lo usan") y quitarles el nombre propio. Pasan de pasivo legal a copy de beneficios, que es lo que son.
+
+### Señales de confianza en la tarjeta
+Reemplazan a las estrellas. Solo afirmaciones verificables: **Contraentrega** (aplica a toda la tienda) y **Envío gratis** en destacados / **3–7 días** en el resto. El envío gratis sale del mismo flag `isDestacado` que lo aplica en `checkout-modal.tsx`, así que no se pueden desincronizar.
+
+## Destacados (antes "VIP") — no romper
+
+Productos con landing extendida (video en uso, antes/después, paso a paso, qué viene en la caja, comparativa, testimonios con foto) **+ envío gratis y despacho prioritario**. Se activan con el toggle "⭐ ¿Producto Destacado?" en el Studio. Viven en `/destacados`; `/vip` redirige permanente.
+
+**El renombre fue de marca, no de datos.** Hay tres capas y solo la primera cambió de nombre:
+
+| Capa | Nombre | Por qué |
+|---|---|---|
+| Campos almacenados en Sanity | `isVip`, `vipHeroVideo`, `vipSteps`, … | Sin migrar. Renombrarlos obligaría a tocar los documentos publicados. Lo que ve el editor es el `title`, que sí dice Destacado. |
+| Código de la app | `isDestacado`, `destacadoSteps`, … | Alias-eado en `lib/sanity/queries.ts` (`"isDestacado": isVip`), igual que `"slug": slug.current`. |
+| Feed de catálogo a Nitro | `is_vip` | Contrato con un consumidor externo. No renombrar sin coordinar con Nitro. |
+
+Si agregas un campo nuevo de Destacados, ponle nombre `destacado*` directo en el schema (los `vip*` son solo los heredados) e inclúyelo en **ambos** queries, igual que `aiLifestyleImage`.
+
+El toggle también controla el envío gratis en `components/checkout-modal.tsx`. Si algún día quieres separar "landing extendida" de "envío gratis", hay que partir el flag en dos.
 
 ## Colecciones de Marca (`collectionLanding`) — no romper
 
