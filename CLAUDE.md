@@ -72,19 +72,21 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 
 ## Arquitectura home — no romper
 
-### ProductBrowser y el sidebar IA
-`components/product-browser.tsx` recibe la prop `aiImages` desde `app/page.tsx`. Internamente renderiza:
-- **Desktop**: sidebar sticky a la izquierda DENTRO del `container mx-auto`, junto al grid de productos.
-- **Mobile**: carrusel horizontal "Looks del momento" entre las políticas y las categorías.
+### ProductBrowser y los carriles de inspiración
+`components/product-browser.tsx` recibe la prop `aiImages` desde `app/page.tsx` y la pasa a `ProductGrid` como **slot repetido**: un carril horizontal (`components/inspiration-rail.tsx`) que se inserta como fila `col-span-full` tras el producto 12 y luego cada 16. Mismo componente en móvil y escritorio.
 
-El sidebar y el grid comparten el mismo `container mx-auto`. No moverlos a contenedores separados o se rompe el marco.
+**Antes había una columna lateral sticky en escritorio y un carrusel suelto en móvil. Se eliminaron (sep 2026) y no hay que reponerlos.** La columna era incompatible con la cuadrícula: el catálogo carga de 24 en 24 sobre 574 productos, así que `sticky` dejaba 3 imágenes congeladas al lado de un scroll interminable, y `max-h-screen overflow-y-auto` creaba un scroll anidado con contenido inalcanzable (una vez pegado el sticky, su parte baja no se puede ver).
+
+- `lib/inspiration.ts` tiene la lógica pura (`railSlice`, `RAIL_SIZE`) y su test. Vive aparte del `.tsx` porque `node --test` no importa JSX, y es justo la parte que falla en silencio si se rompe.
+- `railSlice` **da la vuelta** cuando se agotan las imágenes: con 574 productos salen ~35 carriles y solo hay ~39 imágenes. Repetir es aceptable en descubrimiento; quedarse sin carriles a mitad del scroll, no.
+- Los carriles solo salen en el listado limpio (sin búsqueda, categoría ni etiquetas), igual que el banner promocional.
 
 ### Banner sobre el grid de productos nuevos — texto fijo
 El banner que va encima del grid de productos nuevos es `components/new-arrivals-banner.tsx` (`NewArrivalsBanner`): **copy fijo** ("Lo nuevo en Todopolis"), NO generado por IA. Se eliminó el antiguo "Banner Mágico": ya no existe el schema `heroBanner`, ni `getSanityHeroBanner`, ni `app/api/banners/generate`, ni `SmartBanner`. No buscar un "generador de banner" — si quieres cambiar el texto, edítalo en el componente.
 
 ### Query de productos — campo `aiLifestyleImage`
 El campo `aiLifestyleImage` está en **ambos** queries de Sanity:
-- `PRODUCTS_LIST_QUERY` → para el sidebar/carrusel de la home
+- `PRODUCTS_LIST_QUERY` → para los carriles de inspiración de la home
 - `PRODUCT_DETAIL_QUERY` → para la imagen IA en la landing del producto
 
 Si se agrega un nuevo query, incluirlo también: `"aiLifestyleImage": aiLifestyleImage.asset->url`
