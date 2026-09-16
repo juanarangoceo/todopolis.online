@@ -145,27 +145,14 @@ export function ProductHero({ product }: ProductHeroProps) {
                 </span>
               )}
             </div>
-            <a
-              href="#resenas"
-              className="flex items-center gap-1 group"
-              aria-label="Ver reseñas"
-            >
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "w-4 h-4",
-                    i < Math.floor(product.rating ?? 0)
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "fill-muted text-muted"
-                  )}
-                />
-              ))}
-              <span className="ml-2 text-sm font-medium">{product.rating ?? 5.0}</span>
-              <span className="text-sm text-muted-foreground group-hover:text-primary group-hover:underline transition-colors">
-                ({(product as any).reviewsCount ?? (product as any).testimonials?.length ?? product.reviews?.length ?? 15} reseñas)
-              </span>
-            </a>
+            {/* Antes aquí iba "4.8 (3 reseñas)" con el rating hardcodeado.
+                Se reemplaza por la señal que de verdad cierra la venta en
+                Colombia; las estrellas vuelven con reseñas reales atadas a un
+                pedido (ver "Reseñas reales — pendiente" en CLAUDE.md). */}
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-trust-bg border border-trust-border text-trust-fg text-xs font-bold">
+              <Shield className="w-3.5 h-3.5 shrink-0" />
+              Pago contraentrega
+            </span>
           </div>
 
           {/* Subtitle */}

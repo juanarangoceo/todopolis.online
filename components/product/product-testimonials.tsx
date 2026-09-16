@@ -103,17 +103,10 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
             Reseñas
           </h2>
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              ))}
-            </div>
-            <span className="font-semibold text-foreground">{product.rating}</span>
-            <span className="text-muted-foreground text-sm">
-              basado en {(product as any).reviewsCount ?? testimonials.length ?? 15} opiniones
-            </span>
-          </div>
+          {/* El promedio "4.8 basado en N opiniones" salía de un rating
+              hardcodeado. Se quita hasta tener reseñas reales; el bloque de
+              testimonios de abajo sigue igual por ahora (ver "Reseñas reales
+              — pendiente" en CLAUDE.md). */}
         </div>
 
         {/* Desktop: carousel 2 en pantalla */}

@@ -2,12 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Star, ShoppingBag, Sparkles } from 'lucide-react';
+import { Heart, Star, ShoppingBag, Sparkles, ShieldCheck, Truck } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useFavorites } from '@/app/providers/favorites-provider';
 import { useCart } from '@/app/providers/cart-provider';
-import { VipBadge } from '@/components/vip-badge';
+import { DestacadoBadge } from '@/components/destacado-badge';
 
 interface ProductCardProps {
   product: Product;
@@ -93,11 +93,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               </span>
             )}
 
-            {/* VIP badge — coronita dorada, posicionada bajo el discount para
+            {/* Badge de Destacado — coronita dorada, posicionada bajo el discount para
                 no chocar; si no hay discount sube al top-left. */}
-            {product.isVip && (
+            {product.isDestacado && (
               <span className={cn('absolute left-4 z-10', discount > 0 ? 'top-14' : 'top-4')}>
-                <VipBadge size="sm" />
+                <DestacadoBadge size="sm" />
               </span>
             )}
 
@@ -161,23 +161,29 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               {product.name}
             </h3>
 
-            {/* Rating */}
-            <div className="mt-3 flex items-center gap-1.5">
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={cn(
-                      "w-3.5 h-3.5",
-                      i < Math.floor(product.rating)
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "fill-gray-200 text-gray-200"
-                    )}
-                  />
-                ))}
-              </div>
-              <span className="text-sm font-semibold text-foreground hidden sm:inline">{product.rating}</span>
-              <span className="text-xs sm:text-sm text-foreground/50 hidden sm:inline">({product.reviewsCount ?? (product as any).testimonials?.length ?? product.reviews?.length ?? 15} reseñas)</span>
+            {/* Señales de confianza — reemplazan la calificación que antes venía
+                hardcodeada en 4.8 para los 574 productos. Aquí solo van
+                afirmaciones verificables: la contraentrega aplica a toda la
+                tienda y el envío gratis sale del mismo flag que lo aplica en el
+                checkout. Las estrellas vuelven cuando haya reseñas reales
+                (ver "Reseñas reales — pendiente" en CLAUDE.md). */}
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-trust-bg border border-trust-border text-trust-fg text-[10px] sm:text-[11px] font-bold">
+                <ShieldCheck className="w-3 h-3 shrink-0" />
+                Contraentrega
+              </span>
+
+              {product.isDestacado ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-300/70 text-amber-800 text-[10px] sm:text-[11px] font-bold">
+                  <Truck className="w-3 h-3 shrink-0" />
+                  Envío gratis
+                </span>
+              ) : (
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-trust-bg border border-trust-border text-trust-fg text-[11px] font-bold">
+                  <Truck className="w-3 h-3 shrink-0" />
+                  3–7 días
+                </span>
+              )}
             </div>
             
             {/* Price */}

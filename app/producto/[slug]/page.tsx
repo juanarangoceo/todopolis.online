@@ -10,13 +10,13 @@ import { ProductTestimonials } from '@/components/product/product-testimonials'
 import { ProductCTA } from '@/components/product/product-cta'
 import { ProductSubscription } from '@/components/product/product-subscription'
 import { SuggestedBlogs } from '@/components/product/suggested-blogs'
-import { VipHeroVideo } from '@/components/product/vip/vip-hero-video'
-import { VipBeforeAfter } from '@/components/product/vip/vip-before-after'
-import { VipSteps } from '@/components/product/vip/vip-steps'
-import { VipBoxContents } from '@/components/product/vip/vip-box-contents'
-import { VipTestimonials } from '@/components/product/vip/vip-testimonials'
-import { VipComparison } from '@/components/product/vip/vip-comparison'
-import { VipQuoteBlock } from '@/components/product/vip/vip-quote'
+import { DestacadoHeroVideo } from '@/components/product/destacados/destacado-hero-video'
+import { DestacadoBeforeAfter } from '@/components/product/destacados/destacado-before-after'
+import { DestacadoSteps } from '@/components/product/destacados/destacado-steps'
+import { DestacadoBoxContents } from '@/components/product/destacados/destacado-box-contents'
+import { DestacadoTestimonials } from '@/components/product/destacados/destacado-testimonials'
+import { DestacadoComparison } from '@/components/product/destacados/destacado-comparison'
+import { DestacadoQuoteBlock } from '@/components/product/destacados/destacado-quote'
 import { OfferBanner } from '@/components/product/offer-banner'
 import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
@@ -29,6 +29,7 @@ import { SanityProduct } from '@/lib/types'
 import { AgeGate } from '@/components/age-gate'
 import { VoiceLucyMount } from '@/components/lucy/VoiceLucyMount'
 import { ProductVariantProvider } from '@/components/product/product-variant-context'
+import { ArticleModalProvider, ArticleTrigger } from '@/components/product/article-modal'
 
 export async function generateStaticParams() {
   const slugs = await getAllProductSlugs()
@@ -160,15 +161,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     offerEndsAt: (product as any).offerEndsAt ?? null,
     faqs: (product as any).faqs ?? [],
     variants: product.variants ?? [],
-    // VIP — contenido manual extendido
-    isVip: product.isVip ?? false,
-    vipHeroVideo: product.vipHeroVideo,
-    vipBeforeAfter: product.vipBeforeAfter ?? [],
-    vipSteps: product.vipSteps ?? [],
-    vipBoxContents: product.vipBoxContents,
-    vipTestimonials: product.vipTestimonials ?? [],
-    vipComparison: product.vipComparison,
-    vipQuotes: product.vipQuotes ?? [],
+    // Destacados — contenido manual extendido
+    isDestacado: product.isDestacado ?? false,
+    destacadoHeroVideo: product.destacadoHeroVideo,
+    destacadoBeforeAfter: product.destacadoBeforeAfter ?? [],
+    destacadoSteps: product.destacadoSteps ?? [],
+    destacadoBoxContents: product.destacadoBoxContents,
+    destacadoTestimonials: product.destacadoTestimonials ?? [],
+    destacadoComparison: product.destacadoComparison,
+    destacadoQuotes: product.destacadoQuotes ?? [],
   }
 
   const SuggestedSection = ({ products, title, subtitle }: { products: typeof suggestedProducts, title: string, subtitle: string }) =>
@@ -186,7 +187,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </section>
     ) : null
 
-  // Link al artículo — compartido por ambos layouts y por el embudo VIP.
+  // Link al artículo — compartido por ambos layouts y por el embudo de Destacados.
   const articleLink = adaptedProduct.articleSlug ? (
     <div className="container mx-auto px-4 py-4">
       <div className="flex items-center justify-between gap-4 bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl px-6 py-4">
@@ -198,48 +199,48 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               : 'Lee nuestro artículo completo'}
           </p>
         </div>
-        <Link
-          href={`/blog/${adaptedProduct.articleSlug}`}
+        <ArticleTrigger
+          slug={adaptedProduct.articleSlug}
           className="shrink-0 text-sm font-bold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors whitespace-nowrap"
         >
           Leer artículo →
-        </Link>
+        </ArticleTrigger>
       </div>
     </div>
   ) : null
 
   // Cuerpo del embudo (todo lo que va después del hero). Se renderiza igual en
-  // desktop (columna derecha que scrollea) y mobile. En productos VIP los
+  // desktop (columna derecha que scrollea) y mobile. En productos destacados los
   // bloques manuales se intercalan estratégicamente con el contenido IA para
   // armar el embudo y se ocultan los carruseles de productos que distraen.
-  const funnelBody = adaptedProduct.isVip ? (
+  const funnelBody = adaptedProduct.isDestacado ? (
     <>
-      {adaptedProduct.vipHeroVideo?.url && (
-        <VipHeroVideo video={adaptedProduct.vipHeroVideo} />
+      {adaptedProduct.destacadoHeroVideo?.url && (
+        <DestacadoHeroVideo video={adaptedProduct.destacadoHeroVideo} />
       )}
       <ProductLifestyleImage product={adaptedProduct} />
-      {adaptedProduct.vipQuotes[0] && (
-        <VipQuoteBlock quote={adaptedProduct.vipQuotes[0]} />
+      {adaptedProduct.destacadoQuotes[0] && (
+        <DestacadoQuoteBlock quote={adaptedProduct.destacadoQuotes[0]} />
       )}
       <ProductBenefits product={adaptedProduct} />
-      {adaptedProduct.vipBeforeAfter.length > 0 && (
-        <VipBeforeAfter pairs={adaptedProduct.vipBeforeAfter} />
+      {adaptedProduct.destacadoBeforeAfter.length > 0 && (
+        <DestacadoBeforeAfter pairs={adaptedProduct.destacadoBeforeAfter} />
       )}
       <ProductDetails product={adaptedProduct} />
-      {adaptedProduct.vipSteps.length > 0 && (
-        <VipSteps steps={adaptedProduct.vipSteps} />
+      {adaptedProduct.destacadoSteps.length > 0 && (
+        <DestacadoSteps steps={adaptedProduct.destacadoSteps} />
       )}
-      {adaptedProduct.vipBoxContents && (
-        <VipBoxContents data={adaptedProduct.vipBoxContents} />
+      {adaptedProduct.destacadoBoxContents && (
+        <DestacadoBoxContents data={adaptedProduct.destacadoBoxContents} />
       )}
-      {adaptedProduct.vipComparison && (
-        <VipComparison data={adaptedProduct.vipComparison} />
+      {adaptedProduct.destacadoComparison && (
+        <DestacadoComparison data={adaptedProduct.destacadoComparison} />
       )}
-      {adaptedProduct.vipTestimonials.length > 0 && (
-        <VipTestimonials testimonials={adaptedProduct.vipTestimonials} />
+      {adaptedProduct.destacadoTestimonials.length > 0 && (
+        <DestacadoTestimonials testimonials={adaptedProduct.destacadoTestimonials} />
       )}
-      {adaptedProduct.vipQuotes.slice(1).map((q) => (
-        <VipQuoteBlock key={q._key ?? q.text} quote={q} />
+      {adaptedProduct.destacadoQuotes.slice(1).map((q) => (
+        <DestacadoQuoteBlock key={q._key ?? q.text} quote={q} />
       ))}
       {articleLink}
       {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
@@ -276,17 +277,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
   const productUrl = `${BASE_URL}/producto/${adaptedProduct.slug}`
 
-  // Rating agregado: promedio real de los testimonios mostrados en la página.
-  const testimonialRatings = (adaptedProduct.testimonials ?? [])
-    .map((t: any) => Number(t.rating))
-    .filter((n: number) => n > 0)
-  const ratingValue = testimonialRatings.length
-    ? Math.round(
-        (testimonialRatings.reduce((a: number, b: number) => a + b, 0) /
-          testimonialRatings.length) * 10,
-      ) / 10
-    : adaptedProduct.rating
-  const reviewCount = adaptedProduct.reviewsCount ?? testimonialRatings.length
+  // NO se emiten aggregateRating ni review en el JSON-LD.
+  // Los testimonios de la landing los genera la IA (nombres y ciudades
+  // inventados), así que publicarlos como reseñas incumple la política de
+  // reseñas de Google —se pierden los rich results— y en Colombia la SIC lo
+  // trata como publicidad engañosa. Vuelven cuando existan reseñas reales
+  // atadas a un pedido. Ver "Reseñas reales — pendiente" en CLAUDE.md.
 
   // priceValidUntil: fin de la oferta si existe, si no ~1 año desde hoy.
   const priceValidUntil =
@@ -310,23 +306,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       availability: 'https://schema.org/InStock',
       url: productUrl,
     },
-    ...(reviewCount > 0 && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue,
-        reviewCount,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    }),
-    ...(adaptedProduct.testimonials?.length && {
-      review: adaptedProduct.testimonials.map((t: any) => ({
-        '@type': 'Review',
-        author: { '@type': 'Person', name: t.name },
-        reviewRating: { '@type': 'Rating', ratingValue: t.rating ?? 5 },
-        reviewBody: t.text,
-      })),
-    }),
   }
 
   const breadcrumbJsonLd = {
@@ -377,6 +356,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <GlobalSearch products={searchableProducts} />
 
       <main className="flex-1">
+        <ArticleModalProvider currentProductSlug={adaptedProduct.slug}>
         <ProductVariantProvider variants={adaptedProduct.variants}>
         {/* Desktop: Two-column layout with sticky image sidebar */}
         <div className="hidden lg:block">
@@ -388,7 +368,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
 
               {/* Right column — banner de oferta arriba, luego hero y el
-                  embudo (contenido IA + bloques VIP intercalados). */}
+                  embudo (contenido IA + bloques de Destacados intercalados). */}
               <div className="space-y-0">
                 <OfferBanner product={adaptedProduct} />
                 <ProductHero product={adaptedProduct} />
@@ -408,7 +388,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
         </ProductVariantProvider>
 
-        {/* Reseñas — full width, debajo del último CTA, tanto en VIP como no-VIP */}
+        {/* Reseñas — full width, debajo del último CTA, tanto en destacados como en el resto */}
         <ProductTestimonials product={adaptedProduct} />
 
         {/* Global Store Policies */}
@@ -417,8 +397,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
 
         {/* Second products section — below CTA, full width, both layouts.
-            En productos VIP se oculta para no romper el embudo. */}
-        {!adaptedProduct.isVip && moreProducts.length > 0 && (
+            En productos destacados se oculta para no romper el embudo. */}
+        {!adaptedProduct.isDestacado && moreProducts.length > 0 && (
           <section className="pt-6 pb-12 md:pb-16 bg-surface-soft">
             <div className="container mx-auto px-4">
               <div className="text-center mb-8">
@@ -454,6 +434,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
           </div>
         </section>
+        </ArticleModalProvider>
       </main>
 
       <VoiceLucyMount
