@@ -211,8 +211,22 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - `railSlice` **da la vuelta** cuando se agotan las imágenes: con 574 productos salen ~35 carriles y solo hay ~39 imágenes. Repetir es aceptable en descubrimiento; quedarse sin carriles a mitad del scroll, no.
 - Los carriles solo salen en el listado limpio (sin búsqueda, categoría ni etiquetas), igual que el banner promocional.
 
-### Banner sobre el grid de productos nuevos — texto fijo
-El banner que va encima del grid de productos nuevos es `components/new-arrivals-banner.tsx` (`NewArrivalsBanner`): **copy fijo** ("Lo nuevo en Todopolis"), NO generado por IA. Se eliminó el antiguo "Banner Mágico": ya no existe el schema `heroBanner`, ni `getSanityHeroBanner`, ni `app/api/banners/generate`, ni `SmartBanner`. No buscar un "generador de banner" — si quieres cambiar el texto, edítalo en el componente.
+### Novedades del home (`NewArrivalsBanner`) — cupo fijo de 12
+`components/new-arrivals-banner.tsx`, con la selección en `lib/new-arrivals.ts` y su test.
+
+**Copy fijo, NO generado por IA**: "Lo último que llegó a Todópolis". Se eliminó el antiguo "Banner Mágico": ya no existe el schema `heroBanner`, ni `getSanityHeroBanner`, ni `app/api/banners/generate`, ni `SmartBanner`. No busques un "generador de banner" — el texto se edita en el componente.
+
+- **Son SIEMPRE los 12 más recientes** (`NEW_ARRIVALS_COUNT`): entra uno nuevo y desplaza al más viejo. Antes había una ventana de 7 días, que dejaba la sección con dos productos en una semana floja y la desbordaba tras una tanda de import.
+- `newestProductIds` **ordena por fecha** en vez de cortar los N primeros del array. La query viene ordenada hoy, pero si alguien le cambia el `order()`, cortar los primeros volvería a llamar "nuevo" a lo que no lo es — el fallo que esta sección ya tuvo una vez.
+- **No lleva subtítulo, y es deliberado.** Los dos que hubo describían el bloque en vez de decirle algo al cliente, y uno repetía envío y medios de pago, que ya dicen los tres recuadros de `store-policies` diez píxeles más abajo.
+- **En móvil es un carrusel** (`.na-rail`), no rejilla: 12 tarjetas en dos columnas son seis filas que empujan el catálogo fuera de la pantalla. Desde `sm` vuelve a ser rejilla, y `bestColumns` elige columnas para que la última fila no quede coja.
+
+### Los carriles de inspiración se pueden mover a mano
+`components/inspiration-rail.tsx`. La marquesina CSS sigue ahí, pero al primer desplazamiento horizontal el carril pasa a MANUAL y se puede adelantar y devolver, con el dedo o con las flechas de la cabecera.
+
+Marquesina y scroll nativo **no pueden convivir** —una mueve `transform` y el otro `scrollLeft`, y se suman—, así que el traspaso congela la animación, borra el `transform` y pasa ese desplazamiento a `scrollLeft`. Sin eso el carril saltaría al principio al tocarlo, o dejaría las primeras tarjetas inalcanzables.
+
+El traspaso cuelga de `onScroll`, **no de `touchstart` ni `wheel`**: esos dos disparan también cuando el dedo o la rueda pasan por encima camino de bajar la página, y pararían las marquesinas de todos los carriles con solo recorrer el home.
 
 ### Query de productos — campo `aiLifestyleImage`
 El campo `aiLifestyleImage` está en **ambos** queries de Sanity:
@@ -235,6 +249,14 @@ Si se agrega un nuevo query, incluirlo también: `"aiLifestyleImage": aiLifestyl
 Para que un producto nuevo salga al instante en el home, quien lo crea debe revalidar: `revalidateTag('products', 'max')` + `revalidatePath('/')`. Ya lo hacen `app/api/mastershop/import` (manual) y `app/api/mastershop/sync` (cron). Cualquier nueva vía de creación de productos debe incluir esa revalidación.
 (Nota Next: `revalidateTag` lleva 2 argumentos — `(tag, 'max')`.)
 
+### TODA consulta pública excluye `drafts.**`
+El cliente lleva `SANITY_API_TOKEN`, y con token un `*[_type == "product"]` devuelve el documento publicado **y su borrador** como dos entradas distintas. De las 13 consultas públicas de `lib/sanity/queries.ts`, solo `PRODUCTS_COUNT_QUERY` lo excluía. Dos efectos, los dos silenciosos:
+
+1. **Producto duplicado.** Con un borrador abierto en el Studio, ese producto salía DOS VECES en el home. Parecía un duplicado en Sanity; el documento era uno solo.
+2. **Contenido sin publicar a la vista.** Las consultas de detalle (`slug.current == $slug`) no garantizan cuál de los dos devuelven: un comprador podía estar leyendo la ficha EN BORRADOR, con precios o textos a medio editar.
+
+Las 13 llevan ya `!(_id in path("drafts.**"))`, incluidas las subconsultas anidadas que resuelven el artículo relacionado. **Si añades una consulta pública, lleva el mismo filtro.**
+
 ### Queries de detalle lanzan error, no devuelven `null`
 `getSanityProductBySlug`, `getArticleBySlug` y `getCollectionLandingBySlug` lanzan error si la consulta falla tras los reintentos. NO volver a envolverlas en `catch { return null }`: eso convierte un fallo de red transitorio en un 404 permanente cacheado. `null` solo debe significar "el documento no existe".
 
@@ -255,7 +277,7 @@ Las referencias de etiqueta se construyen con `tagSlugsToReferences` (`lib/auto-
 
 Diferencias que quedan con `mastershop/import`, a propósito:
 - **Precio**: manual. No hay costo de proveedor del cual sacar el markup 30/50/70%.
-- **Artículo de blog**: no se genera. `generateAndSaveArticle` solo lo llama el import.
+- **Artículo de blog**: no sale solo, pero hay botón. Ver abajo.
 - El slug **no se reescribe** si ya existe: cambiarle la URL a un producto publicado pierde el tráfico que tenga.
 
 #### La IA SÍ mira las fotos — no quitarlo
@@ -273,6 +295,41 @@ Antes el botón mandaba `imageAssetId` y la ruta lo descartaba: el copy se escri
 Existe porque el dataset acumuló 66 productos con la categoría vacía, con tilde (`electrónica`), en mayúscula (`Otros`) o con la etiqueta cruda de Mastershop (`Hogar, Muebles, Cocina`, que no cae en ninguna pestaña del home salvo "Todos"). El fallback de `normalizeCategory` en `components/product-browser.tsx` salvaba las dos primeras de casualidad.
 
 Limpieza: `node scripts/fix-product-categories.ts` (dry-run) y `--apply` para escribir. Normaliza lo que solo cambia de forma y clasifica el resto con Gemini, validando contra la lista. **Ya se corrió el 16-sep-2026**: los 66 quedaron limpios y el dataset no tiene ni una categoría fuera de la lista. Si vuelve a aparecer alguna, es que se coló una vía de escritura que no valida.
+
+### Artículo de blog: botón `GenerateArticleButton`
+El blog era la última diferencia real entre crear un producto a mano e importarlo: `generateAndSaveArticle` solo lo llamaba `mastershop/import`, así que **185 de 577 productos se quedaron sin artículo** — y sin artículo la ficha no pinta el enlace "Leer artículo →" que abre la ventana emergente; el bloque entero desaparece.
+
+El botón del documento Producto reutiliza `/api/generate-article`, que ya existía para el panel de Mastershop y **es idempotente** (si ya hay artículo devuelve el que hay).
+
+**El artículo apunta al documento PUBLICADO**, porque `relatedProduct._ref` tiene que resolver desde la web y la web no ve borradores. Por eso el botón exige que el producto esté publicado antes.
+
+### El CTA del producto se sanea al renderizar — `lib/cta.ts`
+`sanitizeHeroCta` limpia el `heroCta` que la IA guardó en Sanity. Tiene test, y vive en lib/ porque es el tipo de fallo que no rompe nada: un botón malo solo vende menos, y nadie lo nota revisando 576 fichas.
+
+Lo que había en el dataset (auditado el 17-sep-2026 sobre 558 productos):
+- **191 CTAs pasivos**, 151 de ellos "Ver mi pedido" — que en una ficha suena a rastrear un pedido que todavía no existe. El prompt los prohíbe, pero se generaron con versiones viejas.
+- **13 nombraban la contraentrega.** Con pago protegido encendido el botón no puede casarse con un solo medio: el comprador elige después.
+- **49 pasaban de 22 caracteres** y partían el botón en dos renglones.
+
+Se sanea **al renderizar y no en el dataset** a propósito: cubre también lo que genere la IA mañana, sin depender de que alguien vuelva a pasar un script. El prompt además ya pide máximo 22 caracteres y prohíbe nombrar el medio de pago.
+
+### Color: tres significados y ni uno más
+El sistema ya tenía tokens semánticos en `globals.css` (`--cta`, `--trust`, `--sale`, `--accent-*`); el problema era que se usaban como decoración. En una sola ficha convivían seis tonos y el MISMO elemento —una burbuja— salía en cuatro colores distintos, así que el comprador dejaba de leer el color como señal y el rojo del botón pesaba igual que un chip de categoría.
+
+1. **Rojo salmón (`--cta`) = actuar.** Solo el botón de compra. Nada más puede ser rojo.
+2. **Azul (`--trust`) = hechos verificables.** Pago, envío, garantía, stock.
+3. **Lavanda (`--accent-aspirational`) = interfaz.** Tabs, checks, secciones.
+
+El **metadato va en gris** (categoría, kicker del producto): informa, no persuade. El **ámbar** queda para la distinción comercial (Destacados, Más vendido). El **rosa sobrevive para una sola función: favoritos** — un corazón gris se lee como desactivado.
+
+Se quitaron los dos subrayados decorativos bajo los títulos, que además llevaban degradados distintos entre sí.
+
+### Promesas de entrega y devolución — redáctalas como la política real
+`components/store-policies.tsx` es la fuente: **3 a 7 días hábiles**, envío $12.000 (gratis en Destacados), y los 30 días cubren **defecto de fábrica**, no arrepentimiento.
+
+La ficha llegó a decir "Envío en 24-48h" y "30 días de garantía", las dos contradiciendo eso, y un cierre que prometía "recíbelo esta semana". Si escribes un plazo o una devolución en cualquier bloque nuevo, cópialo de ahí.
+
+También se quitó de la ficha "Lecturas que aclaran dudas" (`suggested-blogs.tsx`, borrado): el artículo del propio producto ya se abre en ventana emergente y el blog está en el menú, así que era una tercera entrada al mismo sitio. Se fue con él una consulta de artículos a Sanity por visita.
 
 ### Los botones del Studio escriben en el BORRADOR, siempre
 `ensureDraftId` (`sanity/lib/draft.ts`) es la única forma en que los componentes del Studio resuelven a qué documento parchear. Lo usan `GenerateContentButton`, `MultiImageUploader` y `GenerateAIImageButton`.
@@ -326,6 +383,10 @@ La tienda de Confío (`stores/01M28…`, «Nitro Ecom») es **la misma** que usa
 `lib/payments/narrative.ts` es la única fuente, y decide según haya o no proveedor configurado. Existe por un fallo documentado en Nitro: estuvieron un día con Confío activo mientras el bot contestaba «solo manejamos contraentrega», porque el texto del negocio lo negaba y el asesor obedece esa frase antes que a cualquier compuerta. Lo consumen `lucy-chat` y `voice-session`. **Si añades otro prompt que hable de pagos, pídeselo a ese módulo.**
 
 El ángulo es «tu dinero queda en custodia hasta que recibas», no «paga por adelantado»: es una garantía MÁS fuerte que la contraentrega, no más débil.
+
+**En la interfaz, además, se NOMBRA a Confío.** «Tu dinero está protegido» dejaba dos preguntas sin responder —¿protegido por quién? ¿y la contraentrega dónde quedó?—, y un comprador que no sabe quién retiene su plata no se siente más seguro, se siente confundido. El texto vivo (`payment-methods.tsx`, `store-policies.tsx`) dice «Paga al recibir, o paga con Confío» y explica las dos vías.
+
+**Cuidado con lo que Confío hace y lo que NO**: retiene el PAGO, no garantiza la ENTREGA. Confío no despacha nada. Escribir «Confío garantiza que te llega» sería prometer una cobertura que el proveedor no da, y del despacho respondemos nosotros.
 
 ### Encender y apagar
 Se enciende con dos variables; **sin ellas Todopolis solo cobra contraentrega** y el botón no se muestra. Borrar `CONFIO_ACCESS_TOKEN` es el freno de emergencia, sin desplegar.
