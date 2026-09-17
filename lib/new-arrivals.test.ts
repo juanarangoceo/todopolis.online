@@ -1,10 +1,10 @@
 // El fallo que esto impide es el de la sección anterior: llamar "recién
-// llegados" a productos de hace meses porque se cortaban los N primeros en vez
-// de mirar la fecha.
+// llegados" a productos de hace meses porque se cortaban los N primeros del
+// array en vez de mirar la fecha.
 
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { bestColumns, newestCreatedAt, recentProductIds, NEW_ARRIVALS_WINDOW_DAYS } from './new-arrivals.ts'
+import { bestColumns, newestCreatedAt, newestProductIds, NEW_ARRIVALS_COUNT } from './new-arrivals.ts'
 
 const NOW = Date.parse('2026-09-16T12:00:00Z')
 const daysAgo = (d: number) => new Date(NOW - d * 86_400_000).toISOString()
@@ -18,32 +18,48 @@ const catalog = [
   { _id: 'sinFecha' },
 ]
 
-test('solo entran los de la ventana', () => {
-  const ids = recentProductIds(catalog, 7, NOW)
+test('entran los N más recientes, por fecha', () => {
+  const ids = newestProductIds(catalog, 3)
   assert.deepEqual([...ids].sort(), ['ayer', 'hace6', 'hoy'])
 })
 
-test('lo viejo queda fuera aunque sea lo primero del catálogo', () => {
-  // El orden del catálogo es `_createdAt desc`, pero un catálogo estancado pone
-  // cosas viejas arriba. Cortar los N primeros las habría llamado "nuevas".
+test('el cupo se llena aunque el catálogo esté estancado', () => {
+  // Diferencia con la ventana de 7 días que había antes: si no entró nada en la
+  // semana, la sección se quedaba vacía. Ahora siempre muestra lo más reciente
+  // que haya, y la fecha que se pinta al lado es la que dice la verdad.
   const estancado = [
     { _id: 'viejo1', _createdAt: daysAgo(200) },
     { _id: 'viejo2', _createdAt: daysAgo(300) },
   ]
-  assert.equal(recentProductIds(estancado, 7, NOW).size, 0)
+  assert.deepEqual([...newestProductIds(estancado, 12)].sort(), ['viejo1', 'viejo2'])
 })
 
-test('un producto sin fecha nunca cuenta como nuevo', () => {
-  assert.equal(recentProductIds([{ _id: 'x' }], 7, NOW).size, 0)
+test('no se fía del orden del array', () => {
+  // Si alguien le cambia el `order()` a la query de Sanity, cortar los N
+  // primeros volvería a colar productos viejos como novedades.
+  const desordenado = [
+    { _id: 'viejo', _createdAt: daysAgo(300) },
+    { _id: 'nuevo', _createdAt: daysAgo(1) },
+    { _id: 'medio', _createdAt: daysAgo(30) },
+  ]
+  assert.deepEqual([...newestProductIds(desordenado, 2)].sort(), ['medio', 'nuevo'])
+})
+
+test('un producto sin fecha nunca ocupa una casilla', () => {
+  assert.equal(newestProductIds([{ _id: 'x' }], 12).size, 0)
 })
 
 test('una fecha corrupta no revienta ni cuela', () => {
-  assert.equal(recentProductIds([{ _id: 'x', _createdAt: 'no-es-fecha' }], 7, NOW).size, 0)
+  assert.equal(newestProductIds([{ _id: 'x', _createdAt: 'no-es-fecha' }], 12).size, 0)
 })
 
-test('el borde de la ventana no incluye el límite exacto', () => {
-  const justo = [{ _id: 'limite', _createdAt: new Date(NOW - 7 * 86_400_000).toISOString() }]
-  assert.equal(recentProductIds(justo, 7, NOW).size, 0)
+test('un catálogo más corto que el cupo devuelve lo que hay', () => {
+  assert.equal(newestProductIds(catalog, 12).size, 5) // 6 menos el que no tiene fecha
+})
+
+test('cupo cero o negativo no devuelve nada', () => {
+  assert.equal(newestProductIds(catalog, 0).size, 0)
+  assert.equal(newestProductIds(catalog, -3).size, 0)
 })
 
 test('newestCreatedAt devuelve la más reciente, no la primera', () => {
@@ -58,8 +74,8 @@ test('newestCreatedAt devuelve la más reciente, no la primera', () => {
   assert.equal(newestCreatedAt([]), null)
 })
 
-test('la ventana por defecto es de una semana', () => {
-  assert.equal(NEW_ARRIVALS_WINDOW_DAYS, 7)
+test('el cupo por defecto es de 12, que es lo que cabe en la rejilla', () => {
+  assert.equal(NEW_ARRIVALS_COUNT, 12)
 })
 
 test('las columnas evitan que la última fila quede coja', () => {

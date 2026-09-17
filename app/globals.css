@@ -316,3 +316,15 @@
     grid-template-columns: repeat(var(--na-cols, 4), minmax(0, 1fr));
   }
 }
+
+/* Carriles deslizables: la barra de scroll nativa parte el diseño en las
+   tarjetas cortas y en móvil no se ve de todos modos. El carril sigue siendo
+   scrollable con el dedo, la rueda y el teclado — solo se oculta la barra. */
+.na-rail::-webkit-scrollbar,
+.rail-viewport::-webkit-scrollbar {
+  display: none;
+}
+.na-rail,
+.rail-viewport {
+  scrollbar-width: none;
+}

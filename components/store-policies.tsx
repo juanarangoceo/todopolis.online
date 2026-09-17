@@ -28,9 +28,9 @@ function defaultPolicies(): StorePolicy[] {
     // "Paga en efectivo ÚNICAMENTE cuando recibas", que con Confío activo
     // contradice al bloque de medios de pago que está más arriba en la misma
     // página. Un comprador que lea las dos cosas no sabe cuál creer.
-    title: advancePaymentEnabled() ? 'No pagas hasta recibir' : 'Pagas cuando lo recibes',
+    title: advancePaymentEnabled() ? 'Paga al recibir, o con Confío' : 'Pagas cuando lo recibes',
     description: advancePaymentEnabled()
-      ? 'Paga en efectivo al recibir, o paga ahora con PSE, Nequi o Bancolombia: tu dinero queda en custodia hasta que el pedido llegue.'
+      ? 'Contraentrega: pagas en efectivo cuando te lo entregan. Con Confío: pagas por PSE, Nequi o Bancolombia y la app retiene tu plata hasta que confirmes que llegó.'
       : 'Compra con total confianza. Paga en efectivo únicamente cuando recibas el producto en casa.',
   },
   {

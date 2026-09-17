@@ -58,8 +58,11 @@ export function VariantSelector({ className, showHint = false }: VariantSelector
         })}
       </div>
 
+      {/* Sin color: el aviso está pegado a los botones de variante, así que el
+          contexto ya lo hace encontrable. El rosa aquí era arbitrario — en el
+          resto del sitio el rosa significa "favoritos". */}
       {showHint && !selectedVariant && (
-        <p className="text-xs font-medium text-todopolis-pink-deep">
+        <p className="text-xs font-semibold text-foreground">
           Selecciona una opción para continuar.
         </p>
       )}

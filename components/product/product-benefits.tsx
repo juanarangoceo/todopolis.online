@@ -17,7 +17,6 @@ export function ProductBenefits({ product }: ProductBenefitsProps) {
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
             Beneficios principales
           </h2>
-          <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-gradient-to-r from-todopolis-blue to-todopolis-lavender" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 max-w-4xl mx-auto">

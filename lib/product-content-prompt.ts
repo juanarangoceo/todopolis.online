@@ -117,9 +117,11 @@ TESTIMONIOS (3 en total):
 - Tono: como un mensaje de WhatsApp a un familiar, no como una reseña corporativa
 
 HERO CTA (texto del botón principal):
-- Máximo 4 palabras, en imperativo, orientado a CERRAR la venta.
+- Máximo 4 palabras y **22 caracteres contando espacios**. Es un botón: si no cabe en una línea, se parte en dos y empuja el precio fuera de la pantalla del móvil.
+- En imperativo, orientado a CERRAR la venta.
+- NO nombres el medio de pago ("Comprar ahora contraentrega"). El comprador elige cómo paga después, en el checkout, y hay más de una opción: casar el botón con una sola es falso.
 - Ejemplos buenos: "Comprar ahora", "Lo quiero ya", "Pídelo hoy", "Ordénalo ahora", "Llévalo a casa", "Asegura el tuyo".
-- Ejemplos PROHIBIDOS: "Ver mi pedido", "Ver más", "Descubrir", "Conocer", "Explorar", "Más info", "Saber más", cualquier verbo pasivo o de exploración.
+- Ejemplos PROHIBIDOS: "Ver mi pedido", "Ver más", "Descubrir", "Conocer", "Explorar", "Más info", "Saber más", cualquier verbo pasivo o de exploración, y cualquiera que pase de 22 caracteres.
 
 CTA HEADLINE:
 - Una oración afirmativa que conecte con el deseo principal y empuje a comprar (no preguntas abiertas, no superlativos genéricos).

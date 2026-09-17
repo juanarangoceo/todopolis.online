@@ -1,6 +1,7 @@
 import { defineType, defineField, defineArrayMember } from 'sanity'
 import { GenerateContentButton } from '../components/GenerateContentButton'
 import { GenerateAIImageButton } from '../components/GenerateAIImageButton'
+import { GenerateArticleButton } from '../components/GenerateArticleButton'
 import { MultiImageUploader } from '../components/MultiImageUploader'
 import { PRODUCT_CATEGORIES } from '../../lib/categories'
 
@@ -63,6 +64,16 @@ export const productType = defineType({
         input: GenerateContentButton,
       },
       description: 'Sube las fotos y llena la descripción arriba, luego haz clic en el botón para generar el contenido de la landing page.',
+    }),
+    defineField({
+      name: 'generateArticle',
+      title: '📝 Generar Artículo de Blog',
+      type: 'string',
+      group: 'basics',
+      components: {
+        input: GenerateArticleButton,
+      },
+      description: 'Crea el artículo del blog atado a este producto. Sin él, la ficha no muestra el enlace "Leer artículo →" que abre la ventana emergente.',
     }),
     defineField({
       name: 'generateAIImage',

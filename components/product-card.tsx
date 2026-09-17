@@ -141,9 +141,10 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           {/* Content */}
           <div className="p-3 sm:p-5 bg-surface">
             <div className="flex items-center justify-between mb-2">
-              {/* Category */}
+              {/* Categoría en neutro: es metadato, no persuasión. El color se
+                  reserva para lo que pide una acción o afirma un hecho. */}
               <span
-                className="text-xs font-bold uppercase tracking-wider text-todopolis-pink-deep"
+                className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
                 {product.category}
               </span>

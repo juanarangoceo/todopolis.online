@@ -11,7 +11,7 @@ interface ProductSubscriptionProps {
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
 // Card-only (sin <section>): el padre define el layout. Pensado para vivir
-// dentro de un grid junto con SuggestedBlogs.
+// dentro de un bloque centrado al final de la ficha de producto.
 export function ProductSubscription({ productSlug, productName }: ProductSubscriptionProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')

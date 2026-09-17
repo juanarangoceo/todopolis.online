@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Star, Heart, ShoppingBag, Truck, Shield, RotateCcw, Zap } from 'lucide-react';
 import { PaymentMethods } from '@/components/payment-methods';
+import { sanitizeHeroCta } from '@/lib/cta';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { CheckoutModal } from '@/components/checkout-modal';
@@ -40,12 +41,10 @@ export function ProductHero({ product }: ProductHeroProps) {
   // Si el heroTitle persuasivo y el nombre real difieren, mostramos el nombre
   // como kicker arriba del título para que el cliente sepa qué producto es.
   const showProductKicker = !!product.name && heroTitle !== product.name;
-  const rawHeroCta = (product as any).heroCta ?? 'Comprar ahora';
-  // Guardrail: CTAs débiles ("Ver mi pedido", "Saber más", etc.) generados por
-  // versiones viejas del prompt → forzar a un cierre fuerte.
-  const heroCta = /^(ver|explor|descub|conoc|saber|m[áa]s\s+info)/i.test(rawHeroCta.trim())
-    ? 'Comprar ahora'
-    : rawHeroCta;
+  // El CTA del producto pasa por `sanitizeHeroCta` (lib/cta.ts): descarta los
+  // verbos de exploración, le arranca la mención a la contraentrega —que dejó
+  // de ser el único medio de pago— y sustituye los que no caben en una línea.
+  const heroCta = sanitizeHeroCta((product as any).heroCta);
   
   const discount = (product as any).originalPrice
     ? Math.round((1 - product.price / (product as any).originalPrice) * 100)
@@ -65,7 +64,7 @@ export function ProductHero({ product }: ProductHeroProps) {
         <div className="lg:hidden space-y-4 mb-8">
           {/* Product name kicker (mobile, antes de la imagen) */}
           {showProductKicker && (
-            <p className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-todopolis-pink-deep bg-todopolis-pink/30 px-2.5 py-1 rounded-full">
+            <p className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground bg-surface-muted px-2.5 py-1 rounded-full">
               {product.name}
             </p>
           )}
@@ -118,25 +117,24 @@ export function ProductHero({ product }: ProductHeroProps) {
           {/* Title block */}
           <div className="space-y-3">
             {showProductKicker && (
-              <p className="hidden lg:inline-block text-xs font-bold uppercase tracking-[0.18em] text-todopolis-pink-deep bg-todopolis-pink/30 px-2.5 py-1 rounded-full">
+              <p className="hidden lg:inline-block text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground bg-surface-muted px-2.5 py-1 rounded-full">
                 {product.name}
               </p>
             )}
             <h1 className="font-serif text-2xl md:text-4xl lg:text-[2.75rem] font-extrabold text-foreground leading-[1.1] tracking-tight text-balance">
               {heroTitle}
             </h1>
-            {/* Acento de marca — regla corta con gradiente coral → lavanda */}
-            <span
-              aria-hidden
-              className="block h-1 w-16 rounded-full"
-              style={{ background: 'linear-gradient(90deg, var(--todopolis-coral-deep), var(--todopolis-lavender-deep))' }}
-            />
           </div>
 
-          {/* Category & Rating */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-primary uppercase tracking-wider">
+          {/* Categoría y señales de pago.
+              En móvil se apilan: en una sola fila, la categoría quedaba pegada
+              a la izquierda y los cuatro chips de pago se partían en dos
+              renglones a su derecha, que es el amontonamiento que se veía. */}
+          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Neutro, no salmón: el salmón es el color del botón de compra
+                  y nada más puede llevarlo, o deja de destacar. */}
+              <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                 {product.category}
               </span>
               {product.isBestSeller && (
@@ -150,7 +148,10 @@ export function ProductHero({ product }: ProductHeroProps) {
                 Se reemplaza por la señal que de verdad cierra la venta en
                 Colombia; las estrellas vuelven con reseñas reales atadas a un
                 pedido (ver "Reseñas reales — pendiente" en CLAUDE.md). */}
-            <PaymentMethods variant="inline" />
+            {/* Oculto en móvil: el bloque de confianza de más abajo ya lista
+                los mismos medios y con contexto. Repetirlos aquí solo gastaba
+                dos renglones de una pantalla donde el precio todavía no se ve. */}
+            <PaymentMethods variant="inline" className="hidden sm:flex" />
           </div>
 
           {/* Subtitle */}
@@ -224,12 +225,13 @@ export function ProductHero({ product }: ProductHeroProps) {
             <button
               onClick={() => setIsCheckoutOpen(true)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300",
+                "flex-1 flex items-center justify-center gap-2.5 px-5 py-4 rounded-2xl font-bold transition-all duration-300",
+                "text-base md:text-lg whitespace-nowrap",
                 "bg-cta text-cta-fg hover:bg-cta-hover shadow-xl shadow-cta-ring hover:shadow-2xl",
                 "hover:scale-[1.02] active:scale-[0.98]"
               )}
             >
-              <ShoppingBag className="w-5 h-5" />
+              <ShoppingBag className="w-5 h-5 shrink-0" />
               {heroCta}
             </button>
             <button
@@ -278,9 +280,9 @@ export function ProductHero({ product }: ProductHeroProps) {
         onClick={() => setIsCheckoutOpen(true)}
         className="w-full flex items-center justify-between px-6 py-4 rounded-2xl font-bold text-lg bg-cta text-cta-fg shadow-2xl shadow-cta-ring active:scale-[0.98] transition-all"
       >
-        <div className="flex items-center gap-2">
-          <ShoppingBag className="w-5 h-5" />
-          <span>{heroCta}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <ShoppingBag className="w-5 h-5 shrink-0" />
+          <span className="truncate">{heroCta}</span>
         </div>
         <span className="text-cta-fg/80 font-medium whitespace-nowrap">
           {formatPrice(product.price ?? 0)}

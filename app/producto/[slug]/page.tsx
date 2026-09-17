@@ -9,7 +9,6 @@ import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
 import { ProductCTA } from '@/components/product/product-cta'
 import { ProductSubscription } from '@/components/product/product-subscription'
-import { SuggestedBlogs } from '@/components/product/suggested-blogs'
 import { DestacadoHeroVideo } from '@/components/product/destacados/destacado-hero-video'
 import { DestacadoBeforeAfter } from '@/components/product/destacados/destacado-before-after'
 import { DestacadoSteps } from '@/components/product/destacados/destacado-steps'
@@ -23,7 +22,7 @@ import { SuggestedProductsCarousel } from '@/components/product/suggested-produc
 import { GlobalSearch } from '@/components/global-search'
 import { StorePolicies } from '@/components/store-policies'
 import { TrackViewContent } from '@/components/analytics/track-view-content'
-import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings, getArticles } from '@/lib/sanity/queries'
+import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries'
 import Link from 'next/link'
 import { SanityProduct } from '@/lib/types'
 import { AgeGate } from '@/components/age-gate'
@@ -87,18 +86,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   }
 
   const storeSettings = await getSanityStoreSettings()
-
-  // Artículos sugeridos para mostrar al lado del formulario de suscripción.
-  // Prioriza misma categoría que el producto, completa con más recientes.
-  const allArticles = await getArticles().catch(() => [])
-  const productCategory = product.category?.toLowerCase()
-  const sameCategoryArticles = allArticles.filter(
-    (a) => a.category?.toLowerCase() === productCategory,
-  )
-  const otherArticles = allArticles.filter(
-    (a) => a.category?.toLowerCase() !== productCategory,
-  )
-  const suggestedArticles = [...sameCategoryArticles, ...otherArticles].slice(0, 3)
 
   // Fetch all products to build suggested + more sections
   const sanityProducts = await getSanityProducts().catch(() => [])
@@ -414,23 +401,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </section>
         )}
 
-        {/* Suscripción + blogs sugeridos.
-            Desktop: dos tarjetas lado a lado al ancho completo del container.
-            Mobile: blogs primero (engancha lectura), luego formulario. */}
+        {/* Suscripción.
+            Aquí vivía también "Lecturas que aclaran dudas" (SuggestedBlogs), en
+            dos columnas. Se quitó: el artículo del propio producto ya se abre
+            en ventana emergente desde la ficha (ArticleTrigger) y el blog
+            completo está en el menú, así que este bloque repetía una tercera
+            entrada al mismo sitio y alargaba una página que ya es larga.
+            De paso desaparece una consulta de artículos a Sanity por visita. */}
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 items-stretch">
-              <div className="order-1 md:order-2">
-                <ProductSubscription
-                  productSlug={adaptedProduct.slug}
-                  productName={adaptedProduct.name}
-                />
-              </div>
-              {suggestedArticles.length > 0 && (
-                <div className="order-0 md:order-1">
-                  <SuggestedBlogs articles={suggestedArticles} />
-                </div>
-              )}
+            <div className="max-w-2xl mx-auto">
+              <ProductSubscription
+                productSlug={adaptedProduct.slug}
+                productName={adaptedProduct.name}
+              />
             </div>
           </div>
         </section>

@@ -85,8 +85,14 @@ export function GlobalSearch({ products }: { products: any[] }) {
         headerSlot
       )}
       
-      {/* Mobile Search Bar (inline below header) */}
-      <div className="md:hidden relative z-50 px-4 py-3 bg-surface/80 backdrop-blur-md border-b border-todopolis-blue/15">
+      {/* Barra de búsqueda móvil, en el flujo, justo debajo del header.
+          `z-30` y no `z-50`: el header es `sticky top-0 z-40`, así que con un
+          z mayor esta barra le pasaba POR ENCIMA al bajar la página y tapaba la
+          hamburguesa y el logo. Con 30 se desliza por debajo, que es lo que el
+          ojo espera.
+          El desplegable de resultados no sufre: abre hacia abajo, en dirección
+          contraria al header. */}
+      <div className="md:hidden relative z-30 px-4 py-3 bg-surface/80 backdrop-blur-md border-b border-todopolis-blue/15">
         {renderSearchContent(true)}
       </div>
 

@@ -66,12 +66,22 @@ export function PaymentMethods({
           <ShieldCheck className="w-5 h-5 text-trust-fg" />
         </span>
         <div className="min-w-0">
+          {/* El titular nombra LAS DOS VÍAS y nombra a Confío.
+              "Tu dinero está protegido" dejaba dos preguntas sin responder
+              —¿protegido por quién? ¿y la contraentrega dónde quedó?— y un
+              comprador que no sabe quién retiene su plata no se siente más
+              seguro, se siente confundido.
+
+              OJO con lo que Confío hace y lo que NO: retiene el PAGO, no
+              garantiza la ENTREGA. Confío no despacha nada. Escribir "Confío
+              garantiza que te llega" sería prometer algo que el proveedor no
+              cubre, y el que responde por el despacho somos nosotros. */}
           <p className="font-bold text-sm text-trust-fg leading-tight">
-            {advance ? 'Paga al recibir, o paga ahora protegido' : 'Pago 100% contraentrega'}
+            {advance ? 'Paga al recibir, o paga con Confío' : 'Pago 100% contraentrega'}
           </p>
           <p className="text-xs text-trust-fg/75 leading-snug mt-1">
             {advance
-              ? 'Con contraentrega pagas en efectivo cuando llega. Si prefieres pagar ahora, tu dinero queda en custodia y solo lo recibimos cuando confirmas que te llegó.'
+              ? 'Contraentrega: pagas en efectivo cuando te lo entregan en la puerta. Con Confío: pagas por PSE, Nequi o Bancolombia y la app retiene tu plata hasta que confirmes que el pedido llegó.'
               : 'Solo pagas cuando el pedido llegue a tu puerta. Sin riesgos, sin sorpresas.'}
           </p>
         </div>

@@ -1,38 +1,48 @@
-// Qué cuenta como "producto nuevo" en la home.
+// Qué entra en la sección de novedades de la home.
 //
-// Vive aquí y no en `app/page.tsx` por dos razones. La práctica: llamar a
-// `Date.now()` dentro del cuerpo de un componente es una función impura en
-// render y el linter de React lo marca. La de fondo: esta decisión —cuántos
-// días son "nuevo"— merece prueba, porque el fallo es silencioso. La sección
-// anterior cortaba los 12 primeros productos y llamaba "recién llegados" a
-// cosas de hace meses.
+// Vive aquí y no en `app/page.tsx` porque la decisión merece prueba: el fallo
+// es silencioso. La sección original cortaba los 12 primeros del array y
+// llamaba "recién llegados" a cosas de hace meses, sin mirar una sola fecha.
+//
+// Hoy son SIEMPRE los 12 más recientes por `_createdAt`: entra uno nuevo y
+// desplaza al más viejo de la tanda. Antes había una ventana de 7 días, que
+// tenía dos problemas prácticos: una semana floja dejaba la sección con dos
+// productos (o sin sección), y una tanda de import la desbordaba por encima de
+// las 12 casillas que caben. Un cupo fijo da una sección estable, siempre
+// llena, y la honestidad la sostiene la fecha que se muestra al lado, no el
+// número.
 
 export interface DatedProduct {
   _id: string
   _createdAt?: string
 }
 
-/** Días hacia atrás que cuentan como novedad. */
-export const NEW_ARRIVALS_WINDOW_DAYS = 7
+/** Cuántos productos ocupan la sección de novedades. */
+export const NEW_ARRIVALS_COUNT = 12
 
 /**
- * Los `_id` de los productos creados dentro de la ventana. `now` es un
- * parámetro para poder probarlo sin depender del reloj.
+ * Los `_id` de los N productos más recientes.
+ *
+ * Ordena por fecha en vez de fiarse del orden del array: la consulta viene
+ * ordenada hoy, pero si alguien le cambia el `order()` a la query, cortar los
+ * N primeros volvería a llamar "nuevo" a lo que no lo es — que es exactamente
+ * el fallo que esta sección ya tuvo una vez.
+ *
+ * Un producto sin fecha válida nunca cuenta: no se puede afirmar que sea nuevo.
  */
-export function recentProductIds(
+export function newestProductIds(
   products: DatedProduct[],
-  windowDays: number = NEW_ARRIVALS_WINDOW_DAYS,
-  now: number = Date.now(),
+  count: number = NEW_ARRIVALS_COUNT,
 ): Set<string> {
-  const cutoff = now - windowDays * 24 * 60 * 60 * 1000
-  const ids = new Set<string>()
+  const conFecha: { id: string; t: number }[] = []
   for (const p of products) {
     if (!p._createdAt) continue
-    const created = Date.parse(p._createdAt)
-    if (Number.isNaN(created) || created <= cutoff) continue
-    ids.add(p._id)
+    const t = Date.parse(p._createdAt)
+    if (Number.isNaN(t)) continue
+    conFecha.push({ id: p._id, t })
   }
-  return ids
+  conFecha.sort((a, b) => b.t - a.t)
+  return new Set(conFecha.slice(0, Math.max(0, count)).map((x) => x.id))
 }
 
 /** La fecha de creación más reciente del catálogo, o null. */

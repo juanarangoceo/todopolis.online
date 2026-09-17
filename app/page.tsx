@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/header';
 import { NewArrivalsBanner } from '@/components/new-arrivals-banner';
-import { newestCreatedAt, recentProductIds, NEW_ARRIVALS_WINDOW_DAYS } from '@/lib/new-arrivals';
+import { newestProductIds } from '@/lib/new-arrivals';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
@@ -43,11 +43,10 @@ export default async function Home() {
     tags: p.tags ?? [],
   }));
 
-  // Productos realmente nuevos: los de la ventana definida en lib/new-arrivals.
-  // Si la semana no trajo nada, la sección no se pinta — y eso es correcto.
-  const recentIds = recentProductIds(sanityProducts);
+  // Las 12 casillas de novedades: siempre los más recientes del catálogo.
+  // Entra uno nuevo y desplaza al más viejo de la tanda.
+  const recentIds = newestProductIds(sanityProducts);
   const newArrivals = initialProducts.filter((p: { id: string }) => recentIds.has(p.id));
-  const newestAt = newestCreatedAt(sanityProducts);
 
   const aiImages = sanityProducts
     .filter((p: any) => p.aiLifestyleImage)
@@ -74,9 +73,12 @@ export default async function Home() {
         { iconName: 'Truck', title: 'Llega en 3 a 7 días', description: '$12.000 a todo el país. Gratis en Destacados.' },
         {
           iconName: 'WalletCards',
-          title: advancePaymentEnabled() ? 'No pagas hasta recibir' : 'Pagas cuando lo recibes',
+          // "No pagas hasta recibir" era media verdad desde que hay prepago:
+          // con Confío sí pagas antes, solo que la plata la retiene la app y no
+          // nosotros. El título nombra las dos vías y a quién la custodia.
+          title: advancePaymentEnabled() ? 'Paga al recibir, o con Confío' : 'Pagas cuando lo recibes',
           description: advancePaymentEnabled()
-            ? 'En efectivo al recibir, o con PSE, Nequi o Bancolombia y tu plata queda en custodia.'
+            ? 'En efectivo cuando te lo entregan, o por PSE, Nequi y Bancolombia: Confío retiene tu plata hasta que confirmes que llegó.'
             : 'En efectivo, en la puerta de tu casa. Sin tarjetas ni adelantos.',
         },
         { iconName: 'RefreshCw', title: '30 días para devolver', description: 'Si llega con un defecto, lo reponemos o te devolvemos.' },
@@ -108,7 +110,7 @@ export default async function Home() {
             ) : undefined
           }
         >
-          <NewArrivalsBanner products={newArrivals} newestAt={newestAt} windowDays={NEW_ARRIVALS_WINDOW_DAYS} />
+          <NewArrivalsBanner products={newArrivals} />
 
           <PolicyBadges policies={policies} />
         </ProductBrowser>

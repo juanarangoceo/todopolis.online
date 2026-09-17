@@ -2,8 +2,8 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
-import { Sparkles } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { type AiImage } from '@/lib/inspiration'
 
 // Carril horizontal de imágenes de estilo de vida generadas por IA.
@@ -17,6 +17,13 @@ import { type AiImage } from '@/lib/inspiration'
 // El movimiento es una marquesina CSS (`.rail-marquee`, en globals.css) que solo
 // anima `transform`. No hay JS en el bucle: lo único que hace este componente es
 // encender y apagar la animación según el carril esté o no en pantalla.
+//
+// A partir del primer gesto del usuario el carril pasa a MANUAL y se puede
+// adelantar y devolver, con el dedo o con las flechas. Marquesina y scroll
+// nativo no pueden convivir —una mueve `transform` y el otro `scrollLeft`, y se
+// suman—, así que el traspaso congela la animación, borra el `transform` y
+// pasa ese desplazamiento a `scrollLeft`. El carril no da un salto: se queda
+// exactamente donde estaba y desde ahí manda el dedo.
 
 function sanityOptimized(url: string, width: number): string {
   if (!url || !url.includes('cdn.sanity.io')) return url
@@ -53,20 +60,63 @@ function Card({ item, priority, dup = false }: { item: AiImage; priority: boolea
 
 export function InspirationRail({ images }: { images: AiImage[] }) {
   const viewportRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
   const [running, setRunning] = useState(false)
+  const [manual, setManual] = useState(false)
 
   // Enciende la marquesina solo mientras el carril se ve. Una animación
   // infinita fuera de pantalla sigue costando, y en la home hay varios.
   useEffect(() => {
     const node = viewportRef.current
-    if (!node) return
+    if (!node || manual) return
     const observer = new IntersectionObserver(
       (entries) => setRunning(entries[0]?.isIntersecting ?? false),
       { rootMargin: '100px 0px' },
     )
     observer.observe(node)
     return () => observer.disconnect()
-  }, [])
+  }, [manual])
+
+  /**
+   * Traspaso de marquesina a manual, sin salto visual.
+   *
+   * Lee cuánto lleva desplazado el `transform` de la pista, lo borra y mete ese
+   * mismo número en `scrollLeft`. Sin esto el carril saltaría al principio en
+   * cuanto lo tocas, o peor: dejaría las primeras tarjetas inalcanzables,
+   * porque el desplazamiento de la animación y el del scroll se suman.
+   */
+  const goManual = useCallback(() => {
+    if (manual) return
+    const viewport = viewportRef.current
+    const track = trackRef.current
+    if (!viewport || !track) return
+
+    let desplazado = 0
+    try {
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(track).transform)
+      desplazado = -matrix.m41 // translateX es negativo mientras avanza
+    } catch {
+      desplazado = 0 // navegador sin DOMMatrix: arranca desde el principio
+    }
+
+    setRunning(false)
+    setManual(true)
+    track.style.transform = 'none'
+    track.style.animation = 'none'
+    // Se SUMA al scroll que el gesto ya haya hecho: si no, el primer empujón
+    // del dedo se pierde y el carril parece que se resiste.
+    viewport.scrollLeft = Math.max(0, desplazado + viewport.scrollLeft)
+  }, [manual])
+
+  // Una tarjeta y pico: el salto deja siempre una asomada al borde, que es lo
+  // que le dice al usuario que el carril sigue.
+  const nudge = (direction: 1 | -1) => {
+    goManual()
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const paso = Math.max(160, viewport.clientWidth * 0.7)
+    viewport.scrollBy({ left: direction * paso, behavior: 'smooth' })
+  }
 
   if (images.length === 0) return null
 
@@ -77,17 +127,52 @@ export function InspirationRail({ images }: { images: AiImage[] }) {
         <p className="text-xs md:text-sm font-bold text-todopolis-lavender-deep uppercase tracking-wider">
           Inspiración
         </p>
+
+        {/* Las flechas viven en la cabecera y no flotando sobre las fotos: en
+            móvil un botón encima de la imagen tapa producto y compite con el
+            toque que abre la ficha. */}
+        <div className="ml-auto flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => nudge(-1)}
+            aria-label="Ver inspiración anterior"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-todopolis-lavender/50 text-todopolis-lavender-deep shadow-sm active:scale-90 hover:bg-todopolis-lavender/10 transition-all"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => nudge(1)}
+            aria-label="Ver más inspiración"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-todopolis-lavender/50 text-todopolis-lavender-deep shadow-sm active:scale-90 hover:bg-todopolis-lavender/10 transition-all"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* El viewport recorta; la pista se mueve. Sin `overflow-x-auto` aquí: la
-          marquesina y el scroll manual se pelearían. Con
-          `prefers-reduced-motion` el CSS lo convierte en carrusel deslizable. */}
+      {/* El viewport recorta y también desplaza; la pista se mueve sola hasta
+          que alguien la toca.
+
+          El traspaso cuelga de `onScroll` y no de `touchstart`/`wheel` a
+          propósito: esos dos disparan también cuando el dedo o la rueda pasan
+          por encima camino de bajar la página, y pararían la marquesina de
+          todos los carriles con solo recorrer el home. `onScroll` solo salta
+          cuando de verdad hubo desplazamiento horizontal. */}
       {/* Sin padding en el viewport NI en la pista: `translateX(-50%)` se
           calcula sobre el ancho de borde, así que cualquier padding rompería
           el bucle. La marquesina sangra de borde a borde, que además es lo
           correcto para algo en movimiento. */}
-      <div ref={viewportRef} className="rail-viewport overflow-hidden">
-        <div className="rail-marquee flex w-max" data-running={running ? 'true' : 'false'}>
+      <div
+        ref={viewportRef}
+        className="rail-viewport overflow-x-auto overflow-y-hidden overscroll-x-contain"
+        onScroll={goManual}
+      >
+        <div
+          ref={trackRef}
+          className="rail-marquee flex w-max"
+          data-running={running && !manual ? 'true' : 'false'}
+        >
           {images.map((item, i) => (
             <Card key={`a-${item.slug}-${i}`} item={item} priority={i < 3} />
           ))}

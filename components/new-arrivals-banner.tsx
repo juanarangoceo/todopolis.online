@@ -3,7 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { bestColumns } from '@/lib/new-arrivals';
-import { advancePaymentEnabled } from '@/lib/payments/config';
 
 // Sección de novedades del home.
 //
@@ -24,34 +23,14 @@ import { advancePaymentEnabled } from '@/lib/payments/config';
 
 interface NewArrivalsBannerProps {
   products?: Product[];
-  /** Fecha del producto más reciente del catálogo, en ISO. */
-  newestAt?: string | null;
-  /** Ventana en días que define "nuevo". Solo para el texto. */
-  windowDays?: number;
 }
 
-/** "hoy", "ayer" o "el 12 de septiembre". Sin librerías. */
-function whenLabel(iso: string | null | undefined): string | null {
-  if (!iso) return null;
-  const then = new Date(iso);
-  if (Number.isNaN(then.getTime())) return null;
-
-  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const days = Math.round((startOfDay(new Date()) - startOfDay(then)) / 86_400_000);
-
-  if (days <= 0) return 'hoy';
-  if (days === 1) return 'ayer';
-  if (days < 7) return `hace ${days} días`;
-  return then.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' });
-}
-
-export function NewArrivalsBanner({ products = [], newestAt, windowDays = 7 }: NewArrivalsBannerProps) {
+export function NewArrivalsBanner({ products = [] }: NewArrivalsBannerProps) {
   // Sin novedades no hay sección. Inventar una sería el mismo error de antes.
   if (products.length === 0) return null;
 
   const shown = products.slice(0, 12);
   const columns = bestColumns(shown.length);
-  const when = whenLabel(newestAt);
   const formatPrice = (price: number) => '$' + price.toLocaleString('es-CO');
 
   return (
@@ -65,31 +44,42 @@ export function NewArrivalsBanner({ products = [], newestAt, windowDays = 7 }: N
           <div aria-hidden className="absolute bottom-0 left-1/4 w-56 h-56 bg-todopolis-blue/25 rounded-full blur-3xl translate-y-1/2 pointer-events-none" />
 
           <div className="relative z-10 px-5 md:px-8 pt-6 md:pt-8 pb-6 md:pb-8">
-            {/* El titular ES el dato. Un número que cambia solo no se parece a
-                una plantilla, que era justo el problema del copy anterior. */}
+            {/* El nombre de la marca en el titular: Todópolis es "todo" +
+                polis, la ciudad de todo, y es lo único que ningún competidor
+                puede copiar. El catálogo deja de ser una lista de inventario y
+                pasa a ser un sitio con movimiento propio.
+
+                No hay subtítulo a propósito. Los dos que hubo antes describían
+                el bloque ("Llegaron 12 productos nuevos", "Doce novedades del
+                catálogo") — contaban el estante en vez de decirle algo al
+                cliente, y el titular ya dice qué es esto. Uno de ellos además
+                repetía envío y medios de pago, que es exactamente lo que dicen
+                los tres recuadros diez píxeles más abajo.
+
+                Queda solo el sello de fecha, que es el único dato verificable
+                y cambia solo. Va en su propia línea porque `whenLabel` devuelve
+                "hoy", "ayer", "hace 3 días" o "el 12 de septiembre", y así
+                encajan las cuatro sin reescribir la frase. */}
             <div className="mb-5 md:mb-6">
               <h2
                 id="novedades-titulo"
                 className="font-serif text-2xl md:text-4xl font-extrabold text-neutral-900 leading-tight text-balance"
               >
-                {products.length === 1
-                  ? 'Llegó 1 producto nuevo'
-                  : `Llegaron ${products.length} productos nuevos`}
+                Lo último que llegó a Todópolis
               </h2>
-              <p className="mt-1.5 text-sm md:text-base text-neutral-600">
-                {when ? `Los subimos ${when}.` : `Entraron esta semana.`}{' '}
-                {advancePaymentEnabled()
-                  ? 'Envío a todo el país, contraentrega o pago protegido.'
-                  : 'Envío a todo el país y pago contraentrega.'}
-              </p>
             </div>
 
-            {/* Columnas calculadas para que la última fila quede completa: con
-                6 novedades y 4 columnas salían 4 + 2 y dos huecos. `justify-center`
-                es el plan B para cantidades sin divisor cómodo (7, 11…): la fila
-                incompleta se centra y se lee como decisión, no como hueco. */}
+            {/* En móvil es un carrusel: 12 tarjetas en rejilla de 2 columnas
+                son 6 filas que empujan la cuadrícula del catálogo fuera de la
+                pantalla. Deslizando ocupan una sola fila.
+
+                Desde `sm` vuelve a ser rejilla, y las columnas se calculan para
+                que la última fila quede completa: con 6 novedades y 4 columnas
+                salían 4 + 2 y dos huecos. `justify-center` es el plan B para
+                cantidades sin divisor cómodo (7, 11…): la fila incompleta se
+                centra y se lee como decisión, no como hueco. */}
             <div
-              className="na-grid grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 justify-center"
+              className="na-rail flex gap-3 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-1 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none na-grid sm:grid sm:grid-cols-3 md:gap-4 sm:justify-center"
               style={{ ['--na-cols' as string]: String(columns) }}
             >
               {shown.map((product) => {
@@ -98,7 +88,7 @@ export function NewArrivalsBanner({ products = [], newestAt, windowDays = 7 }: N
                   <Link
                     key={product.id}
                     href={`/producto/${slug}`}
-                    className="group rounded-2xl overflow-hidden bg-white/85 border border-white hover:border-todopolis-blue hover:shadow-md transition-all duration-200"
+                    className="group w-[42vw] max-w-[190px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink rounded-2xl overflow-hidden bg-white/85 border border-white hover:border-todopolis-blue hover:shadow-md transition-all duration-200"
                   >
                     {/* 3/4 y no cuadrado: el recorte cuadrado decapitaba las
                         fotos de producto, que vienen verticales. */}
@@ -107,7 +97,7 @@ export function NewArrivalsBanner({ products = [], newestAt, windowDays = 7 }: N
                         src={product.image || '/placeholder.jpg'}
                         alt={product.name}
                         fill
-                        sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw"
+                        sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 42vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
