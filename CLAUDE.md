@@ -461,3 +461,102 @@ Documento que agrupa 3–6 productos de un segmento y genera con IA una landing 
 - `COLLECTION_DETAIL_QUERY` resuelve los `products`. Si agregas un campo al schema que la landing necesite, inclúyelo también en ese query (misma regla que `aiLifestyleImage`).
 - Publicar/despublicar una colección revalida `/coleccion/[slug]` **y** el índice `/colecciones` (caso `collectionLanding` en `app/api/revalidate/route.ts`). Cualquier ajuste a colecciones debe mantener esa revalidación.
 - La landing de detalle reutiliza componentes de marca (`ProductGrid`, `ProductFaq`, `SuggestedProductsCarousel`, `GlobalSearch`) — no duplicar su markup.
+
+## Publicidad en Meta — no romper
+
+La tienda está preparada para pautar. El Píxel y la Conversions API corren en
+paralelo con el mismo `event_id` (Meta deduplica) y matching avanzado hasheado
+con SHA-256. Alrededor hay varias reglas que se pusieron por una razón concreta.
+
+### `Purchase` solo cuando hay dinero. El formulario manda `Lead`.
+Estuvo disparando `Purchase` al **enviar el formulario**. Con contraentrega eso
+le decía a Meta que el 100% de los formularios eran ventas, y el algoritmo
+optimizaba hacia gente que llena formularios y no recibe el paquete.
+
+- Formulario enviado → **`Lead`** (`trackLead` + espejo CAPI desde `create-order`).
+- Confío pasa a `funded` → **`Purchase`** (`lib/payments/confio-orders.ts`).
+- Pedido marcado `delivered` en el panel → **`Purchase`** (`update-order-status`).
+
+`lib/meta-purchase.ts` es la **única** puerta del Purchase, y garantiza
+exactamente-una-vez con un **CAS sobre `meta_purchase_sent_at`** (`is null` en
+el WHERE), no con una bandera. El evento se manda SOLO si el CAS ganó: al revés,
+un fallo al escribir la marca dejaría la puerta abierta a un segundo envío. Un
+Purchase de menos se nota en el volumen; uno de más corrompe el ROAS y las
+pujas durante días.
+
+### La atribución se copia AL CREAR el pedido, no después
+`lib/attribution.ts` (puro, con test). El Purchase se manda días más tarde,
+cuando ya no hay navegador del que leer `_fbp` ni `_fbc`: por eso esas cookies y
+los UTM se guardan en la fila de `orders` en el momento del pedido. Sin ellos,
+un evento tardío no se atribuye a ningún anuncio.
+
+**Manda la PRIMERA visita, no la última.** Alguien llega por un anuncio, se va y
+vuelve al día siguiente escribiendo la dirección: con atribución de última
+visita esa venta se contaría como tráfico directo y el anuncio que la produjo
+parecería no vender. Ventana de 7 días en cookie `tp_attr`.
+
+### Estados del pedido — vocabulario cerrado
+`lib/orders.ts` + restricción `orders_status_check` en la base. Antes no había
+vocabulario: el código escribía `pending`/`pending_payment` y en Supabase había
+`Enviado` y `Cancelado` escritos a mano. **De ese filtro depende a quién se le
+manda un Purchase.**
+
+`pending_payment → pending → confirmed → shipped → delivered`, más `cancelled`
+desde cualquiera vivo. `ALLOWED_TRANSITIONS` impide marcar entregado algo que
+nunca se despachó. De `pending_payment` solo se sale por Confío, no a mano.
+
+### El Píxel NO carga en bienestar íntimo
+23 fichas. Meta prohíbe anunciar productos para adultos; mandarle eventos desde
+ahí no sirve para pautar y mete en la cuenta datos que no deberían estar. El
+layout pasa `blockedPaths` a `MetaPixel` y la ficha no monta `TrackViewContent`.
+Mismo criterio que la exclusión del sitemap, de `llms.txt` y del feed.
+
+El aviso de esas páginas dice **«Contenido sensible»**, no «Contenido para
+adultos»: la segunda es la etiqueta con la que las plataformas nombran lo que no
+admiten, y es el título de la primera pantalla que ve un revisor.
+
+### Consentimiento: aviso con rechazo, NO opt-in previo
+`lib/consent.ts`. Colombia no exige el modelo europeo, así que se mide desde el
+primer momento y «Rechazar medición» apaga el Píxel de verdad (y recarga).
+**Es una decisión de jurisdicción**: si algún día se pauta a la UE o el Reino
+Unido, hay que cambiar `hasTrackingConsent` a opt-in y ajustar el texto de
+`/privacidad`, que describe este modelo.
+
+### Páginas legales — son páginas, no ventanas emergentes
+`/privacidad` y `/terminos`, en el sitemap. Meta pide una **URL enlazable** de la
+política; un modal no se puede pegar en un formulario ni lo visita un revisor.
+
+- La política **nombra el Píxel y la CAPI** y dice qué se envía. Es requisito de
+  los Términos de Herramientas de Negocio. Antes decía «no compartimos tu
+  información con terceros» mientras le mandaba datos a Meta.
+- Los términos llevan el **derecho de retracto de 5 días hábiles** (Ley 1480,
+  art. 47), que no es opcional en venta a distancia, y declaran el **despacho
+  directo sin declinar responsabilidad**: frente al consumidor responde
+  Todópolis aunque despache el proveedor.
+- `lib/legal.ts` es la fuente única de la identidad. **El número de documento no
+  se publica**: si una plataforma lo exige, se entrega por su canal privado.
+
+### Lo que NO va en Sanity
+El **ID del Píxel sí** («Ajustes de Tienda» → `metaPixelId`), y aplica sin
+desplegar — que es lo que se necesita al abrir cuenta nueva. Resuelven igual el
+navegador (`lib/fbpixel.ts`) y el servidor (`lib/meta-capi.ts`): si no
+coincidieran, la deduplicación se rompe y Meta cuenta doble.
+
+El **token de la CAPI NO**: es un secreto y el Studio lo ven los editores. Vive
+solo en `META_CAPI_ACCESS_TOKEN` de Vercel.
+
+### Feed de catálogo: `/api/catalog/meta`
+CSV, 554 productos, para obtención programada desde Commerce Manager. Excluye
+bienestar íntimo y los artículos sin precio o sin imagen, que Meta rechazaría y
+que ensucian la tasa de errores del catálogo.
+
+### Nada de datos inventados en el copy
+El prompt llegó a decir literalmente «INVENTA especificaciones plausibles». Con
+tráfico pagado eso es publicidad engañosa para la SIC y afirmación no
+sustentable para Meta. Ahora prohíbe los datos que no se puedan sostener y las
+promesas de salud.
+
+Por lo mismo, «Reseñas» pasó a **«Para qué lo usan»**, sin estrellas, sin nombre
+propio y sin sello de verificado: los escribe la IA. La prueba social auténtica
+es `customerPhotos` («Así les llegó»). **No volver a rotular eso como reseñas**
+hasta que existan las reales atadas a un pedido.
