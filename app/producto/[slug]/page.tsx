@@ -9,6 +9,7 @@ import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
 import { ProductCTA } from '@/components/product/product-cta'
 import { ProductSubscription } from '@/components/product/product-subscription'
+import { CustomerPhotos } from '@/components/product/customer-photos'
 import { DestacadoHeroVideo } from '@/components/product/destacados/destacado-hero-video'
 import { DestacadoBeforeAfter } from '@/components/product/destacados/destacado-before-after'
 import { DestacadoSteps } from '@/components/product/destacados/destacado-steps'
@@ -147,6 +148,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     offerName: (product as any).offerName ?? null,
     offerEndsAt: (product as any).offerEndsAt ?? null,
     faqs: (product as any).faqs ?? [],
+    customerPhotos: product.customerPhotos ?? [],
     variants: product.variants ?? [],
     // Destacados — contenido manual extendido
     isDestacado: product.isDestacado ?? false,
@@ -158,6 +160,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     destacadoComparison: product.destacadoComparison,
     destacadoQuotes: product.destacadoQuotes ?? [],
   }
+
+  // Solo hay recuadro de fotos si alguna trae URL resuelta: un item de Sanity
+  // al que le borraron el asset llega como objeto sin `url`, y contarlo pondría
+  // la landing en dos columnas para no pintar nada en la derecha.
+  const hasCustomerPhotos = adaptedProduct.customerPhotos.some((p) => !!p?.url)
 
   const SuggestedSection = ({ products, title, subtitle }: { products: typeof suggestedProducts, title: string, subtitle: string }) =>
     products.length > 0 ? (
@@ -340,7 +347,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         category={adaptedProduct.category}
       />
       {product.category === 'bienestar-intimo' && <AgeGate />}
-      <GlobalSearch products={searchableProducts} />
+      {/* La lupa flotante que aparece al bajar es una salida del embudo, y en
+          un producto Destacado el embudo es justamente lo que se cuida: por eso
+          esta ficha ya oculta los carruseles de "otros productos". El buscador
+          no desaparece —sigue en el header y en la barra de móvil—, lo que se
+          quita es el botón que invita a irse a mitad de lectura. */}
+      <GlobalSearch products={searchableProducts} showMobileFab={!adaptedProduct.isDestacado} />
 
       <main className="flex-1">
         <ArticleModalProvider currentProductSlug={adaptedProduct.slug}>
@@ -380,7 +392,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* Global Store Policies */}
         <div className="container mx-auto px-4 mt-8">
-          <StorePolicies policies={storeSettings?.policies} />
+          <StorePolicies
+            policies={storeSettings?.policies}
+            whatsapp={{
+              phone: storeSettings?.whatsappPhone ?? null,
+              productName: adaptedProduct.name,
+              pageUrl: productUrl,
+            }}
+          />
         </div>
 
         {/* Second products section — below CTA, full width, both layouts.
@@ -408,13 +427,31 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             completo está en el menú, así que este bloque repetía una tercera
             entrada al mismo sitio y alargaba una página que ya es larga.
             De paso desaparece una consulta de artículos a Sanity por visita. */}
+        {/* Suscripción, y a su derecha las fotos reales de clientes cuando las
+            hay. El ancho del contenedor CAMBIA con el contenido: con fotos son
+            dos columnas dentro de `max-w-6xl`; sin fotos vuelve a la columna
+            única de `max-w-2xl` que había antes, porque estirar un formulario
+            de tres campos a todo el ancho lo deja desangelado.
+            `items-stretch` iguala la altura de las dos tarjetas. */}
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
-            <div className="max-w-2xl mx-auto">
+            <div
+              className={
+                hasCustomerPhotos
+                  ? 'grid lg:grid-cols-2 gap-6 lg:gap-8 items-stretch max-w-6xl mx-auto'
+                  : 'max-w-2xl mx-auto'
+              }
+            >
               <ProductSubscription
                 productSlug={adaptedProduct.slug}
                 productName={adaptedProduct.name}
               />
+              {hasCustomerPhotos && (
+                <CustomerPhotos
+                  photos={adaptedProduct.customerPhotos}
+                  productName={adaptedProduct.name}
+                />
+              )}
             </div>
           </div>
         </section>

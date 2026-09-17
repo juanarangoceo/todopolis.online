@@ -310,6 +310,47 @@ export const productType = defineType({
       description: 'Si se deja en blanco, se mostrará la cantidad de testimonios registrados abajo.',
       group: 'landing',
     }),
+    // ─── Fotos reales de clientes ───────────────────────────────────────────
+    // A diferencia de `testimonials`, que los escribe la IA con nombres
+    // inventados, esto son fotos que MANDÓ un cliente de verdad al recibir el
+    // producto. Es la única prueba social auténtica que hoy tiene la ficha, y
+    // por eso se guarda aparte y no se genera nunca con IA.
+    //
+    // Si el array está vacío, la landing no pinta el recuadro: un bloque
+    // "Así les llegó" sin fotos es peor que no tenerlo.
+    defineField({
+      name: 'customerPhotos',
+      title: '📸 Fotos Reales de Clientes',
+      type: 'array',
+      group: 'landing',
+      description:
+        'Fotos que te mandan los clientes cuando reciben el producto. Súbelas solo si son reales y tienes permiso para publicarlas — son la prueba social de la ficha y el bloque no aparece si está vacío.',
+      of: [
+        defineArrayMember({
+          name: 'customerPhoto',
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            defineField({
+              name: 'customerName',
+              title: 'Nombre del cliente (opcional)',
+              type: 'string',
+              description: 'Solo el nombre de pila. Se muestra bajo la foto.',
+            }),
+            defineField({
+              name: 'city',
+              title: 'Ciudad (opcional)',
+              type: 'string',
+            }),
+            defineField({
+              name: 'alt',
+              title: 'Texto alternativo (accesibilidad)',
+              type: 'string',
+            }),
+          ],
+        }),
+      ],
+    }),
     defineField({
       name: 'ctaHeadline',
       title: 'CTA Final: Título',

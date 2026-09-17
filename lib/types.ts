@@ -100,6 +100,15 @@ export interface DestacadoQuote {
 }
 
 // Sanity product type (matches schema)
+/** Foto que mandó un cliente, con el crédito opcional que quiera dársele. */
+export interface CustomerPhoto {
+  _key?: string
+  url?: string
+  customerName?: string
+  city?: string
+  alt?: string
+}
+
 export interface SanityProduct {
   _id: string
   /** Fecha de creación en Sanity. La usa la sección de novedades. */
@@ -130,6 +139,12 @@ export interface SanityProduct {
   offerName?: string
   offerEndsAt?: string
   faqs?: Array<{ _key?: string; question: string; answer: string }>
+  /**
+   * Fotos REALES que mandan los clientes al recibir el producto. Nada que ver
+   * con `testimonials`, que los escribe la IA: estas son la única prueba
+   * social auténtica de la ficha, y por eso se guardan y se pintan aparte.
+   */
+  customerPhotos?: CustomerPhoto[]
   // Destacados — manual
   isDestacado?: boolean
   destacadoHeroVideo?: DestacadoHeroVideo

@@ -7,7 +7,18 @@ import Image from 'next/image';
 import { MagicSearchBar } from './magic-search-bar';
 import { MobileSearchFab } from './mobile-search-fab';
 
-export function GlobalSearch({ products }: { products: any[] }) {
+interface GlobalSearchProps {
+  products: any[]
+  /**
+   * Lupa flotante de móvil que aparece al bajar. Se apaga donde el objetivo de
+   * la página es que el visitante siga leyendo hasta el final y no que salte a
+   * otro producto — hoy, la ficha de un producto Destacado.
+   * El buscador NO desaparece: sigue en el header y en la barra de móvil.
+   */
+  showMobileFab?: boolean
+}
+
+export function GlobalSearch({ products, showMobileFab = true }: GlobalSearchProps) {
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -97,7 +108,7 @@ export function GlobalSearch({ products }: { products: any[] }) {
       </div>
 
       {/* Floating search button for mobile */}
-      <MobileSearchFab />
+      {showMobileFab && <MobileSearchFab />}
     </>
   );
 }

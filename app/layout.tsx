@@ -18,11 +18,15 @@ const nunito = Nunito({
   weight: ['400', '500', '600', '700', '800', '900'],
 });
 
+// 800 y 900 NO son decoración: `font-serif font-extrabold` y `font-black` se
+// usan en el H1 de la ficha de producto, en Novedades, Ofertas y Favoritos.
+// Sin cargarlos, el navegador falsificaba el grosor engordando el trazo del
+// 700 (faux bold), que a 44 px se ve embarrado y con los contornos sucios.
 const montserrat = Montserrat({ 
   subsets: ["latin"],
   variable: '--font-montserrat',
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'

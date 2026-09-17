@@ -148,26 +148,6 @@ export function Header() {
 
             {/* Right — actions */}
             <div className="flex items-center justify-end gap-2 shrink-0">
-              {/* Blog → lila (contenido / sabiduría) */}
-              <Link
-                href="/blog"
-                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-lavender hover:bg-todopolis-lavender/15 transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Blog"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-todopolis-lavender-deep group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wide">Blog</span>
-              </Link>
-
-              {/* Colecciones → azul (navegación / curaduría) */}
-              <Link
-                href="/colecciones"
-                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-blue hover:bg-todopolis-blue/10 transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Colecciones"
-              >
-                <LayoutGrid className="w-3.5 h-3.5 text-todopolis-blue-deep group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-todopolis-blue-deep uppercase tracking-wide">Colecciones</span>
-              </Link>
-
               {/* Destacados → dorado (track propio, separado de la paleta brand) */}
               <Link
                 href="/destacados"
@@ -191,6 +171,26 @@ export function Header() {
               >
                 <Zap className="w-3.5 h-3.5 text-sale group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-bold text-sale uppercase tracking-wide">Ofertas</span>
+              </Link>
+
+              {/* Colecciones → azul (navegación / curaduría) */}
+              <Link
+                href="/colecciones"
+                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-blue hover:bg-todopolis-blue/10 transition-all duration-300 shadow-sm hover:shadow-md"
+                aria-label="Colecciones"
+              >
+                <LayoutGrid className="w-3.5 h-3.5 text-todopolis-blue-deep group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-todopolis-blue-deep uppercase tracking-wide">Colecciones</span>
+              </Link>
+
+              {/* Blog → lila (contenido / sabiduría) */}
+              <Link
+                href="/blog"
+                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-lavender hover:bg-todopolis-lavender/15 transition-all duration-300 shadow-sm hover:shadow-md"
+                aria-label="Blog"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-todopolis-lavender-deep group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wide">Blog</span>
               </Link>
 
               {/* Lucy → lila (IA aspiracional) */}
@@ -285,18 +285,6 @@ export function Header() {
               </span>
               <span className="font-bold text-sm text-foreground">Inicio</span>
             </Link>
-
-            <Link
-              href="/colecciones"
-              onClick={closeMenu}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-todopolis-blue/10 border border-nav-inactive-border hover:border-todopolis-blue transition-all shadow-sm"
-            >
-              <span className="w-9 h-9 rounded-xl bg-todopolis-blue/20 flex items-center justify-center shrink-0">
-                <LayoutGrid className="w-4 h-4 text-todopolis-blue-deep" />
-              </span>
-              <span className="font-bold text-sm text-foreground">Colecciones</span>
-            </Link>
-
             <Link
               href="/destacados"
               onClick={closeMenu}
@@ -318,7 +306,6 @@ export function Header() {
               <span className="font-bold text-sm text-amber-900">Destacados</span>
               <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-amber-700">Envío gratis</span>
             </Link>
-
             <Link
               href="/ofertas"
               onClick={closeMenu}
@@ -330,7 +317,16 @@ export function Header() {
               <span className="font-bold text-sm text-foreground">Ofertas</span>
               <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-sale">Hot</span>
             </Link>
-
+            <Link
+              href="/colecciones"
+              onClick={closeMenu}
+              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-todopolis-blue/10 border border-nav-inactive-border hover:border-todopolis-blue transition-all shadow-sm"
+            >
+              <span className="w-9 h-9 rounded-xl bg-todopolis-blue/20 flex items-center justify-center shrink-0">
+                <LayoutGrid className="w-4 h-4 text-todopolis-blue-deep" />
+              </span>
+              <span className="font-bold text-sm text-foreground">Colecciones</span>
+            </Link>
             <Link
               href="/blog"
               onClick={closeMenu}

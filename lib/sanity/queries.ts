@@ -93,6 +93,16 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
   specifications,
   testimonials,
   reviewsCount,
+  // Fotos reales que mandan los clientes. Solo las pide la ficha de producto:
+  // no entran en PRODUCTS_LIST_QUERY porque la tarjeta del catálogo no las usa
+  // y serían 574 arrays de assets resueltos en cada carga del home.
+  "customerPhotos": customerPhotos[]{
+    _key,
+    "url": asset->url,
+    customerName,
+    city,
+    alt
+  },
   ctaHeadline,
   ctaText,
   offerName,
