@@ -2,6 +2,22 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+
+  // El contenedor de desarrollo se ve por el túnel SSH, en 100.107.182.42:3001,
+  // no en localhost. Next bloquea por defecto los recursos de desarrollo que
+  // pide un origen distinto de aquel con el que arrancó el servidor, así que
+  // desde el túnel quedaban bloqueados el HMR y el runtime del cliente.
+  //
+  // El síntoma engaña: la página carga y se ve bien —el HTML lo pinta el
+  // servidor—, pero el JavaScript nunca termina de hidratar. Los manejadores de
+  // eventos no se enganchan y los componentes interactivos se comportan como
+  // HTML plano: el enlace "Leer artículo" navegaba a /blog en vez de abrir la
+  // ventana emergente, y los cambios de código no se reflejaban al guardar.
+  // En localhost todo funcionaba, que es lo que despista.
+  //
+  // Solo aplica a `next dev`; en producción esta opción se ignora.
+  allowedDevOrigins: ['100.107.182.42'],
+
   async redirects() {
     return [
       // /vip pasó a llamarse /destacados (sep 2026). Permanente para no perder

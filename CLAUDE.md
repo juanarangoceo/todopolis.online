@@ -86,6 +86,46 @@ Tres salidas, en orden de preferencia:
    estar arriba consume ~95 MB en total, no es el problema. El problema es el
    tamaño del bundle contra 3.2 GB de RAM.
 
+#### Si el navegador muestra código viejo: reinicia `web-dev`
+**El hot reload se rompe en silencio cuando el contenedor muere por RAM.** El
+contenedor vuelve a arrancar solo, la página sigue respondiendo 200 y todo
+parece normal — pero el vigilante de archivos quedó tocado y Next sirve el
+último render bueno. Editas, guardas, recargas y no cambia nada.
+
+Es peor que un fallo ruidoso porque lleva a diagnosticar lo que no es: el
+17-sep-2026 costó un reporte de un fallo inexistente, un texto "que no se
+quitaba" y que en el código ya no estaba.
+
+La causa más común de esa muerte por RAM es correr `docker compose build web`
+—el build de producción— con `web-dev` arriba: no caben los dos en 3.2 GB.
+Baja dev antes de construir.
+
+```bash
+docker inspect todopolis-web-dev-1 --format '{{.State.OOMKilled}}'   # ¿true?
+docker compose --profile dev restart web-dev
+```
+
+#### `allowedDevOrigins` — sin esto, por el túnel NADA es interactivo
+`next.config.ts` lleva `allowedDevOrigins: ['100.107.182.42']`. **No lo quites.**
+
+Next bloquea por defecto los recursos de desarrollo que pide un origen distinto
+de aquel con el que arrancó el servidor. Como el contenedor arranca en localhost
+y nosotros lo vemos por el túnel, desde `100.107.182.42:3001` quedaban
+bloqueados el HMR y el runtime del cliente.
+
+El síntoma es tramposo: **la página carga y se ve perfecta**, porque el HTML lo
+pinta el servidor. Lo que no ocurre es la hidratación, así que todo lo
+interactivo se comporta como HTML plano — el enlace "Leer artículo" navegaba a
+/blog en vez de abrir la ventana emergente, y guardar un archivo no refrescaba
+el navegador. Y en `localhost:3001` todo funciona, que es lo que despista.
+
+La pista está en los logs del contenedor:
+```
+⚠ Blocked cross-origin request to Next.js dev resource /_next/webpack-hmr from "100.107.182.42".
+```
+Solo afecta a `next dev`; en producción la opción se ignora. Si algún día
+cambia la IP de Tailscale, hay que actualizarla ahí.
+
 Reconstruir el de producción tras un cambio:
 ```bash
 docker compose build web && docker compose down && docker compose up -d
