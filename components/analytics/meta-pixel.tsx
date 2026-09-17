@@ -1,10 +1,21 @@
 'use client'
 
 import Script from 'next/script'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useSyncExternalStore } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { getPixelId, setPixelId, pageview } from '@/lib/fbpixel'
-import { CONSENT_COOKIE, hasTrackingConsent } from '@/lib/consent'
+import { CONSENT_COOKIE, CONSENT_UNKNOWN, hasTrackingConsent, isConsentResolved } from '@/lib/consent'
+
+// La cookie de consentimiento no cambia mientras dure la página: al tocar el
+// interruptor del pie se recarga entera. No hay a qué suscribirse.
+function subscribeToConsent(): () => void {
+  return () => {}
+}
+
+function readConsentCookie(): string | null {
+  const row = document.cookie.split('; ').find((c) => c.startsWith(`${CONSENT_COOKIE}=`))
+  return row ? row.split('=')[1] : null
+}
 
 // Dispara PageView en cada navegación SPA. Va en su propio componente porque
 // useSearchParams obliga a un límite de Suspense.
@@ -52,21 +63,19 @@ export function MetaPixel({
   setPixelId(pixelId)
   const activePixelId = getPixelId()
 
-  // Consentimiento. Empieza en `null` y se resuelve tras montar, porque la
-  // cookie solo existe en el navegador: decidirlo en el primer render daría un
-  // error de hidratación. El retraso no cuesta nada — el script ya era
-  // `afterInteractive`.
+  // Consentimiento. La cookie es estado EXTERNO a React, así que se lee con
+  // `useSyncExternalStore` —igual que `cookie-preferences.tsx` y que el
+  // `<title>` en `whatsapp-button.tsx`— y no con un efecto que llama a
+  // setState, que provoca renders en cascada.
   //
-  // `null` = todavía no se sabe → no se pinta. Así, quien rechazó no ve
-  // cargarse el pixel ni un instante antes de que se compruebe.
-  const [allowed, setAllowed] = useState<boolean | null>(null)
-  useEffect(() => {
-    const stored = document.cookie
-      .split('; ')
-      .find((c) => c.startsWith(`${CONSENT_COOKIE}=`))
-      ?.split('=')[1]
-    setAllowed(hasTrackingConsent(stored))
-  }, [])
+  // El snapshot del servidor devuelve el centinela CONSENT_UNKNOWN, y el render
+  // de hidratación usa ese mismo valor: por eso servidor y cliente coinciden.
+  // No vale `null` ahí — `null` significa «no hay cookie», que es un estado en
+  // el que SÍ se mide, y el pixel se pintaría al hidratar sobre un servidor que
+  // no pintó nada. Con el centinela, el pixel NO sale hasta haber comprobado:
+  // quien lo desactivó no lo ve cargarse ni un instante.
+  const stored = useSyncExternalStore(subscribeToConsent, readConsentCookie, () => CONSENT_UNKNOWN)
+  const allowed = isConsentResolved(stored) ? hasTrackingConsent(stored) : null
 
   // Bloqueado no se pinta nada. Al salir hacia una página normal, este
   // componente vuelve a montarse entero: si el script nunca se había cargado,

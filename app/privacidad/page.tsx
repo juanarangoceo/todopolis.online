@@ -120,9 +120,10 @@ export default function PrivacidadPage() {
       <LegalSection id="cookies" title="5. Cookies, píxel de Meta y publicidad">
         <p>
           Este sitio usa cookies y tecnologías similares. Unas son necesarias para que la
-          página funcione; otras sirven para medir y para publicidad. Al entrar te mostramos un
-          aviso donde puedes <strong>rechazar la medición</strong>: si lo haces, dejamos de
-          enviar tus datos a Meta y a Google de inmediato, y puedes seguir comprando igual.
+          página funcione; otras sirven para medir y para publicidad. Puedes{' '}
+          <strong>desactivar las de medición cuando quieras</strong> desde el enlace del pie de
+          página: si lo haces, dejamos de enviar tus datos a Meta y a Google de inmediato, y
+          puedes seguir comprando igual.
         </p>
 
         <h3>Necesarias</h3>
@@ -146,12 +147,19 @@ export default function PrivacidadPage() {
 
         <h3>Cómo desactivarlas</h3>
         <ul>
-          <li>Rechazándolas en el aviso de cookies de este sitio, o cambiando tu decisión desde el enlace del pie de página.</li>
+          <li>
+            Con el enlace <strong>«Desactivar cookies de medición»</strong> del pie de esta
+            página. Es la forma más directa y tiene efecto inmediato en este sitio.
+          </li>
           <li>
             En la configuración de anuncios de tu cuenta de Facebook o Instagram, dentro de{' '}
             <em>Preferencias de anuncios</em>.
           </li>
           <li>Bloqueando cookies de terceros en tu navegador.</li>
+          <li>
+            Escribiéndonos por WhatsApp al <strong>{BUSINESS.phoneDisplay}</strong>, si prefieres
+            que lo hagamos nosotros.
+          </li>
         </ul>
         <p className="legal-note">
           Rechazar las cookies de medición no te impide comprar ni cambia los precios.

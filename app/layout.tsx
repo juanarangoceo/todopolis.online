@@ -8,7 +8,6 @@ import { LucyChatButton } from '@/components/lucy/lucy-chat-button'
 import { WhatsAppButton } from '@/components/whatsapp-button'
 import { MetaPixel } from '@/components/analytics/meta-pixel'
 import { AttributionTracker } from '@/components/analytics/attribution-tracker'
-import { CookieNotice } from '@/components/cookie-notice'
 import { getAdultProductSlugs, getSanityStoreSettings } from '@/lib/sanity/queries'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
@@ -132,7 +131,6 @@ export default async function RootLayout({
             aunque el visitante rechace las cookies de publicidad, porque los
             UTM son parámetros que ya venían escritos en la dirección. */}
         <AttributionTracker />
-        <CookieNotice />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}

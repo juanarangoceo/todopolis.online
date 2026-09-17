@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Instagram, Facebook, Sparkles, Heart, X, ShieldCheck } from 'lucide-react';
 import { advancePaymentVisible } from '@/components/payment-methods';
 import { BUSINESS, SOCIAL } from '@/lib/legal';
+import { CookiePreferences } from '@/components/cookie-preferences';
 
 // ── Modal content ────────────────────────────────────────────────────────────
 
@@ -215,6 +216,13 @@ export function Footer() {
                       </Link>
                     </li>
                   ))}
+                  {/* El interruptor de medición vive aquí y no en un aviso
+                      flotante: interrumpir a quien venía a comprar costaba
+                      conversión, pero el mecanismo tiene que existir de verdad
+                      porque /privacidad afirma que existe. */}
+                  <li>
+                    <CookiePreferences />
+                  </li>
                 </ul>
               </div>
             </div>
