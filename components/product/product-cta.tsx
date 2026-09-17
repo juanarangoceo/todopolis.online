@@ -56,9 +56,19 @@ export function ProductCTA({ product }: ProductCTAProps) {
               horas" es un dato de operación: al comprador no le mueve nada
               saber cuándo sale de una bodega que no conoce.
               Lo que de verdad diferencia aquí es que el comprador elige cómo
-              paga, y eso es lo que dice el titular. */}
-          <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground mb-6 text-balance">
-            {hasOffer ? 'Llévatelo antes de que suba' : 'Pídelo ahora y págalo a tu manera'}
+              paga, y eso es lo que dice el titular.
+
+              EL TONO IMPORTA TANTO COMO EL ARGUMENTO. «Pídelo ahora y págalo a
+              tu manera» era una orden seguida de una concesión: dos imperativos
+              en una marca que habla como una amiga que sabe del tema, no como
+              un vendedor apurando. «Tú eliges cómo pagarlo» dice lo mismo y
+              pone al comprador de sujeto en vez de recibir la orden.
+
+              Con oferta, «Llévatelo antes de que suba» insinuaba una subida de
+              precio que nadie ha decidido. Lo honesto es que la oferta termina
+              —y eso ya lo dice la chapa de arriba con su fecha real. */}
+          <h2 className="font-serif text-3xl md:text-5xl font-bold text-ink-title tracking-tight mb-6 text-balance">
+            {hasOffer ? 'Aprovecha mientras dure el precio' : 'Tú eliges cómo pagarlo'}
           </h2>
 
           {/* El subtítulo cierra el recorrido de la landing: quien llega hasta

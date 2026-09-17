@@ -23,6 +23,17 @@ interface ProductTestimonialsProps {
 // concretos del producto. Lo que se va es la etiqueta falsa — el nombre, la
 // ciudad, las estrellas y el sello.
 //
+// EL ENCABEZADO NO PUEDE ATRIBUIR ESTO A UN CLIENTE. «Experiencias de nuestros
+// clientes», «Lo que opinan», «Testimonios» y cualquier variante afirman que
+// alguien real lo dijo, y volverían a meter el problema entero por la puerta
+// del título. El encabezado actual es igual de persuasivo por otra vía: habla
+// en segunda persona y vende el beneficio al comprador («Así TE va a servir»)
+// en vez de describir a terceros que no existen.
+//
+// La página de Términos (/terminos, sección «Contenido del sitio») declara por
+// escrito que estos textos NO son testimonios de clientes reales. Si alguien
+// cambia este encabezado, esa declaración pasa a contradecir a la ficha.
+//
 // La prueba social auténtica de la ficha vive en otro sitio: `CustomerPhotos`
 // («Así les llegó»), que son fotos reales que manda un comprador. Y las reseñas
 // de verdad siguen pendientes: pedido entregado → WhatsApp con token de un solo
@@ -89,11 +100,11 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-ink-title tracking-tight mb-3">
-            Para qué lo usan
+            Así te va a servir
           </h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto leading-relaxed inline-flex items-center gap-1.5 flex-wrap justify-center">
             <Sparkles className="w-3.5 h-3.5 text-todopolis-lavender-deep shrink-0" />
-            Situaciones de uso habituales de este producto.
+            Situaciones en las que este producto se gana su puesto.
           </p>
         </div>
 

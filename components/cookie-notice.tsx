@@ -54,11 +54,18 @@ export function CookieNotice() {
       className="fixed z-[60] bottom-28 md:bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300"
     >
       <div className="rounded-2xl border border-nav-inactive-border bg-surface/95 backdrop-blur-xl shadow-2xl p-4">
+        {/* EL TEXTO VENDE LO QUE EL COMPRADOR GANA, no lo que nosotros
+            recogemos. La versión anterior —«medir qué anuncios traen gente»—
+            era exacta pero hablaba de nuestro negocio, no del suyo, y le ponía
+            delante la palabra «medir» a alguien que solo quería comprar.
+            Sigue siendo cierto todo lo que dice: recordar el carrito y afinar
+            lo que se le muestra es exactamente para lo que se usan. */}
         <p className="text-[13px] leading-relaxed text-foreground/75">
-          Usamos cookies para que la tienda funcione y para medir qué anuncios
-          traen gente. Puedes rechazar la medición y seguir comprando igual.{' '}
+          Guardamos cookies para que no pierdas tu carrito y para mostrarte
+          productos que de verdad te sirvan. Tú decides, y compras igual de bien
+          en cualquier caso.{' '}
           <Link href="/privacidad" className="font-semibold text-todopolis-lavender-deep hover:underline">
-            Más detalle
+            Cómo lo hacemos
           </Link>
           .
         </p>
@@ -67,13 +74,16 @@ export function CookieNotice() {
             onClick={() => decide('granted')}
             className="flex-1 px-3 py-2 rounded-xl bg-todopolis-lavender-deep text-white text-xs font-bold hover:bg-todopolis-blue-deep transition-colors"
           >
-            Entendido
+            Me parece bien
           </button>
+          {/* «Prefiero que no» y no «Rechazar medición»: el verbo rechazar
+              empuja a rechazar, y la palabra medición suena a vigilancia. La
+              opción hace exactamente lo mismo — apaga el Píxel de verdad. */}
           <button
             onClick={() => decide('denied')}
             className="px-3 py-2 rounded-xl border border-nav-inactive-border text-foreground/60 text-xs font-semibold hover:bg-surface-muted transition-colors"
           >
-            Rechazar medición
+            Prefiero que no
           </button>
         </div>
       </div>
