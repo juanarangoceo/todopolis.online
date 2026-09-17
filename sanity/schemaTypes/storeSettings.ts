@@ -31,6 +31,24 @@ export const storeSettingsType = defineType({
             : 'Debe ser un número con indicativo, entre 8 y 15 dígitos'
         ),
     }),
+    // ─── Medición y publicidad ──────────────────────────────────────────────
+    defineField({
+      name: 'metaPixelId',
+      title: '📊 ID del Píxel de Meta',
+      type: 'string',
+      description:
+        'Solo el número (ej. 562585775680913). Al guardarlo y publicar, el sitio empieza a usar ESTE píxel sin necesidad de volver a desplegar. Si se deja vacío, se usa el de la variable de entorno; si tampoco hay, no se mide nada.',
+      validation: (r) =>
+        r.custom((v) =>
+          !v || /^\d{10,20}$/.test(String(v).trim())
+            ? true
+            : 'El ID del píxel son solo dígitos (entre 10 y 20).'
+        ),
+    }),
+    // El TOKEN de la API de Conversiones NO va aquí a propósito: es un secreto
+    // y cualquiera con acceso al Studio vería el campo. Vive en Vercel, como
+    // META_CAPI_ACCESS_TOKEN.
+
     defineField({
       name: 'policies',
       title: 'Políticas de la Tienda',

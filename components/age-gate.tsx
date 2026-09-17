@@ -1,5 +1,13 @@
 'use client'
 
+// Verificación de edad para las fichas de bienestar íntimo.
+//
+// El encabezado dice "Contenido sensible" y NO "Contenido para adultos": la
+// segunda formulación describe la categoría entera con el término que las
+// plataformas publicitarias usan para el material que no admiten, y el nombre
+// de esa pantalla es de lo primero que ve un revisor. El aviso sigue siendo
+// igual de claro sobre qué hay detrás y sobre la mayoría de edad.
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
@@ -45,9 +53,10 @@ export function AgeGate({ open, onConfirm, onReject }: AgeGateProps = {}) {
         <div className="w-14 h-14 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-4">
           <ShieldCheck className="w-7 h-7 text-rose-500" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Contenido para adultos</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Contenido sensible</h2>
         <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-          Esta sección contiene productos de bienestar íntimo. Para continuar debes ser mayor de 18 años.
+          Esta página muestra productos de bienestar íntimo. Para continuar debes confirmar que
+          eres mayor de 18 años.
         </p>
         <div className="flex flex-col gap-3">
           <button

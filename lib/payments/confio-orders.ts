@@ -6,6 +6,7 @@
 // un pedido es una fila de `orders` y el cobro vive en esa misma fila.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { PURCHASE_ORDER_COLUMNS, sendOrderPurchase, type PurchaseOrder } from '@/lib/meta-purchase'
 import { randomUUID } from 'node:crypto'
 import { createPayment, getPayment } from './confio/client.ts'
 import { CONFIO_MIN_COP, centsToCop, copToCents, outcomeFor, provesPayment } from './confio/protocol.ts'
@@ -190,14 +191,31 @@ export async function applyConfioSnapshot(params: {
   }
 
   // El CAS. Solo un ejecutor gana.
+  //
+  // `status` pasa a 'confirmed' y no a 'pending': con el dinero ya en custodia,
+  // este pedido no está esperando que nadie lo verifique por WhatsApp — está
+  // listo para despacharse, y así lo ve quien empaca. Los de contraentrega sí
+  // siguen naciendo 'pending' hasta que alguien los confirme.
   const { data } = await db
     .from('orders')
-    .update({ payment_status: 'funded', status: 'pending', funded_at: now })
+    .update({ payment_status: 'funded', status: 'confirmed', funded_at: now, confirmed_at: now })
     .eq('id', order.id)
     .eq('payment_status', 'awaiting')
-    .select('id')
+    .select(PURCHASE_ORDER_COLUMNS)
 
   if (!data?.length) return { changed: false, funded: false, reason: 'ya_confirmado' }
+
+  // Purchase de Meta: AQUÍ hay dinero de verdad. Va después del CAS del pago y
+  // tiene su propio CAS dentro, así que ni dos pasadas del cron a la vez ni un
+  // reintento pueden mandarlo dos veces.
+  //
+  // Best-effort: un fallo de Meta no puede deshacer una confirmación de pago.
+  try {
+    await sendOrderPurchase(db, data[0] as PurchaseOrder, 'confio_funded')
+  } catch (err) {
+    console.error(`[confio] Purchase de Meta falló para el pedido ${order.id}:`, err)
+  }
+
   return { changed: true, funded: true, reason: 'funded' }
 }
 

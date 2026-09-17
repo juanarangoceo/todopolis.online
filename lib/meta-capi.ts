@@ -5,12 +5,36 @@
 // SHA-256 antes de salir (requisito de Meta). No-op si faltan credenciales.
 
 import { createHash } from 'crypto'
+import { getSanityStoreSettings } from './sanity/queries'
 
 const GRAPH_VERSION = 'v21.0'
 
-const PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID
+const ENV_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID
 const ACCESS_TOKEN = process.env.META_CAPI_ACCESS_TOKEN
 const TEST_EVENT_CODE = process.env.META_CAPI_TEST_EVENT_CODE
+
+/**
+ * El píxel al que se manda el evento.
+ *
+ * Tiene que coincidir con el del navegador o la deduplicación por `event_id`
+ * no funciona y Meta contaría cada conversión dos veces. Por eso resuelve en el
+ * MISMO orden que `lib/fbpixel.ts`: manda «Ajustes de Tienda» del Studio y la
+ * variable de entorno es el respaldo.
+ *
+ * El token NO se busca en Sanity: es un secreto y el Studio lo ven los
+ * editores. Vive solo en las variables del servidor.
+ */
+async function resolvePixelId(): Promise<string | undefined> {
+  try {
+    const settings = await getSanityStoreSettings()
+    const fromSanity = (settings?.metaPixelId as string | undefined)?.trim()
+    if (fromSanity) return fromSanity
+  } catch {
+    // Sanity caído no puede dejar la tienda sin medición: se sigue con el de
+    // la variable de entorno.
+  }
+  return ENV_PIXEL_ID
+}
 
 export interface CapiUserData {
   phone?: string
@@ -51,7 +75,9 @@ function hashField(raw: string | undefined, kind: 'email' | 'phone' | 'text'): s
 }
 
 export async function sendCapiEvent(args: SendCapiArgs): Promise<void> {
-  if (!PIXEL_ID || !ACCESS_TOKEN) return // CAPI no configurada → no-op
+  if (!ACCESS_TOKEN) return // CAPI no configurada → no-op
+  const pixelId = await resolvePixelId()
+  if (!pixelId) return
 
   const u = args.userData ?? {}
   const firstName = u.name?.trim().split(/\s+/)[0]
@@ -86,7 +112,7 @@ export async function sendCapiEvent(args: SendCapiArgs): Promise<void> {
     ...(TEST_EVENT_CODE && { test_event_code: TEST_EVENT_CODE }),
   }
 
-  const url = `https://graph.facebook.com/${GRAPH_VERSION}/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`
+  const url = `https://graph.facebook.com/${GRAPH_VERSION}/${pixelId}/events?access_token=${ACCESS_TOKEN}`
 
   try {
     const res = await fetch(url, {

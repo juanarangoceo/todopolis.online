@@ -7,7 +7,9 @@ import { CartProvider } from '@/app/providers/cart-provider'
 import { LucyChatButton } from '@/components/lucy/lucy-chat-button'
 import { WhatsAppButton } from '@/components/whatsapp-button'
 import { MetaPixel } from '@/components/analytics/meta-pixel'
-import { getSanityStoreSettings } from '@/lib/sanity/queries'
+import { AttributionTracker } from '@/components/analytics/attribution-tracker'
+import { CookieNotice } from '@/components/cookie-notice'
+import { getAdultProductSlugs, getSanityStoreSettings } from '@/lib/sanity/queries'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
@@ -104,6 +106,12 @@ export default async function RootLayout({
   // vez de desaparecer.
   const storeSettings = await getSanityStoreSettings()
 
+  // Rutas donde el Píxel de Meta NO debe cargarse. Las dos consultas van en
+  // paralelo y las dos están cacheadas (revalidate + tag), así que esto no
+  // añade latencia por página.
+  const adultSlugs = await getAdultProductSlugs()
+  const pixelBlockedPaths = adultSlugs.map((slug) => `/producto/${slug}`)
+
   return (
     <html lang="es" className={`${nunito.variable} ${montserrat.variable} h-full antialiased`}>
       {GA_ID && (
@@ -118,7 +126,13 @@ export default async function RootLayout({
         </>
       )}
       <body className="font-sans min-h-full flex flex-col">
-        <MetaPixel />
+        <MetaPixel blockedPaths={pixelBlockedPaths} pixelId={storeSettings?.metaPixelId} />
+        {/* Guarda de qué anuncio vino el visitante para poder apuntarle la venta
+            cuando se entregue, días después. No depende del Píxel: funciona
+            aunque el visitante rechace las cookies de publicidad, porque los
+            UTM son parámetros que ya venían escritos en la dirección. */}
+        <AttributionTracker />
+        <CookieNotice />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}

@@ -34,6 +34,21 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
     changeFrequency: 'weekly',
     priority: 0.7,
   },
+  // Páginas legales. Prioridad baja porque no compiten por tráfico, pero van en
+  // el mapa a propósito: una revisión de negocio de Meta o de la SIC tiene que
+  // poder llegar a ellas sin depender de que alguien mire el pie de página.
+  {
+    url: `${BASE_URL}/privacidad`,
+    lastModified: new Date(),
+    changeFrequency: 'yearly',
+    priority: 0.3,
+  },
+  {
+    url: `${BASE_URL}/terminos`,
+    lastModified: new Date(),
+    changeFrequency: 'yearly',
+    priority: 0.3,
+  },
 ]
 
 export const revalidate = 3600 // re-generate every hour

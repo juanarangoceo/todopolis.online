@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Instagram, Facebook, Sparkles, Heart, X, ShieldCheck } from 'lucide-react';
 import { advancePaymentVisible } from '@/components/payment-methods';
+import { BUSINESS, SOCIAL } from '@/lib/legal';
 
 // ── Modal content ────────────────────────────────────────────────────────────
 
@@ -61,30 +62,12 @@ const supportContent: Record<string, { title: string; body: React.ReactNode }> =
       </div>
     ),
   },
-  'Politica de Privacidad': {
-    title: 'Política de Privacidad',
-    body: (
-      <div className="space-y-4 text-gray-600 text-sm leading-relaxed">
-        <p>En Todópolis nos comprometemos a proteger tu información personal. Los datos que recopilamos (nombre, teléfono, dirección) se usan exclusivamente para procesar y entregar tu pedido.</p>
-        <p>No vendemos ni compartimos tu información con terceros salvo las transportadoras necesarias para el envío.</p>
-        <p>Puedes solicitar la eliminación de tus datos en cualquier momento contactándonos por WhatsApp.</p>
-        <p>Al realizar un pedido aceptas esta política de privacidad.</p>
-      </div>
-    ),
-  },
-  'Terminos y Condiciones': {
-    title: 'Términos y Condiciones',
-    body: (
-      <div className="space-y-4 text-gray-600 text-sm leading-relaxed">
-        <p><strong className="text-gray-800">Uso del sitio:</strong> Al navegar en Todópolis aceptas que el contenido es de carácter informativo y comercial.</p>
-        <p><strong className="text-gray-800">Pedidos:</strong> Un pedido se confirma solo cuando es verificado por nuestro equipo vía WhatsApp. Nos reservamos el derecho de cancelar pedidos con información incompleta.</p>
-        <p><strong className="text-gray-800">Precios:</strong> Los precios pueden cambiar sin previo aviso. El precio válido es el mostrado al momento de realizar el pedido.</p>
-        <p><strong className="text-gray-800">Responsabilidad:</strong> Todópolis no se hace responsable por retrasos causados por la transportadora una vez despachado el paquete.</p>
-        <p><strong className="text-gray-800">Jurisdicción:</strong> Estos términos se rigen por las leyes de Colombia.</p>
-      </div>
-    ),
-  },
 };
+
+const LEGAL_LINKS = [
+  { href: '/privacidad', label: 'Política de Privacidad' },
+  { href: '/terminos', label: 'Términos y Condiciones' },
+] as const;
 
 // ── Support Modal ─────────────────────────────────────────────────────────────
 
@@ -126,7 +109,9 @@ function SupportModal({ item, onClose }: { item: string; onClose: () => void }) 
 export function Footer() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
-  const supportItems = ['Preguntas Frecuentes', 'Envios y Devoluciones', 'Politica de Privacidad', 'Terminos y Condiciones'];
+  // Privacidad y Términos salieron de aquí: ahora son páginas con URL propia
+  // (LEGAL_LINKS). En el modal solo queda lo operativo.
+  const supportItems = ['Preguntas Frecuentes', 'Envios y Devoluciones'];
 
   return (
     <>
@@ -149,21 +134,30 @@ export function Footer() {
                 <p className="text-white/60 text-sm leading-relaxed font-serif mb-6">
                   Tu tienda online favorita con todo lo que necesitas. Moda, tecnologia, hogar, belleza y mucho mas en un solo lugar.
                 </p>
+                {/* Enlaces reales, no `href="#"`. Un enlace que no lleva a
+                    ninguna parte es peor que ninguno: en una revisión de negocio
+                    de Meta es justo lo que se mira para comprobar que la tienda
+                    existe fuera de su propia web. Las URLs están en
+                    `lib/legal.ts`. */}
                 <div className="flex gap-3">
-                  <Link 
-                    href="#" 
-                    className="p-3 rounded-xl bg-[#FFB4AC]/20 hover:bg-[#FFB4AC] hover:text-white transition-all duration-300 group" 
-                    aria-label="Instagram"
+                  <a
+                    href={SOCIAL.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-[#FFB4AC]/20 hover:bg-[#FFB4AC] hover:text-white transition-all duration-300 group"
+                    aria-label="Todópolis en Instagram"
                   >
                     <Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  </Link>
-                  <Link 
-                    href="#" 
-                    className="p-3 rounded-xl bg-[#A2D2FF]/20 hover:bg-[#A2D2FF] hover:text-white transition-all duration-300 group" 
-                    aria-label="Facebook"
+                  </a>
+                  <a
+                    href={SOCIAL.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-[#A2D2FF]/20 hover:bg-[#A2D2FF] hover:text-white transition-all duration-300 group"
+                    aria-label="Todópolis en Facebook"
                   >
                     <Facebook className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  </Link>
+                  </a>
                 </div>
               </div>
               
@@ -204,6 +198,21 @@ export function Footer() {
                         <span className="w-0 group-hover:w-2 h-0.5 bg-[#A2D2FF] transition-all duration-300 shrink-0" />
                         {item}
                       </button>
+                    </li>
+                  ))}
+                  {/* Privacidad y Términos son ENLACES, no ventanas emergentes:
+                      Meta pide una dirección visitable de la política de
+                      privacidad, y una que se abre con JavaScript no se puede
+                      pegar en un formulario ni la alcanza un revisor. */}
+                  {LEGAL_LINKS.map(({ href, label }) => (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        className="text-sm text-white/60 hover:text-[#A2D2FF] transition-colors font-serif flex items-center gap-2 group"
+                      >
+                        <span className="w-0 group-hover:w-2 h-0.5 bg-[#A2D2FF] transition-all duration-300 shrink-0" />
+                        {label}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -270,8 +279,29 @@ export function Footer() {
 
             {/* Bottom bar */}
             <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+              {/* IDENTIFICACIÓN DEL PROVEEDOR — Ley 1480 de 2011, art. 50: el
+                  consumidor tiene que poder saber a quién le compra y a quién
+                  reclamarle. Todópolis es una marca, no una sociedad; responde
+                  una persona natural.
+
+                  Aquí va SOLO el nombre, y el detalle vive en /terminos. La ley
+                  pide que el dato sea claro y accesible, no que ocupe el pie de
+                  todas las páginas, y el nombre de una persona natural en un
+                  sitio indexable conviene dosificarlo. El número de documento no
+                  se publica en ninguna parte: no le sirve a quien compra y, si
+                  una plataforma lo exige, se entrega por su canal privado de
+                  verificación.
+
+                  Sale de `lib/legal.ts` para que el pie y las páginas legales no
+                  puedan decir cosas distintas. */}
+              <p className="text-xs text-white/35 font-serif leading-relaxed">
+                Marca operada por {BUSINESS.legalName} · {BUSINESS.country} ·{' '}
+                <Link href="/terminos" className="hover:text-white/60 transition-colors underline underline-offset-2">
+                  Información del vendedor
+                </Link>
+              </p>
               <p className="text-sm text-white/40 font-serif">
-                2024 Todópolis. Todos los derechos reservados.
+                © {new Date().getFullYear()} {BUSINESS.brand}. Todos los derechos reservados.
               </p>
               <p className="text-sm text-white/40 font-serif flex items-center gap-2">
                 Hecho con <Heart className="w-4 h-4 text-[#FFB4AC] fill-[#FFB4AC]" /> en Colombia

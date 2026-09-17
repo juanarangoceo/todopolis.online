@@ -86,6 +86,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     notFound()
   }
 
+  const isAdultProduct = product.category === 'bienestar-intimo'
+
   const storeSettings = await getSanityStoreSettings()
 
   // Fetch all products to build suggested + more sections
@@ -340,13 +342,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         />
       )}
       <Header />
-      <TrackViewContent
-        id={adaptedProduct.slug}
-        name={adaptedProduct.name}
-        price={adaptedProduct.price}
-        category={adaptedProduct.category}
-      />
-      {product.category === 'bienestar-intimo' && <AgeGate />}
+      {/* Ni ViewContent ni ningún otro evento en bienestar íntimo: Meta prohíbe
+          anunciar productos para adultos y esos eventos alimentarían audiencias
+          publicitarias. El Píxel tampoco carga en estas rutas (ver el
+          `blockedPaths` de `app/layout.tsx`); esto corta el evento que monta la
+          propia ficha. */}
+      {!isAdultProduct && (
+        <TrackViewContent
+          id={adaptedProduct.slug}
+          name={adaptedProduct.name}
+          price={adaptedProduct.price}
+          category={adaptedProduct.category}
+        />
+      )}
+      {isAdultProduct && <AgeGate />}
       {/* La lupa flotante que aparece al bajar es una salida del embudo, y en
           un producto Destacado el embudo es justamente lo que se cuida: por eso
           esta ficha ya oculta los carruseles de "otros productos". El buscador

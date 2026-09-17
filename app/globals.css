@@ -339,3 +339,60 @@
 .rail-viewport {
   scrollbar-width: none;
 }
+
+/* Texto corrido de las páginas legales (/privacidad, /terminos).
+   Vive aquí y no como clases sueltas en el JSX porque son documentos largos:
+   repetir `text-sm leading-relaxed text-foreground/80` en ochenta párrafos es
+   donde se cuelan las incoherencias. */
+.legal-body {
+  color: var(--foreground);
+}
+.legal-body > section + section {
+  margin-top: 2rem;
+}
+.legal-body h2 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink-title);
+  margin-bottom: 0.75rem;
+}
+.legal-body h3 {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  margin-top: 1.25rem;
+  margin-bottom: 0.375rem;
+}
+.legal-body p,
+.legal-body li {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--muted-foreground);
+}
+.legal-body p + p {
+  margin-top: 0.75rem;
+}
+.legal-body ul,
+.legal-body ol {
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.legal-body ul { list-style: disc; }
+.legal-body ol { list-style: decimal; }
+.legal-body strong { color: var(--foreground); font-weight: 700; }
+.legal-body a {
+  color: var(--todopolis-lavender-deep);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal-body .legal-note {
+  margin-top: 1rem;
+  border-left: 3px solid var(--todopolis-lavender);
+  padding-left: 1rem;
+}

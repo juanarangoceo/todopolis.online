@@ -222,12 +222,39 @@ export async function getSanityStoreSettings() {
       heroTitle,
       heroSubtitle,
       whatsappPhone,
+      metaPixelId,
       policies
     }`, {}, {
       next: { revalidate: 86400, tags: ['storeSettings'] },
     }))
   } catch {
     return null
+  }
+}
+
+// Slugs de las fichas de bienestar íntimo. Los usa el layout para NO cargar el
+// Píxel de Meta en esas páginas: Meta prohíbe anunciar productos para adultos,
+// y mandarle eventos de navegación desde ahí —que además alimentan audiencias—
+// es un riesgo para la cuenta publicitaria que no compra nada a cambio.
+//
+// Consulta propia y no `getAllProductSlugs`: esa devuelve los 577 productos con
+// su categoría y fecha, y esto se pide en CADA página del sitio. Aquí solo
+// vuelven los slugs que hacen falta.
+const ADULT_SLUGS_QUERY = `*[_type == "product" && category == "bienestar-intimo" && defined(slug.current) && !(_id in path("drafts.**"))]{ "slug": slug.current }`
+
+export async function getAdultProductSlugs(): Promise<string[]> {
+  try {
+    const rows: { slug: string }[] = await withRetry(() =>
+      getSanityClient().fetch(ADULT_SLUGS_QUERY, {}, {
+        next: { revalidate: 86400, tags: ['products'] },
+      })
+    )
+    return rows.map((r) => r.slug).filter(Boolean)
+  } catch {
+    // Si la consulta falla NO se asume que no hay ninguno: se devuelve lista
+    // vacía y el pixel carga, que es el comportamiento de siempre. Bloquear de
+    // más por un fallo de red dejaría la tienda entera sin medición.
+    return []
   }
 }
 

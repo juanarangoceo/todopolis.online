@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Product } from '@/lib/types';
 import { useProductVariant } from '@/components/product/product-variant-context';
 import { VariantSelector } from '@/components/product/variant-selector';
-import { trackInitiateCheckout, trackPurchase, newEventId } from '@/lib/fbpixel';
+import { trackInitiateCheckout, trackLead, newEventId } from '@/lib/fbpixel';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -124,7 +124,7 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
       }
     }
 
-    // event_id compartido navegador↔CAPI para deduplicar el Purchase.
+    // event_id compartido navegador↔CAPI para deduplicar el Lead.
     const fbEventId = newEventId();
     formData.append('fbEventId', fbEventId);
 
@@ -138,8 +138,9 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
     setLoading(false);
 
     if (result.success) {
-      // Purchase del navegador (el espejo CAPI lo envía createOrder con el mismo eventId).
-      trackPurchase(
+      // Lead del navegador (el espejo CAPI lo envía createOrder con el mismo
+      // eventId). NO es Purchase: todavía no ha pagado nadie — ver lib/fbpixel.ts.
+      trackLead(
         {
           id: productId,
           value: totalPrice,

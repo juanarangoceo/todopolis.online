@@ -1,9 +1,10 @@
 'use client'
 
 import Script from 'next/script'
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { FB_PIXEL_ID, pageview } from '@/lib/fbpixel'
+import { getPixelId, setPixelId, pageview } from '@/lib/fbpixel'
+import { CONSENT_COOKIE, hasTrackingConsent } from '@/lib/consent'
 
 // Dispara PageView en cada navegación SPA. Va en su propio componente porque
 // useSearchParams obliga a un límite de Suspense.
@@ -18,10 +19,61 @@ function PixelRouteTracker() {
   return null
 }
 
-// Carga fbevents.js, inicializa el pixel y dispara el primer PageView.
-// No renderiza nada si no hay Pixel ID configurado.
-export function MetaPixel() {
-  if (!FB_PIXEL_ID) return null
+/**
+ * Píxel de Meta.
+ *
+ * `blockedPaths` son rutas donde NO se mide nada: hoy, las fichas de bienestar
+ * íntimo. Meta prohíbe anunciar productos para adultos, así que mandarle
+ * eventos desde esas páginas no sirve para pautar y sí mete en la cuenta
+ * publicitaria un tipo de dato que no debería estar ahí.
+ *
+ * El bloqueo actúa en dos momentos, porque hacen falta los dos:
+ *
+ *  1. Si la primera página que alguien abre es una de esas, el script ni
+ *     siquiera se descarga.
+ *  2. Si llega navegando desde otra página del sitio, `fbevents.js` ya está
+ *     cargado; ahí lo que se corta es el `PageView`. El pixel cargado no emite
+ *     nada por su cuenta, así que sin PageView ni ViewContent (que la ficha
+ *     tampoco monta) no sale ningún evento.
+ */
+export function MetaPixel({
+  blockedPaths = [],
+  pixelId,
+}: {
+  blockedPaths?: string[]
+  /** ID desde «Ajustes de Tienda» del Studio. Manda sobre la variable de entorno. */
+  pixelId?: string | null
+}) {
+  const pathname = usePathname()
+  const isBlocked = blockedPaths.includes(pathname)
+
+  // Se fija ANTES de cualquier evento: los ayudantes de `lib/fbpixel.ts` que
+  // usan el carrito y el checkout leen este valor, no la constante de entorno.
+  setPixelId(pixelId)
+  const activePixelId = getPixelId()
+
+  // Consentimiento. Empieza en `null` y se resuelve tras montar, porque la
+  // cookie solo existe en el navegador: decidirlo en el primer render daría un
+  // error de hidratación. El retraso no cuesta nada — el script ya era
+  // `afterInteractive`.
+  //
+  // `null` = todavía no se sabe → no se pinta. Así, quien rechazó no ve
+  // cargarse el pixel ni un instante antes de que se compruebe.
+  const [allowed, setAllowed] = useState<boolean | null>(null)
+  useEffect(() => {
+    const stored = document.cookie
+      .split('; ')
+      .find((c) => c.startsWith(`${CONSENT_COOKIE}=`))
+      ?.split('=')[1]
+    setAllowed(hasTrackingConsent(stored))
+  }, [])
+
+  // Bloqueado no se pinta nada. Al salir hacia una página normal, este
+  // componente vuelve a montarse entero: si el script nunca se había cargado,
+  // se carga y su propio `fbq('track','PageView')` cuenta esa visita; si ya
+  // estaba cargado de antes, quien la cuenta es `PixelRouteTracker` al montarse
+  // de nuevo (Next no reejecuta un <Script> con el mismo id).
+  if (!activePixelId || isBlocked || allowed !== true) return null
 
   return (
     <>
@@ -35,7 +87,7 @@ export function MetaPixel() {
           t.src=v;s=b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t,s)}(window,document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '${FB_PIXEL_ID}');
+          fbq('init', '${activePixelId}');
           fbq('track', 'PageView');
         `}
       </Script>
@@ -46,7 +98,7 @@ export function MetaPixel() {
           width="1"
           style={{ display: 'none' }}
           alt=""
-          src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
+          src={`https://www.facebook.com/tr?id=${activePixelId}&ev=PageView&noscript=1`}
         />
       </noscript>
       <Suspense fallback={null}>

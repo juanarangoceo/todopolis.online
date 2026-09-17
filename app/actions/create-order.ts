@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { cookies, headers } from 'next/headers';
 import { sendCapiEvent } from '@/lib/meta-capi';
+import { ATTRIBUTION_COOKIE, attributionToColumns, readStoredAttribution } from '@/lib/attribution';
 
 export async function createOrder(formData: FormData) {
   try {
@@ -41,25 +42,54 @@ export async function createOrder(formData: FormData) {
       return { success: false, error: 'Por favor completa todos los campos' };
     }
 
+    // ── Atribución ───────────────────────────────────────────────────────────
+    // De qué anuncio vino este pedido. Se copia AL CREARLO y no se calcula
+    // después porque el Purchase de Meta se manda más tarde —cuando el pedido
+    // se entrega— y para entonces ya no hay navegador del que leer `_fbp` ni
+    // `_fbc`. Sin ellos, un evento enviado días después no se puede atribuir.
+    const cookieStore = await cookies();
+    const attribution = readStoredAttribution(
+      cookieStore.get(ATTRIBUTION_COOKIE)?.value ?? null,
+      Date.now()
+    );
+
     const { error } = await supabase
       .from('orders')
-      .insert([orderData]);
+      .insert([{
+        ...orderData,
+        ...attributionToColumns(attribution, {
+          fbp: cookieStore.get('_fbp')?.value ?? null,
+          fbc: cookieStore.get('_fbc')?.value ?? null,
+        }),
+      }]);
 
     if (error) {
       console.error('Error insertando orden:', error);
       return { success: false, error: 'Ocurrió un error al procesar tu pedido' };
     }
 
-    // ── Meta Conversions API: Purchase server-side (deduplicado por event_id) ──
+    // ── Meta Conversions API ─────────────────────────────────────────────────
+    // ESTO ES UN `Lead`, NO UN `Purchase`.
+    //
+    // Aquí el comprador acaba de llenar un formulario: con contraentrega no ha
+    // pagado nada todavía y el pedido nace 'pending'. Mandar `Purchase` en este
+    // punto le decía a Meta que el 100% de los formularios eran ventas, así que
+    // el algoritmo optimizaba hacia gente que llena formularios y luego no
+    // recibe el paquete — que es exactamente el tráfico que no se quiere.
+    //
+    // El `Purchase` se manda cuando hay dinero de verdad:
+    //   · Confío  → al pasar a `funded` (`lib/payments/confio-orders.ts`)
+    //   · Contraentrega → al marcar el pedido 'delivered' en el panel
+    // y en los dos casos con las cookies que se guardaron en esta fila.
+    //
     // Best-effort: nunca debe romper la confirmación del pedido.
     try {
       const fbEventId = formData.get('fbEventId') as string | null;
       if (fbEventId) {
-        const cookieStore = await cookies();
         const headerStore = await headers();
         const xff = headerStore.get('x-forwarded-for');
         await sendCapiEvent({
-          eventName: 'Purchase',
+          eventName: 'Lead',
           eventId: fbEventId,
           eventSourceUrl: headerStore.get('referer') ?? undefined,
           customData: {
@@ -81,7 +111,7 @@ export async function createOrder(formData: FormData) {
         });
       }
     } catch (capiErr) {
-      console.error('[create-order] CAPI Purchase falló (no crítico):', capiErr);
+      console.error('[create-order] CAPI Lead falló (no crítico):', capiErr);
     }
 
     return { success: true };

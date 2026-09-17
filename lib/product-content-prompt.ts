@@ -2,6 +2,16 @@
 // Lo usan: app/api/mastershop/import (import manual), lib/mastershop-sync (cron),
 // y app/api/generate-product-content (regenerar desde el admin/studio).
 //
+// NO SE INVENTAN DATOS. Este prompt llegó a decir literalmente "INVENTA
+// especificaciones plausibles", y de ahí salieron fichas con potencias y
+// medidas que nadie había comprobado. Con tráfico pagado eso deja de ser un
+// detalle: una especificación falsa en una landing es publicidad engañosa para
+// la SIC y una afirmación no sustentable para las políticas de Meta.
+//
+// La ruta de generación manual ya le pasa al modelo las 3 primeras fotos del
+// producto (`app/api/generate-product-content`), así que el material, el color
+// y las medidas legibles en el empaque salen de mirar, no de suponer.
+//
 // Antes este prompt estaba duplicado en 3 lugares y el del cron era una versión
 // vieja y débil que reintroducía clichés ("miles de colombianos") y CTAs pasivos.
 // Centralizarlo evita esa deriva. Temperatura sugerida para el copy: 0.85.
@@ -43,7 +53,9 @@ Regla crítica que rige TODO el copy:
 - CADA frase debe incluir al menos UN dato concreto del producto (un ingrediente, un tiempo, una medida, una textura, un mecanismo, una acción específica).
 - Si una frase se puede copiar tal cual a OTRO producto distinto de la misma categoría, está mal escrita y debes reescribirla.
 - Prohibido vender la categoría ("ideal para tu rutina diaria"); vende ESTE producto con sus datos.
-- Si el input no trae suficiente detalle, INVENTA especificaciones plausibles y específicas (no genéricas). Mejor "motor de 18.000 rpm con 3 velocidades" que "potente motor".
+- NUNCA inventes datos que no puedas sostener: ni medidas, ni potencias, ni materiales, ni composiciones, ni certificaciones, ni tiempos de resultado. Si el dato no está en el texto del producto ni se ve en las fotos, NO lo escribas.
+- Si falta detalle técnico, sé específico en lo que SÍ sabes (uso, situación, a quién le sirve) en vez de rellenar con cifras. Mejor "cabe en el bolsillo de un morral" que "motor de 18.000 rpm" si nadie ha medido ese motor.
+- Prohibido prometer resultados de salud, curación, pérdida de peso o cambios corporales. Describe la función del producto, no un efecto médico.
 - El cliente colombiano ya leyó cien anuncios. La única forma de captar atención es que cada frase le diga algo que NO sabía del producto.
 
 ─── PROHIBIDO (clichés que matan la conversión) ────────────────────────────
