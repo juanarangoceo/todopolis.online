@@ -22,7 +22,25 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 8): Promise<T> {
 }
 
 // GROQ query for a list of products (for home page cards)
-const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | order(_createdAt desc) {
+// ─── Por qué TODAS las consultas excluyen `drafts.**` ────────────────────────
+//
+// El cliente de Sanity lleva `SANITY_API_TOKEN`, y con token un `*[_type ==
+// "product"]` devuelve el documento publicado Y su borrador como dos entradas
+// distintas. Eso tenía dos efectos, los dos silenciosos:
+//
+//   1. PRODUCTO DUPLICADO. Mientras alguien tuviera abierto un borrador en el
+//      Studio, ese producto salía DOS VECES en el home — se vio en las
+//      novedades del 17-sep-2026, con la misma foto y el mismo precio en dos
+//      casillas seguidas.
+//   2. CONTENIDO SIN PUBLICAR A LA VISTA. Peor: las consultas de detalle
+//      (`slug.current == $slug`) no garantizan cuál de los dos devuelven, así
+//      que un comprador podía estar leyendo la versión en borrador de una
+//      ficha, con precios o textos a medio editar.
+//
+// `PRODUCTS_COUNT_QUERY` ya lo excluía; las otras doce no. Si añades una
+// consulta pública nueva, lleva el mismo filtro.
+
+const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**"))] | order(_createdAt desc) {
   _id,
   _createdAt,
   name,
@@ -44,7 +62,7 @@ const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current)] | or
 }`
 
 // GROQ query for a single product (for landing page)
-const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] {
+const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !(_id in path("drafts.**"))][0] {
   _id,
   _createdAt,
   name,
@@ -84,8 +102,8 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug][0] 
     question,
     answer
   },
-  "articleSlug": *[_type == "article" && relatedProduct._ref == ^._id][0].slug.current,
-  "articleTopic": *[_type == "article" && relatedProduct._ref == ^._id][0].topic,
+  "articleSlug": *[_type == "article" && relatedProduct._ref == ^._id && !(_id in path("drafts.**"))][0].slug.current,
+  "articleTopic": *[_type == "article" && relatedProduct._ref == ^._id && !(_id in path("drafts.**"))][0].topic,
   // Destacados — contenido manual extendido.
   // Los campos ALMACENADOS conservan el prefijo vip* (no se migró el dataset);
   // aquí se alias-ean al nombre de marca actual. Ver CLAUDE.md.
@@ -140,7 +158,7 @@ const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {
 }`
 
 // GROQ query to get all slugs (for generateStaticParams + sitemap)
-const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)]{ "slug": slug.current, category, _updatedAt }`
+const ALL_SLUGS_QUERY = `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**"))]{ "slug": slug.current, category, _updatedAt }`
 
 export async function getSanityProducts() {
   try {
@@ -269,8 +287,8 @@ export async function getProductsByTags(slugs: string[], mode: 'any' | 'all'): P
   if (!slugs.length) return []
   const filter =
     mode === 'all'
-      ? `*[_type == "product" && defined(slug.current) && count((tags[]->slug.current)[@ in $slugs]) == $required]`
-      : `*[_type == "product" && defined(slug.current) && count((tags[]->slug.current)[@ in $slugs]) > 0]`
+      ? `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**")) && count((tags[]->slug.current)[@ in $slugs]) == $required]`
+      : `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**")) && count((tags[]->slug.current)[@ in $slugs]) > 0]`
   const query = `${filter} | order(_createdAt desc) {
     _id,
     name,
@@ -298,7 +316,7 @@ export async function getProductsByTags(slugs: string[], mode: 'any' | 'all'): P
 
 // ─── Article queries ──────────────────────────────────────────────────────────
 
-const ARTICLES_LIST_QUERY = `*[_type == "article"] | order(publishedAt desc) {
+const ARTICLES_LIST_QUERY = `*[_type == "article" && !(_id in path("drafts.**"))] | order(publishedAt desc) {
   _id,
   title,
   "slug": slug.current,
@@ -310,7 +328,7 @@ const ARTICLES_LIST_QUERY = `*[_type == "article"] | order(publishedAt desc) {
   productSlug
 }`
 
-const ARTICLE_DETAIL_QUERY = `*[_type == "article" && slug.current == $slug][0] {
+const ARTICLE_DETAIL_QUERY = `*[_type == "article" && slug.current == $slug && !(_id in path("drafts.**"))][0] {
   _id,
   title,
   "slug": slug.current,
@@ -339,7 +357,7 @@ const ARTICLE_DETAIL_QUERY = `*[_type == "article" && slug.current == $slug][0] 
   }
 }`
 
-const ALL_ARTICLE_SLUGS_QUERY = `*[_type == "article" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+const ALL_ARTICLE_SLUGS_QUERY = `*[_type == "article" && defined(slug.current) && !(_id in path("drafts.**"))]{ "slug": slug.current, _updatedAt }`
 
 
 export async function getArticles(): Promise<SanityArticle[]> {
@@ -373,7 +391,7 @@ export async function getAllArticleSlugs(): Promise<{ slug: string; _updatedAt?:
 // ─── Colecciones de Marca ──────────────────────────────────────────────────
 // Landing paraguas que agrupa 3-6 productos de un segmento con contenido IA.
 // Los productos se resuelven conservando el orden del array de referencias.
-const COLLECTION_DETAIL_QUERY = `*[_type == "collectionLanding" && slug.current == $slug][0] {
+const COLLECTION_DETAIL_QUERY = `*[_type == "collectionLanding" && slug.current == $slug && !(_id in path("drafts.**"))][0] {
   _id,
   title,
   "slug": slug.current,
@@ -411,7 +429,7 @@ const COLLECTION_DETAIL_QUERY = `*[_type == "collectionLanding" && slug.current 
   }
 }`
 
-const ALL_COLLECTION_SLUGS_QUERY = `*[_type == "collectionLanding" && defined(slug.current)] {
+const ALL_COLLECTION_SLUGS_QUERY = `*[_type == "collectionLanding" && defined(slug.current) && !(_id in path("drafts.**"))] {
   "slug": slug.current,
   _updatedAt
 }`
@@ -457,7 +475,7 @@ export async function getAllCollectionSlugs(): Promise<{ slug: string; _updatedA
 
 // Lista de colecciones para la página índice /colecciones. Solo las que tienen
 // productos. Trae portadas (primeras imágenes de producto) para el collage del card.
-const COLLECTIONS_LIST_QUERY = `*[_type == "collectionLanding" && defined(slug.current) && count(products) > 0] | order(_createdAt desc) {
+const COLLECTIONS_LIST_QUERY = `*[_type == "collectionLanding" && defined(slug.current) && !(_id in path("drafts.**")) && count(products) > 0] | order(_createdAt desc) {
   _id,
   title,
   "slug": slug.current,
