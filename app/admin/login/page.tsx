@@ -30,7 +30,10 @@ export default function AdminLoginPage() {
       // Success! Save password to localStorage for APIs that need it and redirect
       localStorage.setItem('mastershop_admin_pwd', password)
       const searchParams = new URLSearchParams(window.location.search)
-      const from = searchParams.get('from') || '/admin/mastershop'
+      // Destino por defecto: el panel de pedidos, que es lo que se mira a
+      // diario. Mastershop solo se abre cuando toca importar catálogo.
+      // `from` manda cuando el proxy redirigió desde una página protegida.
+      const from = searchParams.get('from') || '/admin/pedidos'
       router.push(from)
       router.refresh() // Force refresh to update server components with new cookie
     } catch (err: any) {
