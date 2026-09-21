@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Play } from 'lucide-react'
 import { DestacadoHeroVideo as VipHeroVideoData } from '@/lib/types'
+import { sanityCdnImage } from '@/lib/sanity/cdn-image'
 
 interface Props {
   video: VipHeroVideoData
@@ -42,10 +43,9 @@ export function DestacadoHeroVideo({ video }: Props) {
   return (
     <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
-        <div className="relative max-w-sm md:max-w-md mx-auto rounded-3xl overflow-hidden shadow-xl border border-amber-200/60 aspect-[4/5] bg-black">
+        <div className="relative mx-auto aspect-[4/5] max-w-sm overflow-hidden rounded-3xl border border-todopolis-lavender/50 bg-black shadow-xl md:aspect-video md:max-w-4xl">
           {/* MP4 / GIF: render directo inline, sin click-to-play */}
           {source === 'mp4' && (
-            // eslint-disable-next-line jsx-a11y/media-has-caption
             <video
               src={video.url}
               poster={video.posterImage}
@@ -74,18 +74,19 @@ export function DestacadoHeroVideo({ video }: Props) {
                 >
                   {video.posterImage ? (
                     <Image
-                      src={video.posterImage}
+                      src={sanityCdnImage(video.posterImage, 1400)}
                       alt={video.caption ?? 'Poster del video'}
                       fill
                       sizes="(min-width: 1024px) 800px, 100vw"
                       className="object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-todopolis-blue/20 to-todopolis-lavender/20" />
                   )}
                   <span className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
                   <span className="relative z-10 flex items-center justify-center w-20 h-20 rounded-full shadow-2xl border-2 border-white/30 backdrop-blur-sm transition-transform group-hover:scale-110"
-                    style={{ background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)' }}
+                    style={{ background: 'linear-gradient(135deg, var(--todopolis-blue-deep) 0%, var(--todopolis-lavender-deep) 100%)' }}
                   >
                     <Play className="w-8 h-8 text-white ml-1" fill="currentColor" />
                   </span>
@@ -105,9 +106,9 @@ export function DestacadoHeroVideo({ video }: Props) {
           {/* URL genérica: fallback con link */}
           {source === 'other' && video.posterImage && (
             <a href={video.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative">
-              <Image src={video.posterImage} alt={video.caption ?? 'Video'} fill sizes="100vw" className="object-cover" />
+              <Image src={sanityCdnImage(video.posterImage, 1400)} alt={video.caption ?? 'Video'} fill sizes="100vw" className="object-cover" unoptimized />
               <span className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                <span className="px-4 py-2 rounded-full bg-white/95 text-sm font-bold text-amber-900">Ver video →</span>
+                <span className="px-4 py-2 rounded-full bg-white/95 text-sm font-bold text-todopolis-lavender-deep">Ver video →</span>
               </span>
             </a>
           )}

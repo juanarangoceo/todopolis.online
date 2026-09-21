@@ -1,7 +1,8 @@
 import Image from 'next/image'
-import { Package, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { DestacadoBoxContents as VipBoxContentsData } from '@/lib/types'
 import { DestacadoSectionHeader } from './destacado-section-header'
+import { sanityCdnImage } from '@/lib/sanity/cdn-image'
 
 interface Props {
   data: VipBoxContentsData
@@ -20,32 +21,28 @@ export function DestacadoBoxContents({ data }: Props) {
           subtitle={data.intro}
         />
 
-        <div className="space-y-6 max-w-xl mx-auto">
-          {data.image ? (
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-amber-200/60 shadow-md bg-muted">
+        <div className={`mx-auto grid max-w-5xl gap-8 ${data.image ? 'md:grid-cols-2 md:items-center' : 'max-w-2xl'}`}>
+          {data.image && (
+            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-todopolis-lavender/50 bg-muted shadow-md">
               <Image
-                src={data.image}
+                src={sanityCdnImage(data.image, 1000)}
                 alt={data.imageAlt || 'Contenido de la caja'}
                 fill
                 sizes="(min-width: 768px) 50vw, 100vw"
                 className="object-cover"
+                unoptimized
               />
-            </div>
-          ) : (
-            <div className="aspect-[4/3] rounded-2xl border-2 border-dashed border-amber-200 flex items-center justify-center bg-amber-50">
-              <Package className="w-16 h-16 text-amber-400" />
             </div>
           )}
 
           {items.length > 0 && (
-            <ul className="space-y-3">
+            <ul className="space-y-3 rounded-3xl border border-nav-inactive-border bg-surface p-6 shadow-sm md:p-8">
               {items.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span
-                    className="shrink-0 mt-0.5 w-6 h-6 rounded-lg flex items-center justify-center border border-amber-300 shadow-sm"
-                    style={{ background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)' }}
+                    className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-todopolis-blue/70 bg-todopolis-blue/30 shadow-sm"
                   >
-                    <Check className="w-3.5 h-3.5 text-amber-900" strokeWidth={3} />
+                    <Check className="h-3.5 w-3.5 text-todopolis-blue-deep" strokeWidth={3} />
                   </span>
                   <span className="text-foreground/85 leading-relaxed">{item}</span>
                 </li>

@@ -99,6 +99,21 @@ export interface DestacadoQuote {
   author?: string
 }
 
+/**
+ * Columna vertebral editorial de una landing de campaña. Los tres momentos no
+ * son componentes decorativos: obligan al editor a conectar la situación del
+ * comprador con el mecanismo del producto y el resultado esperado.
+ */
+export interface DestacadoStory {
+  eyebrow?: string
+  problemTitle?: string
+  problemText?: string
+  turningPointTitle?: string
+  turningPointText?: string
+  outcomeTitle?: string
+  outcomeText?: string
+}
+
 // Sanity product type (matches schema)
 /** Foto que mandó un cliente, con el crédito opcional que quiera dársele. */
 export interface CustomerPhoto {
@@ -130,7 +145,7 @@ export interface SanityProduct {
   aiLifestyleImage?: string
   benefits?: Array<{ icon: string; title: string; description: string }>
   specifications?: Array<{ label: string; value: string }>
-  testimonials?: Array<{ name: string; role: string; rating: number; text: string }>
+  testimonials?: Array<{ name?: string; role?: string; rating?: number; text: string }>
   reviewsCount?: number
   ctaHeadline?: string
   ctaText?: string
@@ -154,6 +169,7 @@ export interface SanityProduct {
   destacadoTestimonials?: DestacadoVisualTestimonial[]
   destacadoComparison?: DestacadoComparison
   destacadoQuotes?: DestacadoQuote[]
+  destacadoStory?: DestacadoStory
 }
 
 // Legacy mock type (keep for backward compat during transition)
@@ -178,7 +194,7 @@ export interface Product {
   features?: string[]
   specifications?: { label: string; value: string }[]
   benefits?: { icon: string; title: string; description: string }[]
-  testimonials?: { name: string; role: string; rating: number; text: string }[]
+  testimonials?: { name?: string; role?: string; rating?: number; text: string }[]
   reviewsCount?: number
   heroTitle?: string
   heroSubtitle?: string
@@ -195,6 +211,7 @@ export interface Product {
   destacadoTestimonials?: DestacadoVisualTestimonial[]
   destacadoComparison?: DestacadoComparison
   destacadoQuotes?: DestacadoQuote[]
+  destacadoStory?: DestacadoStory
 }
 
 export interface ProductTag {
@@ -230,4 +247,3 @@ export interface StoreSettings {
   heroSubtitle?: string
   policies: StorePolicy[]
 }
-

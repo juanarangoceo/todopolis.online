@@ -47,6 +47,7 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
           sizes="(max-width: 1024px) 100vw, 45vw"
           className="object-cover"
           priority
+          loading="eager"
         />
         {discount > 0 && (
           <span className="absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 bg-sale">

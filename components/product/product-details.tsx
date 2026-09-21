@@ -7,11 +7,12 @@ import { Info, ListChecks } from 'lucide-react';
 
 interface ProductDetailsProps {
   product: Product;
+  specificationsOnly?: boolean;
 }
 
 type Tab = 'description' | 'specifications';
 
-export function ProductDetails({ product }: ProductDetailsProps) {
+export function ProductDetails({ product, specificationsOnly = false }: ProductDetailsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('description');
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -19,6 +20,44 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     { id: 'description' as Tab, label: 'Descripción', icon: Info },
     { id: 'specifications' as Tab, label: 'Especificaciones', icon: ListChecks },
   ];
+
+  if (specificationsOnly) {
+    if (!product.specifications?.length) return null;
+
+    return (
+      <section className="py-12 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-8 text-center">
+              <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-trust-border bg-trust-bg px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-trust-fg">
+                <ListChecks className="h-3.5 w-3.5" />
+                Datos comprobables
+              </span>
+              <h2 className="font-serif text-3xl font-bold tracking-tight text-ink-title md:text-4xl">
+                Los detalles que conviene saber
+              </h2>
+            </div>
+            <div className="overflow-hidden rounded-3xl border border-nav-inactive-border bg-surface shadow-sm">
+              <table className="w-full">
+                <tbody>
+                  {product.specifications.map((spec, index) => (
+                    <tr key={`${spec.label}-${index}`} className="border-b border-border/60 last:border-0 odd:bg-surface-soft">
+                      <td className="w-[42%] px-5 py-4 text-sm font-bold text-foreground/70 md:px-8 md:text-base">
+                        {spec.label}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-foreground md:px-8 md:text-base">
+                        {spec.value}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8 md:py-12">

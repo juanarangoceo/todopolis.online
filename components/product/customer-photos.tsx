@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Camera } from 'lucide-react'
 import { CustomerPhoto } from '@/lib/types'
+import { sanityCdnImage } from '@/lib/sanity/cdn-image'
 
 interface CustomerPhotosProps {
   photos?: CustomerPhoto[]
@@ -63,11 +64,12 @@ export function CustomerPhotos({ photos, productName }: CustomerPhotosProps) {
               className="relative aspect-square rounded-xl overflow-hidden bg-surface-muted group"
             >
               <Image
-                src={photo.url as string}
+                src={sanityCdnImage(photo.url as string, 600)}
                 alt={photo.alt || `${productName} — foto de un cliente`}
                 fill
                 sizes="(max-width: 640px) 45vw, 160px"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
+                unoptimized
               />
 
               {/* Crédito sobre la foto. Solo si el editor puso nombre o ciudad:

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Header } from '@/components/header'
+import { CampaignHeader } from '@/components/campaign-header'
 import { Footer } from '@/components/footer'
 import { ProductHero } from '@/components/product/product-hero'
 import { ProductImageGallery } from '@/components/product/product-image-gallery'
@@ -17,6 +18,7 @@ import { DestacadoBoxContents } from '@/components/product/destacados/destacado-
 import { DestacadoTestimonials } from '@/components/product/destacados/destacado-testimonials'
 import { DestacadoComparison } from '@/components/product/destacados/destacado-comparison'
 import { DestacadoQuoteBlock } from '@/components/product/destacados/destacado-quote'
+import { DestacadoStory } from '@/components/product/destacados/destacado-story'
 import { OfferBanner } from '@/components/product/offer-banner'
 import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
@@ -24,12 +26,27 @@ import { GlobalSearch } from '@/components/global-search'
 import { StorePolicies } from '@/components/store-policies'
 import { TrackViewContent } from '@/components/analytics/track-view-content'
 import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries'
-import Link from 'next/link'
-import { SanityProduct } from '@/lib/types'
+import { Product, SanityProduct } from '@/lib/types'
 import { AgeGate } from '@/components/age-gate'
 import { VoiceLucyMount } from '@/components/lucy/VoiceLucyMount'
 import { ProductVariantProvider } from '@/components/product/product-variant-context'
 import { ArticleModalProvider, ArticleTrigger } from '@/components/product/article-modal'
+
+function SuggestedSection({ products, title, subtitle }: { products: Product[], title: string, subtitle: string }) {
+  if (products.length === 0) return null
+
+  return (
+    <section className="py-8 md:py-16">
+      <div className="text-center mb-10">
+        <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
+          {title}
+        </h2>
+        <p className="text-muted-foreground max-w-2xl mx-auto">{subtitle}</p>
+      </div>
+      <SuggestedProductsCarousel products={products} />
+    </section>
+  )
+}
 
 export async function generateStaticParams() {
   const slugs = await getAllProductSlugs()
@@ -88,10 +105,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const isAdultProduct = product.category === 'bienestar-intimo'
 
-  const storeSettings = await getSanityStoreSettings()
-
-  // Fetch all products to build suggested + more sections
-  const sanityProducts = await getSanityProducts().catch(() => [])
+  // Los Destacados no tienen buscador ni venta cruzada: traer cientos de
+  // productos en una visita de anuncio solo añadía datos y latencia. Ajustes y
+  // catálogo son independientes, así que se resuelven en paralelo.
+  const [storeSettings, sanityProducts] = await Promise.all([
+    getSanityStoreSettings(),
+    product.isDestacado ? Promise.resolve([]) : getSanityProducts().catch(() => []),
+  ])
   const otherProducts = sanityProducts
     .filter((p: any) => p._id !== product._id && p.category?.toLowerCase() !== 'bienestar-intimo')
     .map((p: any) => ({
@@ -161,27 +181,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     destacadoTestimonials: product.destacadoTestimonials ?? [],
     destacadoComparison: product.destacadoComparison,
     destacadoQuotes: product.destacadoQuotes ?? [],
+    destacadoStory: product.destacadoStory,
   }
 
   // Solo hay recuadro de fotos si alguna trae URL resuelta: un item de Sanity
   // al que le borraron el asset llega como objeto sin `url`, y contarlo pondría
   // la landing en dos columnas para no pintar nada en la derecha.
   const hasCustomerPhotos = adaptedProduct.customerPhotos.some((p) => !!p?.url)
-
-  const SuggestedSection = ({ products, title, subtitle }: { products: typeof suggestedProducts, title: string, subtitle: string }) =>
-    products.length > 0 ? (
-      <section className="py-8 md:py-16">
-        <div className="text-center mb-10">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-            {title}
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            {subtitle}
-          </p>
-        </div>
-        <SuggestedProductsCarousel products={products} />
-      </section>
-    ) : null
 
   // Link al artículo — compartido por ambos layouts y por el embudo de Destacados.
   const articleLink = adaptedProduct.articleSlug ? (
@@ -205,24 +211,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     </div>
   ) : null
 
-  // Cuerpo del embudo (todo lo que va después del hero). Se renderiza igual en
-  // desktop (columna derecha que scrollea) y mobile. En productos destacados los
-  // bloques manuales se intercalan estratégicamente con el contenido IA para
-  // armar el embudo y se ocultan los carruseles de productos que distraen.
-  const funnelBody = adaptedProduct.isDestacado ? (
+  // El Destacado ya no es una ficha larga comprimida al lado de una foto fija.
+  // Después del hero, la historia recupera todo el ancho y avanza en este orden:
+  // contexto → mecanismo → demostración → contenido → prueba → objeciones → cierre.
+  const destacadoFunnel = (
     <>
       {adaptedProduct.destacadoHeroVideo?.url && (
         <DestacadoHeroVideo video={adaptedProduct.destacadoHeroVideo} />
       )}
-      <ProductLifestyleImage product={adaptedProduct} />
+      <DestacadoStory story={adaptedProduct.destacadoStory} />
       {adaptedProduct.destacadoQuotes[0] && (
         <DestacadoQuoteBlock quote={adaptedProduct.destacadoQuotes[0]} />
       )}
       <ProductBenefits product={adaptedProduct} />
+      {!adaptedProduct.destacadoHeroVideo?.url && (
+        <ProductLifestyleImage product={adaptedProduct} />
+      )}
       {adaptedProduct.destacadoBeforeAfter.length > 0 && (
         <DestacadoBeforeAfter pairs={adaptedProduct.destacadoBeforeAfter} />
       )}
-      <ProductDetails product={adaptedProduct} />
       {adaptedProduct.destacadoSteps.length > 0 && (
         <DestacadoSteps steps={adaptedProduct.destacadoSteps} />
       )}
@@ -232,8 +239,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       {adaptedProduct.destacadoComparison && (
         <DestacadoComparison data={adaptedProduct.destacadoComparison} />
       )}
+      <ProductDetails product={adaptedProduct} specificationsOnly />
       {adaptedProduct.destacadoTestimonials.length > 0 && (
         <DestacadoTestimonials testimonials={adaptedProduct.destacadoTestimonials} />
+      )}
+      {hasCustomerPhotos && (
+        <section className="py-10 md:py-14">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-5xl">
+              <CustomerPhotos
+                photos={adaptedProduct.customerPhotos}
+                productName={adaptedProduct.name}
+              />
+            </div>
+          </div>
+        </section>
       )}
       {adaptedProduct.destacadoQuotes.slice(1).map((q) => (
         <DestacadoQuoteBlock key={q._key ?? q.text} quote={q} />
@@ -242,7 +262,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
       <ProductCTA product={adaptedProduct} />
     </>
-  ) : (
+  )
+
+  const standardFunnel = (
     <>
       <ProductLifestyleImage product={adaptedProduct} />
       <ProductBenefits product={adaptedProduct} />
@@ -281,9 +303,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // atadas a un pedido. Ver "Reseñas reales — pendiente" en CLAUDE.md.
 
   // priceValidUntil: fin de la oferta si existe, si no ~1 año desde hoy.
-  const priceValidUntil =
-    (adaptedProduct.offerEndsAt as string | null) ||
-    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const priceValidUntil = adaptedProduct.offerEndsAt as string | null
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -297,7 +317,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       '@type': 'Offer',
       priceCurrency: 'COP',
       price: adaptedProduct.price,
-      priceValidUntil,
+      ...(priceValidUntil ? { priceValidUntil } : {}),
       itemCondition: 'https://schema.org/NewCondition',
       availability: 'https://schema.org/InStock',
       url: productUrl,
@@ -341,7 +361,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
-      <Header />
+      {adaptedProduct.isDestacado ? <CampaignHeader /> : <Header />}
       {/* Ni ViewContent ni ningún otro evento en bienestar íntimo: Meta prohíbe
           anunciar productos para adultos y esos eventos alimentarían audiencias
           publicitarias. El Píxel tampoco carga en estas rutas (ver el
@@ -361,43 +381,37 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           esta ficha ya oculta los carruseles de "otros productos". El buscador
           no desaparece —sigue en el header y en la barra de móvil—, lo que se
           quita es el botón que invita a irse a mitad de lectura. */}
-      <GlobalSearch products={searchableProducts} showMobileFab={!adaptedProduct.isDestacado} />
+      {!adaptedProduct.isDestacado && <GlobalSearch products={searchableProducts} />}
 
       <main className="flex-1">
         <ArticleModalProvider currentProductSlug={adaptedProduct.slug}>
         <ProductVariantProvider variants={adaptedProduct.variants}>
-        {/* Desktop: Two-column layout with sticky image sidebar */}
-        <div className="hidden lg:block">
-          <div className="container mx-auto px-4 py-8">
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              {/* Left column — sticky image gallery */}
-              <div className="lg:sticky lg:top-24 lg:self-start">
-                <ProductImageGallery product={adaptedProduct} />
-              </div>
-
-              {/* Right column — banner de oferta arriba, luego hero y el
-                  embudo (contenido IA + bloques de Destacados intercalados). */}
-              <div className="space-y-0">
-                <OfferBanner product={adaptedProduct} />
-                <ProductHero product={adaptedProduct} />
-                {funnelBody}
-              </div>
+        {/* Un solo árbol responsivo. Antes desktop y mobile duplicaban todo el
+            hero y todo el embudo en el HTML; además de peso innecesario, eso
+            duplicaba IDs, modales y contenido para lectores de pantalla. */}
+        <div className="container mx-auto px-4 py-4 lg:py-8">
+          <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
+            <div className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
+              <ProductImageGallery product={adaptedProduct} />
+            </div>
+            <div className="min-w-0 space-y-0">
+              <OfferBanner product={adaptedProduct} />
+              <ProductHero product={adaptedProduct} />
+              {!adaptedProduct.isDestacado && standardFunnel}
             </div>
           </div>
         </div>
 
-        {/* Mobile: Normal stacked layout */}
-        <div className="lg:hidden">
-          <div className="container mx-auto px-4 pt-4">
-            <OfferBanner product={adaptedProduct} />
+        {adaptedProduct.isDestacado && (
+          <div className="border-t border-nav-inactive-border">
+            {destacadoFunnel}
           </div>
-          <ProductHero product={adaptedProduct} />
-          {funnelBody}
-        </div>
+        )}
         </ProductVariantProvider>
 
-        {/* Reseñas — full width, debajo del último CTA, tanto en destacados como en el resto */}
-        <ProductTestimonials product={adaptedProduct} />
+        {/* Los escenarios IA legados no forman parte de una campaña. Las
+            landings destacadas solo muestran prueba manual/fotos reales. */}
+        {!adaptedProduct.isDestacado && <ProductTestimonials product={adaptedProduct} />}
 
         {/* Global Store Policies */}
         <div className="container mx-auto px-4 mt-8">
@@ -442,7 +456,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             única de `max-w-2xl` que había antes, porque estirar un formulario
             de tres campos a todo el ancho lo deja desangelado.
             `items-stretch` iguala la altura de las dos tarjetas. */}
-        <section className="py-12 md:py-16">
+        {!adaptedProduct.isDestacado && <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
             <div
               className={
@@ -463,7 +477,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               )}
             </div>
           </div>
-        </section>
+        </section>}
         </ArticleModalProvider>
       </main>
 

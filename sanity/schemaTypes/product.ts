@@ -287,18 +287,19 @@ export const productType = defineType({
     }),
     defineField({
       name: 'testimonials',
-      title: 'Testimonios',
+      title: 'Escenarios de uso (IA, no son reseñas)',
       type: 'array',
       group: 'landing',
+      description: 'Situaciones hipotéticas de uso redactadas sin atribuirlas a personas reales. Los datos antiguos de nombre, ciudad y estrellas se conservan ocultos solo por compatibilidad.',
       of: [
         defineArrayMember({
           name: 'testimonial',
           type: 'object',
           fields: [
-            defineField({ name: 'name', title: 'Nombre', type: 'string' }),
-            defineField({ name: 'role', title: 'Rol / Ciudad', type: 'string' }),
-            defineField({ name: 'text', title: 'Testimonio', type: 'text', rows: 3 }),
-            defineField({ name: 'rating', title: 'Calificación (1-5)', type: 'number', validation: (r) => r.min(1).max(5) }),
+            defineField({ name: 'text', title: 'Situación de uso', type: 'text', rows: 3 }),
+            defineField({ name: 'name', title: 'Nombre legado', type: 'string', hidden: true }),
+            defineField({ name: 'role', title: 'Rol / Ciudad legado', type: 'string', hidden: true }),
+            defineField({ name: 'rating', title: 'Calificación legada', type: 'number', hidden: true }),
           ],
         }),
       ],
@@ -399,15 +400,15 @@ export const productType = defineType({
       description: 'Fecha y hora exacta. El countdown desaparece automáticamente al llegar a cero.',
     }),
 
-    // ─── Destacados — Contenido manual extendido (100% editorial) ────────────
+    // ─── Destacados — Contenido extendido de campaña ────────────────────────
     // OJO: los `name` de estos campos conservan el prefijo `vip*` a propósito.
     // Son los nombres ALMACENADOS en el dataset; renombrarlos exigiría migrar
     // los documentos existentes. Lo que ve el editor son los `title`, y el
     // código de la app los lee alias-eados como `destacado*` desde
     // lib/sanity/queries.ts. Ver CLAUDE.md.
-    // Estos campos NUNCA los toca la IA ni el sync de Mastershop. Decisión
-    // editorial: el editor activa isVip y llena los bloques que quiera. Los
-    // bloques vacíos no se renderizan.
+    // `vipStory` llega prellenado por la IA y queda para revisión editorial.
+    // Los módulos visuales restantes siguen siendo manuales porque dependen de
+    // fotos, videos, comparaciones y testimonios aportados por la tienda.
     defineField({
       name: 'isVip',
       title: '⭐ ¿Producto Destacado?',
@@ -415,6 +416,61 @@ export const productType = defineType({
       group: 'destacados',
       initialValue: false,
       description: 'Activa la estrellita en la tarjeta del producto y lo incluye en /destacados. Si lo activas, los bloques de abajo se mostrarán en la landing (solo los que llenes). También activa envío gratis en el checkout.',
+    }),
+    defineField({
+      name: 'vipStory',
+      title: '🧩 Historia de campaña — tres momentos',
+      type: 'object',
+      group: 'destacados',
+      description: 'La IA la prepara al crear o regenerar el producto. Revísala antes de publicar: conecta el problema, el mecanismo real y el resultado; los módulos visuales de abajo sirven como evidencia.',
+      options: { collapsible: true, collapsed: false },
+      validation: (rule) => rule.custom((value, context) => {
+        if (!context.document?.isVip) return true
+        const story = value as Record<string, unknown> | undefined
+        const required = [
+          'problemTitle',
+          'problemText',
+          'turningPointTitle',
+          'turningPointText',
+          'outcomeTitle',
+          'outcomeText',
+        ]
+        return story && required.every((field) => typeof story[field] === 'string' && story[field])
+          ? true
+          : 'Un producto Destacado necesita completar los tres momentos antes de publicarse como landing de campaña.'
+      }).warning(),
+      fields: [
+        defineField({
+          name: 'eyebrow',
+          title: 'Antetítulo de la historia',
+          type: 'string',
+          description: 'Ej: "Si esto te pasa cada mañana". Una frase breve que haga sentir reconocido al visitante.',
+        }),
+        defineField({ name: 'problemTitle', title: '1. El momento — título', type: 'string' }),
+        defineField({
+          name: 'problemText',
+          title: '1. El momento — escena concreta',
+          type: 'text',
+          rows: 3,
+          description: 'Describe la situación cotidiana antes del producto, sin exagerar ni diagnosticar.',
+        }),
+        defineField({ name: 'turningPointTitle', title: '2. Lo que cambia — título', type: 'string' }),
+        defineField({
+          name: 'turningPointText',
+          title: '2. Lo que cambia — mecanismo',
+          type: 'text',
+          rows: 3,
+          description: 'Explica qué hace diferente al producto y por qué funciona, usando datos comprobables.',
+        }),
+        defineField({ name: 'outcomeTitle', title: '3. El resultado — título', type: 'string' }),
+        defineField({
+          name: 'outcomeText',
+          title: '3. El resultado — nueva escena',
+          type: 'text',
+          rows: 3,
+          description: 'Pinta el después observable y realista. Nada de promesas absolutas.',
+        }),
+      ],
     }),
     defineField({
       name: 'vipHeroVideo',

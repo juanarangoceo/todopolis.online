@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { DestacadoBeforeAfterPair } from '@/lib/types'
 import { DestacadoSectionHeader } from './destacado-section-header'
 import { DestacadoSlider } from './destacado-slider'
+import { sanityCdnImage } from '@/lib/sanity/cdn-image'
 
 interface Props {
   pairs: DestacadoBeforeAfterPair[]
@@ -40,16 +41,17 @@ function BeforeAfterSlider({ pair }: { pair: DestacadoBeforeAfterPair }) {
         ref={containerRef}
         onPointerDown={handlePointer}
         onPointerMove={handlePointer}
-        className="relative aspect-[4/3] md:aspect-[16/10] rounded-2xl overflow-hidden border border-amber-200/60 shadow-md cursor-ew-resize select-none touch-pan-y bg-muted"
+        className="relative aspect-[4/3] md:aspect-[16/10] rounded-2xl overflow-hidden border border-todopolis-lavender/55 shadow-md cursor-ew-resize select-none touch-pan-y bg-muted"
       >
         {/* "Antes" — capa base */}
         <Image
-          src={pair.beforeImage}
+          src={sanityCdnImage(pair.beforeImage, 1200)}
           alt={pair.beforeImageAlt || 'Antes'}
           fill
           sizes="(min-width: 1024px) 800px, 100vw"
           className="object-cover pointer-events-none"
           draggable={false}
+          unoptimized
         />
         <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-[10px] font-black uppercase tracking-widest">
           Antes
@@ -58,27 +60,28 @@ function BeforeAfterSlider({ pair }: { pair: DestacadoBeforeAfterPair }) {
         {/* "Después" — recortada por position% */}
         <div className="absolute inset-0 pointer-events-none" style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}>
           <Image
-            src={pair.afterImage}
+            src={sanityCdnImage(pair.afterImage, 1200)}
             alt={pair.afterImageAlt || 'Después'}
             fill
             sizes="(min-width: 1024px) 800px, 100vw"
             className="object-cover"
             draggable={false}
+            unoptimized
           />
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest shadow">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-cta text-cta-fg text-[10px] font-black uppercase tracking-widest shadow">
             Después
           </span>
         </div>
 
         {/* Línea + handle */}
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_0_1px_rgba(245,158,11,0.5)] pointer-events-none"
+          className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_0_1px_rgba(107,63,138,0.55)] pointer-events-none"
           style={{ left: `${position}%` }}
         >
           <span
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-amber-400"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-todopolis-lavender-deep"
           >
-            <span className="text-amber-600 text-base leading-none">⇆</span>
+            <span className="text-todopolis-lavender-deep text-base leading-none">⇆</span>
           </span>
         </div>
       </div>

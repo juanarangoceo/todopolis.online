@@ -264,10 +264,7 @@ async function importProduct(
     testimonials: (ai.testimonials ?? []).map((t: any) => ({
       _type: 'testimonial',
       _key: Math.random().toString(36).substring(2, 9),
-      name: t.name,
-      role: t.role,
       text: t.text,
-      rating: Number(t.rating ?? 5),
     })),
     ctaHeadline: ai.ctaHeadline ?? '',
     ctaText: ai.ctaText ?? '',
@@ -277,6 +274,9 @@ async function importProduct(
       question: f.question,
       answer: f.answer,
     })),
+    // El cron deja lista la historia de campaña desde el alta. Marcar el
+    // producto como Destacado después no requiere volver a generar el copy.
+    ...(ai.campaignStory && { vipStory: ai.campaignStory }),
     ...(variants.length > 0 && { variants }),
     ...(tagReferences.length > 0 && { tags: tagReferences }),
   }

@@ -16,6 +16,7 @@ export function GenerateContentButton(props: any) {
   const name = useFormValue(['name']) as string
   const shortDescription = useFormValue(['shortDescription']) as string
   const category = useFormValue(['category']) as string | undefined
+  const isDestacado = useFormValue(['isVip']) as boolean | undefined
   const slug = useFormValue(['slug']) as { current?: string } | undefined
   const images = useFormValue(['images']) as any[]
   const mastershopImageUrl = useFormValue(['mastershopImageUrl']) as string | undefined
@@ -68,10 +69,12 @@ export function GenerateContentButton(props: any) {
       
       const mapArray = (arr: any, typeName: string) => 
         Array.isArray(arr) ? arr.map(item => {
-          const processed = { ...item }
-          if (typeName === 'testimonial' && processed.rating) {
-            processed.rating = Number(processed.rating)
-          }
+          // La clave `testimonials` se conserva por compatibilidad, pero la IA
+          // ya genera escenarios anónimos. Descartar identidad y estrellas aquí
+          // impide que una respuesta vieja vuelva a crear una reseña ficticia.
+          const processed = typeName === 'testimonial'
+            ? { text: item?.text }
+            : { ...item }
           return {
             ...processed,
             _key: generateKey(),
@@ -92,7 +95,21 @@ export function GenerateContentButton(props: any) {
         faqs: mapArray(generated.faqs, 'faq'),
       }
 
+      // Se guarda aun antes de activar Destacado. De ese modo el editor puede
+      // revisar la historia y después encender la campaña sin regenerar todo.
+      if (generated.campaignStory) {
+        patchData.vipStory = generated.campaignStory
+      }
+
       const cambios: string[] = []
+
+      if (generated.campaignStory) {
+        cambios.push(
+          isDestacado
+            ? 'Historia de campaña en tres momentos'
+            : 'Historia de campaña preparada para cuando sea Destacado',
+        )
+      }
 
       // Nombre estratégico: el import de Mastershop siempre lo aplicó y el botón
       // lo descartaba, así que el mismo producto quedaba peor creado a mano.

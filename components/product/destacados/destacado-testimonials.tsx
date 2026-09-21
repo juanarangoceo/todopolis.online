@@ -3,6 +3,7 @@ import { Quote } from 'lucide-react'
 import { DestacadoVisualTestimonial } from '@/lib/types'
 import { DestacadoSectionHeader } from './destacado-section-header'
 import { DestacadoSlider } from './destacado-slider'
+import { sanityCdnImage } from '@/lib/sanity/cdn-image'
 
 interface Props {
   testimonials: DestacadoVisualTestimonial[]
@@ -25,20 +26,21 @@ export function DestacadoTestimonials({ testimonials }: Props) {
           {valid.map((t) => (
             <figure
               key={t._key ?? `${t.name}-${t.quote.slice(0, 20)}`}
-              className="relative flex flex-col h-full bg-surface rounded-2xl border border-amber-200/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              className="relative flex flex-col h-full bg-surface rounded-2xl border border-todopolis-lavender/55 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
             >
               {t.photo && (
                 <div className="relative aspect-square bg-muted overflow-hidden">
                   <Image
-                    src={t.photo}
+                    src={sanityCdnImage(t.photo, 700)}
                     alt={t.photoAlt || t.name}
                     fill
                     sizes="300px"
                     className="object-cover"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   <Quote
-                    className="absolute top-4 right-4 w-7 h-7 text-amber-300 drop-shadow"
+                    className="absolute top-4 right-4 w-7 h-7 text-todopolis-lavender drop-shadow"
                     fill="currentColor"
                     strokeWidth={0}
                   />
@@ -49,7 +51,7 @@ export function DestacadoTestimonials({ testimonials }: Props) {
                 <blockquote className="text-foreground/85 leading-relaxed text-sm md:text-base mb-4 flex-1">
                   &ldquo;{t.quote}&rdquo;
                 </blockquote>
-                <div className="pt-3 border-t border-amber-100">
+                <div className="pt-3 border-t border-todopolis-lavender/35">
                   <p className="font-bold text-sm text-foreground leading-tight">{t.name}</p>
                   {t.location && (
                     <p className="text-xs text-foreground/55 mt-0.5">{t.location}</p>

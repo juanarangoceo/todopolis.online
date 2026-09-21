@@ -118,6 +118,15 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
   // Los campos ALMACENADOS conservan el prefijo vip* (no se migró el dataset);
   // aquí se alias-ean al nombre de marca actual. Ver CLAUDE.md.
   "isDestacado": isVip,
+  "destacadoStory": vipStory {
+    eyebrow,
+    problemTitle,
+    problemText,
+    turningPointTitle,
+    turningPointText,
+    outcomeTitle,
+    outcomeText
+  },
   "destacadoHeroVideo": vipHeroVideo {
     url,
     "posterImage": posterImage.asset->url,

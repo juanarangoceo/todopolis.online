@@ -28,10 +28,10 @@ Todópolis es una tienda online colombiana enfocada en productos de calidad con 
 1. MÉTODO PAS EMOCIONAL
    - PROBLEMA: Identifica el dolor específico que resuelve el producto (no el producto en sí)
    - AGITACIÓN: Intensifica ese dolor con lenguaje empático que haga al lector decir "¡eso me pasa a mí!"
-   - SOLUCIÓN: Presenta el producto como la transformación inevitable, no como una compra
+   - SOLUCIÓN: Presenta el producto como una alternativa concreta y comprensible, nunca como un resultado inevitable
 
-2. TRIGGERS PSICOLÓGICOS (úsalos con sutileza, no de forma agresiva)
-   - Prueba social: nombres y ciudades reales de Colombia en los testimonios
+2. SEÑALES DE CONFIANZA (úsalas con sutileza, no de forma agresiva)
+   - Prueba social: NO la inventes. Solo existe cuando la tienda aporta una foto, una reseña o un pedido real
    - Autoridad: menciona si aplica datos, certificaciones, tiempo en el mercado
    - Escasez percibida: lenguaje que implique demanda alta sin mentir
    - Identidad: conecta el producto con quién quiere SER el cliente, no solo qué quiere TENER
@@ -117,16 +117,22 @@ BENEFICIOS (4 en total):
 - Descripción: 2 oraciones. Primera explica el resultado. Segunda conecta con emoción o identidad
 - Cada beneficio debe ser diferente al anterior (no repitas la misma idea con otras palabras)
 
+HISTORIA DE CAMPAÑA (campaignStory, tres momentos):
+- problemTitle + problemText: una escena cotidiana anterior al producto. Debe provocar reconocimiento, no miedo ni vergüenza
+- turningPointTitle + turningPointText: explica el mecanismo o diferencia comprobable que cambia esa escena
+- outcomeTitle + outcomeText: muestra el después observable y realista, sin prometer resultados absolutos
+- Cada texto tiene 25-45 palabras y debe conducir naturalmente al siguiente. No repitas el hero ni enumeres beneficios
+- eyebrow: frase de 3-7 palabras que introduce la historia sin sonar a anuncio
+
 ESPECIFICACIONES (5 en total):
 - Mezcla datos técnicos reales con características de uso
 - Incluye siempre: material/composición, dimensiones/cantidad, compatibilidad/uso, garantía, una especificación diferenciadora
 
-TESTIMONIOS (3 en total):
-- Deben contar una HISTORIA CORTA de transformación (situación antes → resultado después)
-- Nombres colombianos reales y variados (hombre/mujer, diferentes ciudades: Bogotá, Medellín, Cali, Barranquilla, Bucaramanga)
-- Menciona un detalle específico que haga el testimonio creíble (tiempo de uso, ocasión concreta)
-- Rating: el primero 5 estrellas, el segundo 5 estrellas, el tercero 4 estrellas (más realismo)
-- Tono: como un mensaje de WhatsApp a un familiar, no como una reseña corporativa
+ESCENARIOS DE USO (3 en total, se guardan temporalmente bajo la clave técnica "testimonials"):
+- NO son reseñas ni declaraciones de clientes. No inventes nombres, ciudades, ocupaciones, calificaciones, compras ni tiempos de uso
+- Escríbelos en tercera persona como situaciones hipotéticas concretas: contexto → uso del producto → resultado funcional esperado
+- Cada escenario debe representar un momento distinto y contener un detalle comprobable del producto
+- Evita la primera persona ("lo compré", "llevo tres semanas") y cualquier frase que implique que el hecho ya ocurrió
 
 HERO CTA (texto del botón principal):
 - Máximo 4 palabras y **22 caracteres contando espacios**. Es un botón: si no cabe en una línea, se parte en dos y empuja el precio fuera de la pantalla del móvil.
@@ -160,7 +166,7 @@ Antes de emitir el JSON, repasa cada campo y descarta cualquiera que:
 2. Use alguna frase prohibida en cualquier variante ("miles de", "el mejor", "premium" sin justificar, "te encantará", "calidad incomparable", etc.).
 3. Contenga adjetivos vacíos sin sustento concreto: "increíble", "espectacular", "único", "fantástico", "maravilloso", "extraordinario".
 4. Prometa cosas que Todópolis no cumple (devoluciones gratis, garantía de por vida, envío express).
-5. Testimonios sin un detalle específico de uso ("me encantó" no vale; "lo uso hace tres semanas y noté…" sí vale).
+5. Escenarios de uso escritos como testimonios reales o atribuidos a una persona que no fue aportada por la tienda.
 
 Si encuentras alguno, reescríbelo con datos concretos del producto antes de responder.
 
@@ -179,6 +185,15 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin co
     { "icon": "emoji", "title": "Tercer resultado único", "description": "Oración de resultado + oración emocional." },
     { "icon": "emoji", "title": "Cuarto resultado único", "description": "Oración de resultado + oración emocional." }
   ],
+  "campaignStory": {
+    "eyebrow": "Entrada breve y reconocible",
+    "problemTitle": "Escena cotidiana antes del producto",
+    "problemText": "Situación concreta y empática, sin exagerar el problema.",
+    "turningPointTitle": "La diferencia que cambia la escena",
+    "turningPointText": "Mecanismo real del producto explicado con claridad.",
+    "outcomeTitle": "El después observable",
+    "outcomeText": "Resultado funcional y realista en una nueva escena cotidiana."
+  },
   "specifications": [
     { "label": "Etiqueta técnica", "value": "Valor específico y real" },
     { "label": "Etiqueta técnica", "value": "Valor específico y real" },
@@ -187,9 +202,9 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin texto adicional, sin co
     { "label": "Etiqueta técnica", "value": "Valor específico y real" }
   ],
   "testimonials": [
-    { "name": "Nombre colombiano", "role": "Ciudad · ocupación o contexto", "rating": 5, "text": "Historia corta: situación antes → resultado concreto después. Detalle específico creíble." },
-    { "name": "Nombre colombiano diferente", "role": "Ciudad diferente · contexto", "rating": 5, "text": "Historia corta con detalle específico de tiempo o uso." },
-    { "name": "Nombre colombiano diferente", "role": "Ciudad diferente · contexto", "rating": 4, "text": "Historia positiva con una pequeña crítica constructiva que aumente credibilidad." }
+    { "text": "Escenario hipotético en tercera persona: contexto concreto → uso → resultado funcional esperado." },
+    { "text": "Segundo escenario de uso, sin nombre, ciudad, estrellas ni afirmación de compra real." },
+    { "text": "Tercer escenario distinto, anclado a una característica comprobable del producto." }
   ],
   "ctaHeadline": "Titular de cierre con urgencia honesta que empuje a comprar (afirmación, no pregunta)",
   "ctaText": "Oración de beneficio final que cierra la venta. Segunda oración con contraentrega o facilidad de compra que empuja al botón.",

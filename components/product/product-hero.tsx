@@ -69,9 +69,10 @@ export function ProductHero({ product }: ProductHeroProps) {
               src={images[selectedImage]}
               alt={product.name}
               fill
-              sizes="100vw"
+              sizes="(max-width: 1023px) 100vw, 1px"
               className="object-cover"
               priority
+              loading="eager"
             />
             {discount > 0 && (
               <span className="absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 bg-sale">
@@ -249,7 +250,7 @@ export function ProductHero({ product }: ProductHeroProps) {
           <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-sm text-muted-foreground">En stock - Envío inmediato</span>
+              <span className="text-sm text-muted-foreground">Disponible · llega en 3 a 7 días hábiles</span>
             </div>
             {product.isBestSeller && (
               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-todopolis-coral-deep">
@@ -356,7 +357,7 @@ export function ProductHero({ product }: ProductHeroProps) {
             </div>
             <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-trust-bg border border-trust-border">
               <RotateCcw className="w-6 h-6 text-trust-fg" />
-              <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">30 días devolución</span>
+              <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">30 días si llega con defecto</span>
             </div>
           </div>
         </div>

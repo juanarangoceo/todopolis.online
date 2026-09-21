@@ -11,8 +11,8 @@ interface DestacadoSectionHeaderProps {
 export function DestacadoSectionHeader({ eyebrow = 'Solo en Destacados', title, subtitle }: DestacadoSectionHeaderProps) {
   return (
     <div className="text-center mb-6 md:mb-7">
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] bg-amber-50 border border-amber-200/70 text-amber-700 mb-3">
-        <Star className="w-3 h-3 text-amber-500" fill="currentColor" strokeWidth={1.5} />
+      <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-todopolis-lavender/60 bg-todopolis-lavender/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-todopolis-lavender-deep">
+        <Star className="w-3 h-3 text-todopolis-lavender-deep" fill="currentColor" strokeWidth={1.5} />
         {eyebrow}
       </span>
       <h2 className="font-serif text-2xl md:text-3xl font-bold text-foreground leading-tight text-balance">

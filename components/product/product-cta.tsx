@@ -26,6 +26,13 @@ export function ProductCTA({ product }: ProductCTAProps) {
   const originalPrice = product.originalPrice;
   const hasOffer = typeof originalPrice === 'number' && originalPrice > product.price;
   const discount = hasOffer ? Math.round((1 - product.price / originalPrice) * 100) : 0;
+  const unsafeLegacyClaim = /garantía de satisfacción|sin riesgos|devolución gratis|envío inmediato/i;
+  const headline = product.ctaHeadline?.trim()
+    || (hasOffer ? 'Aprovecha mientras dure el precio' : 'Tú eliges cómo pagarlo');
+  const customSupportingText = product.ctaText?.trim();
+  const supportingText = customSupportingText && !unsafeLegacyClaim.test(customSupportingText)
+    ? customSupportingText
+    : 'Ya sabes de qué está hecho, cómo se usa y qué trae. Lo único que falta es elegir cómo pagarlo.';
 
   return (
     <section className="py-8 md:py-12 relative overflow-hidden">
@@ -68,14 +75,14 @@ export function ProductCTA({ product }: ProductCTAProps) {
               precio que nadie ha decidido. Lo honesto es que la oferta termina
               —y eso ya lo dice la chapa de arriba con su fecha real. */}
           <h2 className="font-serif text-3xl md:text-5xl font-bold text-ink-title tracking-tight mb-6 text-balance">
-            {hasOffer ? 'Aprovecha mientras dure el precio' : 'Tú eliges cómo pagarlo'}
+            {headline}
           </h2>
 
           {/* El subtítulo cierra el recorrido de la landing: quien llega hasta
               aquí ya leyó beneficios, especificaciones y preguntas. No hay que
               darle un dato más, hay que quitarle el último freno. */}
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-balance">
-            Ya sabes de qué está hecho, cómo se usa y qué trae. Lo único que falta es tenerlo en casa.
+            {supportingText}
           </p>
 
           {/* Price Card — block, full-width up to max-w */}

@@ -62,6 +62,10 @@ function UseCaseCard({ text, index }: { text: string; index: number }) {
 
 export function ProductTestimonials({ product }: ProductTestimonialsProps) {
   const cases = (product.testimonials ?? [])
+    // Los documentos antiguos tienen personas, ciudades y estrellas inventadas
+    // por el generador anterior. No se muestran. Las generaciones nuevas solo
+    // guardan `text` y funcionan como escenarios hipotéticos honestos.
+    .filter((t) => !(t as { name?: string }).name?.trim())
     .map((t) => ((t as { text?: string; comment?: string }).text ?? (t as { comment?: string }).comment ?? '').trim())
     .filter(Boolean);
 
@@ -81,9 +85,15 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
 
   useEffect(() => {
     if (cases.length <= DESKTOP_VISIBLE) return;
-    const interval = setInterval(next, 4500);
+    const interval = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setCurrentIndex((index) => (index + 1) % cases.length);
+        setFading(false);
+      }, 250);
+    }, 4500);
     return () => clearInterval(interval);
-  }, [currentIndex, cases.length]);
+  }, [cases.length]);
 
   // Sin contenido no se pinta la sección. Antes caía a tres testimonios de
   // respaldo escritos a mano —«Maria Garcia», «Carolina Martinez»— que salían

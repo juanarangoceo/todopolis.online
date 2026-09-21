@@ -3,6 +3,7 @@ import { DestacadoStep } from '@/lib/types'
 import { DestacadoSectionHeader } from './destacado-section-header'
 import { DestacadoSlider } from './destacado-slider'
 import { ExpandableText } from '../expandable-text'
+import { sanityCdnImage } from '@/lib/sanity/cdn-image'
 
 interface Props {
   steps: DestacadoStep[]
@@ -25,25 +26,26 @@ export function DestacadoSteps({ steps }: Props) {
           {valid.map((step, i) => (
             <div
               key={step._key ?? i}
-              className="relative flex flex-col h-full bg-surface rounded-2xl border border-amber-200/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              className="relative flex flex-col h-full bg-surface rounded-2xl border border-todopolis-lavender/55 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
             >
               {step.image && (
                 <div className="relative aspect-[4/3] bg-muted overflow-hidden">
                   <Image
-                    src={step.image}
+                    src={sanityCdnImage(step.image, 700)}
                     alt={step.imageAlt || step.title}
                     fill
                     sizes="290px"
                     className="object-cover"
+                    unoptimized
                   />
                 </div>
               )}
               <div className="relative p-5 md:p-6 flex-1">
                 <span
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-xl font-black text-base mb-3 shadow-sm border border-amber-300"
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-xl font-black text-base mb-3 shadow-sm border border-todopolis-blue/70"
                   style={{
-                    background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)',
-                    color: '#5A3A0A',
+                    background: 'linear-gradient(135deg, var(--todopolis-blue) 0%, var(--todopolis-lavender) 100%)',
+                    color: 'var(--todopolis-blue-deep)',
                   }}
                 >
                   {i + 1}
