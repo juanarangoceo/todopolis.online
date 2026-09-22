@@ -66,7 +66,7 @@ export function DestacadoSlider({
           type="button"
           onClick={() => scrollBy(-1)}
           aria-label="Anterior"
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-white shadow-lg border border-amber-200 text-amber-700 hover:scale-105 transition-transform"
+          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-white shadow-lg border border-nav-inactive-border text-ink-title hover:scale-105 transition-transform"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -76,7 +76,7 @@ export function DestacadoSlider({
           type="button"
           onClick={() => scrollBy(1)}
           aria-label="Siguiente"
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-white shadow-lg border border-amber-200 text-amber-700 hover:scale-105 transition-transform"
+          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-white shadow-lg border border-nav-inactive-border text-ink-title hover:scale-105 transition-transform"
         >
           <ChevronRight className="w-5 h-5" />
         </button>

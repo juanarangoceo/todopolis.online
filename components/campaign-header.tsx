@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { ShieldCheck, ShoppingBag, Truck } from 'lucide-react'
 
 const LOGO_URL =
@@ -15,14 +16,19 @@ export function CampaignHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-nav-inactive-border bg-surface/92 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-3 px-4">
-        <Image
-          src={LOGO_URL}
-          alt="Todópolis"
-          width={128}
-          height={40}
-          priority
-          className="object-contain"
-        />
+        {/* El logo lleva a la tienda, como en cualquier sitio: es lo primero
+            que se toca para "ver quién vende esto", y un logo que no responde
+            se lee como página rota, no como embudo cuidado. */}
+        <Link href="/" aria-label="Todópolis — ir a la tienda" className="shrink-0">
+          <Image
+            src={LOGO_URL}
+            alt="Todópolis"
+            width={128}
+            height={40}
+            priority
+            className="object-contain"
+          />
+        </Link>
 
         <div className="hidden items-center gap-4 text-xs font-bold text-trust-fg md:flex">
           <span className="inline-flex items-center gap-1.5">

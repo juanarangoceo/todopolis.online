@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { DestacadoBeforeAfterPair } from '@/lib/types'
-import { DestacadoSectionHeader } from './destacado-section-header'
+import { DestacadoSection, DestacadoSectionHeader } from './destacado-section-header'
 import { DestacadoSlider } from './destacado-slider'
 import { sanityCdnImage } from '@/lib/sanity/cdn-image'
 
@@ -95,16 +95,17 @@ export function DestacadoBeforeAfter({ pairs }: Props) {
   if (valid.length === 0) return null
 
   return (
-    <section className="py-8 md:py-10 bg-surface-soft">
-      <div className="container mx-auto px-4">
+    <DestacadoSection>
+        {/* Sin «sin filtros, sin retoques»: es una afirmación que la tienda
+            no puede sostener sobre fotos que sube cualquier editor. */}
         <DestacadoSectionHeader
-          eyebrow="Resultados reales"
-          title="Antes y después"
-          subtitle="Desliza la línea para ver el cambio. Sin filtros, sin retoques."
+          eyebrow="Antes y después"
+          title="La diferencia, a la vista"
+          subtitle="Desliza la línea para comparar."
         />
 
         {valid.length === 1 ? (
-          <div className="max-w-xl mx-auto">
+          <div className="max-w-3xl">
             <BeforeAfterSlider pair={valid[0]} />
           </div>
         ) : (
@@ -114,7 +115,6 @@ export function DestacadoBeforeAfter({ pairs }: Props) {
             ))}
           </DestacadoSlider>
         )}
-      </div>
-    </section>
+    </DestacadoSection>
   )
 }

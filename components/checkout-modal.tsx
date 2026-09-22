@@ -8,14 +8,17 @@ import { Product } from '@/lib/types';
 import { useProductVariant } from '@/components/product/product-variant-context';
 import { VariantSelector } from '@/components/product/variant-selector';
 import { trackInitiateCheckout, trackLead, newEventId } from '@/lib/fbpixel';
+import { priceForQuantity, savingsForQuantity } from '@/lib/quantity-offers';
 
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product;
+  /** Cantidad elegida en el selector de combos del hero. */
+  initialQuantity?: number;
 }
 
-export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) {
+export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }: CheckoutModalProps) {
   const [step, setStep] = useState(1);
   // 'cod' = contraentrega (el de siempre). 'confio' = pago anticipado protegido.
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'confio'>('cod');
@@ -25,6 +28,7 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
 
   // Variantes: si el producto las tiene, elegir una es obligatorio.
   const { variants, selectedVariant } = useProductVariant();
+  const offers = product.quantityOffers;
   const variantRequired = variants.length > 0;
   const variantMissing = variantRequired && !selectedVariant;
 
@@ -36,9 +40,13 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
       setStep(1);
       setError(null);
       setLoading(false);
-      setQuantity(1);
+      setQuantity(initialQuantity);
       setPaymentMethod('cod');
-      trackInitiateCheckout({ id: productId, value: product.price ?? 0, quantity: 1 });
+      trackInitiateCheckout({
+        id: productId,
+        value: priceForQuantity(product.price ?? 0, initialQuantity, offers),
+        quantity: initialQuantity,
+      });
     }
   }, [isOpen]);
 
@@ -54,7 +62,11 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
   // Productos Destacados → envío gratis.
   const isDestacado = (product as any).isDestacado === true;
   const shippingCost = isDestacado ? 0 : 12000;
-  const totalPrice = ((product.price ?? 0) * quantity) + shippingCost;
+  // Subtotal con combos por cantidad (`lib/quantity-offers.ts`), el mismo
+  // cálculo que hace la ruta de Confío en el servidor.
+  const subtotal = priceForQuantity(product.price ?? 0, quantity, offers);
+  const savings = savingsForQuantity(product.price ?? 0, quantity, offers);
+  const totalPrice = subtotal + shippingCost;
   // Mínimo de Confío. Debajo de eso la pasarela rechaza con 400.
   const canPayUpfront = confioEnabled && totalPrice >= 10000;
 
@@ -180,7 +192,9 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
               {step === 1 ? 'Compra Rápida' : '¡Pedido Confirmado!'}
             </h2>
             {step === 1 && (
-              <p className="text-sm text-gray-500 mt-1">Pago Contraentrega 📦</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {confioEnabled ? 'Paga al recibir o con Confío' : 'Pagas al recibir'}
+              </p>
             )}
           </div>
           <button 
@@ -256,6 +270,12 @@ export function CheckoutModal({ isOpen, onClose, product }: CheckoutModalProps) 
                       <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors font-medium cursor-pointer text-gray-700">+</button>
                     </div>
                   </div>
+                  {savings > 0 && (
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-gray-500 text-sm">Ahorro del combo:</span>
+                      <span className="font-bold text-trust-fg">−{formatPrice(savings)}</span>
+                    </div>
+                  )}
                   <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
                     <span className="font-bold text-gray-900 text-sm">Total a Pagar:</span>
                     <span className="text-xl font-black text-primary">{formatPrice(totalPrice)}</span>

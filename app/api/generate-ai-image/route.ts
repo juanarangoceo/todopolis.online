@@ -21,14 +21,48 @@ function sanityRefToUrl(ref: string): string {
   return `https://cdn.sanity.io/images/${projectId}/${dataset}/${withExtension}`
 }
 
-function buildImagePrompt(name: string, heroTitle: string, description: string): string {
+// Encuadres para armar la galería lifestyle. Sin escena, el prompt es el de
+// siempre; con escena, se le añade la instrucción para que cada foto de la
+// galería cuente algo distinto en vez de salir cinco variaciones del mismo
+// retrato. Las claves las manda GenerateAIImageButton.
+const SCENES: Record<string, string> = {
+  uso: 'Scene focus: the product in active, everyday use, mid-action, candid and natural rather than posed.',
+  detalle: 'Scene focus: a close-up detail shot. Hands holding or operating the product; texture, materials and finish clearly visible. Shallow depth of field. The face may be out of frame.',
+  ambiente: 'Scene focus (this overrides the person requirement above): the product placed in a beautiful, lived-in Colombian home or setting where it naturally belongs. No person, or only a hand or silhouette at the edge of the frame.',
+  momento: 'Scene focus: an emotional everyday moment — family, friends or partner sharing the benefit of the product together. Warm, genuine interaction.',
+  exterior: 'Scene focus: outdoors in natural daylight (park, balcony, street or terrace in a Colombian city), the product in use in that environment.',
+}
+
+// Prompt de la foto lifestyle.
+//
+// La versión anterior pedía «magazine-quality», «professional studio-quality
+// lighting» y «an attractive Latin American person». Para anuncios de Meta eso
+// juega en contra: la foto de estudio perfecta es justo lo que el ojo reconoce
+// como publicidad —o como IA— y la salta. Lo que funciona en el feed es lo que
+// parece una foto real de alguien usando el producto en su casa.
+//
+// Tres reglas que antes no estaban:
+//  - La persona es QUIEN USA el producto (edad, contexto), no un modelo genérico.
+//  - El producto conserva su TAMAÑO real: agrandarlo para que «domine el
+//    encuadre» fabricaba una expectativa que el paquete no cumple.
+//  - Nada de texto, logos inventados ni piezas que el producto no trae.
+function buildImagePrompt(name: string, heroTitle: string, description: string, scene?: string): string {
   const parts = [
     `Product name: "${name}".`,
-    heroTitle ? `Headline: "${heroTitle}".` : '',
-    description ? `Description: ${description.slice(0, 250)}.` : '',
+    heroTitle ? `What it does for the buyer: "${heroTitle}".` : '',
+    description ? `Description: ${description.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '').slice(0, 300)}.` : '',
   ].filter(Boolean).join(' ')
 
-  return `Generate a hyperrealistic commercial lifestyle photograph. An attractive Latin American person is using or interacting with this product in a natural, dynamic way. Study the reference image to faithfully reproduce the product's visual identity — its exact shape, colors, materials, textures, branding, and design details — but you are free to reposition, reorient, or reangle the product and adapt the entire scene composition to create the most compelling lifestyle image. The product must be instantly recognizable as the same item from the reference, even if shown from a different angle, position, or in a new setting. The product is the undisputed hero of the image — the person provides lifestyle context but the product dominates the frame and commands full visual attention. ${parts} Style: ultra-photorealistic, professional studio-quality lighting with soft natural fill, the person conveys confidence, satisfaction, and aspiration — not just happiness, warm inviting Colombian lifestyle setting, magazine-quality advertising composition, sharp focus on both person and product, portrait format. No text, no watermarks, no logos overlay.`
+  return [
+    'Create a photorealistic lifestyle photo of this exact product being used in real life in Colombia.',
+    parts,
+    'PRODUCT FIDELITY (most important): the reference image(s) show the real product. Reproduce its exact shape, colors, materials, proportions, parts and any printed branding. Keep its true real-world size relative to hands, people and furniture — never enlarge it. Do not add accessories, parts, colors or features the reference does not show. You may change the angle and position.',
+    'PEOPLE: show the person who would really use this product, matching the age, gender and situation implied by the name and description (for example a toddler with a parent nearby for a toddler toy, an adult at a desk for a gaming accessory). Ordinary, natural-looking Colombian people with real skin texture — not models, no heavy retouching. Natural, candid expressions mid-action rather than posing for the camera.',
+    'SETTING AND LIGHT: a believable Colombian home, apartment, balcony, park or street that fits the product. Natural window light or daylight. It should look like a well-composed photo taken by a good photographer with a real camera, not a studio catalog shot and not a 3D render.',
+    'COMPOSITION: vertical portrait framing for a mobile feed. The product is clearly visible, in focus and easy to identify within the first second, with some breathing room around it.',
+    'NEVER include: text, captions, prices, watermarks, invented logos, UI elements, extra fingers or distorted hands, duplicated products.',
+    scene && SCENES[scene] ? SCENES[scene] : '',
+  ].filter(Boolean).join('\n\n')
 }
 
 const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -67,32 +101,36 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'SANITY_API_TOKEN no está configurada.' }, { status: 500 })
   }
 
-  const { name, heroTitle, shortDescription, imageRef, mastershopImageUrl, docId } = await request.json()
+  const { name, heroTitle, shortDescription, imageRef, imageRefs, mastershopImageUrl, docId, scene } = await request.json()
 
   if (!name || !docId) {
     return NextResponse.json({ error: 'Se requieren name y docId.' }, { status: 400 })
   }
 
   try {
-    const prompt = buildImagePrompt(name, heroTitle ?? '', shortDescription ?? '')
+    const prompt = buildImagePrompt(name, heroTitle ?? '', shortDescription ?? '', scene)
 
-    // Resolve the product reference image (Sanity asset first, then mastershop URL)
-    let referenceImage: { buffer: ArrayBuffer; contentType: string } | null = null
+    // Fotos de referencia: hasta 3 del producto (Sanity primero, Mastershop de
+    // respaldo). Con una sola, el modelo inventaba lo que no se veía desde ese
+    // ángulo —la parte de atrás, el tamaño real, las piezas del kit—.
+    const refs: string[] = [
+      ...(Array.isArray(imageRefs) ? imageRefs : []),
+      ...(imageRef ? [imageRef] : []),
+    ].filter((r, idx, arr): r is string => typeof r === 'string' && !!r && arr.indexOf(r) === idx).slice(0, 3)
 
-    if (imageRef) {
-      const url = sanityRefToUrl(imageRef)
-      referenceImage = await fetchImageBuffer(url)
+    const referenceImages = (
+      await Promise.all(refs.map((ref) => fetchImageBuffer(`${sanityRefToUrl(ref)}?w=1024&fm=jpg`)))
+    ).filter((img): img is { buffer: ArrayBuffer; contentType: string } => img !== null)
+    if (referenceImages.length === 0 && mastershopImageUrl) {
+      const img = await fetchImageBuffer(mastershopImageUrl)
+      if (img) referenceImages.push(img)
     }
-    if (!referenceImage && mastershopImageUrl) {
-      referenceImage = await fetchImageBuffer(mastershopImageUrl)
-    }
+    const referenceImage = referenceImages[0] ?? null
 
     let b64: string | undefined
 
     if (referenceImage) {
       // Use /edits endpoint — model sees the real product and replicates it faithfully
-      const ext = referenceImage.contentType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg'
-      const filename = `product.${ext}`
 
       const formData = new FormData()
       formData.append('model', 'gpt-image-2')
@@ -100,7 +138,10 @@ export async function POST(request: NextRequest) {
       formData.append('n', '1')
       formData.append('size', '1024x1536')
       formData.append('quality', 'high')
-      formData.append('image[]', new File([referenceImage.buffer], filename, { type: referenceImage.contentType }))
+      referenceImages.forEach((img, idx) => {
+        const imgExt = img.contentType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg'
+        formData.append('image[]', new File([img.buffer], `product-${idx + 1}.${imgExt}`, { type: img.contentType }))
+      })
 
       const editsRes = await fetch('https://api.openai.com/v1/images/edits', {
         method: 'POST',

@@ -5,12 +5,31 @@ import { useFormValue, useClient } from 'sanity'
 import { ensureDraftId } from '../lib/draft'
 
 type Status = 'idle' | 'generating' | 'preview' | 'confirming' | 'confirmed' | 'error'
+type Target = 'main' | 'gallery'
+
+// Mismas claves que SCENES en app/api/generate-ai-image/route.ts. La galería
+// lifestyle pide fotos que cuenten cosas distintas: sin escena, cinco
+// generaciones seguidas salen cinco versiones del mismo retrato.
+const SCENE_OPTIONS = [
+  { value: '', label: 'Libre (la de siempre)' },
+  { value: 'uso', label: 'En uso, en plena acción' },
+  { value: 'detalle', label: 'Detalle en las manos' },
+  { value: 'ambiente', label: 'Ambientada, sin persona' },
+  { value: 'momento', label: 'Momento compartido' },
+  { value: 'exterior', label: 'Al aire libre' },
+]
+
+function randomKey() {
+  return Math.random().toString(36).slice(2, 12)
+}
 
 export function GenerateAIImageButton(props: any) {
   const [status, setStatus] = useState<Status>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewAssetId, setPreviewAssetId] = useState<string | null>(null)
+  const [scene, setScene] = useState('')
+  const [savedTo, setSavedTo] = useState<Target>('main')
 
   const name = useFormValue(['name']) as string
   const heroTitle = useFormValue(['heroTitle']) as string
@@ -19,11 +38,16 @@ export function GenerateAIImageButton(props: any) {
   const images = useFormValue(['images']) as any[]
   const mastershopImageUrl = useFormValue(['mastershopImageUrl']) as string
   const aiLifestyleImage = useFormValue(['aiLifestyleImage']) as any
+  const gallery = useFormValue(['aiLifestyleGallery']) as any[] | undefined
 
   const client = useClient({ apiVersion: '2025-01-01' })
 
   const hasExistingImage = !!aiLifestyleImage?.asset?._ref
+  const galleryCount = gallery?.length ?? 0
   const imageRef = images?.[0]?.asset?._ref ?? null
+  // Hasta 3 fotos de referencia: con una sola, el modelo inventa lo que no se
+  // ve desde ese ángulo.
+  const imageRefs = (images ?? []).map((i) => i?.asset?._ref).filter(Boolean).slice(0, 3)
   const hasProductImage = !!(imageRef || mastershopImageUrl)
 
   const handleGenerate = async () => {
@@ -39,7 +63,7 @@ export function GenerateAIImageButton(props: any) {
       const res = await fetch('/api/generate-ai-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, heroTitle, shortDescription, imageRef, mastershopImageUrl, docId }),
+        body: JSON.stringify({ name, heroTitle, shortDescription, imageRef, imageRefs, mastershopImageUrl, docId, scene: scene || undefined }),
       })
 
       const result = await res.json()
@@ -54,7 +78,9 @@ export function GenerateAIImageButton(props: any) {
     }
   }
 
-  const handleConfirm = async () => {
+  // `main` reemplaza la imagen principal (la que también usan los carriles del
+  // home); `gallery` la AÑADE al final del carrusel de la landing.
+  const handleConfirm = async (target: Target) => {
     if (!previewAssetId || !docId) return
     setStatus('confirming')
 
@@ -62,12 +88,20 @@ export function GenerateAIImageButton(props: any) {
       // El botón promete "guardar borrador" — hay que escribir en el borrador.
       // Parchear el id publicado publicaba la imagen sin pasar por Publish.
       const draftId = await ensureDraftId(client, docId)
-      await client.patch(draftId).set({
-        aiLifestyleImage: {
-          _type: 'image',
-          asset: { _type: 'reference', _ref: previewAssetId },
-        },
-      }).commit()
+      const image = {
+        _type: 'image',
+        asset: { _type: 'reference', _ref: previewAssetId },
+      }
+      if (target === 'main') {
+        await client.patch(draftId).set({ aiLifestyleImage: image }).commit()
+      } else {
+        await client
+          .patch(draftId)
+          .setIfMissing({ aiLifestyleGallery: [] })
+          .append('aiLifestyleGallery', [{ ...image, _key: randomKey() }])
+          .commit()
+      }
+      setSavedTo(target)
       setStatus('confirmed')
     } catch (err: any) {
       setErrorMessage(err.message ?? 'Error al guardar imagen')
@@ -93,7 +127,7 @@ export function GenerateAIImageButton(props: any) {
       {(status === 'idle' || status === 'error') && (
         <>
           <p style={{ color: 'rgba(255,255,255,0.85)', marginBottom: '8px', fontSize: '13px', lineHeight: 1.5 }}>
-            Genera una foto hiperrealista de una persona usando el producto. Usa la imagen como referencia visual. Formato 4:5.
+            Genera fotos hiperrealistas del producto en uso, con la foto del producto como referencia. Cambia la escena en cada una para armar una galería variada.
           </p>
 
           {/* Indicadores de datos disponibles */}
@@ -114,9 +148,26 @@ export function GenerateAIImageButton(props: any) {
 
           {hasExistingImage && (
             <p style={{ color: '#ffe6fa', marginBottom: '10px', fontSize: '12px' }}>
-              ⚠️ Ya existe una imagen publicada. Puedes regenerar o cargarla manualmente en el campo de abajo.
+              Ya hay imagen principal{galleryCount > 0 ? ` y ${galleryCount} en la galería` : ''}. Lo que generes ahora lo puedes añadir a la galería o usarlo como principal. También puedes subir fotos directamente en «Galería lifestyle» (pestaña Landing).
             </p>
           )}
+
+          <label style={{ display: 'block', color: 'white', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
+            Escena
+          </label>
+          <select
+            value={scene}
+            onChange={(e) => setScene(e.target.value)}
+            style={{
+              width: '100%', marginBottom: '10px', padding: '8px 10px', borderRadius: '6px',
+              border: '1px solid rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.95)',
+              color: '#2D2D2D', fontSize: '13px', fontWeight: 600,
+            }}
+          >
+            {SCENE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
 
           <button onClick={handleGenerate} style={btnStyle('#f5576c')}>
             🖼️ Generar Imagen con IA
@@ -146,7 +197,7 @@ export function GenerateAIImageButton(props: any) {
       {(status === 'preview' || status === 'confirming') && previewUrl && (
         <>
           <p style={{ color: 'rgba(255,255,255,0.85)', marginBottom: '10px', fontSize: '13px' }}>
-            ¿Te gusta esta imagen? Confírmala para publicarla en la landing page.
+            ¿Te gusta? Elige dónde guardarla (queda en el borrador hasta que publiques).
           </p>
 
           {/* Preview de la imagen */}
@@ -165,18 +216,28 @@ export function GenerateAIImageButton(props: any) {
             />
           </div>
 
-          {/* Botones de acción */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          {/* Botones de acción. Sin imagen principal todavía, la primera
+              va ahí: una galería sin portada no se pinta. */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {hasExistingImage && (
+              <button
+                onClick={() => handleConfirm('gallery')}
+                disabled={status === 'confirming'}
+                style={{ ...btnStyle('#22c55e'), flex: '1 1 100%', opacity: status === 'confirming' ? 0.6 : 1 }}
+              >
+                ➕ Añadir a la galería
+              </button>
+            )}
             <button
-              onClick={handleConfirm}
+              onClick={() => handleConfirm('main')}
               disabled={status === 'confirming'}
               style={{
-                ...btnStyle('#22c55e'),
+                ...btnStyle(hasExistingImage ? 'rgba(255,255,255,0.25)' : '#22c55e'),
                 flex: 1,
-                background: status === 'confirming' ? 'rgba(34,197,94,0.5)' : '#22c55e',
+                opacity: status === 'confirming' ? 0.6 : 1,
               }}
             >
-              {'✅ Confirmar y guardar borrador'}
+              {hasExistingImage ? '⭐ Usar como principal' : '✅ Guardar como principal'}
             </button>
 
             <button
@@ -202,13 +263,15 @@ export function GenerateAIImageButton(props: any) {
       {status === 'confirmed' && (
         <div>
           <p style={{ color: '#a8ff78', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
-            ✅ Imagen guardada en el campo "Imagen Lifestyle IA" abajo.
+            {savedTo === 'gallery'
+              ? '✅ Añadida al final de la "Galería lifestyle" (pestaña Landing).'
+              : '✅ Guardada como imagen principal ("Imagen Lifestyle IA", pestaña Landing).'}
           </p>
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginBottom: '12px' }}>
             Guarda y publica el documento para que aparezca en la landing page.
           </p>
           <button onClick={handleDiscard} style={{ ...btnStyle('rgba(255,255,255,0.25)'), color: 'white' }}>
-            🔄 Generar otra imagen
+            ➕ Generar otra para la galería
           </button>
         </div>
       )}

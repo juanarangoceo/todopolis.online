@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { DestacadoSection, DestacadoSectionHeader } from './destacados/destacado-section-header';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -48,12 +49,12 @@ const DESKTOP_VISIBLE = 3;
 
 function UseCaseCard({ text, index }: { text: string; index: number }) {
   return (
-    <div className="relative flex flex-col p-5 md:p-6 rounded-3xl bg-card/80 backdrop-blur-xl border border-nav-inactive-border shadow-md h-full">
+    <div className="relative flex flex-col border-t-2 border-nav-inactive-border pt-5 h-full">
       <span
         aria-hidden
-        className="w-9 h-9 rounded-xl bg-gradient-to-br from-todopolis-blue/15 to-todopolis-lavender/25 flex items-center justify-center font-serif text-sm font-extrabold text-todopolis-lavender-deep mb-3"
+        className="font-serif text-sm font-extrabold tabular-nums text-todopolis-lavender-deep mb-3"
       >
-        {index + 1}
+        {String(index + 1).padStart(2, '0')}
       </span>
       <p className="text-foreground leading-relaxed text-sm md:text-base flex-1">{text}</p>
     </div>
@@ -106,21 +107,16 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
     : cases;
 
   return (
-    <section id="usos" className="scroll-mt-24 py-8 md:py-12 bg-gradient-to-b from-transparent via-muted/30 to-transparent">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-8">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-ink-title tracking-tight mb-3">
-            Así te va a servir
-          </h2>
-          <p className="text-muted-foreground text-sm max-w-xl mx-auto leading-relaxed inline-flex items-center gap-1.5 flex-wrap justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-todopolis-lavender-deep shrink-0" />
-            Situaciones en las que este producto se gana su puesto.
-          </p>
-        </div>
+    <DestacadoSection id="usos" className="scroll-mt-24">
+        {/* Misma rejilla y encabezado que el resto de la ficha. */}
+        <DestacadoSectionHeader
+          eyebrow="En el día a día"
+          title="Así te va a servir"
+        />
 
         {/* Escritorio: tres a la vez. El corte es `lg` y no `md` porque en
             tablet tres columnas dejan 184 px de texto útil. */}
-        <div className="hidden lg:block max-w-6xl mx-auto">
+        <div className="hidden lg:block">
           <div
             className={cn(
               'grid gap-5 transition-opacity duration-250',
@@ -159,12 +155,11 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
         </div>
 
         {/* Móvil y tablet: pila vertical. */}
-        <div className="lg:hidden flex flex-col gap-4 max-w-xl mx-auto">
+        <div className="lg:hidden flex flex-col gap-4">
           {cases.map((text, i) => (
             <UseCaseCard key={i} text={text} index={i} />
           ))}
         </div>
-      </div>
-    </section>
+    </DestacadoSection>
   );
 }

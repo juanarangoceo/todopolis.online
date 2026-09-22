@@ -174,7 +174,7 @@ Dos causas frecuentes:
    - `cdn.bemaster.com`
    - `images.unsplash.com`
 
-2. **Imágenes grandes que timeout**: El optimizador de Next.js tiene timeout de 7 s. Las imágenes IA generadas (`aiLifestyleImage`, PNG ~2 MB) usan `unoptimized` en el componente `product-lifestyle-image.tsx` para servirse directo desde Sanity CDN y evitar el timeout.
+2. **Imágenes grandes que timeout**: El optimizador de Next.js tiene timeout de 7 s. Las imágenes IA generadas (`aiLifestyleImage`, PNG ~2 MB) usan `unoptimized` en el componente `product-lifestyle-gallery.tsx` para servirse directo desde Sanity CDN y evitar el timeout.
 
 ### `placeholder.jpg`
 El código usa `/placeholder.jpg` como fallback cuando un producto no tiene imagen. El archivo existe en `public/placeholder.jpg`. No eliminarlo.
@@ -240,7 +240,7 @@ Si se agrega un nuevo query, incluirlo también: `"aiLifestyleImage": aiLifestyl
 - `product-browser.tsx` — maneja estado de filtros y búsqueda. No quitar `'use client'`.
 
 ### `unoptimized` en imágenes IA — intencional
-`product-lifestyle-image.tsx` tiene `unoptimized` en el `<Image>`. Es intencional: las imágenes IA son PNG de ~2 MB y el optimizador de Next.js local hace timeout. No quitarlo.
+`product-lifestyle-gallery.tsx` tiene `unoptimized` en el `<Image>`. Es intencional: las imágenes IA son PNG de ~2 MB y el optimizador de Next.js local hace timeout. No quitarlo.
 
 ### Cliente Sanity — `useCdn: false` es obligatorio
 `lib/sanity/client.ts` usa `useCdn: false` a propósito. NO cambiar a `true` aunque sea el default recomendado por Sanity: al revalidar el home tras publicar un producto, el CDN puede no haber propagado aún y el home se regenera SIN el producto, quedando cacheado así hasta el siguiente deploy. El sistema depende de que las lecturas sean siempre frescas. El build NO necesita el CDN — `withRetry()` en `queries.ts` ya absorbe el rate-limit.
@@ -452,6 +452,42 @@ Productos con landing extendida (video en uso, antes/después, paso a paso, qué
 Si agregas un campo nuevo de Destacados, ponle nombre `destacado*` directo en el schema (los `vip*` son solo los heredados) e inclúyelo en **ambos** queries, igual que `aiLifestyleImage`.
 
 El toggle también controla el envío gratis en `components/checkout-modal.tsx`. Si algún día quieres separar "landing extendida" de "envío gratis", hay que partir el flag en dos.
+
+### Ficha de producto — un solo recorrido y una sola rejilla (sep 2026)
+Normal y Destacado comparten el MISMO recorrido (`funnel` en `app/producto/[slug]/page.tsx`): historia → beneficios con galería → (bloques manuales de Destacados) → usos (solo normal) → ficha técnica → fotos de clientes → «Cómo pagas» → preguntas → cierre. Los componentes viven en `components/product/destacados/` por historia, pero ya los usan las dos fichas. Solo en la normal, DESPUÉS del cierre: un carrusel de venta cruzada (antes había otro a media ficha, una salida justo antes del botón) y la suscripción. `StorePolicies` ya no va en la ficha: el cierre dice envío, devolución y WhatsApp.
+
+Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/destacados/destacado-section-header.tsx`): el MISMO `container` que el hero y **ningún `max-w-*` propio**. Antes cada bloque tenía su ancho (6xl, 4xl, md, 5xl, 2xl, lg) y en escritorio la página era una escalera de bordes. Lo que necesita renglones más cortos usa `DestacadoSplit` (título 4 columnas, contenido 8), no se encoge. Si añades un bloque, úsalos.
+
+- **Banner bajo el hero**: campo `destacadoBanner` (escritorio + móvil opcional + alt), de borde a borde, `<picture>` con URLs del CDN de Sanity. Las dimensiones del asset viajan en la query para que la página no salte.
+- **Galería lifestyle**: `aiLifestyleImage` sigue siendo la principal (y la de los carriles del home); `aiLifestyleGallery` suma más fotos. El botón de IA del Studio ahora elige **escena** y puede **añadir a la galería** en vez de reemplazar. Se pintan juntas con `ProductLifestyleGallery` y `lifestyleImages()` (`lib/lifestyle.ts`), también en la ficha normal.
+- **«Cómo pagas»** (`destacado-payment.tsx`) explica Confío en el cuerpo de la página, antes de las preguntas. Por eso la ficha pasa `showPaymentExplainer={false}` al `Footer`: el recuadro del pie sigue en el resto del sitio.
+- **El cierre** (`destacado-cta.tsx`) lleva la foto del producto al lado y abre el checkout del hero con el evento `product:buy`, no con un modal propio. El copy sale de `closingCopy()`, que descarta al renderizar las promesas viejas de la IA («envío rápido», «24-48h», «garantía de satisfacción»).
+- El cierre dice «Envío gratis» o «Envío $12.000» según `isDestacado`, el mismo flag que lo cobra en `checkout-modal.tsx`.
+- **Estilo**: antetítulo gris con filete, no pastillas con estrella; beneficios abiertos y numerados, sin emoji; listas con filetes, no tarjetas. Los subtítulos «Sin filtros, sin retoques» y «Sin actores ni stock» se quitaron: son afirmaciones que la tienda no puede sostener sobre fotos que sube un editor.
+- El logo de `CampaignHeader` enlaza al home.
+- **Hero**: el titular de campaña reemplaza al gancho de la IA en Destacados; la descripción va en viñetas sin emoji; el subtítulo se oculta en móvil; bajo el botón van tres hechos en tres renglones (no el recuadro de pagos ni las cajas de confianza).
+- **WhatsApp en móvil va DENTRO de la barra fija de compra**; la burbuja flotante (`whatsapp-button.tsx`) no se pinta en la ficha en móvil, porque tapaba el nombre del producto.
+
+### El precio de venta es `product.price`. El `price` de una variante es el COSTO
+En `variants[]`, el campo `price` («Precio Mastershop») es lo que cobra el proveedor, no lo que paga el cliente: el reloj infantil se vende a $82.900 y su variante dice $55.000. `app/api/checkout/confio` lo usaba como precio unitario, así que **Confío cobraba el costo** en los 65 productos con variantes (corregido sep 2026). Ninguna ruta de cobro, ficha ni checkout debe leer `variant.price` como precio.
+
+**Pendiente, coordinar con Nitro:** `lib/catalog/project-sanity-product.ts` (el feed hacia Nitro) sigue tomando los precios de las variantes. No se tocó porque es un contrato con un consumidor externo.
+
+### Combos por cantidad — `lib/quantity-offers.ts` (con test)
+Campo `quantityOffers` («Lleva 2 por $X»). Es la ÚNICA fuente del cálculo: el selector del hero, el checkout y la ruta de Confío llaman a `priceForQuantity`. Si alguien calcula el total por su cuenta, el comprador ve un número y paga otro (en Confío eso deja el pedido en `mismatch`). Un combo que no ahorra frente a las unidades sueltas se ignora.
+
+### Completar un Destacado con IA
+Botón «🤖 Completar Destacado con IA» (pestaña Destacados, `sanity/components/CompleteDestacadoButton.tsx`) + `/api/generate-destacado-content` + `lib/destacado-content.ts`. Llena SOLO lo vacío: titular de campaña (`destacadoHeadline`), historia, pasos y lista de la caja; y opcionalmente 3 fotos de galería con escenas distintas. Escribe en el borrador. Para hacerlo en lote: `node scripts/complete-destacados.ts` (dry-run) y `--apply` (escribe borradores). Las reglas de la historia son `CAMPAIGN_STORY_RULES`, compartidas con el prompt principal.
+
+### Prompts de contenido — reglas nuevas (sep 2026)
+- **Envío, pago y garantía salen de `paymentFactsForCopy()`** (`lib/payments/narrative.ts`), no escritos a mano en `lib/product-content-prompt.ts`. El prompt afirmaba «entrega rápida» y «despacho en 24-48h»; la política es 3 a 7 días hábiles.
+- **Sin emojis en ningún campo.** Las descripciones viejas traen «✅🔥⭐»: `lib/description.ts` las parte en viñetas y quita el emoji al renderizar.
+- Nueva salida **`audienceFit`** («¿Es para ti?»: para quién sí / no), guardada por los tres consumidores con `audienceFitFromAi` (`lib/audience-fit.ts`).
+- **Imagen IA** (`app/api/generate-ai-image`): foto realista de la persona que de verdad usa el producto, con su tamaño real, y no una foto de estudio con «persona atractiva». Usa hasta 3 fotos de referencia.
+
+### Bloques retirados de Destacados
+- **Citas destacadas** (`vipQuotes`): fuera del schema y de la landing. Se leían como relleno.
+- **Testimonios visuales** (`vipTestimonials`): fusionados con «Fotos Reales de Clientes», que ahora admite `quote` (textual del cliente). El campo viejo está `deprecated` y oculto si está vacío; la query junta los dos en `customerPhotos`, así que lo existente se sigue viendo.
 
 ## Colecciones de Marca (`collectionLanding`) — no romper
 

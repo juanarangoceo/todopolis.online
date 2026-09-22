@@ -1,25 +1,91 @@
-import { Star } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+// ─── Rejilla común de la landing de Destacados ─────────────────────────────
+// Todas las secciones usan el MISMO contenedor que el hero (`container px-4`)
+// y ningún `max-w-*` propio. Antes cada bloque elegía su ancho —historia en
+// 6xl, beneficios en 4xl, imagen IA en md, especificaciones en 5xl, FAQ en 2xl,
+// cierre en lg— y en escritorio la página era una escalera de bordes que no
+// coincidían entre sí. Ahora los bordes izquierdo y derecho son los del hero
+// de principio a fin, y lo que necesita una medida de lectura más corta la
+// consigue con columnas (`split`), no encogiendo la sección.
+//
+// Casi todo va en blanco y se separa por aire, no por tarjetas. El gris suave
+// (`tone="soft"`) queda para dos momentos: la historia, que abre el recorrido,
+// y el cierre. No se alterna sección a sección porque casi todas son
+// opcionales y la alternancia se rompería según qué haya llenado el editor.
+
+interface DestacadoSectionProps {
+  children: React.ReactNode
+  tone?: 'white' | 'soft'
+  className?: string
+  id?: string
+}
+
+export function DestacadoSection({ children, tone = 'white', className, id }: DestacadoSectionProps) {
+  return (
+    <section
+      id={id}
+      className={cn('py-12 md:py-20', tone === 'soft' ? 'bg-surface-soft' : 'bg-surface', className)}
+    >
+      <div className="container mx-auto px-4">{children}</div>
+    </section>
+  )
+}
+
+/**
+ * Encabezado a la izquierda (4 columnas) y contenido a la derecha (8). Para
+ * bloques de lectura —ficha técnica, comparativa, preguntas, pago— que a todo
+ * el ancho quedarían con renglones de 150 caracteres.
+ */
+export function DestacadoSplit({ header, children }: { header: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-8 lg:grid-cols-12 lg:gap-16">
+      <div className="lg:col-span-4">
+        <div className="lg:sticky lg:top-28">{header}</div>
+      </div>
+      <div className="min-w-0 lg:col-span-8">{children}</div>
+    </div>
+  )
+}
 
 interface DestacadoSectionHeaderProps {
   eyebrow?: string
   title: string
   subtitle?: string
+  align?: 'left' | 'center'
+  className?: string
 }
 
-// Header reutilizable para todas las secciones de Destacados: chip dorado + título +
-// subtítulo opcional. Mantiene consistencia visual entre los 7 bloques.
-export function DestacadoSectionHeader({ eyebrow = 'Solo en Destacados', title, subtitle }: DestacadoSectionHeaderProps) {
+// El antetítulo es texto gris con un filete corto, NO una pastilla con
+// estrella. Las pastillas de colores encima de cada título eran lo que más
+// delataba la plantilla: siete secciones seguidas con el mismo adorno se leen
+// como relleno, y la lavanda en todas dejaba de significar nada.
+export function DestacadoSectionHeader({
+  eyebrow,
+  title,
+  subtitle,
+  align = 'left',
+  className,
+}: DestacadoSectionHeaderProps) {
+  const centered = align === 'center'
   return (
-    <div className="text-center mb-6 md:mb-7">
-      <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-todopolis-lavender/60 bg-todopolis-lavender/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-todopolis-lavender-deep">
-        <Star className="w-3 h-3 text-todopolis-lavender-deep" fill="currentColor" strokeWidth={1.5} />
-        {eyebrow}
-      </span>
-      <h2 className="font-serif text-2xl md:text-3xl font-bold text-foreground leading-tight text-balance">
+    <div className={cn('mb-8 md:mb-10', centered && 'mx-auto max-w-2xl text-center', className)}>
+      {eyebrow && (
+        <p
+          className={cn(
+            'mb-3 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground',
+            centered && 'justify-center',
+          )}
+        >
+          <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
+          {eyebrow}
+        </p>
+      )}
+      <h2 className="font-serif text-[1.75rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-ink-title text-balance md:text-[2.5rem]">
         {title}
       </h2>
       {subtitle && (
-        <p className="mt-2.5 text-sm md:text-base text-foreground/65 max-w-2xl mx-auto leading-relaxed">
+        <p className={cn('mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg', centered && 'mx-auto')}>
           {subtitle}
         </p>
       )}

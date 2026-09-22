@@ -1,6 +1,6 @@
 import { Check, X } from 'lucide-react'
 import { DestacadoComparison as VipComparisonData } from '@/lib/types'
-import { DestacadoSectionHeader } from './destacado-section-header'
+import { DestacadoSection, DestacadoSectionHeader, DestacadoSplit } from './destacado-section-header'
 
 interface Props {
   data: VipComparisonData
@@ -47,14 +47,17 @@ export function DestacadoComparison({ data }: Props) {
   const theirLabel = data.theirLabel || 'Otros'
 
   return (
-    <section className="py-8 md:py-10 bg-surface-soft">
-      <div className="container mx-auto px-4">
-        <DestacadoSectionHeader
-          eyebrow="Cómo nos comparamos"
-          title={data.title || 'No es lo mismo'}
-        />
-
-        <div className="max-w-4xl mx-auto rounded-2xl overflow-x-auto border border-todopolis-lavender/55 shadow-md bg-surface">
+    <DestacadoSection>
+      <DestacadoSplit
+        header={
+          <DestacadoSectionHeader
+            eyebrow="Frente a lo de siempre"
+            title={data.title || 'No es lo mismo'}
+            className="lg:mb-0"
+          />
+        }
+      >
+        <div className="rounded-2xl overflow-x-auto border border-nav-inactive-border bg-surface">
           <table className="w-full min-w-[420px] text-left">
             <thead>
               <tr className="border-b border-todopolis-lavender/40">
@@ -92,7 +95,7 @@ export function DestacadoComparison({ data }: Props) {
             </tbody>
           </table>
         </div>
-      </div>
-    </section>
+      </DestacadoSplit>
+    </DestacadoSection>
   )
 }

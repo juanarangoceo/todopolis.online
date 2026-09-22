@@ -53,3 +53,28 @@ export function paymentPolicyForVoice(): string {
     'Nunca digas que solo manejamos contraentrega. Si el cliente duda, pregunta: lo prefieres contraentrega o con pago protegido.',
   ].join(' ')
 }
+
+/**
+ * Los hechos de envío, pago y garantía para el COPY de una landing (prompt de
+ * `lib/product-content-prompt.ts`). No es la narrativa de un asesor —no le dice
+ * al modelo cómo cerrar una conversación—, sino qué puede afirmar por escrito
+ * en preguntas frecuentes y en el cierre sin prometer algo falso.
+ */
+export function paymentFactsForCopy(): string {
+  const shipping = [
+    '- Envío a todo Colombia: llega en 3 a 7 días HÁBILES. Nunca escribas "envío rápido", "despacho rápido", "24-48h", "esta semana" ni "entrega inmediata".',
+    '- Costo del envío: $12.000, gratis en los productos Destacados. Si no sabes si el producto es Destacado, no menciones el costo.',
+    '- Garantía: 30 días si el producto llega con defecto de fábrica (se repone o se devuelve el dinero). NO es devolución libre por arrepentimiento ni "garantía de satisfacción".',
+    '- Atención por WhatsApp antes y después de la compra.',
+  ]
+  const payment = advancePaymentEnabled()
+    ? [
+        '- Hay DOS formas de pagar y el cliente elige en el checkout: contraentrega (paga en efectivo al recibir) o pago protegido con PSE, Nequi o Bancolombia a través de Confío, que retiene el dinero en custodia hasta que el cliente confirma que recibió.',
+        '- Nunca digas que "solo" hay contraentrega, ni nombres un único medio de pago como si fuera el único. Confío protege el PAGO; no digas que garantiza la entrega.',
+        '- No se acepta tarjeta de crédito ni débito.',
+      ]
+    : [
+        '- Pago contraentrega: el cliente paga en efectivo al recibir. No hay tarjeta, transferencia ni link de pago.',
+      ]
+  return [...shipping, ...payment].join('\n')
+}

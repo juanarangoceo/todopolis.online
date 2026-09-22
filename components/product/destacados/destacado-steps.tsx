@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { DestacadoStep } from '@/lib/types'
-import { DestacadoSectionHeader } from './destacado-section-header'
+import { DestacadoSection, DestacadoSectionHeader } from './destacado-section-header'
 import { DestacadoSlider } from './destacado-slider'
 import { ExpandableText } from '../expandable-text'
 import { sanityCdnImage } from '@/lib/sanity/cdn-image'
@@ -14,19 +14,14 @@ export function DestacadoSteps({ steps }: Props) {
   if (valid.length === 0) return null
 
   return (
-    <section className="py-8 md:py-10">
-      <div className="container mx-auto px-4">
-        <DestacadoSectionHeader
-          eyebrow="Cómo se usa"
-          title="Tan fácil como esto"
-          subtitle="Sin manual, sin curva de aprendizaje. Lo agarras y lo usas."
-        />
+    <DestacadoSection>
+        <DestacadoSectionHeader eyebrow="Cómo se usa" title="Así se usa, paso a paso" />
 
         <DestacadoSlider slideClassName="w-[80%] sm:w-[280px]">
           {valid.map((step, i) => (
             <div
               key={step._key ?? i}
-              className="relative flex flex-col h-full bg-surface rounded-2xl border border-todopolis-lavender/55 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              className="relative flex flex-col h-full bg-surface rounded-2xl border border-nav-inactive-border overflow-hidden"
             >
               {step.image && (
                 <div className="relative aspect-[4/3] bg-muted overflow-hidden">
@@ -41,14 +36,8 @@ export function DestacadoSteps({ steps }: Props) {
                 </div>
               )}
               <div className="relative p-5 md:p-6 flex-1">
-                <span
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-xl font-black text-base mb-3 shadow-sm border border-todopolis-blue/70"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--todopolis-blue) 0%, var(--todopolis-lavender) 100%)',
-                    color: 'var(--todopolis-blue-deep)',
-                  }}
-                >
-                  {i + 1}
+                <span className="mb-2 block font-serif text-sm font-extrabold tabular-nums text-todopolis-lavender-deep">
+                  Paso {String(i + 1).padStart(2, '0')}
                 </span>
                 <h3 className="font-bold text-lg text-foreground leading-snug mb-1.5">
                   {step.title}
@@ -58,7 +47,6 @@ export function DestacadoSteps({ steps }: Props) {
             </div>
           ))}
         </DestacadoSlider>
-      </div>
-    </section>
+    </DestacadoSection>
   )
 }

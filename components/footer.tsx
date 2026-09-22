@@ -107,7 +107,10 @@ function SupportModal({ item, onClose }: { item: string; onClose: () => void }) 
 
 // ── Footer ────────────────────────────────────────────────────────────────────
 
-export function Footer() {
+// `showPaymentExplainer={false}` en las páginas que ya explican Confío en su
+// propio cuerpo (la landing de Destacados, sección «Cómo pagas»): repetirlo en
+// el pie, en fondo oscuro y después del botón de compra, no aclara nada.
+export function Footer({ showPaymentExplainer = true }: { showPaymentExplainer?: boolean } = {}) {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   // Privacidad y Términos salieron de aquí: ahora son páginas con URL propia
@@ -231,7 +234,7 @@ export function Footer() {
                 pago anticipado está encendido: si no, prometeríamos una
                 custodia que el checkout no puede ofrecer. Mismo criterio que
                 PaymentMethods y los prompts de Lucy. */}
-            {advancePaymentVisible() && (
+            {showPaymentExplainer && advancePaymentVisible() && (
               <div className="mt-14 rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
                 <div className="flex items-start gap-3 mb-6">
                   <span className="w-11 h-11 shrink-0 rounded-2xl bg-white/10 flex items-center justify-center">

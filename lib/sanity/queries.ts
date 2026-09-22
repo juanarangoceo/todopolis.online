@@ -89,6 +89,12 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
   heroSubtitle,
   heroCta,
   "aiLifestyleImage": aiLifestyleImage.asset->url,
+  // Solo en el detalle: los carriles del home usan únicamente la principal.
+  "aiLifestyleGallery": aiLifestyleGallery[defined(asset)]{
+    _key,
+    "url": asset->url,
+    alt
+  },
   benefits,
   specifications,
   testimonials,
@@ -96,13 +102,30 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
   // Fotos reales que mandan los clientes. Solo las pide la ficha de producto:
   // no entran en PRODUCTS_LIST_QUERY porque la tarjeta del catálogo no las usa
   // y serían 574 arrays de assets resueltos en cada carga del home.
-  "customerPhotos": customerPhotos[]{
-    _key,
-    "url": asset->url,
-    customerName,
-    city,
-    alt
-  },
+  //
+  // Los antiguos «Testimonios visuales» de Destacados (vipTestimonials) se
+  // fusionaron aquí: el campo está retirado en el schema, pero los que ya
+  // existen se siguen mostrando como fotos de cliente con su frase.
+  "customerPhotos": [
+    ...coalesce(customerPhotos[]{
+      _key,
+      "url": asset->url,
+      customerName,
+      city,
+      quote,
+      alt
+    }, []),
+    ...coalesce(vipTestimonials[]{
+      _key,
+      "url": photo.asset->url,
+      "customerName": name,
+      "city": location,
+      quote,
+      "alt": photo.alt
+    }, [])
+  ],
+  quantityOffers[] { quantity, totalPrice, label },
+  audienceFit { forWho, notFor },
   ctaHeadline,
   ctaText,
   offerName,
@@ -118,6 +141,16 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
   // Los campos ALMACENADOS conservan el prefijo vip* (no se migró el dataset);
   // aquí se alias-ean al nombre de marca actual. Ver CLAUDE.md.
   "isDestacado": isVip,
+  destacadoHeadline,
+  // Las dimensiones viajan con la URL para reservar el alto del banner antes
+  // de que cargue: sin ellas, la página salta al llegar la imagen.
+  "destacadoBanner": destacadoBanner {
+    "desktop": desktopImage.asset->url,
+    "desktopDimensions": desktopImage.asset->metadata.dimensions { width, height },
+    "mobile": mobileImage.asset->url,
+    "mobileDimensions": mobileImage.asset->metadata.dimensions { width, height },
+    alt
+  },
   "destacadoStory": vipStory {
     eyebrow,
     problemTitle,
@@ -154,21 +187,12 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
     intro,
     items
   },
-  "destacadoTestimonials": vipTestimonials[] {
-    _key,
-    "photo": photo.asset->url,
-    "photoAlt": photo.alt,
-    quote,
-    name,
-    location
-  },
   "destacadoComparison": vipComparison {
     title,
     ourLabel,
     theirLabel,
     rows[] { _key, feature, ours, theirs }
-  },
-  "destacadoQuotes": vipQuotes[] { _key, text, author }
+  }
 }`
 
 const STORE_SETTINGS_QUERY = `*[_type == "storeSettings"][0] {

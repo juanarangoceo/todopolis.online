@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from '@/lib/product-content-prompt'
+import { audienceFitFromAi } from '@/lib/audience-fit'
 import { slugifyProductName } from '@/lib/slugify'
 
 // Allow up to 60s — import includes AI generation + Sanity write
@@ -252,6 +253,7 @@ export async function POST(request: NextRequest) {
       // Se genera desde la primera importación aunque el producto todavía no
       // sea Destacado. Así la narrativa ya existe cuando se active la campaña.
       ...(ai.campaignStory && { vipStory: ai.campaignStory }),
+      ...(audienceFitFromAi(ai.audienceFit) && { audienceFit: audienceFitFromAi(ai.audienceFit) }),
       ...(variants.length > 0 && { variants }),
       ...(tagReferences.length > 0 && { tags: tagReferences }),
     }

@@ -4,49 +4,35 @@ import { CampaignHeader } from '@/components/campaign-header'
 import { Footer } from '@/components/footer'
 import { ProductHero } from '@/components/product/product-hero'
 import { ProductImageGallery } from '@/components/product/product-image-gallery'
-import { ProductLifestyleImage } from '@/components/product/product-lifestyle-image'
-import { ProductBenefits } from '@/components/product/product-benefits'
+import { lifestyleImages } from '@/lib/lifestyle'
 import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
-import { ProductCTA } from '@/components/product/product-cta'
 import { ProductSubscription } from '@/components/product/product-subscription'
-import { CustomerPhotos } from '@/components/product/customer-photos'
+import { DestacadoBanner } from '@/components/product/destacados/destacado-banner'
+import { DestacadoBenefits } from '@/components/product/destacados/destacado-benefits'
+import { DestacadoCustomerPhotos } from '@/components/product/destacados/destacado-customer-photos'
+import { DestacadoPayment } from '@/components/product/destacados/destacado-payment'
+import { DestacadoAudience } from '@/components/product/destacados/destacado-audience'
+import { DestacadoFaq } from '@/components/product/destacados/destacado-faq'
+import { DestacadoCTA } from '@/components/product/destacados/destacado-cta'
 import { DestacadoHeroVideo } from '@/components/product/destacados/destacado-hero-video'
 import { DestacadoBeforeAfter } from '@/components/product/destacados/destacado-before-after'
 import { DestacadoSteps } from '@/components/product/destacados/destacado-steps'
 import { DestacadoBoxContents } from '@/components/product/destacados/destacado-box-contents'
-import { DestacadoTestimonials } from '@/components/product/destacados/destacado-testimonials'
 import { DestacadoComparison } from '@/components/product/destacados/destacado-comparison'
-import { DestacadoQuoteBlock } from '@/components/product/destacados/destacado-quote'
 import { DestacadoStory } from '@/components/product/destacados/destacado-story'
 import { OfferBanner } from '@/components/product/offer-banner'
-import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 import { GlobalSearch } from '@/components/global-search'
-import { StorePolicies } from '@/components/store-policies'
+import { buildWhatsAppUrl, resolveWhatsAppPhone } from '@/lib/whatsapp'
 import { TrackViewContent } from '@/components/analytics/track-view-content'
 import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries'
-import { Product, SanityProduct } from '@/lib/types'
+import { SanityProduct } from '@/lib/types'
 import { AgeGate } from '@/components/age-gate'
 import { VoiceLucyMount } from '@/components/lucy/VoiceLucyMount'
 import { ProductVariantProvider } from '@/components/product/product-variant-context'
-import { ArticleModalProvider, ArticleTrigger } from '@/components/product/article-modal'
-
-function SuggestedSection({ products, title, subtitle }: { products: Product[], title: string, subtitle: string }) {
-  if (products.length === 0) return null
-
-  return (
-    <section className="py-8 md:py-16">
-      <div className="text-center mb-10">
-        <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-          {title}
-        </h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">{subtitle}</p>
-      </div>
-      <SuggestedProductsCarousel products={products} />
-    </section>
-  )
-}
+import { ArticleModalProvider } from '@/components/product/article-modal'
+import { DestacadoSection, DestacadoSectionHeader } from '@/components/product/destacados/destacado-section-header'
 
 export async function generateStaticParams() {
   const slugs = await getAllProductSlugs()
@@ -130,10 +116,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       reviewsCount: p.reviewsCount,
     }))
 
-  // First carousel: 4 products right after product details
-  const suggestedProducts = otherProducts.slice(0, 4)
-  // Second carousel: next 4 different products at the end
-  const moreProducts = otherProducts.slice(4, 16)
+  // Venta cruzada: UN carrusel, después del cierre. Antes había otro de 4
+  // productos a media ficha, entre las especificaciones y las preguntas: una
+  // salida justo antes de que el comprador llegara al botón.
+  const moreProducts = otherProducts.slice(0, 12)
 
   // Adapt SanityProduct shape to the component interface
   const adaptedProduct = {
@@ -165,118 +151,93 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ctaHeadline: product.ctaHeadline,
     ctaText: product.ctaText,
     aiLifestyleImage: product.aiLifestyleImage,
+    // Principal + galería, ya sin huecos ni repetidos: es lo que pinta el
+    // carrusel lifestyle en las dos variantes de la ficha.
+    lifestyleImages: lifestyleImages(product.aiLifestyleImage, product.aiLifestyleGallery),
     articleSlug: (product as any).articleSlug ?? null,
     articleTopic: (product as any).articleTopic ?? null,
     offerName: (product as any).offerName ?? null,
     offerEndsAt: (product as any).offerEndsAt ?? null,
     faqs: (product as any).faqs ?? [],
     customerPhotos: product.customerPhotos ?? [],
+    quantityOffers: product.quantityOffers ?? [],
+    audienceFit: product.audienceFit,
     variants: product.variants ?? [],
     // Destacados — contenido manual extendido
     isDestacado: product.isDestacado ?? false,
+    destacadoHeadline: product.destacadoHeadline,
+    destacadoBanner: product.destacadoBanner,
     destacadoHeroVideo: product.destacadoHeroVideo,
     destacadoBeforeAfter: product.destacadoBeforeAfter ?? [],
     destacadoSteps: product.destacadoSteps ?? [],
     destacadoBoxContents: product.destacadoBoxContents,
-    destacadoTestimonials: product.destacadoTestimonials ?? [],
     destacadoComparison: product.destacadoComparison,
-    destacadoQuotes: product.destacadoQuotes ?? [],
     destacadoStory: product.destacadoStory,
   }
 
-  // Solo hay recuadro de fotos si alguna trae URL resuelta: un item de Sanity
-  // al que le borraron el asset llega como objeto sin `url`, y contarlo pondría
-  // la landing en dos columnas para no pintar nada en la derecha.
-  const hasCustomerPhotos = adaptedProduct.customerPhotos.some((p) => !!p?.url)
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
+  const productUrl = `${BASE_URL}/producto/${adaptedProduct.slug}`
 
-  // Link al artículo — compartido por ambos layouts y por el embudo de Destacados.
-  const articleLink = adaptedProduct.articleSlug ? (
-    <div className="container mx-auto px-4 py-4">
-      <div className="flex items-center justify-between gap-4 bg-todopolis-lavender/15 border border-todopolis-lavender/40 rounded-2xl px-6 py-4">
-        <div>
-          <p className="text-xs text-muted-foreground mb-0.5">¿Aún tienes dudas?</p>
-          <p className="font-semibold text-sm text-foreground">
-            {adaptedProduct.articleTopic
-              ? `Lee: ${adaptedProduct.articleTopic}`
-              : 'Lee nuestro artículo completo'}
-          </p>
-        </div>
-        <ArticleTrigger
-          slug={adaptedProduct.articleSlug}
-          className="shrink-0 text-sm font-bold text-todopolis-lavender-deep hover:text-todopolis-blue-deep transition-colors whitespace-nowrap"
-        >
-          Leer artículo →
-        </ArticleTrigger>
-      </div>
-    </div>
-  ) : null
+  const whatsappHref = buildWhatsAppUrl({
+    phone: resolveWhatsAppPhone(storeSettings?.whatsappPhone, process.env.NEXT_PUBLIC_WHATSAPP_PHONE),
+    pageUrl: productUrl,
+    productName: adaptedProduct.name,
+  })
+  const isDestacado = adaptedProduct.isDestacado
 
-  // El Destacado ya no es una ficha larga comprimida al lado de una foto fija.
-  // Después del hero, la historia recupera todo el ancho y avanza en este orden:
-  // contexto → mecanismo → demostración → contenido → prueba → objeciones → cierre.
-  const destacadoFunnel = (
+  // UN solo recorrido para todas las fichas (sep 2026). Antes la ficha normal
+  // metía beneficios, pestañas, FAQ y cierre dentro de la columna derecha del
+  // hero —600 px al lado de una foto pegajosa— y la de Destacados tenía el
+  // suyo a todo el ancho. Ahora las dos comparten este orden y la misma
+  // rejilla (`destacados/destacado-section-header.tsx`):
+  //
+  //   reconocimiento (banner) → contexto (historia) → beneficios con fotos →
+  //   demostración → ¿es para ti? → contenido → datos → prueba → cómo se
+  //   paga → dudas → cierre
+  //
+  // Los bloques manuales de Destacados solo salen si el producto es Destacado
+  // y el editor los llenó. La historia no es exclusiva: la IA la escribe para
+  // todos los productos, así que sale donde exista.
+  const funnel = (
     <>
-      {adaptedProduct.destacadoHeroVideo?.url && (
+      {isDestacado && <DestacadoBanner banner={adaptedProduct.destacadoBanner} />}
+      {isDestacado && adaptedProduct.destacadoHeroVideo?.url && (
         <DestacadoHeroVideo video={adaptedProduct.destacadoHeroVideo} />
       )}
       <DestacadoStory story={adaptedProduct.destacadoStory} />
-      {adaptedProduct.destacadoQuotes[0] && (
-        <DestacadoQuoteBlock quote={adaptedProduct.destacadoQuotes[0]} />
-      )}
-      <ProductBenefits product={adaptedProduct} />
-      {!adaptedProduct.destacadoHeroVideo?.url && (
-        <ProductLifestyleImage product={adaptedProduct} />
-      )}
-      {adaptedProduct.destacadoBeforeAfter.length > 0 && (
+      <DestacadoBenefits
+        benefits={adaptedProduct.benefits}
+        images={adaptedProduct.lifestyleImages}
+        productName={adaptedProduct.name}
+      />
+      {isDestacado && adaptedProduct.destacadoBeforeAfter.length > 0 && (
         <DestacadoBeforeAfter pairs={adaptedProduct.destacadoBeforeAfter} />
       )}
-      {adaptedProduct.destacadoSteps.length > 0 && (
+      {isDestacado && adaptedProduct.destacadoSteps.length > 0 && (
         <DestacadoSteps steps={adaptedProduct.destacadoSteps} />
       )}
-      {adaptedProduct.destacadoBoxContents && (
+      {/* Escenarios de uso de la IA. En Destacados no: ahí la prueba es la
+          manual (pasos, antes/después, testimonios con foto). */}
+      {!isDestacado && <ProductTestimonials product={adaptedProduct} />}
+      <DestacadoAudience fit={adaptedProduct.audienceFit} />
+      {isDestacado && adaptedProduct.destacadoBoxContents && (
         <DestacadoBoxContents data={adaptedProduct.destacadoBoxContents} />
       )}
-      {adaptedProduct.destacadoComparison && (
+      {isDestacado && adaptedProduct.destacadoComparison && (
         <DestacadoComparison data={adaptedProduct.destacadoComparison} />
       )}
       <ProductDetails product={adaptedProduct} specificationsOnly />
-      {adaptedProduct.destacadoTestimonials.length > 0 && (
-        <DestacadoTestimonials testimonials={adaptedProduct.destacadoTestimonials} />
-      )}
-      {hasCustomerPhotos && (
-        <section className="py-10 md:py-14">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-5xl">
-              <CustomerPhotos
-                photos={adaptedProduct.customerPhotos}
-                productName={adaptedProduct.name}
-              />
-            </div>
-          </div>
-        </section>
-      )}
-      {adaptedProduct.destacadoQuotes.slice(1).map((q) => (
-        <DestacadoQuoteBlock key={q._key ?? q.text} quote={q} />
-      ))}
-      {articleLink}
-      {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
-      <ProductCTA product={adaptedProduct} />
-    </>
-  )
-
-  const standardFunnel = (
-    <>
-      <ProductLifestyleImage product={adaptedProduct} />
-      <ProductBenefits product={adaptedProduct} />
-      <ProductDetails product={adaptedProduct} />
-      <SuggestedSection
-        products={suggestedProducts}
-        title="También te podría interesar"
-        subtitle="Productos seleccionados especialmente para ti que complementan perfectamente tu elección."
+      <DestacadoCustomerPhotos
+        photos={adaptedProduct.customerPhotos}
+        productName={adaptedProduct.name}
       />
-      {articleLink}
-      {adaptedProduct.faqs?.length > 0 && <ProductFaq faqs={adaptedProduct.faqs} />}
-      <ProductCTA product={adaptedProduct} />
+      <DestacadoPayment />
+      <DestacadoFaq
+        faqs={adaptedProduct.faqs}
+        articleSlug={adaptedProduct.articleSlug}
+        articleTopic={adaptedProduct.articleTopic}
+      />
+      <DestacadoCTA product={adaptedProduct} whatsappHref={whatsappHref} />
     </>
   )
 
@@ -292,8 +253,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       category: p.category ?? 'Otros',
     }))
 
-  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
-  const productUrl = `${BASE_URL}/producto/${adaptedProduct.slug}`
 
   // NO se emiten aggregateRating ni review en el JSON-LD.
   // Los testimonios de la landing los genera la IA (nombres y ciudades
@@ -396,88 +355,36 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
             <div className="min-w-0 space-y-0">
               <OfferBanner product={adaptedProduct} />
-              <ProductHero product={adaptedProduct} />
-              {!adaptedProduct.isDestacado && standardFunnel}
+              <ProductHero product={adaptedProduct} whatsappHref={whatsappHref} />
             </div>
           </div>
         </div>
 
-        {adaptedProduct.isDestacado && (
-          <div className="border-t border-nav-inactive-border">
-            {destacadoFunnel}
-          </div>
-        )}
+        {funnel}
         </ProductVariantProvider>
 
-        {/* Los escenarios IA legados no forman parte de una campaña. Las
-            landings destacadas solo muestran prueba manual/fotos reales. */}
-        {!adaptedProduct.isDestacado && <ProductTestimonials product={adaptedProduct} />}
-
-        {/* Global Store Policies */}
-        <div className="container mx-auto px-4 mt-8">
-          <StorePolicies
-            policies={storeSettings?.policies}
-            whatsapp={{
-              phone: storeSettings?.whatsappPhone ?? null,
-              productName: adaptedProduct.name,
-              pageUrl: productUrl,
-            }}
-          />
-        </div>
-
-        {/* Second products section — below CTA, full width, both layouts.
-            En productos destacados se oculta para no romper el embudo. */}
-        {!adaptedProduct.isDestacado && moreProducts.length > 0 && (
-          <section className="pt-6 pb-12 md:pb-16 bg-surface-soft">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-8">
-                <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">
-                  Otros productos que te encantarán
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Sigue explorando nuestra selección de productos de alta calidad.
-                </p>
-              </div>
-              <SuggestedProductsCarousel products={moreProducts} />
-            </div>
-          </section>
+        {/* Lo que va DESPUÉS del cierre, solo en la ficha normal. En Destacados
+            no hay venta cruzada ni suscripción: son salidas del embudo en una
+            visita que viene de un anuncio de ESTE producto. Tampoco va
+            `StorePolicies` en ninguna de las dos: el cierre ya dice envío,
+            devolución y WhatsApp, y «Cómo pagas» explica el pago. */}
+        {!isDestacado && moreProducts.length > 0 && (
+          <DestacadoSection>
+            <DestacadoSectionHeader eyebrow="Sigue mirando" title="Otros productos de la tienda" />
+            <SuggestedProductsCarousel products={moreProducts} />
+          </DestacadoSection>
         )}
 
-        {/* Suscripción.
-            Aquí vivía también "Lecturas que aclaran dudas" (SuggestedBlogs), en
-            dos columnas. Se quitó: el artículo del propio producto ya se abre
-            en ventana emergente desde la ficha (ArticleTrigger) y el blog
-            completo está en el menú, así que este bloque repetía una tercera
-            entrada al mismo sitio y alargaba una página que ya es larga.
-            De paso desaparece una consulta de artículos a Sanity por visita. */}
-        {/* Suscripción, y a su derecha las fotos reales de clientes cuando las
-            hay. El ancho del contenedor CAMBIA con el contenido: con fotos son
-            dos columnas dentro de `max-w-6xl`; sin fotos vuelve a la columna
-            única de `max-w-2xl` que había antes, porque estirar un formulario
-            de tres campos a todo el ancho lo deja desangelado.
-            `items-stretch` iguala la altura de las dos tarjetas. */}
-        {!adaptedProduct.isDestacado && <section className="py-12 md:py-16">
-          <div className="container mx-auto px-4">
-            <div
-              className={
-                hasCustomerPhotos
-                  ? 'grid lg:grid-cols-2 gap-6 lg:gap-8 items-stretch max-w-6xl mx-auto'
-                  : 'max-w-2xl mx-auto'
-              }
-            >
+        {!isDestacado && (
+          <DestacadoSection tone="soft">
+            <div className="mx-auto max-w-2xl">
               <ProductSubscription
                 productSlug={adaptedProduct.slug}
                 productName={adaptedProduct.name}
               />
-              {hasCustomerPhotos && (
-                <CustomerPhotos
-                  photos={adaptedProduct.customerPhotos}
-                  productName={adaptedProduct.name}
-                />
-              )}
             </div>
-          </div>
-        </section>}
+          </DestacadoSection>
+        )}
         </ArticleModalProvider>
       </main>
 
@@ -491,7 +398,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         }}
       />
 
-      <Footer />
+      <Footer showPaymentExplainer={false} />
     </div>
   )
 }

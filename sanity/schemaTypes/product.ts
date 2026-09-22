@@ -2,6 +2,7 @@ import { defineType, defineField, defineArrayMember } from 'sanity'
 import { GenerateContentButton } from '../components/GenerateContentButton'
 import { GenerateAIImageButton } from '../components/GenerateAIImageButton'
 import { GenerateArticleButton } from '../components/GenerateArticleButton'
+import { CompleteDestacadoButton } from '../components/CompleteDestacadoButton'
 import { MultiImageUploader } from '../components/MultiImageUploader'
 import { PRODUCT_CATEGORIES } from '../../lib/categories'
 
@@ -83,7 +84,7 @@ export const productType = defineType({
       components: {
         input: GenerateAIImageButton,
       },
-      description: 'Genera una imagen hiperrealista de una persona usando el producto. Se mostrará antes de la sección de beneficios en la landing page.',
+      description: 'Genera fotos hiperrealistas del producto en uso. La primera queda como imagen principal; las siguientes se pueden añadir a la galería lifestyle (carrusel de la landing).',
     }),
 
     // ─── Precio y clasificación ─────────────────────────────────────────────
@@ -100,6 +101,63 @@ export const productType = defineType({
       type: 'number',
       group: 'basics',
       description: 'Opcional. Si el producto está en oferta, escribe aquí el precio anterior.',
+    }),
+    // Combos por cantidad («Lleva 2 por $X»). El precio se resuelve con
+    // `lib/quantity-offers.ts` tanto en la ficha como en el servidor de pagos:
+    // el número que llega a Confío nunca sale del navegador.
+    defineField({
+      name: 'quantityOffers',
+      title: '🎁 Combos por cantidad',
+      type: 'array',
+      group: 'basics',
+      description: 'Opcional. Ej: "Lleva 2 por $229.000". Se muestran como opciones junto al precio y el checkout cobra el precio del combo. El precio del combo debe ser MENOR que el precio unitario × cantidad, o se ignora.',
+      of: [
+        defineArrayMember({
+          name: 'quantityOffer',
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'quantity',
+              title: 'Cantidad',
+              type: 'number',
+              validation: (rule) => rule.required().integer().min(2).max(10),
+            }),
+            defineField({
+              name: 'totalPrice',
+              title: 'Precio total del combo',
+              type: 'number',
+              description: 'Lo que paga el cliente por TODAS las unidades juntas.',
+              validation: (rule) => rule.required().positive(),
+            }),
+            defineField({
+              name: 'label',
+              title: 'Etiqueta (opcional)',
+              type: 'string',
+              description: 'Ej: "El más elegido", "Para regalar". Máximo 20 caracteres.',
+              validation: (rule) => rule.max(20),
+            }),
+          ],
+          preview: {
+            select: { quantity: 'quantity', totalPrice: 'totalPrice', label: 'label' },
+            prepare({ quantity, totalPrice, label }) {
+              return {
+                title: `Lleva ${quantity ?? '?'} por $${(totalPrice ?? 0).toLocaleString('es-CO')}`,
+                subtitle: label,
+              }
+            },
+          },
+        }),
+      ],
+      validation: (rule) => rule.custom((offers, context) => {
+        const price = context.document?.price as number | undefined
+        if (!Array.isArray(offers) || !price) return true
+        const bad = (offers as Array<{ quantity?: number; totalPrice?: number }>).find(
+          (o) => o.quantity && o.totalPrice && o.totalPrice >= o.quantity * price,
+        )
+        return bad
+          ? `El combo de ${bad.quantity} cuesta igual o más que ${bad.quantity} unidades sueltas: no se mostrará.`
+          : true
+      }).warning(),
     }),
     defineField({
       name: 'category',
@@ -231,7 +289,26 @@ export const productType = defineType({
       type: 'image',
       group: 'landing',
       options: { hotspot: true },
-      description: 'Imagen generada con IA. Se muestra entre el hero y los beneficios en la landing page.',
+      description: 'Imagen principal de la galería lifestyle. La genera el botón "Generar Imagen Lifestyle con IA" (Básicos) o la puedes subir tú.',
+    }),
+    // Galería lifestyle: acompaña a `aiLifestyleImage` (que sigue siendo la
+    // primera y la que usan los carriles de inspiración del home). En la
+    // landing se pintan juntas como carrusel. Se llena subiendo fotos aquí o
+    // con el botón de IA, que ahora puede AÑADIR en vez de reemplazar.
+    defineField({
+      name: 'aiLifestyleGallery',
+      title: '🖼️ Galería lifestyle (más fotos)',
+      type: 'array',
+      group: 'landing',
+      description: 'Fotos adicionales del producto en uso. Arrastra varias a la vez o créalas con el botón de IA → "Añadir a la galería". Se muestran como carrusel después de la imagen principal.',
+      of: [
+        defineArrayMember({
+          type: 'image',
+          options: { hotspot: true },
+          fields: [{ name: 'alt', title: 'Texto alternativo', type: 'string' }],
+        }),
+      ],
+      options: { layout: 'grid' },
     }),
     defineField({
       name: 'heroTitle',
@@ -343,6 +420,16 @@ export const productType = defineType({
               title: 'Ciudad (opcional)',
               type: 'string',
             }),
+            // Absorbe a los antiguos «Testimonios visuales» de Destacados: una
+            // foto real con lo que dijo el cliente. Solo lo que el cliente
+            // escribió de verdad, con su permiso.
+            defineField({
+              name: 'quote',
+              title: 'Lo que dijo (opcional)',
+              type: 'text',
+              rows: 2,
+              description: 'Copia textual de lo que escribió el cliente al mandar la foto. Nunca redactado por nosotros ni por la IA.',
+            }),
             defineField({
               name: 'alt',
               title: 'Texto alternativo (accesibilidad)',
@@ -364,6 +451,32 @@ export const productType = defineType({
       type: 'text',
       rows: 2,
       group: 'landing',
+    }),
+    // «¿Es para ti?». Lo llena la IA con el resto de la landing. Decir para
+    // quién NO es da más confianza que otra lista de beneficios, y baja las
+    // devoluciones de quien compró esperando otra cosa.
+    defineField({
+      name: 'audienceFit',
+      title: '🎯 ¿Es para ti? (para quién sí / para quién no)',
+      type: 'object',
+      group: 'landing',
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({
+          name: 'forWho',
+          title: 'Es para ti si…',
+          type: 'array',
+          of: [{ type: 'string' }],
+          validation: (rule) => rule.max(4),
+        }),
+        defineField({
+          name: 'notFor',
+          title: 'No es para ti si…',
+          type: 'array',
+          of: [{ type: 'string' }],
+          validation: (rule) => rule.max(3),
+        }),
+      ],
     }),
     defineField({
       name: 'faqs',
@@ -416,6 +529,54 @@ export const productType = defineType({
       group: 'destacados',
       initialValue: false,
       description: 'Activa la estrellita en la tarjeta del producto y lo incluye en /destacados. Si lo activas, los bloques de abajo se mostrarán en la landing (solo los que llenes). También activa envío gratis en el checkout.',
+    }),
+    // Nombres nuevos, sin prefijo `vip*`: los heredados solo conservan el suyo
+    // porque ya están almacenados. Ver CLAUDE.md → Destacados.
+    defineField({
+      name: 'completeDestacado',
+      title: '🤖 Completar Destacado con IA',
+      type: 'string',
+      group: 'destacados',
+      components: { input: CompleteDestacadoButton },
+      description: 'Llena lo que esté vacío: titular de campaña, historia, pasos de uso, qué viene en la caja y (opcional) 3 fotos para la galería. No toca lo que ya escribiste.',
+    }),
+    defineField({
+      name: 'destacadoHeadline',
+      title: '📣 Titular de campaña',
+      type: 'string',
+      group: 'destacados',
+      description: 'La frase del anuncio, para que quien hace clic la reconozca. Sale bajo el nombre del producto en lugar del gancho de la IA. Máximo 60 caracteres. Ej: "Aprende a rodar sin caídas laterales".',
+      validation: (rule) => rule.max(60),
+    }),
+    defineField({
+      name: 'destacadoBanner',
+      title: '🪧 Banner bajo el hero',
+      type: 'object',
+      group: 'destacados',
+      description: 'Imagen a todo el ancho de la pantalla, justo debajo de la primera sección (foto + precio). Ideal para la pieza de campaña del anuncio: la persona reconoce lo que vio en Meta.',
+      options: { collapsible: true, collapsed: false },
+      fields: [
+        defineField({
+          name: 'desktopImage',
+          title: 'Imagen escritorio',
+          type: 'image',
+          options: { hotspot: true },
+          description: 'Horizontal. Recomendado 2400 × 800 px (3:1) o 1920 × 720. Se muestra de borde a borde.',
+        }),
+        defineField({
+          name: 'mobileImage',
+          title: 'Imagen móvil (opcional)',
+          type: 'image',
+          options: { hotspot: true },
+          description: 'Vertical o cuadrada, p. ej. 1080 × 1350. Si la dejas vacía, el móvil usa la de escritorio.',
+        }),
+        defineField({
+          name: 'alt',
+          title: 'Texto alternativo',
+          type: 'string',
+          description: 'Qué muestra el banner, en una frase. Si el banner lleva texto dentro de la imagen, escríbelo aquí.',
+        }),
+      ],
     }),
     defineField({
       name: 'vipStory',
@@ -599,12 +760,18 @@ export const productType = defineType({
         }),
       ],
     }),
+    // RETIRADO: se fusionó con «Fotos Reales de Clientes» (que ahora admite lo
+    // que dijo el cliente). Los datos que ya existen se siguen mostrando —la
+    // query los junta con customerPhotos— y el campo solo aparece en los
+    // documentos que todavía tienen alguno, para poder moverlos a mano.
     defineField({
       name: 'vipTestimonials',
-      title: '💬 Testimonios visuales (con foto)',
+      title: '💬 Testimonios visuales (RETIRADO)',
       type: 'array',
       group: 'destacados',
-      description: 'Diferentes a los testimonios de texto generados por IA. Estos llevan foto real y convierten mucho mejor.',
+      deprecated: { reason: 'Usa «Fotos Reales de Clientes» (pestaña Landing), que ahora admite lo que dijo el cliente.' },
+      hidden: ({ value }) => !Array.isArray(value) || value.length === 0,
+      description: 'Se sigue mostrando en la landing, junto a las fotos de clientes. Para cosas nuevas usa «Fotos Reales de Clientes».',
       of: [
         defineArrayMember({
           name: 'visualTestimonial',
@@ -666,24 +833,6 @@ export const productType = defineType({
               },
             }),
           ],
-        }),
-      ],
-    }),
-    defineField({
-      name: 'vipQuotes',
-      title: '✨ Quotes destacadas (puedes agregar varios)',
-      type: 'array',
-      group: 'destacados',
-      description: 'Frases sueltas grandes que dan respiro a la landing. Se intercalan entre secciones.',
-      of: [
-        defineArrayMember({
-          name: 'vipQuote',
-          type: 'object',
-          fields: [
-            defineField({ name: 'text', title: 'Texto del quote', type: 'text', rows: 3, validation: (rule) => rule.required() }),
-            defineField({ name: 'author', title: 'Autor (opcional)', type: 'string' }),
-          ],
-          preview: { select: { title: 'text', subtitle: 'author' } },
         }),
       ],
     }),

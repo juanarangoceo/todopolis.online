@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { set, useFormValue, useClient } from 'sanity'
 import { ensureDraftId } from '../lib/draft'
 import { slugifyProductName } from '../../lib/slugify'
+import { audienceFitFromAi } from '../../lib/audience-fit'
 
 // This is a custom Sanity Studio input component that triggers AI content generation
 export function GenerateContentButton(props: any) {
@@ -100,6 +101,10 @@ export function GenerateContentButton(props: any) {
       if (generated.campaignStory) {
         patchData.vipStory = generated.campaignStory
       }
+
+      // «¿Es para ti?» — misma validación que el import y el cron.
+      const fit = audienceFitFromAi(generated.audienceFit)
+      if (fit) patchData.audienceFit = fit
 
       const cambios: string[] = []
 

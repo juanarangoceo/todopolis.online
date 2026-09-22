@@ -9,6 +9,7 @@ import {
   type OrderRow,
 } from '@/lib/payments/confio-orders'
 import { CONFIO_MIN_COP } from '@/lib/payments/confio/protocol'
+import { priceForQuantity } from '@/lib/quantity-offers'
 import { AdvancePaymentError } from '@/lib/payments/types'
 
 // Crea el pedido y abre el cobro de Confío. Devuelve la URL del checkout para
@@ -22,11 +23,17 @@ async function resolvePrice(slug: string, variantId: number | null) {
   const product = await getSanityProductBySlug(slug)
   if (!product) return null
 
-  const variant = variantId
-    ? (product.variants ?? []).find((v: ProductVariant) => v.idVariant === variantId)
-    : null
+  // La variante solo se valida (que exista); su `price` NO se usa. Ese campo es
+  // el «Precio Mastershop» —el COSTO del proveedor que trae la sincronización—
+  // y no el de venta. Esta ruta lo usaba como precio unitario, así que en los
+  // 65 productos con variantes Confío cobraba el costo: el reloj infantil de
+  // $82.900 salía a $55.000. El precio de venta es `product.price`, el mismo
+  // que muestran la ficha y el checkout contraentrega.
+  if (variantId && !(product.variants ?? []).some((v: ProductVariant) => v.idVariant === variantId)) {
+    return null
+  }
 
-  const unitPrice = variant?.price && variant.price > 0 ? variant.price : product.price
+  const unitPrice = product.price
   if (typeof unitPrice !== 'number' || unitPrice <= 0) return null
 
   // Confío EXIGE al menos una foto. Se toman del catálogo en orden.
@@ -39,6 +46,7 @@ async function resolvePrice(slug: string, variantId: number | null) {
   return {
     name: product.name,
     unitPrice: Math.round(unitPrice),
+    quantityOffers: product.quantityOffers,
     isDestacado: product.isDestacado === true,
     mediaAssets: [...new Set(mediaAssets)].slice(0, 5),
   }
@@ -95,7 +103,8 @@ export async function POST(request: NextRequest) {
   // El envío sigue la misma regla que el checkout contraentrega: gratis en
   // destacados, $12.000 en el resto. Se cobra junto con el producto.
   const shipping = resolved.isDestacado ? 0 : 12_000
-  const subtotal = resolved.unitPrice * quantity
+  // Combos por cantidad: mismo cálculo que el checkout (`lib/quantity-offers`).
+  const subtotal = priceForQuantity(resolved.unitPrice, quantity, resolved.quantityOffers)
   const totalCop = subtotal + shipping
 
   if (totalCop < CONFIO_MIN_COP) {

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Play } from 'lucide-react'
 import { DestacadoHeroVideo as VipHeroVideoData } from '@/lib/types'
 import { sanityCdnImage } from '@/lib/sanity/cdn-image'
+import { DestacadoSection } from './destacado-section-header'
 
 interface Props {
   video: VipHeroVideoData
@@ -41,9 +42,10 @@ export function DestacadoHeroVideo({ video }: Props) {
   const source = detectSource(video.url)
 
   return (
-    <section className="py-8 md:py-10">
-      <div className="container mx-auto px-4">
-        <div className="relative mx-auto aspect-[4/5] max-w-sm overflow-hidden rounded-3xl border border-todopolis-lavender/50 bg-black shadow-xl md:aspect-video md:max-w-4xl">
+    <DestacadoSection>
+        {/* Ocupa el ancho completo de la rejilla, como el hero: a 4xl
+            centrado era otro borde distinto en la página. */}
+        <div className="relative mx-auto aspect-[4/5] max-w-sm overflow-hidden rounded-3xl bg-black md:aspect-video md:max-w-none">
           {/* MP4 / GIF: render directo inline, sin click-to-play */}
           {source === 'mp4' && (
             <video
@@ -115,9 +117,8 @@ export function DestacadoHeroVideo({ video }: Props) {
         </div>
 
         {video.caption && (
-          <p className="text-center text-sm text-foreground/55 mt-4 italic">{video.caption}</p>
+          <p className="mt-4 text-sm text-muted-foreground">{video.caption}</p>
         )}
-      </div>
-    </section>
+    </DestacadoSection>
   )
 }

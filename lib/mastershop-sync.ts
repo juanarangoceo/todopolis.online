@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from './generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from './auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from './product-content-prompt'
+import { audienceFitFromAi } from './audience-fit'
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 const PAGE_LIMIT = 50
@@ -277,6 +278,7 @@ async function importProduct(
     // El cron deja lista la historia de campaña desde el alta. Marcar el
     // producto como Destacado después no requiere volver a generar el copy.
     ...(ai.campaignStory && { vipStory: ai.campaignStory }),
+    ...(audienceFitFromAi(ai.audienceFit) && { audienceFit: audienceFitFromAi(ai.audienceFit) }),
     ...(variants.length > 0 && { variants }),
     ...(tagReferences.length > 0 && { tags: tagReferences }),
   }

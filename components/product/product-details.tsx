@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Info, ListChecks } from 'lucide-react';
+import { DestacadoSection, DestacadoSectionHeader, DestacadoSplit } from './destacados/destacado-section-header';
 
 interface ProductDetailsProps {
   product: Product;
@@ -21,41 +22,33 @@ export function ProductDetails({ product, specificationsOnly = false }: ProductD
     { id: 'specifications' as Tab, label: 'Especificaciones', icon: ListChecks },
   ];
 
+  // Variante de la landing de Destacados: ficha técnica en la rejilla de la
+  // landing (título a la izquierda, datos a la derecha) y como lista con
+  // filetes, no como tabla dentro de una tarjeta.
   if (specificationsOnly) {
     if (!product.specifications?.length) return null;
 
     return (
-      <section className="py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-8 text-center">
-              <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-trust-border bg-trust-bg px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-trust-fg">
-                <ListChecks className="h-3.5 w-3.5" />
-                Datos comprobables
-              </span>
-              <h2 className="font-serif text-3xl font-bold tracking-tight text-ink-title md:text-4xl">
-                Los detalles que conviene saber
-              </h2>
-            </div>
-            <div className="overflow-hidden rounded-3xl border border-nav-inactive-border bg-surface shadow-sm">
-              <table className="w-full">
-                <tbody>
-                  {product.specifications.map((spec, index) => (
-                    <tr key={`${spec.label}-${index}`} className="border-b border-border/60 last:border-0 odd:bg-surface-soft">
-                      <td className="w-[42%] px-5 py-4 text-sm font-bold text-foreground/70 md:px-8 md:text-base">
-                        {spec.label}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-foreground md:px-8 md:text-base">
-                        {spec.value}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
+      <DestacadoSection>
+        <DestacadoSplit
+          header={
+            <DestacadoSectionHeader
+              eyebrow="Ficha técnica"
+              title="Medidas, materiales y detalles"
+              className="lg:mb-0"
+            />
+          }
+        >
+          <dl className="divide-y divide-nav-inactive-border border-y border-nav-inactive-border">
+            {product.specifications.map((spec, index) => (
+              <div key={`${spec.label}-${index}`} className="grid gap-1 py-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6">
+                <dt className="text-sm font-semibold text-muted-foreground md:text-base">{spec.label}</dt>
+                <dd className="text-sm text-ink-title md:text-base">{spec.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </DestacadoSplit>
+      </DestacadoSection>
     );
   }
 

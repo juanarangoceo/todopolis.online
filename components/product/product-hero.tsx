@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Star, Heart, ShoppingBag, Truck, Shield, RotateCcw, Zap } from 'lucide-react';
+import { Star, Heart, ShoppingBag, Truck, ShieldCheck, RotateCcw, Zap, Check } from 'lucide-react';
 import { PaymentMethods } from '@/components/payment-methods';
 import { sanitizeHeroCta } from '@/lib/cta';
+import { descriptionBullets } from '@/lib/description';
+import { priceForQuantity, savingsForQuantity, validOffers } from '@/lib/quantity-offers';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { CheckoutModal } from '@/components/checkout-modal';
@@ -14,16 +16,19 @@ import { OfferCountdownInline } from './offer-countdown-inline';
 
 interface ProductHeroProps {
   product: Product;
+  /** wa.me ya armado. En móvil va dentro de la barra fija de compra. */
+  whatsappHref?: string | null;
 }
 
-export function ProductHero({ product }: ProductHeroProps) {
+export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
   const { favoriteSlugs, toggleFavorite } = useFavorites();
   const slug = (product as any).slug || (product as any)._id || '';
   const isWishlisted = favoriteSlugs.includes(slug);
   
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [isExpandedDescription, setIsExpandedDescription] = useState(false);
+  // Cantidad elegida en el selector de combos. El checkout abre con ella.
+  const [selectedQty, setSelectedQty] = useState(1);
 
   // Listen for buy event dispatched from the desktop image gallery banner
   useEffect(() => {
@@ -37,7 +42,10 @@ export function ProductHero({ product }: ProductHeroProps) {
   };
 
   const images: string[] = (product as any).images ?? (product.image ? [product.image] : ['/placeholder.jpg']);
-  const heroTitle = (product as any).heroTitle ?? product.name;
+  // En un Destacado con titular de campaña, esa frase —la del anuncio— toma
+  // el lugar del gancho de la IA: quien llega del anuncio reconoce lo que vio.
+  const campaignHeadline = product.isDestacado ? (product as any).destacadoHeadline?.trim() : '';
+  const heroTitle = campaignHeadline || ((product as any).heroTitle ?? product.name);
   // El gancho solo se pinta si aporta algo: `heroTitle` cae a `product.name`
   // cuando el producto no tiene copy de IA, y en ese caso repetir el nombre
   // debajo del titular parece un fallo de plantilla.
@@ -51,14 +59,20 @@ export function ProductHero({ product }: ProductHeroProps) {
     ? Math.round((1 - product.price / (product as any).originalPrice) * 100)
     : 0;
 
+  // Combos por cantidad, sobre el precio de venta. (El `price` de la variante
+  // es el costo de Mastershop, no un precio de venta: no se usa.)
+  const offers = validOffers(product.price ?? 0, product.quantityOffers);
+  const qty = offers.length ? selectedQty : 1;
+  const selectedTotal = priceForQuantity(product.price ?? 0, qty, offers);
+
+  const bullets = descriptionBullets(product.shortDescription);
+
   return (
     <>
     <section className="relative py-4 md:py-8 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent" />
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-      </div>
+      {/* Sin fondo decorativo. Había un degradado del color del botón (rojo al
+          5%) en la mitad derecha que en escritorio se cortaba en seco al borde
+          de la columna y dejaba un recuadro rosado sin motivo. */}
 
       <div className="container mx-auto px-4">
         {/* Mobile-only: Image gallery inline */}
@@ -222,29 +236,29 @@ export function ProductHero({ product }: ProductHeroProps) {
           {/* Subtitle — a la izquierda: son 160 caracteres, ya es texto de
               lectura y centrarlo obliga al ojo a buscar el inicio de cada
               renglón. */}
+          {/* Oculto en móvil: ahí el precio queda demasiado lejos, y la historia
+              y los beneficios de más abajo dicen lo mismo con más espacio. */}
           {(product as any).heroSubtitle && (
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="hidden sm:block text-xl text-muted-foreground leading-relaxed">
               {(product as any).heroSubtitle}
             </p>
           )}
 
-          {/* Short Description */}
-          <div className="relative">
-            <div className={cn(
-              "text-lg text-muted-foreground leading-relaxed transition-all duration-300 overflow-hidden",
-              !isExpandedDescription ? "line-clamp-3 sm:line-clamp-none max-h-24 sm:max-h-[2000px]" : "max-h-[2000px]"
-            )}>
-              <p>{product.shortDescription}</p>
-            </div>
-            <div className="sm:hidden mt-2 flex">
-              <button
-                onClick={() => setIsExpandedDescription(!isExpandedDescription)}
-                className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-              >
-                {isExpandedDescription ? 'Ver menos' : 'Ver más'}
-              </button>
-            </div>
-          </div>
+          {/* Descripción como viñetas, sin los emojis que trae de la IA
+              (`lib/description.ts`). Antes era un párrafo con ✅🔥⭐ incrustados
+              y un «Ver más» en móvil. */}
+          {bullets.length > 1 ? (
+            <ul className="space-y-2.5">
+              {bullets.map((b, i) => (
+                <li key={i} className="flex gap-3 text-base md:text-lg text-foreground/80 leading-snug">
+                  <Check className="mt-1 h-4 w-4 shrink-0 text-todopolis-lavender-deep" strokeWidth={3} />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          ) : bullets.length === 1 ? (
+            <p className="text-lg text-muted-foreground leading-relaxed">{bullets[0]}</p>
+          ) : null}
 
           {/* In Stock + señal de demanda honesta (solo si es best seller) */}
           <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
@@ -306,6 +320,50 @@ export function ProductHero({ product }: ProductHeroProps) {
               )}
             </div>
 
+            {/* Combos por cantidad. Radios nativos: se eligen con teclado y
+                el lector de pantalla los anuncia como grupo. */}
+            {offers.length > 0 && (
+              <fieldset className="space-y-2">
+                <legend className="sr-only">Cantidad</legend>
+                {[{ quantity: 1, totalPrice: product.price ?? 0, label: undefined as string | undefined }, ...offers].map((o) => {
+                  const savings = savingsForQuantity(product.price ?? 0, o.quantity, offers);
+                  const active = qty === o.quantity;
+                  return (
+                    <label
+                      key={o.quantity}
+                      className={cn(
+                        'flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3 transition-colors',
+                        active ? 'border-ink-title bg-surface-soft' : 'border-nav-inactive-border hover:border-foreground/30'
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="quantity-offer"
+                        value={o.quantity}
+                        checked={active}
+                        onChange={() => setSelectedQty(o.quantity)}
+                        className="h-4 w-4 accent-[var(--ink-title)]"
+                      />
+                      <span className="flex-1 min-w-0">
+                        <span className="block font-bold text-ink-title">
+                          {o.quantity === 1 ? '1 unidad' : `Lleva ${o.quantity}`}
+                          {o.label && (
+                            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-700">
+                              {o.label}
+                            </span>
+                          )}
+                        </span>
+                        {savings > 0 && (
+                          <span className="block text-sm text-trust-fg font-semibold">Ahorras {formatPrice(savings)}</span>
+                        )}
+                      </span>
+                      <span className="font-serif font-extrabold tabular-nums text-ink-title">{formatPrice(o.totalPrice)}</span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+            )}
+
             {/* Actions */}
             <div className="flex gap-4">
               <button
@@ -335,31 +393,42 @@ export function ProductHero({ product }: ProductHeroProps) {
             </div>
           </div>
 
-          {/* Medios de pago — DEBAJO del botón.
-              Aquí es respaldo, no información: los chips de la corona
-              (Contraentrega · PSE · Nequi · Bancolombia) ya dijeron arriba qué
-              medios hay, así que este recuadro no tiene que informar de nada
-              nuevo. Lo que hace es responder la duda que aparece justo después
-              de mirar el botón —"¿y si pago y no llega?"—, y una tranquilidad
-              se da después de pedir, no antes.
-              El texto cambia solo según haya o no prepago. */}
-          <PaymentMethods variant="block" />
-
-          {/* Trust Badges — sistema único de confianza */}
-          <div className="grid grid-cols-3 gap-3 md:gap-4 pt-4 md:pt-6">
-            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-trust-bg border border-trust-border">
-              <Truck className="w-6 h-6 text-trust-fg" />
-              <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">Envío a todo Colombia</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-trust-bg border border-trust-border">
-              <Shield className="w-6 h-6 text-trust-fg" />
-              <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">Compra segura</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-trust-bg border border-trust-border">
-              <RotateCcw className="w-6 h-6 text-trust-fg" />
-              <span className="text-[10px] md:text-xs text-center font-semibold text-foreground/80 leading-tight">30 días si llega con defecto</span>
-            </div>
-          </div>
+          {/* Tres hechos en tres renglones, debajo del botón. Antes aquí iban el
+              recuadro de dos tarjetas de medios de pago y tres cajas azules
+              («Compra segura» incluida, que no dice nada comprobable): en
+              móvil empujaban todo casi una pantalla. La explicación completa de
+              cómo se paga vive ahora en la sección «Cómo pagas», y el enlace
+              lleva ahí. */}
+          <ul className="space-y-2 text-sm text-foreground/80">
+            <li className="flex items-start gap-2.5">
+              <Truck className="mt-0.5 h-4 w-4 shrink-0 text-trust-fg" />
+              <span>
+                <strong className="font-semibold text-ink-title">{product.isDestacado ? 'Envío gratis' : 'Envío $12.000'}</strong> · llega en 3 a 7 días hábiles
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-trust-fg" />
+              <span>
+                <strong className="font-semibold text-ink-title">
+                  {process.env.NEXT_PUBLIC_CONFIO_ENABLED === 'true' ? 'Paga al recibir o con Confío' : 'Pagas al recibir'}
+                </strong>
+                {process.env.NEXT_PUBLIC_CONFIO_ENABLED === 'true' && (
+                  <>
+                    {' · '}
+                    <a href="#como-pagas" className="underline decoration-nav-inactive-border underline-offset-4 hover:decoration-current">
+                      cómo funciona
+                    </a>
+                  </>
+                )}
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <RotateCcw className="mt-0.5 h-4 w-4 shrink-0 text-trust-fg" />
+              <span>
+                <strong className="font-semibold text-ink-title">30 días</strong> si llega con defecto de fábrica
+              </span>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -367,22 +436,39 @@ export function ProductHero({ product }: ProductHeroProps) {
         isOpen={isCheckoutOpen} 
         onClose={() => setIsCheckoutOpen(false)} 
         product={product} 
+        initialQuantity={qty}
       />
     </section>
 
-    {/* Sticky Mobile Checkout CTA */}
+    {/* Barra fija de compra en móvil. WhatsApp va DENTRO, a la izquierda:
+        antes era una burbuja flotante encima de la barra que tapaba el
+        nombre del producto en la primera pantalla (ver whatsapp-button.tsx,
+        que en la ficha ya no se pinta en móvil). */}
     {!isCheckoutOpen && (
-    <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 animate-in slide-in-from-bottom-5">
+    <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 flex gap-2 animate-in slide-in-from-bottom-5">
+      {whatsappHref && (
+        <a
+          href={whatsappHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Escribirnos por WhatsApp"
+          className="flex w-14 shrink-0 items-center justify-center rounded-2xl bg-[#25D366] shadow-2xl shadow-[#25D366]/30 active:scale-[0.98] transition-transform"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 fill-white">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.297-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 0 1 6.988 2.896 9.83 9.83 0 0 1 2.893 6.994c-.003 5.45-4.437 9.886-9.885 9.886m8.413-18.297A11.82 11.82 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.82 11.82 0 0 0 20.464 3.488" />
+          </svg>
+        </a>
+      )}
       <button
         onClick={() => setIsCheckoutOpen(true)}
-        className="w-full flex items-center justify-between px-6 py-4 rounded-2xl font-bold text-lg bg-cta text-cta-fg shadow-2xl shadow-cta-ring active:scale-[0.98] transition-all"
+        className="flex-1 min-w-0 flex items-center justify-between gap-3 px-5 py-4 rounded-2xl font-bold text-lg bg-cta text-cta-fg shadow-2xl shadow-cta-ring active:scale-[0.98] transition-all"
       >
         <div className="flex items-center gap-2 min-w-0">
           <ShoppingBag className="w-5 h-5 shrink-0" />
           <span className="truncate">{heroCta}</span>
         </div>
         <span className="text-cta-fg/80 font-medium whitespace-nowrap">
-          {formatPrice(product.price ?? 0)}
+          {formatPrice(selectedTotal)}
         </span>
       </button>
     </div>

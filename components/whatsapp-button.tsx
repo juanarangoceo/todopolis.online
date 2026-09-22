@@ -65,8 +65,11 @@ export function WhatsAppButton({ phone }: { phone?: string | null }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escribirnos por WhatsApp"
-      className={`group fixed left-4 sm:left-6 z-[55] flex items-center gap-2 ${
-        isProductPage ? 'bottom-24 md:bottom-6' : 'bottom-6'
+      // En la ficha de producto, en móvil, NO se pinta: WhatsApp va dentro de
+      // la barra fija de compra (`product-hero.tsx`). Flotando encima de esa
+      // barra tapaba el nombre del producto en la primera pantalla.
+      className={`group fixed left-4 sm:left-6 z-[55] items-center gap-2 bottom-6 ${
+        isProductPage ? 'hidden md:flex' : 'flex'
       }`}
     >
       <span className="relative flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] shadow-2xl shadow-[#25D366]/40 transition-transform duration-300 hover:scale-110 active:scale-95">

@@ -1,3 +1,5 @@
+import type { QuantityOffer } from './quantity-offers'
+
 export interface ArticleSection {
   _key?: string
   type: 'intro' | 'h2' | 'list' | 'faq' | 'cta'
@@ -70,15 +72,6 @@ export interface DestacadoBoxContents {
   items?: string[]
 }
 
-export interface DestacadoVisualTestimonial {
-  _key?: string
-  photo?: string
-  photoAlt?: string
-  quote: string
-  name: string
-  location?: string
-}
-
 export interface VipComparisonRow {
   _key?: string
   feature: string
@@ -91,12 +84,6 @@ export interface DestacadoComparison {
   ourLabel?: string
   theirLabel?: string
   rows?: VipComparisonRow[]
-}
-
-export interface DestacadoQuote {
-  _key?: string
-  text: string
-  author?: string
 }
 
 /**
@@ -114,6 +101,27 @@ export interface DestacadoStory {
   outcomeText?: string
 }
 
+export interface ImageDimensions {
+  width: number
+  height: number
+}
+
+/** Banner a todo el ancho bajo el hero de un Destacado. */
+export interface DestacadoBanner {
+  desktop?: string
+  desktopDimensions?: ImageDimensions
+  mobile?: string
+  mobileDimensions?: ImageDimensions
+  alt?: string
+}
+
+/** Foto extra de la galería lifestyle (se suma a `aiLifestyleImage`). */
+export interface LifestyleGalleryImage {
+  _key?: string
+  url?: string
+  alt?: string
+}
+
 // Sanity product type (matches schema)
 /** Foto que mandó un cliente, con el crédito opcional que quiera dársele. */
 export interface CustomerPhoto {
@@ -121,7 +129,15 @@ export interface CustomerPhoto {
   url?: string
   customerName?: string
   city?: string
+  /** Lo que escribió el cliente, textual. Nunca redactado por la tienda. */
+  quote?: string
   alt?: string
+}
+
+/** «¿Es para ti?»: para quién sí y para quién no. Lo escribe la IA. */
+export interface AudienceFit {
+  forWho?: string[]
+  notFor?: string[]
 }
 
 export interface SanityProduct {
@@ -143,6 +159,7 @@ export interface SanityProduct {
   heroSubtitle?: string
   heroCta?: string
   aiLifestyleImage?: string
+  aiLifestyleGallery?: LifestyleGalleryImage[]
   benefits?: Array<{ icon: string; title: string; description: string }>
   specifications?: Array<{ label: string; value: string }>
   testimonials?: Array<{ name?: string; role?: string; rating?: number; text: string }>
@@ -160,15 +177,17 @@ export interface SanityProduct {
    * social auténtica de la ficha, y por eso se guardan y se pintan aparte.
    */
   customerPhotos?: CustomerPhoto[]
+  quantityOffers?: QuantityOffer[]
+  audienceFit?: AudienceFit
   // Destacados — manual
   isDestacado?: boolean
+  destacadoHeadline?: string
+  destacadoBanner?: DestacadoBanner
   destacadoHeroVideo?: DestacadoHeroVideo
   destacadoBeforeAfter?: DestacadoBeforeAfterPair[]
   destacadoSteps?: DestacadoStep[]
   destacadoBoxContents?: DestacadoBoxContents
-  destacadoTestimonials?: DestacadoVisualTestimonial[]
   destacadoComparison?: DestacadoComparison
-  destacadoQuotes?: DestacadoQuote[]
   destacadoStory?: DestacadoStory
 }
 
@@ -202,15 +221,16 @@ export interface Product {
   ctaHeadline?: string
   ctaText?: string
   tags?: ProductTag[]
+  quantityOffers?: QuantityOffer[]
   // Destacados — manual (igual que SanityProduct, replicado aquí para el shape adaptado del producto)
   isDestacado?: boolean
+  destacadoHeadline?: string
+  destacadoBanner?: DestacadoBanner
   destacadoHeroVideo?: DestacadoHeroVideo
   destacadoBeforeAfter?: DestacadoBeforeAfterPair[]
   destacadoSteps?: DestacadoStep[]
   destacadoBoxContents?: DestacadoBoxContents
-  destacadoTestimonials?: DestacadoVisualTestimonial[]
   destacadoComparison?: DestacadoComparison
-  destacadoQuotes?: DestacadoQuote[]
   destacadoStory?: DestacadoStory
 }
 
