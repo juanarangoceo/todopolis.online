@@ -1,17 +1,27 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/admin-session'
+
+// Rutas de API que solo usa el panel. Antes quedaban abiertas: el proxy solo
+// miraba /admin y la cookie no viajaba a /api. `/api/mastershop/sync` NO va
+// aquí: es el cron y se autentica con CRON_SECRET.
+const ADMIN_API_PREFIXES = ['/api/mastershop/import', '/api/mastershop/products', '/api/mastershop/sanity-ids']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Custom simple auth for the admin dashboard
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login') && !pathname.startsWith('/api/admin/auth')) {
-    const sessionCookie = request.cookies.get('admin_session')
-    
-    if (!sessionCookie || sessionCookie.value !== 'authenticated') {
+  // Panel /admin: sesión firmada (lib/admin-session.ts).
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+    if (!(await verifyAdminToken(request.cookies.get(ADMIN_COOKIE)?.value))) {
       const loginUrl = new URL('/admin/login', request.url)
       loginUrl.searchParams.set('from', pathname)
       return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  if (ADMIN_API_PREFIXES.some((p) => pathname.startsWith(p))) {
+    if (!(await verifyAdminToken(request.cookies.get(ADMIN_COOKIE)?.value))) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
   }
 

@@ -1,4 +1,5 @@
 import { paymentPolicyForVoice } from '@/lib/payments/narrative'
+import { recordAiUsage } from '@/lib/ai/usage'
 import { NextRequest } from 'next/server'
 import { getSanityClient } from '@/lib/sanity/client'
 
@@ -171,6 +172,10 @@ export async function POST(request: NextRequest) {
   }
 
   const data = await res.json()
+  // La conversación de voz va directo entre el navegador y OpenAI: el servidor
+  // no ve sus tokens. Se registra la SESIÓN (units = 1) sin costo, para que
+  // /admin/profit diga cuántas hubo y avise que ese gasto no se mide aquí.
+  await recordAiUsage({ source: 'voice_session', estimated: true, units: 1 })
   return Response.json({
     client_secret: { value: data.value },
     product: {

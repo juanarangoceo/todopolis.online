@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createUsageCollector } from '@/lib/ai/usage'
 import { fetchInlineImages, generateDestacadoContent, type DestacadoNeeds } from '@/lib/destacado-content'
 import { urlForImage } from '@/lib/sanity/image'
 
@@ -32,9 +33,12 @@ export async function POST(request: NextRequest) {
   const urls = refs.map((ref) => urlForImage(ref).width(1024).height(1024).fit('max').format('jpg').quality(80).url())
   if (urls.length === 0 && typeof body.mastershopImageUrl === 'string') urls.push(body.mastershopImageUrl)
 
+  const productRef = typeof body.productId === 'string' ? body.productId.replace(/^drafts\./, '').slice(0, 120) : null
+  const usage = createUsageCollector(`destacado:${productRef ?? crypto.randomUUID()}`, productRef)
   try {
     const images = await fetchInlineImages(urls)
     const content = await generateDestacadoContent({
+      onUsage: usage.sink,
       apiKey,
       needs,
       images,
@@ -46,6 +50,7 @@ export async function POST(request: NextRequest) {
         benefits: body.benefits,
       },
     })
+    await usage.flush()
     return NextResponse.json({ ...content, imagesAnalyzed: images.length })
   } catch (error: any) {
     console.error('[generate-destacado-content]', error?.message ?? error)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { geminiUsage, recordAiUsage } from '@/lib/ai/usage'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { SYSTEM_PROMPT, COLLECTION_COPY_TEMPERATURE } from '@/lib/collection-content-prompt'
 
@@ -60,6 +61,8 @@ export async function POST(request: NextRequest) {
         temperature: COLLECTION_COPY_TEMPERATURE,
       } as any,
     })
+    // Consumo para /admin/profit. Una colección no es un producto: flow propio.
+    await recordAiUsage({ source: 'collection', flow: `collection:${crypto.randomUUID()}`, ...geminiUsage(result.response.usageMetadata) })
 
     // Gemini thinking mode devuelve "thought" parts además del texto real.
     // response.text() lanza si NO hay partes no-thought; extraemos manualmente.

@@ -49,12 +49,15 @@ function cop(n: number) {
 }
 
 function fecha(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CO', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  // A mano y siempre en hora de Colombia (UTC−5, sin horario de verano): con
+  // `toLocaleDateString` el servidor formateaba en UTC y el navegador en hora
+  // local, y React rompía la hidratación de toda la tabla.
+  const d = new Date(new Date(iso).getTime() - 5 * 3600 * 1000)
+  const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic']
+  const h24 = d.getUTCHours()
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12
+  const mm = String(d.getUTCMinutes()).padStart(2, '0')
+  return `${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}, ${String(h12).padStart(2, '0')}:${mm} ${h24 < 12 ? 'a. m.' : 'p. m.'}`
 }
 
 export function OrdersTable({ orders }: { orders: OrderRow[] }) {
@@ -107,10 +110,10 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+                className={`px-3 py-1.5 rounded-full border text-xs font-bold transition-colors ${
                   filter === f
-                    ? 'bg-todopolis-blue text-todopolis-blue-deep'
-                    : 'bg-surface-muted text-foreground/60 hover:bg-surface-soft'
+                    ? 'border-todopolis-lavender-deep bg-todopolis-lavender-deep text-white'
+                    : 'border-nav-inactive-border bg-surface text-foreground/70 hover:text-ink-title'
                 }`}
               >
                 {f === 'todos' ? 'Todos' : ORDER_STATUS_LABEL[f]} ({n})
@@ -120,9 +123,9 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-nav-inactive-border bg-surface">
+      <div className="overflow-x-auto rounded-3xl border border-nav-inactive-border bg-surface">
         <table className="w-full text-sm min-w-[980px]">
-          <thead className="bg-surface-muted text-xs uppercase tracking-wider text-muted-foreground">
+          <thead className="border-b border-nav-inactive-border text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="text-left font-bold px-4 py-3">Fecha</th>
               <th className="text-left font-bold px-4 py-3">Producto</th>

@@ -1,8 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
+const LOGO_URL = 'https://res.cloudinary.com/dohwyszdj/image/upload/f_auto,q_auto,w_320/v1779801383/logo_nuevo_todopolis_1_ljlqn6.png'
+
+// Acceso al panel. Con la identidad de la tienda (docs/identidad-de-marca.md):
+// antes era una tarjeta oscura con candado en emoji, la única pantalla así.
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -20,172 +25,57 @@ export default function AdminLoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       })
-
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'No se pudo entrar')
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Error al iniciar sesión')
-      }
+      // Antes la contraseña se guardaba en localStorage «para las APIs»; ninguna
+      // la leía y quedaba en texto plano en el navegador. Se borra la vieja.
+      try { localStorage.removeItem('mastershop_admin_pwd') } catch { /* sin almacenamiento */ }
 
-      // Success! Save password to localStorage for APIs that need it and redirect
-      localStorage.setItem('mastershop_admin_pwd', password)
-      const searchParams = new URLSearchParams(window.location.search)
-      // Destino por defecto: el panel de pedidos, que es lo que se mira a
-      // diario. Mastershop solo se abre cuando toca importar catálogo.
       // `from` manda cuando el proxy redirigió desde una página protegida.
-      const from = searchParams.get('from') || '/admin/pedidos'
-      router.push(from)
-      router.refresh() // Force refresh to update server components with new cookie
-    } catch (err: any) {
-      setError(err.message)
+      const from = new URLSearchParams(window.location.search).get('from')
+      router.push(from && from.startsWith('/admin') ? from : '/admin')
+      router.refresh()
+    } catch (err) {
+      setError((err as Error).message)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <div className="login-logo">🔒</div>
-          <h1>Acceso Restringido</h1>
-          <p>Área de administración de Todópolis</p>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-surface-soft px-4">
+      <div className="w-full max-w-sm rounded-3xl border border-nav-inactive-border bg-surface p-8 shadow-sm">
+        <Image src={LOGO_URL} alt="Todópolis" width={144} height={36} style={{ height: 36, width: 'auto' }} priority />
+        <p className="mt-6 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
+          Panel
+        </p>
+        <h1 className="mt-1 font-serif text-2xl font-extrabold text-ink-title">Entrar al panel</h1>
 
-        <form onSubmit={handleLogin} className="login-form">
-          {error && <div className="login-error">⚠️ {error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="password">Contraseña</label>
+        <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-semibold text-ink-title">Contraseña</span>
             <input
               type="password"
-              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              autoComplete="current-password"
               disabled={loading}
               autoFocus
+              className="w-full rounded-xl border-2 border-nav-inactive-border bg-surface px-3.5 py-2.5 text-sm text-ink-title focus:border-todopolis-lavender-deep/50 focus:outline-none"
             />
-          </div>
-
-          <button type="submit" className="login-btn" disabled={loading || !password}>
-            {loading ? 'Verificando...' : 'Entrar al Dashboard'}
+          </label>
+          {error && <p className="rounded-xl bg-sale-soft px-3 py-2 text-sm font-semibold text-sale" role="alert">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading || !password}
+            className="w-full rounded-xl bg-ink-title py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {loading ? 'Verificando…' : 'Entrar'}
           </button>
         </form>
       </div>
-
-      <style>{`
-        .login-container {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
-          font-family: 'Inter', system-ui, sans-serif;
-          padding: 1rem;
-        }
-
-        .login-card {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          padding: 2.5rem;
-          width: 100%;
-          max-width: 400px;
-          backdrop-filter: blur(12px);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .login-header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .login-logo {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-        }
-
-        .login-header h1 {
-          color: #e2e8f0;
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin: 0 0 0.5rem 0;
-        }
-
-        .login-header p {
-          color: #94a3b8;
-          font-size: 0.9rem;
-          margin: 0;
-        }
-
-        .login-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .login-error {
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #fca5a5;
-          padding: 0.75rem 1rem;
-          border-radius: 8px;
-          font-size: 0.85rem;
-          text-align: center;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .form-group label {
-          color: #cbd5e1;
-          font-size: 0.85rem;
-          font-weight: 500;
-        }
-
-        .form-group input {
-          background: rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 0.75rem 1rem;
-          border-radius: 10px;
-          color: #fff;
-          font-size: 1rem;
-          outline: none;
-          transition: all 0.2s;
-        }
-
-        .form-group input:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-        }
-
-        .login-btn {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: white;
-          border: none;
-          padding: 0.875rem;
-          border-radius: 10px;
-          font-weight: 600;
-          font-size: 1rem;
-          cursor: pointer;
-          transition: all 0.2s;
-          margin-top: 0.5rem;
-        }
-
-        .login-btn:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .login-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-      `}</style>
     </div>
   )
 }

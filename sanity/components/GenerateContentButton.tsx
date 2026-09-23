@@ -53,6 +53,8 @@ export function GenerateContentButton(props: any) {
           category,
           imageRefs,
           mastershopImageUrl,
+          // Para /admin/profit: el costo queda a nombre del producto (publicado).
+          productId: typeof docId === 'string' ? docId.replace(/^drafts\./, '') : undefined,
         }),
       })
 

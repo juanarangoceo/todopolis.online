@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createUsageCollector } from '@/lib/ai/usage'
 import { revalidatePath } from 'next/cache'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Producto no encontrado en Sanity' }, { status: 404 })
   }
 
+  const usage = createUsageCollector(`article:${resolvedSanityId}`, resolvedSanityId)
   try {
     const result = await generateAndSaveArticle({
       productName: product.name,
@@ -74,7 +76,9 @@ export async function POST(request: NextRequest) {
       projectId,
       dataset,
       apiVersion,
+      onUsage: usage.sink,
     })
+    await usage.flush()
 
     revalidatePath('/blog')
     revalidatePath(`/blog/${result.articleSlug}`)

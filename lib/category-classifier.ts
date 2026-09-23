@@ -21,6 +21,7 @@
 import { experimental_evaluate as evaluate } from 'ai'
 import { MASTERSHOP_CATEGORY_MAP, PRODUCT_CATEGORIES, isProductCategory } from './categories.ts'
 import { JEV_MODEL, jevConfigured } from './jev.ts'
+import type { UsageSink } from './ai/pricing.ts'
 
 export { jevConfigured }
 
@@ -90,9 +91,16 @@ export function decideCategory(jev: JevCategoryAnswer | null, fallbacks: (string
 }
 
 /** Una llamada a JEV. Devuelve null ante cualquier fallo: la categoría nunca bloquea un import. */
+export interface JevOptions {
+  evaluateFn?: typeof evaluate
+  timeoutMs?: number
+  /** Consumo de la llamada, para /admin/profit (lib/ai/usage.ts). */
+  onUsage?: UsageSink
+}
+
 export async function askJev(
   product: ClassifiableProduct,
-  options: { evaluateFn?: typeof evaluate; timeoutMs?: number } = {},
+  options: JevOptions = {},
 ): Promise<JevCategoryAnswer | null> {
   if (!options.evaluateFn && !jevConfigured()) return null
   const request = buildCategoryRequest(product)
@@ -105,6 +113,7 @@ export async function askJev(
       abortSignal: AbortSignal.timeout(options.timeoutMs ?? 8000),
       providerOptions: { gateway: { zeroDataRetention: true } },
     })
+    options.onUsage?.('product_category', { inputTokens: result.usage?.inputTokens, outputTokens: result.usage?.outputTokens })
     const answer = result.answers.category
     if (answer?.type !== 'choice' || !isProductCategory(answer.choice)) return null
     const raw = (result.providerMetadata?.typesafe?.confidence as Record<string, unknown> | undefined)?.category
@@ -115,6 +124,7 @@ export async function askJev(
     return { category: answer.choice, confidence }
   } catch (err) {
     console.warn('[category] JEV falló, se usa el respaldo:', (err as Error)?.message ?? err)
+    options.onUsage?.('product_category', {}, { ok: false })
     return null
   }
 }
@@ -123,7 +133,7 @@ export async function askJev(
 export async function classifyCategory(
   product: ClassifiableProduct,
   fallbacks: (string | null | undefined)[] = [],
-  options: { evaluateFn?: typeof evaluate; timeoutMs?: number } = {},
+  options: JevOptions = {},
 ): Promise<CategoryDecision> {
   return decideCategory(await askJev(product, options), fallbacks)
 }
@@ -140,7 +150,7 @@ export async function classifyFromSource(
   product: ClassifiableProduct,
   sourceMap: Record<string, string> = MASTERSHOP_CATEGORY_MAP,
   extraFallbacks: (string | null | undefined)[] = [],
-  options: { evaluateFn?: typeof evaluate; timeoutMs?: number } = {},
+  options: JevOptions = {},
 ): Promise<CategoryDecision> {
   const mapped = product.sourceCategory ? sourceMap[product.sourceCategory] : undefined
   if (mapped === 'bienestar-intimo') return { category: mapped, confidence: null, source: 'respaldo' }

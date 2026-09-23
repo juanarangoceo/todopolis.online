@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import type { UsageSink } from './ai/pricing'
 
 const ARTICLE_PROMPT = `Eres un especialista en SEO y GEO (Generative Engine Optimization) para e-commerce latinoamericano. Tu misión: crear artículos informativos que posicionan en Google Y aparecen citados por LLMs como ChatGPT, Perplexity y Claude.
 
@@ -80,6 +81,7 @@ export async function generateAndSaveArticle({
   projectId,
   dataset,
   apiVersion,
+  onUsage,
 }: {
   productName: string
   productDescription: string
@@ -92,6 +94,8 @@ export async function generateAndSaveArticle({
   projectId: string
   dataset: string
   apiVersion: string
+  /** Consumo de la llamada a Gemini, para /admin/profit. */
+  onUsage?: UsageSink
 }): Promise<{ articleSlug: string; articleId: string; alreadyExists?: boolean }> {
 
   // Check if article already exists for this product
@@ -119,6 +123,14 @@ export async function generateAndSaveArticle({
   const aiResult = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: ARTICLE_PROMPT + '\n\n' + userPrompt }] }],
     generationConfig: { temperature: 1.0, thinkingConfig: { thinkingLevel: 'low' } } as any,
+  })
+
+  const um = aiResult.response.usageMetadata
+  onUsage?.('article', {
+    inputTokens: um?.promptTokenCount,
+    outputTokens: um?.candidatesTokenCount,
+    thoughtsTokens: (um as { thoughtsTokenCount?: number } | undefined)?.thoughtsTokenCount,
+    cachedTokens: um?.cachedContentTokenCount,
   })
 
   const candidate = aiResult.response.candidates?.[0]

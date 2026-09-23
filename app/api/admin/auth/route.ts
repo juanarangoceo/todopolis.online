@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ADMIN_COOKIE, ADMIN_SESSION_SECONDS, createAdminToken } from '@/lib/admin-session'
 
-const COOKIE_NAME = 'admin_session'
-const COOKIE_MAX_AGE = 60 * 60 * 8 // 8 horas
+// La cookie lleva un token firmado (lib/admin-session.ts) y vive en `path=/`
+// para que la reciban también las rutas de API del panel.
 
 export async function POST(request: NextRequest) {
   const { password } = await request.json()
@@ -15,19 +16,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Contraseña incorrecta' }, { status: 401 })
   }
 
+  const token = await createAdminToken()
+  if (!token) return NextResponse.json({ error: 'Admin no configurado' }, { status: 500 })
+
   const response = NextResponse.json({ success: true })
-  response.cookies.set(COOKIE_NAME, 'authenticated', {
+  response.cookies.set(ADMIN_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: COOKIE_MAX_AGE,
-    path: '/admin',
+    maxAge: ADMIN_SESSION_SECONDS,
+    path: '/',
   })
+  // La cookie vieja vivía en /admin con el valor fijo; se borra para que no
+  // quede una sombra que confunda al navegador.
+  response.cookies.set(ADMIN_COOKIE, '', { path: '/admin', maxAge: 0 })
   return response
 }
 
 export async function DELETE() {
   const response = NextResponse.json({ success: true })
-  response.cookies.delete(COOKIE_NAME)
+  response.cookies.set(ADMIN_COOKIE, '', { path: '/', maxAge: 0 })
+  response.cookies.set(ADMIN_COOKIE, '', { path: '/admin', maxAge: 0 })
   return response
 }

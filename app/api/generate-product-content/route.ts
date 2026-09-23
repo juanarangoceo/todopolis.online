@@ -9,6 +9,7 @@ import {
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 import { PRODUCT_CATEGORIES, isProductCategory } from '@/lib/categories'
 import { askJev, decideCategory } from '@/lib/category-classifier'
+import { createUsageCollector, geminiUsage } from '@/lib/ai/usage'
 import { urlForImage } from '@/lib/sanity/image'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { name, shortDescription, category, imageRefs, mastershopImageUrl } = await request.json()
+  const { name, shortDescription, category, imageRefs, mastershopImageUrl, productId } = await request.json()
 
   if (!name || !shortDescription) {
     return NextResponse.json(
@@ -83,6 +84,10 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     )
   }
+
+  // Un clic en «Generar Landing» = una operación en /admin/profit.
+  const ref = typeof productId === 'string' && /^[\w.-]{1,120}$/.test(productId) ? productId : null
+  const usage = createUsageCollector(`manual:${ref ?? crypto.randomUUID()}`, ref)
 
   try {
     const model = genAI.getGenerativeModel({
@@ -106,7 +111,7 @@ export async function POST(request: NextRequest) {
     // Sin categoría elegida, la decide JEV (lib/category-classifier.ts), en
     // paralelo con Gemini. La sugerencia de Gemini queda de respaldo si JEV no
     // responde o duda.
-    const jevPromise = category ? null : askJev({ name, description: shortDescription })
+    const jevPromise = category ? null : askJev({ name, description: shortDescription }, { onUsage: usage.sink })
 
     // Las fotos van primero y el texto de último: es el orden que recomienda
     // Gemini para que el modelo lea la instrucción con las imágenes ya vistas.
@@ -136,6 +141,7 @@ export async function POST(request: NextRequest) {
           taxonomy,
           { name, shortDescription, category },
           process.env.GEMINI_API_KEY!,
+          { onUsage: usage.sink },
         )
       } catch (err) {
         console.error('[generate-product-content] auto-tagging falló (best-effort):', err)
@@ -144,6 +150,7 @@ export async function POST(request: NextRequest) {
     })()
 
     const result = await copyPromise
+    usage.sink('product_copy', geminiUsage(result.response.usageMetadata))
 
     // Gemini 3 Flash thinking mode returns both "thought" parts and regular text parts.
     // response.text() throws if there are NO non-thought parts.
@@ -179,6 +186,8 @@ export async function POST(request: NextRequest) {
     // editor elija que rellenarlo con el cajón de sastre.
     const suggestedCategory = decision && decision.source !== 'otros' ? decision.category : null
 
+    await usage.flush()
+
     return NextResponse.json({
       ...content,
       suggestedCategory,
@@ -188,6 +197,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     const message = error?.message || error?.toString() || 'Error desconocido'
     console.error('Error generando contenido con Gemini:', message)
+    await usage.flush()
     return NextResponse.json(
       { error: `Error al generar contenido: ${message}` },
       { status: 500 }

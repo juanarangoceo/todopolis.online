@@ -3,6 +3,8 @@ import { generateAndSaveArticle } from './generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from './auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from './product-content-prompt'
 import { classifyFromSource } from './category-classifier'
+import { createUsageCollector, geminiUsage } from './ai/usage'
+import type { UsageSink } from './ai/pricing'
 import { audienceFitFromAi } from './audience-fit'
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
@@ -116,6 +118,9 @@ interface ImportResult {
   benefits: string[]
 }
 
+// Cada producto del cron es una operación con su `flow`, para que
+// /admin/profit sepa cuánto costó crearlo. Lo gastado cuenta aunque el import
+// falle a mitad de camino: por eso el flush va en `finally`.
 async function importProduct(
   idProduct: number,
   apiKey: string,
@@ -124,6 +129,26 @@ async function importProduct(
   projectId: string,
   dataset: string,
   apiVersion: string,
+): Promise<ImportResult | null> {
+  const usage = createUsageCollector(`sync:${idProduct}`)
+  try {
+    const result = await importProductInner(idProduct, apiKey, geminiKey, sanityToken, projectId, dataset, apiVersion, usage.sink)
+    usage.setProductRef(result?.sanityId)
+    return result
+  } finally {
+    await usage.flush()
+  }
+}
+
+async function importProductInner(
+  idProduct: number,
+  apiKey: string,
+  geminiKey: string,
+  sanityToken: string,
+  projectId: string,
+  dataset: string,
+  apiVersion: string,
+  onUsage: UsageSink,
 ): Promise<ImportResult | null> {
   const existsQuery = encodeURIComponent(
     `*[_type == "product" && mastershopId == ${idProduct}][0]._id`,
@@ -155,7 +180,7 @@ async function importProduct(
   const categoryRaw: string = p.prodFormatName ?? ''
   // La categoría la decide JEV con la de Mastershop como pista y respaldo
   // (lib/category-classifier.ts). Va antes del tagging porque lo alimenta.
-  const { category } = await classifyFromSource({ name, description, sourceCategory: categoryRaw })
+  const { category } = await classifyFromSource({ name, description, sourceCategory: categoryRaw }, undefined, [], { onUsage })
 
   const genAI = new GoogleGenerativeAI(geminiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' })
@@ -170,7 +195,7 @@ async function importProduct(
   const tagsPromise = (async () => {
     try {
       const taxonomy = await fetchTagTaxonomy({ projectId, dataset, apiVersion, token: sanityToken })
-      return await classifyProductTags(taxonomy, { name, shortDescription: description, category }, geminiKey)
+      return await classifyProductTags(taxonomy, { name, shortDescription: description, category }, geminiKey, { onUsage })
     } catch (err) {
       log(`auto-tagging falló para ${idProduct} (best-effort): ${(err as Error).message}`)
       return [] as string[]
@@ -178,6 +203,7 @@ async function importProduct(
   })()
 
   const aiResult = await copyPromise
+  onUsage('product_copy', geminiUsage(aiResult.response.usageMetadata))
 
   const candidate = aiResult.response.candidates?.[0]
   const parts = candidate?.content?.parts ?? []
@@ -360,6 +386,7 @@ async function runSync(): Promise<SyncResult> {
   const articlesCreated: string[] = []
 
   for (const item of toProcess) {
+    const articleUsage = createUsageCollector(`article:${item.sanityId}`, item.sanityId)
     try {
       log(`Generando artículo para ${item.slug}...`)
       await generateAndSaveArticle({
@@ -374,11 +401,14 @@ async function runSync(): Promise<SyncResult> {
         projectId,
         dataset,
         apiVersion,
+        onUsage: articleUsage.sink,
       })
       articlesCreated.push(item.slug)
       log(`Artículo creado para ${item.slug}`)
     } catch (err: any) {
       log(`Error generando artículo para ${item.slug}: ${err.message}`)
+    } finally {
+      await articleUsage.flush()
     }
   }
 

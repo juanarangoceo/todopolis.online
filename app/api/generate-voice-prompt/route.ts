@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { geminiUsage, recordAiUsage } from '@/lib/ai/usage'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getSanityClient } from '@/lib/sanity/client'
 
@@ -142,6 +143,7 @@ Descripción breve: ${product.shortDescription ?? '—'}${offerBlock}${benefitsB
       contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\n' + productBrief }] }],
       generationConfig: { temperature: 0.9 } as any,
     })
+    await recordAiUsage({ source: 'voice_prompt', ...geminiUsage(result.response.usageMetadata) })
 
     const candidate = result.response.candidates?.[0]
     const parts = candidate?.content?.parts ?? []

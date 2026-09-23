@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { AdminPage, StatCard } from '../_components/ui'
 import { ORDER_STATUS_LABEL, type OrderStatus } from '@/lib/orders'
 import { OrdersTable, type OrderRow } from './orders-table'
 
@@ -74,60 +75,23 @@ export default async function PedidosPage() {
   const campaigns = Object.entries(byCampaign).sort((a, b) => b[1].total - a[1].total)
 
   return (
-    <main className="container mx-auto px-4 py-8 md:py-10">
-      <header className="mb-6">
-        <h1 className="font-serif text-2xl md:text-3xl font-extrabold text-ink-title tracking-tight">
-          Pedidos
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {orders.length} pedidos · los 300 más recientes
-        </p>
-      </header>
-
-      {/* Tarjetas de resumen */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        <div className="rounded-2xl border border-nav-inactive-border bg-surface p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-            Entregados
-          </p>
-          <p className="font-serif text-2xl font-extrabold text-ink-title tabular-nums">
-            {delivered.length}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-nav-inactive-border bg-surface p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-            Tasa de entrega
-          </p>
-          <p className="font-serif text-2xl font-extrabold text-ink-title tabular-nums">
-            {deliveryRate === null ? '—' : `${deliveryRate}%`}
-          </p>
-          <p className="text-[11px] text-muted-foreground mt-1 leading-tight">
-            sobre pedidos ya cerrados
-          </p>
-        </div>
-        <div className="rounded-2xl border border-nav-inactive-border bg-surface p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-            Cobrado
-          </p>
-          <p className="font-serif text-2xl font-extrabold text-ink-title tabular-nums">
-            {formatCop(revenue)}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-nav-inactive-border bg-surface p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-            Sin confirmar
-          </p>
-          <p className="font-serif text-2xl font-extrabold text-ink-title tabular-nums">
-            {(byStatus.pending ?? 0) + (byStatus.pending_payment ?? 0)}
-          </p>
-        </div>
-      </section>
+    <AdminPage eyebrow="Ventas" title="Pedidos" description={`${orders.length} pedidos · los 300 más recientes`}>
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard label="Entregados" value={String(delivered.length)} />
+        <StatCard label="Tasa de entrega" value={deliveryRate === null ? '—' : `${deliveryRate}%`} hint="sobre pedidos ya cerrados" />
+        <StatCard label="Cobrado" value={formatCop(revenue)} hint="solo entregados" />
+        <StatCard
+          label="Sin confirmar"
+          value={String((byStatus.pending ?? 0) + (byStatus.pending_payment ?? 0))}
+          tone={(byStatus.pending ?? 0) + (byStatus.pending_payment ?? 0) > 0 ? 'warn' : undefined}
+        />
+      </div>
 
       {/* Por campaña */}
       {campaigns.length > 0 && (
         <section className="mb-8">
           <h2 className="font-serif text-lg font-bold text-ink-title mb-3">Por campaña</h2>
-          <div className="overflow-x-auto rounded-2xl border border-nav-inactive-border bg-surface">
+          <div className="overflow-x-auto rounded-3xl border border-nav-inactive-border bg-surface">
             <table className="w-full text-sm">
               <thead className="bg-surface-muted text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
@@ -172,6 +136,6 @@ export default async function PedidosPage() {
         </span>
       </h2>
       <OrdersTable orders={orders} />
-    </main>
+    </AdminPage>
   )
 }

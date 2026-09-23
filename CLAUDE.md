@@ -398,6 +398,34 @@ Detectados el 16-sep-2026 al revisar el flujo manual. Ninguno está resuelto:
   con el botón, producto por producto, o con un script equivalente al de
   categorías.
 
+## Panel /admin (sep 2026)
+
+Layout propio con barra lateral (`app/admin/layout.tsx`, `_components/admin-nav.tsx`) y piezas comunes en `app/admin/_components/ui.tsx` (`AdminPage`, `Section`, `Card`, `StatCard`, `StatusPill`). Mismo lenguaje que la tienda (`docs/identidad-de-marca.md`): **no** temas oscuros ni CSS propio por página — Mastershop y el login los tenían y se rehicieron. La burbuja de WhatsApp no se pinta en `/admin`.
+
+- `/admin` — Resumen: pedidos por confirmar, tasa de entrega, gasto en IA, últimos pedidos y salud del catálogo.
+- `/admin/pedidos`, `/admin/mastershop` (importar), `/admin/profit` (Nitro Profit).
+- Las fechas del panel se formatean a mano en hora de Colombia: con `toLocaleDateString` el servidor (UTC) y el navegador daban textos distintos y se rompía la hidratación.
+
+### Sesión del panel: token firmado (`lib/admin-session.ts`, con test)
+La cookie `admin_session` valía el texto fijo `authenticated` y el proxy solo comprobaba eso: **cualquiera que la escribiera a mano entraba**. Además vivía en `path=/admin`, así que `/api/mastershop/import`, `/products` y `/sanity-ids` no la recibían y **estaban abiertas** (importar productos gastando IA, leer costos del proveedor). Ahora: `v1.<expira>.<HMAC-SHA256>`, 8 h, `path=/`, clave de `ADMIN_SESSION_SECRET` o, si no está, de `ADMIN_DASHBOARD_PASSWORD` (cambiarla cierra todas las sesiones). El proxy protege `/admin/*` y esas tres rutas de API; `updateOrderStatus` verifica igual. El login ya no guarda la contraseña en `localStorage`. **Cualquier ruta nueva que solo use el panel va en `ADMIN_API_PREFIXES` de `proxy.ts`.**
+
+Siguen públicas, a propósito por ahora, las rutas que llama el **Studio** (`generate-product-content`, `generate-ai-image`, `generate-article`, `generate-destacado-content`, `generate-collection-content`): el Studio no tiene la cookie del panel (ver «pendientes conocidos»).
+
+### Nitro Profit — costo de la IA (`/admin/profit`)
+Mismo patrón que `nitro_bot/app/admin/profit`, adaptado:
+
+- **`ai_usage`** (Supabase, migración `20260923180000_ai_usage.sql`): una fila por llamada a un modelo, con tokens y `cost_usd` **congelado** con la tarifa de su día. `flow` agrupa una operación (`import:<id>`, `sync:<id>`, `manual:<docId>`, `destacado:`, `image:`, `article:`, `collection:`) para saber cuánto costó crear UN producto.
+- **`lib/ai/pricing.ts`** (con test): ÚNICA fuente de tarifas, verificadas el 23-sep-2026 contra las páginas oficiales. Tramos por fecha: Gemini 3.8 Flash pasa de $0,75/$3,75 a $1,50/$7,50 el 1-ene-2027, y el panel ya muestra el costo por producto con la tarifa de 2027. JEV solo publica tarifa de entrada ($0,042/M). Si un proveedor cambia precios, se agrega un tramo con su `effectiveFrom`; no se sobrescribe el viejo.
+- **`lib/ai/usage.ts`**: `createUsageCollector(flow)` junta las llamadas de una operación y las inserta en UN lote con `await usage.flush()` antes de responder (en Vercel lo que queda en el aire al responder se pierde). `recordAiUsage` para llamadas sueltas. Nunca lanza.
+- Las funciones de `lib/` (categoría, etiquetas, artículo, Destacado) reciben `onUsage` (un `UsageSink`) en vez de escribir en la base: así siguen siendo probables sin Supabase.
+- **`lib/ai/profit.ts`** (con test): resumen por fuente, modelo y operación; «costo por operación» medido (≥ 3 llamadas reales, re-valoradas a la tarifa de hoy) o estimado (`ESTIMATED_PROFILES`); recetas de «crear un producto» (`PRODUCT_RECIPES`).
+- Pesos con la **TRM oficial** de datos.gov.co (`lib/ai/trm.ts`, cache 1 día; respaldo $3.208,66, la TRM del 23-sep-2026).
+- **No se mide**: la voz de Lucy (`gpt-realtime`) va del navegador a OpenAI y el servidor no ve sus tokens; se cuentan sesiones. Tampoco los scripts locales.
+
+**Regla: toda llamada nueva a un modelo registra su consumo** con `createUsageCollector`/`recordAiUsage`, y su fuente va en `COST_SOURCES` con modelo y perfil estimado (el test lo exige). Si no, Nitro Profit se queda corto sin que nadie lo note.
+
+Estimado al 23-sep-2026 (a reemplazarse por lo medido): importar de Mastershop ≈ US$0,042 (~$134 COP); crear a mano ≈ US$0,023 (~$74), o ≈ $747 con foto IA; la foto IA (GPT Image 2, 1024×1536 high) ≈ US$0,19 es lo más caro.
+
 ## Checkout — datos de entrega (sep 2026)
 
 El formulario pide **nombre y apellido, celular, departamento, ciudad o municipio, dirección, barrio** (obligatorios) y **apto/torre/referencia** (opcional). Antes eran cuatro campos de texto libre, sin departamento ni barrio.

@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/admin-session'
 import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canTransition, isOrderStatus, STATUS_TIMESTAMP, type OrderStatus } from '@/lib/orders'
@@ -24,8 +25,7 @@ export async function updateOrderStatus(
   nextStatus: string,
   opts: { reason?: string } = {}
 ): Promise<UpdateResult> {
-  const session = (await cookies()).get('admin_session')?.value
-  if (session !== 'authenticated') {
+  if (!(await verifyAdminToken((await cookies()).get(ADMIN_COOKIE)?.value))) {
     return { success: false, error: 'No autorizado' }
   }
 

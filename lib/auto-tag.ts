@@ -14,6 +14,7 @@
 
 import { experimental_evaluate as evaluate } from 'ai'
 import { JEV_MODEL, jevConfigured, questionKey } from './jev.ts'
+import type { UsageSink } from './ai/pricing.ts'
 
 const GEMINI_MODEL = 'gemini-3.8-flash'
 const MIN_TAGS = 3
@@ -137,7 +138,7 @@ export function buildTagQuestions(tags: TagDef[]) {
 export async function classifyProductTagsJev(
   tags: TagDef[],
   product: ProductInput,
-  options: { evaluateFn?: typeof evaluate; timeoutMs?: number } = {},
+  options: { evaluateFn?: typeof evaluate; timeoutMs?: number; onUsage?: UsageSink } = {},
 ): Promise<string[] | null> {
   if (!options.evaluateFn && !jevConfigured()) return null
   const { questions, keyToSlug } = buildTagQuestions(tags)
@@ -155,6 +156,7 @@ export async function classifyProductTagsJev(
       abortSignal: AbortSignal.timeout(options.timeoutMs ?? 12000),
       providerOptions: { gateway: { zeroDataRetention: true } },
     })
+    options.onUsage?.('product_tags', { inputTokens: result.usage?.inputTokens, outputTokens: result.usage?.outputTokens })
     const probabilities: Record<string, number> = {}
     for (const [key, answer] of Object.entries(result.answers as Record<string, { type: string; probability?: number }>)) {
       const slug = keyToSlug.get(key)
@@ -164,6 +166,7 @@ export async function classifyProductTagsJev(
     return picked.length > 0 ? picked : null
   } catch (err) {
     console.warn('[auto-tag] JEV falló, se usa Gemini:', (err as Error)?.message ?? err)
+    options.onUsage?.('product_tags', {}, { ok: false })
     return null
   }
 }
@@ -177,11 +180,12 @@ export async function classifyProductTags(
   tags: TagDef[],
   product: ProductInput,
   geminiKey: string,
+  options: { onUsage?: UsageSink } = {},
 ): Promise<string[]> {
   if (tags.length === 0) return []
-  const viaJev = await classifyProductTagsJev(tags, product)
+  const viaJev = await classifyProductTagsJev(tags, product, { onUsage: options.onUsage })
   if (viaJev) return viaJev
-  return classifyProductTagsGemini(tags, product, geminiKey)
+  return classifyProductTagsGemini(tags, product, geminiKey, options.onUsage)
 }
 
 // Llama Gemini y devuelve slugs válidos. Si falla todos los reintentos, devuelve [].
@@ -189,6 +193,7 @@ export async function classifyProductTagsGemini(
   tags: TagDef[],
   product: ProductInput,
   geminiKey: string,
+  onUsage?: UsageSink,
 ): Promise<string[]> {
   if (tags.length === 0) return []
 
@@ -208,6 +213,13 @@ export async function classifyProductTagsGemini(
 
       if (!res.ok) throw new Error(`Gemini ${res.status}`)
       const data = await res.json()
+      const um = data?.usageMetadata ?? {}
+      onUsage?.('product_tags_fallback', {
+        inputTokens: um.promptTokenCount,
+        outputTokens: um.candidatesTokenCount,
+        thoughtsTokens: um.thoughtsTokenCount,
+        cachedTokens: um.cachedContentTokenCount,
+      })
 
       const parts = data?.candidates?.[0]?.content?.parts ?? []
       const rawText = parts

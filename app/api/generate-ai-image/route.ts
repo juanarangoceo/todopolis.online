@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { openaiImageUsage, recordAiUsage } from '@/lib/ai/usage'
 import { createClient } from 'next-sanity'
 
 function getSanityWriteClient() {
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
     const referenceImage = referenceImages[0] ?? null
 
     let b64: string | undefined
+    let imageUsage: unknown = null
 
     if (referenceImage) {
       // Use /edits endpoint — model sees the real product and replicates it faithfully
@@ -156,6 +158,7 @@ export async function POST(request: NextRequest) {
 
       const editsData = await editsRes.json()
       b64 = editsData?.data?.[0]?.b64_json
+      imageUsage = editsData?.usage
     } else {
       // Fallback: no reference image available → use generations endpoint
       const genRes = await fetch('https://api.openai.com/v1/images/generations', {
@@ -180,7 +183,19 @@ export async function POST(request: NextRequest) {
 
       const genData = await genRes.json()
       b64 = genData?.data?.[0]?.b64_json
+      imageUsage = genData?.usage
     }
+
+    // Costo para /admin/profit, con los tokens reales que devuelve OpenAI.
+    const productRef = typeof docId === 'string' ? docId.replace(/^drafts\./, '').slice(0, 120) : null
+    await recordAiUsage({
+      source: 'ai_image',
+      flow: productRef ? `image:${productRef}` : null,
+      productRef,
+      ...openaiImageUsage(imageUsage),
+      ok: !!b64,
+      meta: { references: referenceImages.length, scene: scene ?? null },
+    })
 
     if (!b64) throw new Error('gpt-image-2 no devolvió datos de imagen.')
 

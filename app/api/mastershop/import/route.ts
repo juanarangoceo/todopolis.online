@@ -5,6 +5,7 @@ import { generateAndSaveArticle } from '@/lib/generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from '@/lib/product-content-prompt'
 import { classifyFromSource } from '@/lib/category-classifier'
+import { createUsageCollector, geminiUsage } from '@/lib/ai/usage'
 import { audienceFitFromAi } from '@/lib/audience-fit'
 import { slugifyProductName } from '@/lib/slugify'
 
@@ -67,6 +68,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Se requiere idProduct' }, { status: 400 })
   }
 
+  // Costo de IA de este import, para /admin/profit: una fila por llamada, todas
+  // con el mismo `flow`, escritas en un lote al final (lib/ai/usage.ts).
+  const usage = createUsageCollector(`import:${idProduct}`)
+
   try {
     // ── STEP 0: Idempotency check — abort if already imported ─────────────────
     const existsQuery = encodeURIComponent(
@@ -117,7 +122,7 @@ export async function POST(request: NextRequest) {
     const categoryRaw: string = p.prodFormatName ?? ''
     // La categoría la decide JEV con la de Mastershop como pista y respaldo
   // (lib/category-classifier.ts). Va antes del tagging porque lo alimenta.
-  const { category } = await classifyFromSource({ name, description, sourceCategory: categoryRaw })
+  const { category } = await classifyFromSource({ name, description, sourceCategory: categoryRaw }, undefined, [], { onUsage: usage.sink })
 
     // ── STEP 2: Generate AI content with Gemini (en paralelo con auto-tagging) ──
     const genAI = new GoogleGenerativeAI(geminiKey)
@@ -135,7 +140,7 @@ export async function POST(request: NextRequest) {
     const tagsPromise = (async () => {
       try {
         const taxonomy = await fetchTagTaxonomy({ projectId, dataset, apiVersion, token: sanityToken })
-        return await classifyProductTags(taxonomy, { name, shortDescription: description, category }, geminiKey)
+        return await classifyProductTags(taxonomy, { name, shortDescription: description, category }, geminiKey, { onUsage: usage.sink })
       } catch (err) {
         console.error('[import] auto-tagging falló (best-effort, sigue sin tags):', err)
         return [] as string[]
@@ -143,6 +148,7 @@ export async function POST(request: NextRequest) {
     })()
 
     const aiResult = await copyPromise
+    usage.sink('product_copy', geminiUsage(aiResult.response.usageMetadata))
 
     // Extract text safely (handles thinking models)
     const candidate = aiResult.response.candidates?.[0]
@@ -281,6 +287,7 @@ export async function POST(request: NextRequest) {
         projectId,
         dataset,
         apiVersion,
+        onUsage: usage.sink,
       })
       articleSlug = articleResult.articleSlug
       revalidatePath('/blog')
@@ -289,6 +296,9 @@ export async function POST(request: NextRequest) {
     } catch (articleErr) {
       console.error(`Article generation failed for ${finalName} (non-critical):`, articleErr)
     }
+
+    usage.setProductRef(sanityId)
+    await usage.flush()
 
     return NextResponse.json({
       success: true,
@@ -300,6 +310,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (err: any) {
     console.error(`Error importing product ${idProduct}:`, err)
+    // Lo gastado antes del fallo también cuenta.
+    await usage.flush()
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

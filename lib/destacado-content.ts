@@ -10,6 +10,7 @@
 // regenera ni se sobreescribe.
 
 import { CAMPAIGN_STORY_RULES } from './product-content-prompt.ts'
+import type { UsageSink } from './ai/pricing.ts'
 
 export const DESTACADO_MODEL = 'gemini-3.8-flash'
 
@@ -165,6 +166,7 @@ export async function generateDestacadoContent(opts: {
   input: DestacadoInput
   needs: DestacadoNeeds
   images?: InlineImage[]
+  onUsage?: UsageSink
 }): Promise<DestacadoContent> {
   const { apiKey, input, needs, images = [] } = opts
   if (!needs.headline && !needs.story && !needs.steps && !needs.box) return {}
@@ -186,6 +188,13 @@ export async function generateDestacadoContent(opts: {
   })
   if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 200)}`)
   const data = await res.json()
+  const um = data?.usageMetadata ?? {}
+  opts.onUsage?.('destacado', {
+    inputTokens: um.promptTokenCount,
+    outputTokens: um.candidatesTokenCount,
+    thoughtsTokens: um.thoughtsTokenCount,
+    cachedTokens: um.cachedContentTokenCount,
+  })
   const text = (data?.candidates?.[0]?.content?.parts ?? [])
     .filter((p: any) => !p.thought && typeof p.text === 'string')
     .map((p: any) => p.text)

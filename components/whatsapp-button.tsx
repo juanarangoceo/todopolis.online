@@ -54,6 +54,8 @@ export function WhatsAppButton({ phone }: { phone?: string | null }) {
   // Sin número configurado no se pinta nada. Una burbuja que abre un chat con
   // un número roto es peor que ninguna burbuja.
   if (!href) return null
+  // El panel es una herramienta interna: la burbuja de la tienda no pinta nada ahí.
+  if (pathname.startsWith('/admin')) return null
 
   const isProductPage = pathname.startsWith('/producto/')
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { experimental_evaluate as evaluate } from 'ai'
 import { fetchTagTaxonomy } from '@/lib/auto-tag'
 import { JEV_MODEL, jevConfigured } from '@/lib/jev'
+import { evaluateUsage, recordAiUsage } from '@/lib/ai/usage'
 import { buildSuggestRequest, normalizeSuggestQuery, parseSuggestAnswers, type SearchSuggestion } from '@/lib/search-suggest'
 
 // Sugerencias para una búsqueda del home SIN resultados (lib/search-suggest.ts).
@@ -46,6 +47,8 @@ export async function GET(request: NextRequest) {
       abortSignal: AbortSignal.timeout(9000),
       providerOptions: { gateway: { zeroDataRetention: true } },
     })
+    // Solo se llega aquí sin caché de CDN: cada fila es una evaluación pagada.
+    await recordAiUsage({ source: 'search_suggest', ...evaluateUsage(result.usage), meta: { q } })
     const confidence = (result.providerMetadata?.typesafe?.confidence as Record<string, unknown> | undefined)?.category
     const suggestion = parseSuggestAnswers(
       result.answers as Parameters<typeof parseSuggestAnswers>[0],
