@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { type AiImage } from '@/lib/inspiration'
 
 // Carril horizontal de imágenes de estilo de vida generadas por IA.
@@ -14,29 +14,30 @@ import { type AiImage } from '@/lib/inspiration'
 // interminable. Como fila dentro de la cuadrícula, el scroll infinito pasa de
 // problema a ventaja: aparece inspiración nueva a medida que bajas.
 //
-// El movimiento es una marquesina CSS (`.rail-marquee`, en globals.css) que solo
-// anima `transform`. No hay JS en el bucle: lo único que hace este componente es
-// encender y apagar la animación según el carril esté o no en pantalla.
-//
-// A partir del primer gesto del usuario el carril pasa a MANUAL y se puede
-// adelantar y devolver, con el dedo o con las flechas. Marquesina y scroll
-// nativo no pueden convivir —una mueve `transform` y el otro `scrollLeft`, y se
-// suman—, así que el traspaso congela la animación, borra el `transform` y
-// pasa ese desplazamiento a `scrollLeft`. El carril no da un salto: se queda
-// exactamente donde estaba y desde ahí manda el dedo.
+// SE MUEVE SOLO CUANDO EL CLIENTE LO MUEVE (sep 2026). Fue una marquesina que
+// avanzaba sola y pasaba a manual al primer gesto. Se quitó porque:
+//   - Un blanco en movimiento cuesta tocarlo: la tarjeta se corre bajo el dedo
+//     y se abre la de al lado.
+//   - Con ~24 carriles en el home, cada pantalla tenía algo moviéndose de lado
+//     mientras el ojo baja por la cuadrícula: compite con los productos en vez
+//     de acompañarlos, y lo que se mueve solo se aprende a ignorar como un
+//     anuncio.
+//   - La tarjeta de la izquierda salía siempre cortada a la mitad.
+// Ahora es scroll nativo con `snap`: arranca alineado y la última tarjeta
+// asomada al borde dice que hay más.
 
 function sanityOptimized(url: string, width: number): string {
   if (!url || !url.includes('cdn.sanity.io')) return url
   return `${url}?w=${width}&auto=format&q=80`
 }
 
-function Card({ item, priority, dup = false }: { item: AiImage; priority: boolean; dup?: boolean }) {
+function Card({ item, priority }: { item: AiImage; priority: boolean }) {
   return (
     <Link
       href={`/producto/${item.slug}`}
-      className={`group shrink-0 w-[168px] md:w-[212px] mr-3 active:scale-[0.98] transition-transform${dup ? ' rail-marquee-dup' : ''}`}
+      className="group shrink-0 snap-start w-[168px] md:w-[212px] mr-3 last:mr-0 active:scale-[0.98] transition-transform"
     >
-      <div className="rounded-2xl overflow-hidden shadow-sm border border-todopolis-lavender/40 group-hover:border-todopolis-lavender group-hover:shadow-md transition-all">
+      <div className="rounded-2xl overflow-hidden shadow-sm border border-nav-inactive-border group-hover:border-todopolis-lavender-deep/40 group-hover:shadow-md transition-all">
         <div className="relative w-full aspect-[3/4]">
           <Image
             src={sanityOptimized(item.image, 440)}
@@ -48,10 +49,16 @@ function Card({ item, priority, dup = false }: { item: AiImage; priority: boolea
             unoptimized
           />
         </div>
-        <div className="px-2.5 py-2 bg-white/95">
-          <p className="text-[11px] md:text-xs font-medium text-foreground/75 leading-snug line-clamp-2 group-hover:text-todopolis-lavender-deep transition-colors">
+        <div className="px-2.5 py-2 bg-surface">
+          <p className="text-[11px] md:text-xs font-medium text-foreground/75 leading-snug line-clamp-2 min-h-[2.5em]">
             {item.name}
           </p>
+          {/* El precio es lo que convierte una foto bonita en un clic. */}
+          {item.price ? (
+            <p className="mt-1 text-sm font-extrabold tabular-nums text-ink-title">
+              $ {item.price.toLocaleString('es-CO')}
+            </p>
+          ) : null}
         </div>
       </div>
     </Link>
@@ -60,58 +67,25 @@ function Card({ item, priority, dup = false }: { item: AiImage; priority: boolea
 
 export function InspirationRail({ images }: { images: AiImage[] }) {
   const viewportRef = useRef<HTMLDivElement>(null)
-  const trackRef = useRef<HTMLDivElement>(null)
-  const [running, setRunning] = useState(false)
-  const [manual, setManual] = useState(false)
+  const [edges, setEdges] = useState({ start: true, end: false })
 
-  // Enciende la marquesina solo mientras el carril se ve. Una animación
-  // infinita fuera de pantalla sigue costando, y en la home hay varios.
+  const updateEdges = useCallback(() => {
+    const el = viewportRef.current
+    if (!el) return
+    const start = el.scrollLeft <= 4
+    const end = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4
+    setEdges((prev) => (prev.start === start && prev.end === end ? prev : { start, end }))
+  }, [])
+
   useEffect(() => {
-    const node = viewportRef.current
-    if (!node || manual) return
-    const observer = new IntersectionObserver(
-      (entries) => setRunning(entries[0]?.isIntersecting ?? false),
-      { rootMargin: '100px 0px' },
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [manual])
-
-  /**
-   * Traspaso de marquesina a manual, sin salto visual.
-   *
-   * Lee cuánto lleva desplazado el `transform` de la pista, lo borra y mete ese
-   * mismo número en `scrollLeft`. Sin esto el carril saltaría al principio en
-   * cuanto lo tocas, o peor: dejaría las primeras tarjetas inalcanzables,
-   * porque el desplazamiento de la animación y el del scroll se suman.
-   */
-  const goManual = useCallback(() => {
-    if (manual) return
-    const viewport = viewportRef.current
-    const track = trackRef.current
-    if (!viewport || !track) return
-
-    let desplazado = 0
-    try {
-      const matrix = new DOMMatrixReadOnly(getComputedStyle(track).transform)
-      desplazado = -matrix.m41 // translateX es negativo mientras avanza
-    } catch {
-      desplazado = 0 // navegador sin DOMMatrix: arranca desde el principio
-    }
-
-    setRunning(false)
-    setManual(true)
-    track.style.transform = 'none'
-    track.style.animation = 'none'
-    // Se SUMA al scroll que el gesto ya haya hecho: si no, el primer empujón
-    // del dedo se pierde y el carril parece que se resiste.
-    viewport.scrollLeft = Math.max(0, desplazado + viewport.scrollLeft)
-  }, [manual])
+    updateEdges()
+    window.addEventListener('resize', updateEdges)
+    return () => window.removeEventListener('resize', updateEdges)
+  }, [updateEdges])
 
   // Una tarjeta y pico: el salto deja siempre una asomada al borde, que es lo
   // que le dice al usuario que el carril sigue.
   const nudge = (direction: 1 | -1) => {
-    goManual()
     const viewport = viewportRef.current
     if (!viewport) return
     const paso = Math.max(160, viewport.clientWidth * 0.7)
@@ -120,11 +94,17 @@ export function InspirationRail({ images }: { images: AiImage[] }) {
 
   if (images.length === 0) return null
 
+  const arrow =
+    'w-8 h-8 flex items-center justify-center rounded-full bg-surface border border-nav-inactive-border text-foreground/70 shadow-sm active:scale-90 hover:text-ink-title transition-all disabled:opacity-30 disabled:pointer-events-none'
+
   return (
     <section aria-label="Inspiración" className="py-1">
-      <div className="flex items-center gap-1.5 mb-3 px-4 md:px-0">
-        <Sparkles className="w-4 h-4 text-todopolis-lavender-deep" />
-        <p className="text-xs md:text-sm font-bold text-todopolis-lavender-deep uppercase tracking-wider">
+      {/* Mismo antetítulo gris con filete que el resto de secciones del home
+          (Novedades, Catálogo). Antes iba en lila con destello, el único
+          encabezado del home con ese estilo. */}
+      <div className="flex items-center gap-3 mb-3 px-4 md:px-0">
+        <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
           Inspiración
         </p>
 
@@ -132,57 +112,23 @@ export function InspirationRail({ images }: { images: AiImage[] }) {
             móvil un botón encima de la imagen tapa producto y compite con el
             toque que abre la ficha. */}
         <div className="ml-auto flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => nudge(-1)}
-            aria-label="Ver inspiración anterior"
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-todopolis-lavender/50 text-todopolis-lavender-deep shadow-sm active:scale-90 hover:bg-todopolis-lavender/10 transition-all"
-          >
+          <button type="button" onClick={() => nudge(-1)} disabled={edges.start} aria-label="Ver inspiración anterior" className={arrow}>
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button
-            type="button"
-            onClick={() => nudge(1)}
-            aria-label="Ver más inspiración"
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-todopolis-lavender/50 text-todopolis-lavender-deep shadow-sm active:scale-90 hover:bg-todopolis-lavender/10 transition-all"
-          >
+          <button type="button" onClick={() => nudge(1)} disabled={edges.end} aria-label="Ver más inspiración" className={arrow}>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* El viewport recorta y también desplaza; la pista se mueve sola hasta
-          que alguien la toca.
-
-          El traspaso cuelga de `onScroll` y no de `touchstart`/`wheel` a
-          propósito: esos dos disparan también cuando el dedo o la rueda pasan
-          por encima camino de bajar la página, y pararían la marquesina de
-          todos los carriles con solo recorrer el home. `onScroll` solo salta
-          cuando de verdad hubo desplazamiento horizontal. */}
-      {/* Sin padding en el viewport NI en la pista: `translateX(-50%)` se
-          calcula sobre el ancho de borde, así que cualquier padding rompería
-          el bucle. La marquesina sangra de borde a borde, que además es lo
-          correcto para algo en movimiento. */}
       <div
         ref={viewportRef}
-        className="rail-viewport overflow-x-auto overflow-y-hidden overscroll-x-contain"
-        onScroll={goManual}
+        onScroll={updateEdges}
+        className="rail-viewport flex overflow-x-auto overflow-y-hidden overscroll-x-contain snap-x snap-mandatory scroll-px-4 px-4 md:scroll-px-0 md:px-0"
       >
-        <div
-          ref={trackRef}
-          className="rail-marquee flex w-max"
-          data-running={running && !manual ? 'true' : 'false'}
-        >
-          {images.map((item, i) => (
-            <Card key={`a-${item.slug}-${i}`} item={item} priority={i < 3} />
-          ))}
-          {/* Segunda tanda idéntica: la animación desplaza -50%, que con la
-              separación dentro de cada tarjeta es exactamente el ancho de la
-              primera. Por eso el bucle no tiene costura. */}
-          {images.map((item, i) => (
-            <Card key={`b-${item.slug}-${i}`} item={item} priority={false} dup />
-          ))}
-        </div>
+        {images.map((item, i) => (
+          <Card key={`${item.slug}-${i}`} item={item} priority={i < 3} />
+        ))}
       </div>
     </section>
   )

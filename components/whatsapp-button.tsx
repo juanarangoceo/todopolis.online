@@ -4,13 +4,10 @@
 // —el mismo asesor que atiende la tienda— con el producto que el comprador
 // está mirando ya escrito.
 //
-// DÓNDE SE PINTA, Y POR QUÉ A LA IZQUIERDA. La columna derecha ya está
-// ocupada: `LucyChatButton` (bottom-6, solo en la home) con su globo de aviso
-// creciendo hacia arriba, y `VoiceLucy` (bottom-24) en los productos que lo
-// tengan encendido. Abajo, en móvil, la ficha de producto fija su botón de
-// compra a todo el ancho (`product-hero.tsx`, bottom-4). La izquierda está
-// libre en todas las rutas; en la ficha de producto se sube en móvil para no
-// taparle el botón de compra, que es el que vende.
+// DÓNDE SE PINTA: abajo a la derecha, en todas las rutas. En la ficha de
+// producto, en móvil, no: ahí la barra fija de compra ya lleva WhatsApp
+// (`product-hero.tsx`). Ojo con `VoiceLucy` (bottom-24, derecha), que solo
+// sale en los productos que lo tengan encendido y queda por encima.
 
 import { useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
@@ -20,6 +17,7 @@ import {
   productNameFromTitle,
   resolveWhatsAppPhone,
 } from '@/lib/whatsapp'
+import { WhatsAppIcon } from '@/components/whatsapp-icon'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
 // Respaldo: lo que manda es el campo de Sanity que llega por prop.
@@ -59,6 +57,14 @@ export function WhatsAppButton({ phone }: { phone?: string | null }) {
 
   const isProductPage = pathname.startsWith('/producto/')
 
+  // Botón de WhatsApp, abajo a la DERECHA (sep 2026). Antes iba a la
+  // izquierda porque la derecha era de Lucy; el chat web se retiró y
+  // WhatsApp es el único canal, así que vuelve a donde se le busca.
+  //
+  // Diseño: verde de WhatsApp para que se reconozca sin leer, sombra neutra
+  // (el halo verde fosforescente parecía un anuncio) y sin el punto verde de
+  // «en línea», que prometía una respuesta inmediata que nadie garantiza. En
+  // escritorio lleva la palabra: un círculo solo no dice qué pasa al tocarlo.
   return (
     <a
       href={href}
@@ -66,23 +72,13 @@ export function WhatsAppButton({ phone }: { phone?: string | null }) {
       rel="noopener noreferrer"
       aria-label="Escribirnos por WhatsApp"
       // En la ficha de producto, en móvil, NO se pinta: WhatsApp va dentro de
-      // la barra fija de compra (`product-hero.tsx`). Flotando encima de esa
-      // barra tapaba el nombre del producto en la primera pantalla.
-      className={`group fixed left-4 sm:left-6 z-[55] items-center gap-2 bottom-6 ${
-        isProductPage ? 'hidden md:flex' : 'flex'
-      }`}
+      // la barra fija de compra (`product-hero.tsx`), o como burbuja propia en
+      // los Destacados.
+      className={`${isProductPage ? 'hidden md:flex' : 'flex'} fixed right-4 sm:right-6 z-[55] items-center gap-2 rounded-full bg-[#25D366] text-white shadow-lg shadow-black/15 transition-all duration-200 hover:bg-[#1FB959] hover:shadow-xl active:scale-95 h-14 w-14 justify-center md:w-auto md:h-12 md:pl-4 md:pr-5`}
+      style={{ bottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
     >
-      <span className="relative flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] shadow-2xl shadow-[#25D366]/40 transition-transform duration-300 hover:scale-110 active:scale-95">
-        <svg viewBox="0 0 24 24" aria-hidden="true" className="w-7 h-7 fill-white">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.297-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 0 1 6.988 2.896 9.83 9.83 0 0 1 2.893 6.994c-.003 5.45-4.437 9.886-9.885 9.886m8.413-18.297A11.82 11.82 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.82 11.82 0 0 0 20.464 3.488" />
-        </svg>
-        <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-400 border-2 border-white" />
-      </span>
-
-      {/* Etiqueta en escritorio: aparece al pasar el mouse y no ocupa sitio en móvil. */}
-      <span className="hidden md:block max-w-0 overflow-hidden whitespace-nowrap rounded-full bg-surface text-foreground text-sm font-medium shadow-xl border border-todopolis-lavender/40 opacity-0 transition-all duration-300 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:px-4 group-hover:py-2">
-        Escríbenos por WhatsApp
-      </span>
+      <WhatsAppIcon className="h-7 w-7 md:h-5 md:w-5" />
+      <span className="hidden md:inline text-sm font-bold">Escríbenos</span>
     </a>
   )
 }

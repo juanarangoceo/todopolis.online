@@ -1,9 +1,7 @@
 import { Product } from '@/lib/types';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { bestColumns } from '@/lib/new-arrivals';
-import { PRODUCT_CATEGORIES } from '@/lib/categories';
+import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel';
 
 // Sección de novedades del home.
 //
@@ -31,13 +29,6 @@ export function NewArrivalsBanner({ products = [] }: NewArrivalsBannerProps) {
   if (products.length === 0) return null;
 
   const shown = products.slice(0, 12);
-  const columns = bestColumns(shown.length);
-
-  const formatCardPrice = (price: number) => '$ ' + price.toLocaleString('es-CO');
-  // La categoría llega cruda del dataset (`electronica`); se muestra el
-  // nombre con tilde, como en la cuadrícula.
-  const categoryTitle = (value: string) =>
-    PRODUCT_CATEGORIES.find((c) => c.value === value?.toLowerCase())?.title ?? value;
 
   // Franja de fondo gris suave, a todo el ancho, con el mismo encabezado que
   // las secciones de la ficha (antetítulo gris con filete + titular). Antes
@@ -79,54 +70,14 @@ export function NewArrivalsBanner({ products = [] }: NewArrivalsBannerProps) {
               </Link>
             </div>
 
-            {/* En móvil es un carrusel: 12 tarjetas en rejilla de 2 columnas
-                son 6 filas que empujan la cuadrícula del catálogo fuera de la
-                pantalla. Deslizando ocupan una sola fila.
-
-                Desde `sm` vuelve a ser rejilla, y las columnas se calculan para
-                que la última fila quede completa: con 6 novedades y 4 columnas
-                salían 4 + 2 y dos huecos. `justify-center` es el plan B para
-                cantidades sin divisor cómodo (7, 11…): la fila incompleta se
-                centra y se lee como decisión, no como hueco. */}
-            <div
-              className="na-rail flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 -mx-4 px-4 pb-1 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none na-grid sm:grid sm:grid-cols-3 md:gap-4 sm:justify-center"
-              style={{ ['--na-cols' as string]: String(columns) }}
-            >
-              {shown.map((product) => {
-                const slug = (product as { slug?: string }).slug || product.id;
-                return (
-                  <Link
-                    key={product.id}
-                    href={`/producto/${slug}`}
-                    className="group w-[42vw] max-w-[190px] shrink-0 snap-start overflow-hidden rounded-3xl border border-nav-inactive-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-auto sm:max-w-none sm:shrink"
-                  >
-                    {/* 4:5, como las tarjetas del catálogo. */}
-                    <div className="relative aspect-[4/5] w-full overflow-hidden">
-                      <Image
-                        src={product.image || '/placeholder.jpg'}
-                        alt={product.name}
-                        fill
-                        sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 42vw"
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    </div>
-                    {/* Nombre y precio SIEMPRE visibles: en móvil no hay hover. */}
-                    <div className="p-3 sm:p-4">
-                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">
-                        {categoryTitle(product.category)}
-                      </p>
-                      <p className="line-clamp-2 min-h-[2.5em] text-sm font-semibold leading-snug text-ink-title">
-                        {product.name}
-                      </p>
-                      <p className="mt-2 font-serif text-base font-extrabold tabular-nums text-ink-title sm:text-lg">
-                        {formatCardPrice(product.price)}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+            {/* Una sola fila deslizable en TODOS los tamaños, con la misma
+                tarjeta que el catálogo. Fue rejilla desde `sm`: 12 tarjetas
+                eran 3 filas enteras en escritorio antes de llegar al
+                catálogo, que es lo que la gente viene a recorrer. */}
+            <SuggestedProductsCarousel
+              products={shown}
+              itemClassName="w-[44vw] max-w-[210px] sm:w-[240px] sm:max-w-none lg:w-[270px]"
+            />
 
             <Link
               href="/ofertas"

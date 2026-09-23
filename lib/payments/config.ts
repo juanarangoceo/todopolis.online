@@ -1,8 +1,9 @@
 // Si el pago anticipado está encendido y con qué credenciales. NADA MÁS.
 //
 // Vive aparte de `confio-orders.ts` por una razón de build, no de estética:
-// `app/api/lucy-chat` corre en **edge runtime**, y su prompt necesita saber si
-// hay prepago para no negarlo. Si esa pregunta viviera junto al orquestador,
+// los prompts que hablan de pagos (hoy `voice-session`; antes el chat web
+// `lucy-chat`, que corría en **edge runtime**) necesitan saber si hay prepago
+// para no negarlo. Si esa pregunta viviera junto al orquestador,
 // el prompt arrastraría `node:crypto` y `@supabase/supabase-js` hasta el edge y
 // el build falla con «Native module not found: node:crypto».
 //

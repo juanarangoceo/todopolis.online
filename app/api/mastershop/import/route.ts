@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from '@/lib/product-content-prompt'
+import { classifyFromSource } from '@/lib/category-classifier'
 import { audienceFitFromAi } from '@/lib/audience-fit'
 import { slugifyProductName } from '@/lib/slugify'
 
@@ -12,27 +13,6 @@ export const maxDuration = 60
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 
-// ─── Category mapping Mastershop → Sanity ────────────────────────────────────
-const CATEGORY_MAP: Record<string, string> = {
-  'Salud, belleza y cuidado personal': 'belleza',
-  'Hogar, Muebles, Cocina': 'hogar',
-  'Tecnología y electrodomésticos': 'electronica',
-  'Tecnología y electrodomesticos': 'electronica',
-  'Moda, Ropa y Accesorios': 'moda',
-  'Relojes y Joyas': 'accesorios',
-  'Animales y Mascotas': 'otros',
-  'Bebés, juegos y juguetes': 'juguetes',
-  'Deportes y Fitness': 'deportes',
-  Vehículos: 'otros',
-  'Librerías y papelería': 'otros',
-  Herramientas: 'otros',
-  Otros: 'otros',
-  'Adultos': 'bienestar-intimo',
-  'Eróticos': 'bienestar-intimo',
-  'Bienestar sexual': 'bienestar-intimo',
-  'Juguetes adultos': 'bienestar-intimo',
-  'Lencería': 'bienestar-intimo',
-}
 
 
 
@@ -135,7 +115,9 @@ export async function POST(request: NextRequest) {
     const suggestedPrice: number = p.suggestedPrice ?? 0
     const imageUrl: string | null = p.urlImageProduct ?? null
     const categoryRaw: string = p.prodFormatName ?? ''
-    const category = CATEGORY_MAP[categoryRaw] ?? 'otros'
+    // La categoría la decide JEV con la de Mastershop como pista y respaldo
+  // (lib/category-classifier.ts). Va antes del tagging porque lo alimenta.
+  const { category } = await classifyFromSource({ name, description, sourceCategory: categoryRaw })
 
     // ── STEP 2: Generate AI content with Gemini (en paralelo con auto-tagging) ──
     const genAI = new GoogleGenerativeAI(geminiKey)

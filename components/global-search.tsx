@@ -55,7 +55,7 @@ export function GlobalSearch({ products, showMobileFab = true }: GlobalSearchPro
 
   const renderSearchContent = (compact: boolean) => (
     <div className="relative w-full z-50">
-      <MagicSearchBar onSearch={handleSearch} compact={compact} />
+      <MagicSearchBar onSearch={handleSearch} compact={compact} placeholder={products?.length ? `Busca entre ${products.length} productos` : undefined} />
       
       {/* Dropdown Results */}
       {searchQuery && (

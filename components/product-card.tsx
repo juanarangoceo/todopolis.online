@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Star, ShoppingBag, Sparkles, ShieldCheck, Truck } from 'lucide-react';
+import { Heart, Star, ShoppingBag, Truck } from 'lucide-react';
+import { categoryTitle } from '@/lib/categories';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useFavorites } from '@/app/providers/favorites-provider';
@@ -32,7 +33,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     <>
     <Link
       href={`/producto/${(product as any).slug || product.id}`}
-      className="group block"
+      className="group block h-full"
       style={index < 8 ? {
         animation: `fadeInUp 0.45s ease-out ${index * 60}ms forwards`,
         opacity: 0
@@ -53,11 +54,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             "group-focus-visible:ring-2 group-focus-visible:ring-cta group-focus-visible:ring-offset-2"
           )}
         >
-          {/* Shine effect on hover */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-          </div>
-
           {/* Image container */}
           <div className="relative w-full overflow-hidden bg-white/50 aspect-[4/5] min-h-[140px] sm:min-h-[200px]">
             <Image
@@ -65,7 +61,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               alt={product.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
               priority={index < 4}
               loading={index < 4 ? undefined : 'lazy'}
             />
@@ -76,9 +72,8 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             {/* Discount badge — color de oferta, distinto del CTA */}
             {discount > 0 && (
               <span
-                className="absolute top-4 left-4 px-3 py-1.5 text-sale-fg text-xs font-bold rounded-full shadow-lg flex items-center gap-1 bg-sale backdrop-blur-sm"
+                className="absolute top-3 left-3 sm:top-4 sm:left-4 px-2.5 py-1 text-sale-fg text-xs font-extrabold tabular-nums rounded-full shadow-sm bg-sale"
               >
-                <Sparkles className="w-3 h-3" />
                 -{discount}%
               </span>
             )}
@@ -117,7 +112,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 addToCart(product);
               }}
               className={cn(
-                "absolute bottom-4 right-4 p-3.5 rounded-2xl transition-all duration-300",
+                "absolute bottom-3 right-3 sm:bottom-4 sm:right-4 p-2.5 sm:p-3 rounded-2xl transition-all duration-300",
                 "bg-cta text-cta-fg hover:bg-cta-hover",
                 "opacity-100 translate-y-0",
                 "shadow-xl shadow-cta-ring"
@@ -130,17 +125,17 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
           {/* Content */}
           <div className="p-3 sm:p-5 bg-surface">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between gap-2">
               {/* Categoría en neutro: es metadato, no persuasión. El color se
                   reserva para lo que pide una acción o afirma un hecho. */}
               <span
-                className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                className="truncate text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                {product.category}
+                {categoryTitle(product.category)}
               </span>
 
               {product.isBestSeller && (
-                <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-100/80 text-amber-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap px-1.5 sm:px-2 py-0.5 bg-amber-100/80 text-amber-700 text-[9px] sm:text-[10px] font-bold rounded-full uppercase tracking-wide">
                   <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                   Más Vendido
                 </span>
@@ -148,38 +143,28 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
             
             {/* Name */}
-            <h3 className="mt-2 font-sans text-sm sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-cta transition-colors leading-tight">
+            <h3 className="mt-1.5 min-h-[2.5em] font-sans text-sm sm:text-base font-semibold text-ink-title line-clamp-2 transition-colors leading-snug group-hover:text-foreground/70">
               {product.name}
             </h3>
 
-            {/* Señales de confianza — reemplazan la calificación que antes venía
-                hardcodeada en 4.8 para los 574 productos. Aquí solo van
-                afirmaciones verificables: la contraentrega aplica a toda la
-                tienda y el envío gratis sale del mismo flag que lo aplica en el
-                checkout. Las estrellas vuelven cuando haya reseñas reales
-                (ver "Reseñas reales — pendiente" en CLAUDE.md). */}
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-trust-bg border border-trust-border text-trust-fg text-[10px] sm:text-[11px] font-bold">
-                <ShieldCheck className="w-3 h-3 shrink-0" />
-                Contraentrega
-              </span>
-
-              {product.isDestacado ? (
+            {/* Sin «Contraentrega · 3–7 días» en cada tarjeta (sep 2026): se
+                repetía idéntico en los 578 productos, y lo que se repite en
+                todas partes deja de leerse. Esos datos viven una vez, en los
+                recuadros de políticas del home y en la ficha. Aquí solo queda
+                lo que DISTINGUE a este producto: el envío gratis de los
+                Destacados, que sale del mismo flag que lo cobra en el checkout. */}
+            {product.isDestacado && (
+              <div className="mt-2">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-300/70 text-amber-800 text-[10px] sm:text-[11px] font-bold">
                   <Truck className="w-3 h-3 shrink-0" />
                   Envío gratis
                 </span>
-              ) : (
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-trust-bg border border-trust-border text-trust-fg text-[11px] font-bold">
-                  <Truck className="w-3 h-3 shrink-0" />
-                  3–7 días
-                </span>
-              )}
-            </div>
-            
+              </div>
+            )}
+
             {/* Price */}
-            <div className="mt-2 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-baseline sm:gap-2">
-              <span className="text-base sm:text-2xl font-black text-foreground">
+            <div className="mt-2 sm:mt-3 flex flex-col sm:flex-row items-start sm:items-baseline sm:gap-2">
+              <span className="text-base sm:text-xl font-extrabold tabular-nums text-ink-title">
                 {formatPrice(product.price)}
               </span>
               {product.originalPrice && (

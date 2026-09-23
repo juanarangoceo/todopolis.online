@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { categoryTitle } from '@/lib/categories'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { getArticles, getSanityProducts } from '@/lib/sanity/queries'
@@ -20,23 +21,13 @@ export const metadata = {
   },
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  belleza: 'Belleza',
-  hogar: 'Hogar',
-  electronica: 'Electrónica',
-  moda: 'Moda',
-  accesorios: 'Accesorios',
-  juguetes: 'Juguetes',
-  deportes: 'Deportes',
-  otros: 'Otros',
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 function ArticleCard({ article }: { article: SanityArticle }) {
-  const category = CATEGORY_LABELS[article.category ?? ''] ?? article.category ?? 'General'
+  const category = categoryTitle(article.category) || 'General'
 
   return (
     <article className="group flex flex-col bg-surface border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-todopolis-lavender/60 transition-all duration-300">

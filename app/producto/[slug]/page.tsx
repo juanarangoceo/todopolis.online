@@ -5,9 +5,9 @@ import { Footer } from '@/components/footer'
 import { ProductHero } from '@/components/product/product-hero'
 import { ProductImageGallery } from '@/components/product/product-image-gallery'
 import { lifestyleImages } from '@/lib/lifestyle'
+import { relatedProducts } from '@/lib/related-products'
 import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
-import { ProductSubscription } from '@/components/product/product-subscription'
 import { DestacadoBanner } from '@/components/product/destacados/destacado-banner'
 import { DestacadoBenefits } from '@/components/product/destacados/destacado-benefits'
 import { DestacadoCustomerPhotos } from '@/components/product/destacados/destacado-customer-photos'
@@ -113,12 +113,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       isNew: p.isNew ?? false,
       isBestSeller: p.isBestSeller ?? false,
       reviewsCount: p.reviewsCount,
+      tags: p.tags ?? [],
     }))
 
   // Venta cruzada: UN carrusel, después del cierre. Antes había otro de 4
   // productos a media ficha, entre las especificaciones y las preguntas: una
   // salida justo antes de que el comprador llegara al botón.
-  const moreProducts = otherProducts.slice(0, 12)
+  // Parecidos a ESTE producto (etiquetas, categoría, precio), no los 12 más
+  // nuevos: cortar los primeros del catálogo daba las mismas sugerencias en
+  // todas las fichas. Ver lib/related-products.ts.
+  // Las etiquetas salen de la fila del catálogo y no de la query de detalle,
+  // que no las trae: el catálogo ya viene cargado para este carrusel.
+  const ownTags = sanityProducts.find((p: any) => p._id === product._id)?.tags ?? []
+  const moreProducts = relatedProducts<(typeof otherProducts)[number]>(
+    { id: product._id, category: product.category, price: product.price, tags: ownTags },
+    otherProducts,
+  )
 
   // Adapt SanityProduct shape to the component interface
   const adaptedProduct = {
@@ -372,25 +382,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </ProductVariantProvider>
 
         {/* Lo que va DESPUÉS del cierre, solo en la ficha normal. En Destacados
-            no hay venta cruzada ni suscripción: son salidas del embudo en una
-            visita que viene de un anuncio de ESTE producto. Tampoco va
-            `StorePolicies` en ninguna de las dos: el cierre ya dice envío,
-            devolución y WhatsApp, y «Cómo pagas» explica el pago. */}
+            no hay venta cruzada: es una salida del embudo en una visita que
+            viene de un anuncio de ESTE producto. Tampoco va `StorePolicies` en
+            ninguna de las dos: el cierre ya dice envío, devolución y WhatsApp,
+            y «Cómo pagas» explica el pago.
+            El formulario de «Acceso prioritario» que iba aquí se mudó al pie
+            (`FooterSubscribe`): ocupaba una pantalla entera de móvil justo
+            donde el comprador ya había decidido. */}
         {!isDestacado && moreProducts.length > 0 && (
           <DestacadoSection>
-            <DestacadoSectionHeader eyebrow="Sigue mirando" title="Otros productos de la tienda" />
+            <DestacadoSectionHeader eyebrow="Sigue mirando" title="Te puede interesar" />
             <SuggestedProductsCarousel products={moreProducts} />
-          </DestacadoSection>
-        )}
-
-        {!isDestacado && (
-          <DestacadoSection tone="soft">
-            <div className="mx-auto max-w-2xl">
-              <ProductSubscription
-                productSlug={adaptedProduct.slug}
-                productName={adaptedProduct.name}
-              />
-            </div>
           </DestacadoSection>
         )}
         </ArticleModalProvider>
@@ -406,7 +408,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         }}
       />
 
-      <Footer showPaymentExplainer={false} flush />
+      <Footer showPaymentExplainer={false} flush productSlug={adaptedProduct.slug} />
     </div>
   )
 }

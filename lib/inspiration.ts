@@ -8,6 +8,8 @@ export interface AiImage {
   image: string
   name: string
   slug: string
+  /** Opcional: sin precio la tarjeta solo pinta el nombre. */
+  price?: number
 }
 
 /** Imágenes por carril. Con ~39 disponibles salen ~5 carriles sin repetir. */

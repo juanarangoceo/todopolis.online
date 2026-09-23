@@ -1,5 +1,11 @@
 @AGENTS.md
 
+> **Antes de tocar diseño, copy o componentes visuales, lee
+> [`docs/identidad-de-marca.md`](docs/identidad-de-marca.md).** Es el criterio
+> de marca (voz, color, tipografía, movimiento, qué puede flotar). Las
+> decisiones de abajo son su historia; si un cambio la contradice, se
+> actualiza la guía a propósito, no se ignora.
+
 # Entorno de desarrollo local
 
 ## Arranque obligatorio al iniciar sesión
@@ -203,20 +209,25 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 ## Arquitectura home — no romper
 
 ### ProductBrowser y los carriles de inspiración
-`components/product-browser.tsx` recibe la prop `aiImages` desde `app/page.tsx` y la pasa a `ProductGrid` como **slot repetido**: un carril horizontal (`components/inspiration-rail.tsx`) que se inserta como fila `col-span-full` tras el producto 12 y luego cada 16. Mismo componente en móvil y escritorio.
+`components/product-browser.tsx` recibe la prop `aiImages` desde `app/page.tsx` y la pasa a `ProductGrid` como **slot repetido**: un carril horizontal (`components/inspiration-rail.tsx`) que se inserta como fila `col-span-full` tras el producto 16 y luego cada 24 (antes tras el 4 y cada 12: ~48 carriles con ~39 imágenes, el mismo carril cada dos pantallas). Mismo componente en móvil y escritorio.
 
 **Antes había una columna lateral sticky en escritorio y un carrusel suelto en móvil. Se eliminaron (sep 2026) y no hay que reponerlos.** La columna era incompatible con la cuadrícula: el catálogo carga de 24 en 24 sobre 574 productos, así que `sticky` dejaba 3 imágenes congeladas al lado de un scroll interminable, y `max-h-screen overflow-y-auto` creaba un scroll anidado con contenido inalcanzable (una vez pegado el sticky, su parte baja no se puede ver).
 
 - `lib/inspiration.ts` tiene la lógica pura (`railSlice`, `RAIL_SIZE`) y su test. Vive aparte del `.tsx` porque `node --test` no importa JSX, y es justo la parte que falla en silencio si se rompe.
-- `railSlice` **da la vuelta** cuando se agotan las imágenes: con 574 productos salen ~35 carriles y solo hay ~39 imágenes. Repetir es aceptable en descubrimiento; quedarse sin carriles a mitad del scroll, no.
+- `railSlice` **da la vuelta** cuando se agotan las imágenes: con 574 productos salen ~24 carriles y solo hay ~39 imágenes. Repetir es aceptable en descubrimiento; quedarse sin carriles a mitad del scroll, no.
 - Los carriles solo salen en el listado limpio (sin búsqueda, categoría ni etiquetas), igual que el banner promocional.
 
-### Filtros del home — «Filtros aplicados» (sep 2026)
-`components/product-browser.tsx`. Categorías en UNA fila deslizable, mismo estilo en móvil y escritorio; debajo «Más filtros» + etiquetas destacadas. Todo lo que filtra (búsqueda, categoría, etiquetas) sale en la barra **«Filtros aplicados»**, pegada bajo la cabecera, cada uno con su × y «Borrar todo». Tocar la categoría activa la quita.
+### Filtros del home — categorías con conteo, panel y «Filtros aplicados» (sep 2026)
+`components/product-browser.tsx` pinta; **la lógica está en `lib/catalog-filters.ts` (con test)**: filtros, orden y conteos. No la dupliques en el componente.
 
-- Búsqueda, categoría y etiquetas viven en la URL (`?q=`, `?categoria=`, `?tags=`). Bienestar Íntimo NO se restaura desde la URL: pasa por el aviso de edad.
+- **Categorías**: en móvil, tarjetas con la foto del producto más nuevo de cada una y su conteo (con 14 categorías las píldoras dejaban ver 3); la primera tarjeta es «Filtros». En escritorio, píldoras con conteo que se reparten en dos filas, sin deslizamiento. Solo salen las categorías con productos; con 0 en la vista actual se atenúan. Adultos nunca lleva foto en su tarjeta (sería contenido sensible antes del aviso de edad).
+- **El conteo es «cuántos verías si la tocas»**, con los demás filtros puestos (`categoryCounts`). «Todos» excluye Bienestar Íntimo, igual que el listado.
+- **Panel «Filtros»** (`tag-filter-panel.tsx`, prop `extras`): ordenar (recomendados, menor y mayor precio, mayor descuento), precio (hasta $30.000 · $30–60.000 · $60–100.000 · más de $100.000; tramos del catálogo real, mediana $58.900), solo ofertas, envío gratis (Destacados) y las etiquetas por grupo con nombres para el comprador («Para quién», «Tipo de producto», «Para qué», «Características»). El botón dice cuántos quedan.
+- **Ordenar** también está junto al titular del catálogo y en la barra de filtros aplicados (en escritorio; en móvil solo en el panel, para no taparle espacio a los chips).
+- Todo lo que filtra sale en **«Filtros aplicados»**, pegada bajo la cabecera, con su × y «Borrar todo». Cualquier filtro u orden distinto de «recomendados» saca al home del listado limpio (sin Novedades, banner ni carriles).
+- Todo vive en la URL: `?q=`, `?categoria=`, `?tags=`, `?precio=`, `?oferta=1`, `?envio=gratis`, `?orden=`. Bienestar Íntimo NO se restaura desde la URL: pasa por el aviso de edad.
 - Las barras de búsqueda no están controladas desde fuera: se les fija el texto con el evento `magic-search:set`. La de la cabecera entra por portal tarde y recibe `initialQuery`.
-- Las etiquetas se pintan sin emoji, como la ficha.
+- **Búsqueda sin resultados → sugerencias de JEV** (`components/search-suggestions.tsx` → `/api/search-suggest` → `lib/search-suggest.ts`, con test): una categoría y hasta 3 etiquetas donde sí hay productos («cafetera» → Cocina; «dolor de espalda» → Salud y bienestar · Alivio de dolor). Solo con CERO resultados, nunca por tecla; la respuesta se cachea en la CDN una semana por búsqueda. Nunca sugiere Bienestar Íntimo ni «Otros», ni una categoría o etiqueta sin productos. Sin JEV, no pinta nada.
 
 ### Novedades del home (`NewArrivalsBanner`) — cupo fijo de 12
 `components/new-arrivals-banner.tsx`, con la selección en `lib/new-arrivals.ts` y su test.
@@ -226,14 +237,29 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - **Son SIEMPRE los 12 más recientes** (`NEW_ARRIVALS_COUNT`): entra uno nuevo y desplaza al más viejo. Antes había una ventana de 7 días, que dejaba la sección con dos productos en una semana floja y la desbordaba tras una tanda de import.
 - `newestProductIds` **ordena por fecha** en vez de cortar los N primeros del array. La query viene ordenada hoy, pero si alguien le cambia el `order()`, cortar los primeros volvería a llamar "nuevo" a lo que no lo es — el fallo que esta sección ya tuvo una vez.
 - **No lleva subtítulo, y es deliberado.** Los dos que hubo describían el bloque en vez de decirle algo al cliente, y uno repetía envío y medios de pago, que ya dicen los tres recuadros de `store-policies` diez píxeles más abajo.
-- **En móvil es un carrusel** (`.na-rail`), no rejilla: 12 tarjetas en dos columnas son seis filas que empujan el catálogo fuera de la pantalla. Desde `sm` vuelve a ser rejilla, y `bestColumns` elige columnas para que la última fila no quede coja.
+- **Es una sola fila deslizable en todos los tamaños** (`SuggestedProductsCarousel`) y usa **la misma `ProductCard` que el catálogo**. Fue rejilla desde `sm` con tarjeta propia: 3 filas enteras en escritorio antes del catálogo, y dos estilos de tarjeta uno encima del otro. `bestColumns` quedó sin uso.
 
-### Los carriles de inspiración se pueden mover a mano
-`components/inspiration-rail.tsx`. La marquesina CSS sigue ahí, pero al primer desplazamiento horizontal el carril pasa a MANUAL y se puede adelantar y devolver, con el dedo o con las flechas de la cabecera.
+### Los carriles de inspiración NO se mueven solos (sep 2026)
+`components/inspiration-rail.tsx`. Fueron una marquesina CSS que pasaba a manual al primer gesto; se quitó. Un blanco en movimiento cuesta tocarlo (se abre la tarjeta de al lado), con ~24 carriles siempre había algo corriéndose de lado mientras el ojo baja por la cuadrícula, y la primera tarjeta salía cortada. Ahora es scroll nativo con `snap` y flechas en la cabecera que se apagan en los extremos. **No reponer el movimiento automático.**
 
-Marquesina y scroll nativo **no pueden convivir** —una mueve `transform` y el otro `scrollLeft`, y se suman—, así que el traspaso congela la animación, borra el `transform` y pasa ese desplazamiento a `scrollLeft`. Sin eso el carril saltaría al principio al tocarlo, o dejaría las primeras tarjetas inalcanzables.
+### Header (sep 2026)
+- **Escritorio**: las secciones son texto (Ofertas, Colecciones, Blog), no píldoras de colores en mayúsculas; solo Destacados conserva el dorado. «Ofertas» iba en rojo, el color del botón de compra. Íconos sin caja. Se quitó el contador de productos junto al logo (sigue en el menú móvil) para darle el espacio al buscador.
+- **Móvil**: la lupa ya no flota. `MobileSearchFab` se pinta por portal en `#header-mobile-search-slot` al pasar 200 px de scroll, solo en páginas con buscador. Flotando en `top-24 right-4` tapaba el corazón de favoritos de la columna derecha del catálogo.
+- Fondo al 95 %: al 80 % el texto de las fotos se leía a través del logo.
+- **Sin burbuja de chat en el header**: se confundía con un buzón de mensajes junto al corazón y el carrito.
+- **Buscador** (`magic-search-bar.tsx`): lupa a la izquierda, sin botón «Buscar» (la búsqueda es en vivo; el botón no hacía nada y al pasar el ratón quedaba azul oscuro sobre azul oscuro), sin halo ni partículas. Enter busca ya y baja el teclado. El texto dice «Busca entre N productos».
+- **Móvil, filtros**: «Filtros» va al principio de la fila de categorías y la fila de etiquetas destacadas solo se pinta desde `md`. Eran tres franjas y ~170 px antes del primer producto.
 
-El traspaso cuelga de `onScroll`, **no de `touchstart` ni `wheel`**: esos dos disparan también cuando el dedo o la rueda pasan por encima camino de bajar la página, y pararían las marquesinas de todos los carriles con solo recorrer el home.
+### Atención: SOLO WhatsApp (sep 2026)
+El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del menú móvil y las rutas `/api/lucy-chat` y `/api/lucy-recommend` (eran públicas y sin autenticación: cualquiera podía gastar cuota de Gemini). **No reponerlo.** Queda `VoiceLucy` (asistente de voz en la ficha), que solo sale en los productos donde se enciende desde el panel.
+
+`components/whatsapp-button.tsx`: abajo a la DERECHA, verde de WhatsApp, sombra neutra, sin punto de «en línea»; en escritorio es píldora con «Escríbenos». En la ficha, en móvil, no se pinta: la ficha normal lo lleva dentro de la barra de compra y Destacados pinta su propia burbuja, también a la derecha (`product-hero.tsx`). El logo está en `components/whatsapp-icon.tsx`: úsalo, no pegues el SVG.
+
+### Banner de temporada: el botón va DEBAJO de la imagen
+`components/promo-banner.tsx`. Las piezas traen texto (y a veces botón) pintado en la imagen; el botón superpuesto caía encima.
+
+### `/ofertas` (sep 2026)
+`components/offers-browser.tsx`. Mismo lenguaje que el home: antetítulo + titular, píldoras de categoría con cuántas ofertas tiene cada una, orden (mayor descuento, menor y mayor precio), buscador también en móvil y la misma `ProductCard`. Se quitaron el banner con degradado, manchas y brillo animado, la franja rosa «Hasta 42% off», y las frases «precios que solo duran lo que dura el cronómetro» y «Precios válidos por tiempo limitado»: el listado no tiene fecha de fin. La foto sale de `mastershopImageUrl ?? image`, como en el home.
 
 ### Query de productos — campo `aiLifestyleImage`
 El campo `aiLifestyleImage` está en **ambos** queries de Sanity:
@@ -274,7 +300,14 @@ Todo el contenido generado por IA usa `gemini-3.8-flash`: copy de producto (`gen
 
 Se migró desde `gemini-3.5-flash` (sep 2026): mitad de tarifa ($0.75/$3.75 por 1M vs $1.50/$9.00) y menos thinking tokens → ~3.4× más barato por producto (~$88 COP vs ~$300 COP) y el import baja de ~38 s a ~26 s, lo que da margen frente al `maxDuration = 60`. Ojo: la tarifa de 3.8 sube a $1.50/$7.50 el 1-ene-2027 (sigue siendo más barata que 3.5).
 
-Lucy (`lucy-chat`, `lucy-recommend`, `generate-voice-prompt`) va aparte con `gemini-3-flash-preview` — no es contenido de catálogo.
+Lucy de voz (`generate-voice-prompt`) va aparte con `gemini-3-flash-preview` — no es contenido de catálogo. El chat web (`lucy-chat`, `lucy-recommend`) se retiró.
+
+### Etiquetas (tags) — las pone JEV
+`classifyProductTags` (`lib/auto-tag.ts`, con test) pregunta a JEV un sí/no por etiqueta, en una sola llamada (~1 s, ~4.000 tokens), y elige con `pickTags`: las de probabilidad ≥ 0,6, máximo 6; si quedan menos de 2, completa con las de 0,5–0,6. Ocasión y promo no se asignan solas. Si JEV no responde, Gemini (`classifyProductTagsGemini`, el prompt de siempre). La firma no cambió: import, sync y el botón del Studio la usan igual.
+
+`node scripts/retag-products.ts` (dry-run) / `--apply` etiqueta los productos sin etiquetas (92 al 23-sep-2026) y parchea también el borrador si existe. Concurrencia 2: con 4, JEV respondía «alta demanda».
+
+**JEV está inestable** (23-sep-2026, en la promoción gratuita): cerca de la mitad de las llamadas en lote volvieron con 500, «high demand» o timeout. Por eso todo lo que usa JEV tiene respaldo y nunca bloquea: categoría → tabla de Mastershop/Gemini; etiquetas → Gemini; sugerencias → estado vacío normal. Lo común de JEV está en `lib/jev.ts`.
 
 ### Etiquetas (tags) — convención de `_id` determinista
 Las referencias de etiqueta se construyen con `tagSlugsToReferences` (`lib/auto-tag.ts`) usando `_id` determinista `tag-<slug>`. Las etiquetas DEBEN existir con ese `_id` o la referencia queda rota (no se ve la etiqueta). Lo usan tanto el import de Mastershop como el botón "🤖 Generar Contenido con IA" del documento Producto en el Studio. Si agregas otra vía de tagging, reutiliza ese helper.
@@ -296,12 +329,19 @@ Antes el botón mandaba `imageAssetId` y la ruta lo descartaba: el copy se escri
 - Bajarlas es **best-effort**: si una falla, se genera con las que haya. Si no baja ninguna, el bloque de fotos **no se añade** — instruirle al modelo que "mire las fotos" cuando no hay ninguna lo empuja a describir lo que cree ver.
 - El import de Mastershop **no** lleva estos bloques: manda solo texto, como siempre.
 
-### Categorías — fuente única en `lib/categories.ts`
-`PRODUCT_CATEGORIES` alimenta el dropdown del schema, el bloque de clasificación del prompt y el script de limpieza. **Cualquier vía que escriba `category` valida contra esa lista.**
+### Categorías — fuente única en `lib/categories.ts`, clasificadas por JEV
+`PRODUCT_CATEGORIES` alimenta el dropdown del schema, las pestañas del home (solo las que tienen productos), `/ofertas`, los títulos del blog (`categoryTitle`), el clasificador y el script de limpieza. **Cualquier vía que escriba `category` valida contra esa lista.** Cada categoría lleva `description`: es el criterio que recibe el clasificador, escrito para los casos de frontera.
 
-Existe porque el dataset acumuló 66 productos con la categoría vacía, con tilde (`electrónica`), en mayúscula (`Otros`) o con la etiqueta cruda de Mastershop (`Hogar, Muebles, Cocina`, que no cae en ninguna pestaña del home salvo "Todos"). El fallback de `normalizeCategory` en `components/product-browser.tsx` salvaba las dos primeras de casualidad.
+**Taxonomía del 23-sep-2026** (14): Belleza, Hogar, **Cocina**, Tecnología (`electronica`, antes «Electrónica»; los enlaces `?categoria=Electrónica` se traducen), Moda, Accesorios, **Salud y bienestar**, Deportes, **Bebés**, Juguetes, **Mascotas**, **Carro y moto**, Bienestar Íntimo, Otros. Se retiró Alimentos (0 productos). Motivo: 170 de 578 productos (29 %) estaban en «Otros»; no faltaba criterio sino casillas.
 
-Limpieza: `node scripts/fix-product-categories.ts` (dry-run) y `--apply` para escribir. Normaliza lo que solo cambia de forma y clasifica el resto con Gemini, validando contra la lista. **Ya se corrió el 16-sep-2026**: los 66 quedaron limpios y el dataset no tiene ni una categoría fuera de la lista. Si vuelve a aparecer alguna, es que se coló una vía de escritura que no valida.
+**Quién decide: JEV** (`lib/category-classifier.ts`, `typesafe-ai/jev` por AI Gateway con `experimental_evaluate` del paquete `ai`), el mismo modelo que clasifica etapas en nitro_bot. Es un clasificador: pregunta de opción múltiple → opción + confianza, ~0,4 s. Lo usan:
+- `mastershop/import` y `mastershop-sync` vía `classifyFromSource`: la categoría de Mastershop (`MASTERSHOP_CATEGORY_MAP`, ahora en `lib/categories.ts`) es pista y respaldo. Antes era la única fuente y mandaba a `otros` todo «Animales y Mascotas», «Vehículos», «Herramientas».
+- `generate-product-content` (botón del Studio) cuando el editor no eligió categoría, en paralelo con Gemini; la sugerencia de Gemini es respaldo.
+- `scripts/fix-product-categories.ts`.
+
+Reglas del clasificador: confianza ≥ `MIN_CONFIDENCE` (0,6) → JEV; si duda → respaldo concreto; «otros» nunca gana a una respuesta. **Bienestar Íntimo no pasa por JEV**: si el proveedor lo marca adulto, es adulto (de eso dependen aviso de edad, Píxel, feed y sitemap), y el script no toca los que ya lo son. Sin credenciales (`AI_GATEWAY_API_KEY`, `VERCEL_ENV` u OIDC vigente) JEV se salta y se usa el respaldo: la categoría nunca bloquea un import. En Vercel autentica por OIDC.
+
+Limpieza: `node scripts/fix-product-categories.ts` (vacías, inválidas u «otros») o `--all` (catálogo entero; solo cambia lo que JEV da por seguro), dry-run por defecto y `--apply` para escribir. `--env=archivo` pasa un `VERCEL_OIDC_TOKEN` fresco sin tocar `.env.local` (`vercel env pull <archivo> --environment=development`; el token dura 12 h). Historia: el 16-sep se limpiaron 66 valores sucios con Gemini; el 23-sep el dry-run de `--all` propuso 246 cambios (Otros 170 → ~5). **Aplicar SOLO después de desplegar el código**: con el código viejo en producción, los productos en categorías nuevas desaparecen de las pestañas.
 
 ### Artículo de blog: botón `GenerateArticleButton`
 El blog era la última diferencia real entre crear un producto a mano e importarlo: `generateAndSaveArticle` solo lo llamaba `mastershop/import`, así que **185 de 577 productos se quedaron sin artículo** — y sin artículo la ficha no pinta el enlace "Leer artículo →" que abre la ventana emergente; el bloque entero desaparece.
@@ -411,7 +451,7 @@ La tienda de Confío (`stores/01M28…`, «Nitro Ecom») es **la misma** que usa
 - **No se dispara `Purchase` de Meta al enviar el formulario** en un pago Confío: todavía no ha pagado nadie. (Pendiente: dispararlo vía CAPI al confirmar.)
 
 ### La narrativa NO se escribe a mano en los prompts
-`lib/payments/narrative.ts` es la única fuente, y decide según haya o no proveedor configurado. Existe por un fallo documentado en Nitro: estuvieron un día con Confío activo mientras el bot contestaba «solo manejamos contraentrega», porque el texto del negocio lo negaba y el asesor obedece esa frase antes que a cualquier compuerta. Lo consumen `lucy-chat` y `voice-session`. **Si añades otro prompt que hable de pagos, pídeselo a ese módulo.**
+`lib/payments/narrative.ts` es la única fuente, y decide según haya o no proveedor configurado. Existe por un fallo documentado en Nitro: estuvieron un día con Confío activo mientras el bot contestaba «solo manejamos contraentrega», porque el texto del negocio lo negaba y el asesor obedece esa frase antes que a cualquier compuerta. Lo consume `voice-session` (lo consumía también `lucy-chat`, retirado). **Si añades otro prompt que hable de pagos, pídeselo a ese módulo.**
 
 El ángulo es «tu dinero queda en custodia hasta que recibas», no «paga por adelantado»: es una garantía MÁS fuerte que la contraentrega, no más débil.
 
@@ -466,7 +506,7 @@ Diseñado, sin implementar. La infraestructura ya existe:
 Siguen mostrándose bajo el encabezado "Reseñas" en `product-testimonials.tsx`, pero los genera la IA con nombres inventados. Pendiente: cambiar el encabezado a algo que no afirme ser un cliente real (p. ej. "Para qué lo usan") y quitarles el nombre propio. Pasan de pasivo legal a copy de beneficios, que es lo que son.
 
 ### Señales de confianza en la tarjeta
-Reemplazan a las estrellas. Solo afirmaciones verificables: **Contraentrega** (aplica a toda la tienda) y **Envío gratis** en destacados / **3–7 días** en el resto. El envío gratis sale del mismo flag `isDestacado` que lo aplica en `checkout-modal.tsx`, así que no se pueden desincronizar.
+Reemplazaron a las estrellas, y en sep 2026 se quitaron también de la tarjeta: «Contraentrega · 3–7 días» salía idéntico en los 578 productos, y lo que se repite en todas partes deja de leerse. Esos datos viven UNA vez, en los recuadros de políticas del home y en la ficha. En la tarjeta solo queda lo que distingue al producto: **Envío gratis** en Destacados, del mismo flag `isDestacado` que lo aplica en `checkout-modal.tsx`, así que no se pueden desincronizar.
 
 ## Destacados (antes "VIP") — no romper
 
@@ -485,7 +525,10 @@ Si agregas un campo nuevo de Destacados, ponle nombre `destacado*` directo en el
 El toggle también controla el envío gratis en `components/checkout-modal.tsx`. Si algún día quieres separar "landing extendida" de "envío gratis", hay que partir el flag en dos.
 
 ### Ficha de producto — un solo recorrido y una sola rejilla (sep 2026)
-Normal y Destacado comparten el MISMO recorrido (`funnel` en `app/producto/[slug]/page.tsx`): historia → beneficios con galería → (bloques manuales de Destacados) → usos (solo normal) → ficha técnica → fotos de clientes → preguntas → «Cómo pagas» → cierre. Los componentes viven en `components/product/destacados/` por historia, pero ya los usan las dos fichas. Solo en la normal, DESPUÉS del cierre: un carrusel de venta cruzada (antes había otro a media ficha, una salida justo antes del botón) y la suscripción. `StorePolicies` ya no va en la ficha: el cierre dice envío, devolución y WhatsApp.
+Normal y Destacado comparten el MISMO recorrido (`funnel` en `app/producto/[slug]/page.tsx`): historia → beneficios con galería → (bloques manuales de Destacados) → usos (solo normal) → ficha técnica → fotos de clientes → preguntas → «Cómo pagas» → cierre. Los componentes viven en `components/product/destacados/` por historia, pero ya los usan las dos fichas. Solo en la normal, DESPUÉS del cierre: un carrusel de venta cruzada, «Te puede interesar» (antes había otro a media ficha, una salida justo antes del botón).
+
+- **La venta cruzada sale de `relatedProducts` (`lib/related-products.ts`, con test)**: etiquetas compartidas pesadas por rareza, misma categoría y precio parecido; si faltan, se rellena con lo más nuevo, detrás. Antes cortaba los 12 primeros del catálogo y TODAS las fichas sugerían los mismos recién llegados. Las etiquetas del producto actual salen de su fila en `getSanityProducts`, porque la query de detalle no las trae.
+- **La suscripción («Acceso prioritario») ya no va en la ficha**: es una franja en el pie (`components/footer-subscribe.tsx`, `source: 'footer'`), en todas las páginas. En la ficha, `Footer` recibe `productSlug` para guardar desde dónde llegó. Sin campo de WhatsApp: nadie envía mensajes desde Todópolis. `StorePolicies` ya no va en la ficha: el cierre dice envío, devolución y WhatsApp.
 
 Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/destacados/destacado-section-header.tsx`): el MISMO `container` que el hero y **ningún `max-w-*` propio**. Antes cada bloque tenía su ancho (6xl, 4xl, md, 5xl, 2xl, lg) y en escritorio la página era una escalera de bordes. Lo que necesita renglones más cortos usa `DestacadoSplit` (título 4 columnas, contenido 8), no se encoge. Si añades un bloque, úsalos.
 

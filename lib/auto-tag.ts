@@ -1,8 +1,19 @@
-// Clasifica un producto con la taxonomía de tags usando Gemini.
-// Usado por /api/mastershop/import al crear productos nuevos.
+// Clasifica un producto con la taxonomía de tags.
+//
+// Desde el 23-sep-2026 lo hace JEV (lib/jev.ts): una pregunta de sí/no por
+// etiqueta, con su probabilidad, en una sola llamada de ~1 s. Gemini queda de
+// respaldo si JEV no está configurado o no responde. Antes era solo Gemini,
+// con un prompt que llevaba las 80 etiquetas y sus descripciones, y 92
+// productos del catálogo quedaron sin ninguna.
+//
+// Lo usan el import y el sync de Mastershop, el botón del Studio y
+// `scripts/retag-products.ts`.
 //
 // Usa la REST API directa (no el SDK) porque el script batch corre fuera del
 // runtime de Next y mantener un solo camino simplifica la mantención.
+
+import { experimental_evaluate as evaluate } from 'ai'
+import { JEV_MODEL, jevConfigured, questionKey } from './jev.ts'
 
 const GEMINI_MODEL = 'gemini-3.8-flash'
 const MIN_TAGS = 3
@@ -80,10 +91,101 @@ export async function fetchTagTaxonomy(opts: {
   return data.result ?? []
 }
 
-// Llama Gemini y devuelve slugs válidos. Si falla todos los reintentos, devuelve [].
-// NO lanza: el auto-tagging es best-effort — un producto sin tags se puede etiquetar manualmente
-// después, no debe bloquear el import.
+// Grupos que JEV NO asigna: las ocasiones (Navidad, Día de la Madre…) se ponen a
+// mano en campaña y las de promo (nuevo, oferta, top ventas…) se derivan de
+// otros campos. Misma regla que el prompt de Gemini.
+export const AUTO_TAG_EXCLUDED_GROUPS = new Set(['ocasion', 'promo'])
+
+export const TAG_MIN_PROBABILITY = 0.6
+const TAG_FALLBACK_PROBABILITY = 0.5
+
+/**
+ * Elige etiquetas a partir de las probabilidades de JEV. Pura.
+ * Toma las ≥ 0,6 (máximo 6); si quedan menos de 2, completa con las de 0,5–0,6
+ * hasta llegar a 2. Mejor pocas y buenas: una etiqueta de más ensucia los
+ * filtros y la venta cruzada.
+ */
+export function pickTags(probabilities: Record<string, number>): string[] {
+  const ranked = Object.entries(probabilities)
+    .filter(([, p]) => Number.isFinite(p))
+    .sort((a, b) => b[1] - a[1])
+  const strong = ranked.filter(([, p]) => p >= TAG_MIN_PROBABILITY).slice(0, MAX_TAGS).map(([s]) => s)
+  if (strong.length >= 2) return strong
+  const weak = ranked
+    .filter(([, p]) => p >= TAG_FALLBACK_PROBABILITY && p < TAG_MIN_PROBABILITY)
+    .map(([s]) => s)
+  return [...strong, ...weak].slice(0, 2)
+}
+
+/** La pregunta para JEV: un sí/no por etiqueta asignable. Pura. */
+export function buildTagQuestions(tags: TagDef[]) {
+  const assignable = tags.filter((t) => !AUTO_TAG_EXCLUDED_GROUPS.has(t.group))
+  const keyToSlug = new Map(assignable.map((t) => [questionKey(t.slug), t.slug]))
+  const questions = Object.fromEntries(
+    assignable.map((t) => [
+      questionKey(t.slug),
+      {
+        type: 'boolean' as const,
+        instructions: `¿Le corresponde a este producto la etiqueta «${t.name}» (${t.group})? ${t.description ?? ''} Responde por lo que el producto ES y para quién es, no por palabras sueltas de la descripción.`.trim(),
+      },
+    ]),
+  )
+  return { questions, keyToSlug }
+}
+
+/** Etiquetas con JEV. null si JEV no está o falla: el llamador usa Gemini. */
+export async function classifyProductTagsJev(
+  tags: TagDef[],
+  product: ProductInput,
+  options: { evaluateFn?: typeof evaluate; timeoutMs?: number } = {},
+): Promise<string[] | null> {
+  if (!options.evaluateFn && !jevConfigured()) return null
+  const { questions, keyToSlug } = buildTagQuestions(tags)
+  if (keyToSlug.size === 0) return null
+  try {
+    const result = await (options.evaluateFn ?? evaluate)({
+      model: JEV_MODEL,
+      state: {
+        producto: product.name.slice(0, 200),
+        categoria: product.category ?? '',
+        descripcion: (product.shortDescription ?? '').replace(/\s+/g, ' ').trim().slice(0, 1200),
+      },
+      questions,
+      maxRetries: 1,
+      abortSignal: AbortSignal.timeout(options.timeoutMs ?? 12000),
+      providerOptions: { gateway: { zeroDataRetention: true } },
+    })
+    const probabilities: Record<string, number> = {}
+    for (const [key, answer] of Object.entries(result.answers as Record<string, { type: string; probability?: number }>)) {
+      const slug = keyToSlug.get(key)
+      if (slug && answer?.type === 'boolean' && typeof answer.probability === 'number') probabilities[slug] = answer.probability
+    }
+    const picked = pickTags(probabilities)
+    return picked.length > 0 ? picked : null
+  } catch (err) {
+    console.warn('[auto-tag] JEV falló, se usa Gemini:', (err as Error)?.message ?? err)
+    return null
+  }
+}
+
+/**
+ * Etiquetas para un producto: JEV primero, Gemini si JEV no responde.
+ * NO lanza: el auto-tagging es best-effort — un producto sin tags se puede
+ * etiquetar después, no debe bloquear el import.
+ */
 export async function classifyProductTags(
+  tags: TagDef[],
+  product: ProductInput,
+  geminiKey: string,
+): Promise<string[]> {
+  if (tags.length === 0) return []
+  const viaJev = await classifyProductTagsJev(tags, product)
+  if (viaJev) return viaJev
+  return classifyProductTagsGemini(tags, product, geminiKey)
+}
+
+// Llama Gemini y devuelve slugs válidos. Si falla todos los reintentos, devuelve [].
+export async function classifyProductTagsGemini(
   tags: TagDef[],
   product: ProductInput,
   geminiKey: string,

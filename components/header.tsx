@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Heart, MessageCircle, Zap, BookOpen, Menu, X, Home, Star, LayoutGrid } from 'lucide-react'
+import { ShoppingBag, Heart, Zap, BookOpen, Menu, X, Home, Star, LayoutGrid } from 'lucide-react'
 import { useCart } from '@/app/providers/cart-provider'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useFavorites } from '@/app/providers/favorites-provider'
@@ -39,6 +39,20 @@ function Logo({ small = false }: { small?: boolean }) {
   )
 }
 
+// 38 px: con cinco íconos y el logo, 44 px no caben en 390 px de ancho.
+const MOBILE_ICON =
+  'relative shrink-0 p-[9px] rounded-2xl bg-surface border border-nav-inactive-border shadow-sm active:scale-95 transition-all'
+const DESKTOP_LINK =
+  'rounded-full px-3 py-2 text-sm font-semibold text-foreground/70 transition-colors hover:bg-surface-muted hover:text-ink-title'
+const DESKTOP_ICON =
+  'relative flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-surface-muted'
+
+const NAV_LINKS = [
+  { href: '/ofertas', label: 'Ofertas' },
+  { href: '/colecciones', label: 'Colecciones' },
+  { href: '/blog', label: 'Blog' },
+] as const
+
 export function Header() {
   const { totalItems, openCart } = useCart()
   const { favoriteSlugs } = useFavorites()
@@ -58,56 +72,51 @@ export function Header() {
 
   const closeMenu = () => setMenuOpen(false)
 
-  const openLucy = () => {
-    closeMenu()
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('lucy:open-chat'))
-    }
-  }
-
   return (
     <>
       <header className="sticky top-0 z-40 w-full" id="site-header">
-        {/* Glassmorphism background */}
-        <div className="absolute inset-0 bg-surface/80 backdrop-blur-xl border-b border-nav-inactive-border" />
+        {/* Casi opaco: al 80 % las fotos con texto del catálogo se leían a
+            través del logo al bajar la página. */}
+        <div className="absolute inset-0 bg-surface/95 backdrop-blur-xl border-b border-nav-inactive-border" />
 
         <div className="container mx-auto px-4 relative">
           {/* ── Mobile layout ── */}
-          <div className="md:hidden grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-1.5 h-16">
+          <div className="md:hidden flex items-center gap-1 h-16">
             {/* Hamburger */}
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Abrir menú"
               aria-expanded={menuOpen}
-              className="p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-blue hover:bg-todopolis-blue/10 transition-all shadow-sm active:scale-95"
+              className={MOBILE_ICON}
               style={{ touchAction: 'manipulation' }}
             >
               <Menu className="w-5 h-5 text-foreground" />
             </button>
 
-            {/* Centered logo */}
-            <div className="flex justify-center">
+            <div className="flex flex-1 justify-center min-w-0">
               <Logo small />
             </div>
+
+            {/* Lupa de móvil: la pinta `MobileSearchFab` por portal, solo en
+                las páginas con buscador y solo cuando la barra ya se fue de la
+                pantalla. Antes flotaba en `top-24 right-4`, justo encima del
+                corazón de favoritos de la columna derecha del catálogo. */}
+            <div id="header-mobile-search-slot" className="contents" />
 
             {/* Destacados → estrella dorada, acceso directo a la selección */}
             <Link
               href="/destacados"
-              className="relative p-2.5 rounded-2xl border shadow-sm active:scale-95 transition-all"
-              style={{
-                background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-                borderColor: '#F59E0B66',
-                touchAction: 'manipulation',
-              }}
+              className={`${MOBILE_ICON} bg-amber-50 border-amber-300/70`}
               aria-label="Productos Destacados"
+              style={{ touchAction: 'manipulation' }}
             >
-              <Star className="w-5 h-5 text-amber-700" fill="currentColor" strokeWidth={1.5} />
+              <Star className="w-5 h-5 text-amber-600" fill="currentColor" strokeWidth={1.5} />
             </Link>
 
             {/* Favorites — ícono rosa (semántica emocional) */}
             <Link
               href="/favoritos"
-              className="relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-accent-feminine hover:bg-accent-feminine/20 transition-all shadow-sm active:scale-95"
+              className={MOBILE_ICON}
               aria-label="Favoritos"
               style={{ touchAction: 'manipulation' }}
             >
@@ -122,7 +131,7 @@ export function Header() {
             {/* Cart — ícono salmón (semántica de compra) */}
             <button
               onClick={openCart}
-              className="relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-cta hover:bg-cta/15 transition-all shadow-sm active:scale-95"
+              className={MOBILE_ICON}
               aria-label="Carrito"
               style={{ touchAction: 'manipulation' }}
             >
@@ -133,99 +142,56 @@ export function Header() {
             </button>
           </div>
 
-          {/* ── Desktop layout ── */}
-          <div className="hidden md:flex h-16 items-center justify-between gap-3">
-            {/* Left — Brand Logo + contador de productos */}
-            <div className="flex shrink-0 items-center gap-3 justify-start">
+          {/* ── Desktop layout ──
+              Antes: seis píldoras con borde, en MAYÚSCULAS y cada una de un
+              color (dorado, rojo, azul, lila), más un contador de productos
+              junto al logo. Nueve cajas compitiendo con el buscador, y
+              «Ofertas» en rojo, que es el color reservado al botón de compra.
+              Ahora las secciones son texto, los íconos van sin caja, y el
+              buscador —la herramienta principal con 578 productos— se queda
+              con el espacio. Solo Destacados conserva su dorado: es la
+              distinción comercial. */}
+          <div className="hidden md:flex h-16 items-center gap-6">
+            <div className="shrink-0">
               <Logo />
-              <ProductsCounter variant="desktop" />
             </div>
 
-            {/* Center — desktop search slot */}
-            <div className="flex flex-1 max-w-2xl justify-center px-4">
-              <div id="header-search-slot" className="w-full" />
+            <div className="flex flex-1 min-w-0 justify-center">
+              <div id="header-search-slot" className="w-full max-w-xl" />
             </div>
 
-            {/* Right — actions */}
-            <div className="flex items-center justify-end gap-2 shrink-0">
-              {/* Destacados → dorado (track propio, separado de la paleta brand) */}
+            <nav aria-label="Secciones" className="flex shrink-0 items-center gap-1 lg:gap-2">
               <Link
                 href="/destacados"
-                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300"
-                style={{
-                  background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-                  borderColor: '#F59E0B66',
-                }}
-                aria-label="Productos Destacados"
-                title="Productos Destacados — landings extendidas"
+                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold text-amber-700 transition-colors hover:bg-amber-50"
+                title="Productos Destacados — envío gratis"
               >
-                <Star className="w-3.5 h-3.5 text-amber-700 group-hover:scale-110 transition-transform" fill="currentColor" strokeWidth={1.5} />
-                <span className="text-xs font-bold uppercase tracking-wide text-amber-800">Destacados</span>
+                <Star className="w-4 h-4 text-amber-500" fill="currentColor" strokeWidth={1.5} />
+                Destacados
               </Link>
+              {NAV_LINKS.map(({ href, label }) => (
+                <Link key={href} href={href} className={DESKTOP_LINK}>
+                  {label}
+                </Link>
+              ))}
+            </nav>
 
-              {/* Ofertas → coral suave (sale) */}
-              <Link
-                href="/ofertas"
-                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-sale hover:bg-sale-soft transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Ver ofertas"
-              >
-                <Zap className="w-3.5 h-3.5 text-sale group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-sale uppercase tracking-wide">Ofertas</span>
-              </Link>
-
-              {/* Colecciones → azul (navegación / curaduría) */}
-              <Link
-                href="/colecciones"
-                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-blue hover:bg-todopolis-blue/10 transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Colecciones"
-              >
-                <LayoutGrid className="w-3.5 h-3.5 text-todopolis-blue-deep group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-todopolis-blue-deep uppercase tracking-wide">Colecciones</span>
-              </Link>
-
-              {/* Blog → lila (contenido / sabiduría) */}
-              <Link
-                href="/blog"
-                className="group relative flex items-center gap-1 px-3 py-2 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-lavender hover:bg-todopolis-lavender/15 transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Blog"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-todopolis-lavender-deep group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-todopolis-lavender-deep uppercase tracking-wide">Blog</span>
-              </Link>
-
-              {/* Lucy → lila (IA aspiracional) */}
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('lucy:open-chat'))}
-                className="group relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-todopolis-lavender hover:bg-todopolis-lavender/15 transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Chat con Lucy"
-                title="Hablar con Lucy"
-              >
-                <MessageCircle className="w-4 h-4 text-todopolis-lavender-deep group-hover:scale-110 transition-transform" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full border border-white" />
-              </button>
-
-              {/* Favoritos → rosa (emoción) */}
-              <Link
-                href="/favoritos"
-                className="group relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-accent-feminine hover:bg-accent-feminine/20 transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Favoritos"
-              >
-                <Heart className="w-4 h-4 text-todopolis-pink-deep group-hover:scale-110 transition-transform" />
+            <div className="flex shrink-0 items-center gap-1 border-l border-nav-inactive-border pl-3">
+              {/* Sin chat aquí: el sitio atiende solo por WhatsApp (burbuja
+                  flotante, `whatsapp-button.tsx`). El chat web de Lucy se
+                  retiró en sep 2026. */}
+              <Link href="/favoritos" className={DESKTOP_ICON} aria-label="Favoritos" title="Favoritos">
+                <Heart className="w-5 h-5 text-todopolis-pink-deep" />
                 {favoriteSlugs.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent-feminine text-todopolis-pink-deep text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-accent-feminine text-todopolis-pink-deep text-[10px] font-bold rounded-full flex items-center justify-center">
                     {favoriteSlugs.length}
                   </span>
                 )}
               </Link>
 
-              {/* Carrito → salmón (compra) */}
-              <button
-                onClick={openCart}
-                className="group relative p-2.5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-cta hover:bg-cta/15 transition-all duration-300 shadow-sm hover:shadow-md"
-                aria-label="Carrito"
-              >
-                <ShoppingBag className="w-4 h-4 text-cta group-hover:scale-110 transition-transform" />
-                <span className={`absolute -top-1 -right-1 w-4 h-4 bg-cta text-cta-fg text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+              <button onClick={openCart} className={DESKTOP_ICON} aria-label="Carrito" title="Carrito">
+                <ShoppingBag className="w-5 h-5 text-cta" />
+                <span className={`absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-cta text-cta-fg text-[10px] font-bold rounded-full flex items-center justify-center transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
                   {totalItems}
                 </span>
               </button>
@@ -245,15 +211,12 @@ export function Header() {
           onClick={closeMenu}
         />
 
-        {/* Panel — fondo neutro con un acento sutil aspiracional */}
+        {/* Panel — fondo neutro, sin manchas de adorno (docs/identidad-de-marca.md §4) */}
         <aside
           className={`absolute top-0 left-0 h-full w-[82%] max-w-sm bg-surface shadow-2xl border-r border-nav-inactive-border flex flex-col transition-transform duration-300 ease-out ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
           role="dialog"
           aria-modal="true"
         >
-          {/* Decorative blob discreto en lila */}
-          <div aria-hidden className="absolute top-0 right-0 w-48 h-48 bg-todopolis-lavender/25 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-          <div aria-hidden className="absolute bottom-0 left-0 w-40 h-40 bg-todopolis-blue/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 
           {/* Header del drawer */}
           <div className="relative flex items-center justify-between px-5 pt-5 pb-4 border-b border-nav-inactive-border">
@@ -280,8 +243,8 @@ export function Header() {
               onClick={closeMenu}
               className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-surface-muted border border-nav-inactive-border hover:border-todopolis-blue transition-all shadow-sm"
             >
-              <span className="w-9 h-9 rounded-xl bg-todopolis-blue/20 flex items-center justify-center shrink-0">
-                <Home className="w-4 h-4 text-todopolis-blue-deep" />
+              <span className="w-9 h-9 rounded-xl bg-surface-muted flex items-center justify-center shrink-0">
+                <Home className="w-4 h-4 text-foreground/70" />
               </span>
               <span className="font-bold text-sm text-foreground">Inicio</span>
             </Link>
@@ -309,21 +272,20 @@ export function Header() {
             <Link
               href="/ofertas"
               onClick={closeMenu}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-sale-soft border border-nav-inactive-border hover:border-sale transition-all shadow-sm"
+              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-surface-muted border border-nav-inactive-border hover:border-foreground/20 transition-all shadow-sm"
             >
-              <span className="w-9 h-9 rounded-xl bg-sale-soft flex items-center justify-center shrink-0">
-                <Zap className="w-4 h-4 text-sale" />
+              <span className="w-9 h-9 rounded-xl bg-surface-muted flex items-center justify-center shrink-0">
+                <Zap className="w-4 h-4 text-foreground/70" />
               </span>
               <span className="font-bold text-sm text-foreground">Ofertas</span>
-              <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-sale">Hot</span>
             </Link>
             <Link
               href="/colecciones"
               onClick={closeMenu}
               className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-todopolis-blue/10 border border-nav-inactive-border hover:border-todopolis-blue transition-all shadow-sm"
             >
-              <span className="w-9 h-9 rounded-xl bg-todopolis-blue/20 flex items-center justify-center shrink-0">
-                <LayoutGrid className="w-4 h-4 text-todopolis-blue-deep" />
+              <span className="w-9 h-9 rounded-xl bg-surface-muted flex items-center justify-center shrink-0">
+                <LayoutGrid className="w-4 h-4 text-foreground/70" />
               </span>
               <span className="font-bold text-sm text-foreground">Colecciones</span>
             </Link>
@@ -332,36 +294,17 @@ export function Header() {
               onClick={closeMenu}
               className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-todopolis-lavender/15 border border-nav-inactive-border hover:border-todopolis-lavender transition-all shadow-sm"
             >
-              <span className="w-9 h-9 rounded-xl bg-todopolis-lavender/30 flex items-center justify-center shrink-0">
-                <BookOpen className="w-4 h-4 text-todopolis-lavender-deep" />
+              <span className="w-9 h-9 rounded-xl bg-surface-muted flex items-center justify-center shrink-0">
+                <BookOpen className="w-4 h-4 text-foreground/70" />
               </span>
               <span className="font-bold text-sm text-foreground">Blog</span>
             </Link>
 
-            <button
-              onClick={openLucy}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface hover:bg-todopolis-lavender/15 border border-todopolis-lavender/40 transition-all shadow-sm text-left"
-              style={{ touchAction: 'manipulation' }}
-            >
-              <span className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-todopolis-blue to-todopolis-lavender flex items-center justify-center shrink-0 shadow-md">
-                <MessageCircle className="w-4 h-4 text-todopolis-blue-deep" />
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white" />
-              </span>
-              <span className="flex flex-col">
-                <span className="font-bold text-sm text-foreground leading-tight flex items-center gap-1.5">
-                  Hablar con Lucy
-                  <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md bg-gradient-to-r from-todopolis-blue/20 to-todopolis-lavender/30 text-todopolis-lavender-deep">
-                    IA
-                  </span>
-                </span>
-                <span className="text-[11px] text-foreground/60 leading-tight">Asistente IA disponible 24/7</span>
-              </span>
-            </button>
           </nav>
 
           {/* Footer del drawer */}
           <div className="relative px-5 py-4 border-t border-nav-inactive-border text-[11px] text-foreground/50 text-center">
-            Envío contraentrega a todo Colombia
+            Envío a toda Colombia · Te atendemos por WhatsApp
           </div>
         </aside>
       </div>

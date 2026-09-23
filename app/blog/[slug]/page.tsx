@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { categoryTitle } from '@/lib/categories'
 import { notFound } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -41,11 +42,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  belleza: 'Belleza', hogar: 'Hogar', electronica: 'Electrónica',
-  moda: 'Moda', accesorios: 'Accesorios', juguetes: 'Juguetes',
-  deportes: 'Deportes', otros: 'Otros',
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -58,7 +54,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) notFound()
 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
-  const category = CATEGORY_LABELS[article.category ?? ''] ?? article.category ?? 'General'
+  const category = categoryTitle(article.category) || 'General'
 
   // Schema.org BlogPosting JSON-LD
   const articleJsonLd = {

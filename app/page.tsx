@@ -54,6 +54,7 @@ export default async function Home() {
       image: p.aiLifestyleImage as string,
       name: p.name as string,
       slug: p.slug as string,
+      price: (p.price ?? 0) as number,
     }));
 
   const [storeSettings, tagTaxonomy, promoCampaign] = await Promise.all([

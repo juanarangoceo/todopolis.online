@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Archivos de trabajo del CLI de Supabase
 supabase/.temp/
+
+# Store de pnpm que crea el contenedor dev al reconstruirse (monta .:/app)
+.pnpm-store/

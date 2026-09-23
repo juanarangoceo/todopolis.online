@@ -22,7 +22,7 @@ export function PromoBanner({ campaign, variant }: Props) {
     <Link
       href="/temporada"
       aria-label={campaign.imageAlt}
-      className="block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-shadow"
+      className="block relative overflow-hidden rounded-2xl group border border-nav-inactive-border shadow-sm hover:shadow-lg transition-shadow"
     >
       <div className={isMobile ? 'relative w-full aspect-square' : 'relative w-full aspect-[16/5]'}>
         <Image
@@ -34,14 +34,19 @@ export function PromoBanner({ campaign, variant }: Props) {
           priority={false}
         />
 
-        {campaign.ctaLabel && (
-          <div className="absolute inset-0 flex items-end md:items-center justify-center md:justify-end p-5 md:p-10">
-            <span className="px-5 py-2.5 rounded-full bg-white/95 backdrop-blur text-foreground text-sm md:text-base font-bold shadow-md group-hover:bg-white transition-colors">
-              {campaign.ctaLabel} →
-            </span>
-          </div>
-        )}
       </div>
+
+      {/* El botón va DEBAJO de la imagen, no encima. Las piezas de campaña
+          traen su propio texto (y a veces su propio botón) pintado en la
+          imagen, y el botón superpuesto caía encima de ese texto. */}
+      {campaign.ctaLabel && (
+        <div className="flex items-center justify-between gap-3 bg-surface px-4 py-3 md:px-6">
+          <span className="min-w-0 truncate text-sm font-semibold text-foreground/70">{campaign.pageHeading}</span>
+          <span className="shrink-0 text-sm font-bold text-ink-title transition-transform group-hover:translate-x-0.5">
+            {campaign.ctaLabel} →
+          </span>
+        </div>
+      )}
     </Link>
   );
 }

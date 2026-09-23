@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import Link from 'next/link'
+import { categoryTitle } from '@/lib/categories'
 import { X, Clock, BookOpen } from 'lucide-react'
 import { ArticleSections } from '@/components/blog/article-sections'
 import { SanityArticle } from '@/lib/types'
@@ -19,16 +20,6 @@ import { SanityArticle } from '@/lib/types'
 // (SEO + abrir en pestaña nueva con ctrl/cmd-click siguen funcionando); solo se
 // intercepta el click normal.
 
-const CATEGORY_LABELS: Record<string, string> = {
-  belleza: 'Belleza',
-  hogar: 'Hogar',
-  electronica: 'Electrónica',
-  moda: 'Moda',
-  accesorios: 'Accesorios',
-  juguetes: 'Juguetes',
-  deportes: 'Deportes',
-  otros: 'Otros',
-}
 
 interface ArticleModalContextValue {
   openArticle: (slug: string) => void
@@ -121,7 +112,7 @@ export function ArticleModalProvider({
   }, [slug, article])
 
   const category = article
-    ? CATEGORY_LABELS[article.category ?? ''] ?? article.category ?? 'General'
+    ? categoryTitle(article.category) || 'General'
     : null
 
   return (

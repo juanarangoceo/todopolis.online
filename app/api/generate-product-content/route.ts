@@ -8,6 +8,7 @@ import {
 } from '@/lib/product-content-prompt'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 import { PRODUCT_CATEGORIES, isProductCategory } from '@/lib/categories'
+import { askJev, decideCategory } from '@/lib/category-classifier'
 import { urlForImage } from '@/lib/sanity/image'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -102,6 +103,11 @@ export async function POST(request: NextRequest) {
 
     const userPrompt = `Producto: ${name}\n\nDescripción: ${shortDescription}`
 
+    // Sin categoría elegida, la decide JEV (lib/category-classifier.ts), en
+    // paralelo con Gemini. La sugerencia de Gemini queda de respaldo si JEV no
+    // responde o duda.
+    const jevPromise = category ? null : askJev({ name, description: shortDescription })
+
     // Las fotos van primero y el texto de último: es el orden que recomienda
     // Gemini para que el modelo lea la instrucción con las imágenes ya vistas.
     const promptParts = [
@@ -167,9 +173,11 @@ export async function POST(request: NextRequest) {
 
     // La categoría del modelo se valida contra el catálogo antes de salir: un
     // valor inventado ensucia el dataset igual que los que estamos limpiando.
-    const suggestedCategory = isProductCategory(content.suggestedCategory)
-      ? content.suggestedCategory
-      : null
+    const geminiCategory = isProductCategory(content.suggestedCategory) ? content.suggestedCategory : null
+    const decision = jevPromise ? decideCategory(await jevPromise, [geminiCategory]) : null
+    // «otros» sin respaldo = nadie supo: mejor dejar el campo vacío para que el
+    // editor elija que rellenarlo con el cajón de sastre.
+    const suggestedCategory = decision && decision.source !== 'otros' ? decision.category : null
 
     return NextResponse.json({
       ...content,

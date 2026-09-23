@@ -2,31 +2,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { generateAndSaveArticle } from './generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from './auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from './product-content-prompt'
+import { classifyFromSource } from './category-classifier'
 import { audienceFitFromAi } from './audience-fit'
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 const PAGE_LIMIT = 50
 
-const CATEGORY_MAP: Record<string, string> = {
-  'Salud, belleza y cuidado personal': 'belleza',
-  'Hogar, Muebles, Cocina': 'hogar',
-  'Tecnología y electrodomésticos': 'electronica',
-  'Tecnología y electrodomesticos': 'electronica',
-  'Moda, Ropa y Accesorios': 'moda',
-  'Relojes y Joyas': 'accesorios',
-  'Animales y Mascotas': 'otros',
-  'Bebés, juegos y juguetes': 'juguetes',
-  'Deportes y Fitness': 'deportes',
-  Vehículos: 'otros',
-  'Librerías y papelería': 'otros',
-  Herramientas: 'otros',
-  Otros: 'otros',
-  'Adultos': 'bienestar-intimo',
-  'Eróticos': 'bienestar-intimo',
-  'Bienestar sexual': 'bienestar-intimo',
-  'Juguetes adultos': 'bienestar-intimo',
-  'Lencería': 'bienestar-intimo',
-}
 
 
 function log(msg: string) {
@@ -172,7 +153,9 @@ async function importProduct(
   const suggestedPrice: number = p.suggestedPrice ?? 0
   const imageUrl: string | null = p.urlImageProduct ?? null
   const categoryRaw: string = p.prodFormatName ?? ''
-  const category = CATEGORY_MAP[categoryRaw] ?? 'otros'
+  // La categoría la decide JEV con la de Mastershop como pista y respaldo
+  // (lib/category-classifier.ts). Va antes del tagging porque lo alimenta.
+  const { category } = await classifyFromSource({ name, description, sourceCategory: categoryRaw })
 
   const genAI = new GoogleGenerativeAI(geminiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' })

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, Sparkles, X, Wand2 } from 'lucide-react';
+import { Search, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MagicSearchBarProps {
@@ -13,7 +13,7 @@ interface MagicSearchBarProps {
   initialQuery?: string;
 }
 
-export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto mágico…", compact = false, initialQuery = '' }: MagicSearchBarProps) {
+export function MagicSearchBar({ onSearch, placeholder = "Buscar productos…", compact = false, initialQuery = '' }: MagicSearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,55 +57,26 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto mág
 
   return (
     <div className={cn("relative w-full", compact ? "max-w-full" : "max-w-3xl mx-auto px-4")}>
-      {/* Glow neutro: azul + lila, sin coral. Búsqueda = herramienta universal */}
+      {/* Sin halo difuminado, sin partículas rebotando y sin varita: la barra
+          es una herramienta, y lo que se mueve alrededor de un campo de texto
+          distrae justo cuando alguien está escribiendo. El foco se nota en el
+          borde. */}
       <div
         className={cn(
-          "absolute inset-0 rounded-2xl md:rounded-3xl transition-all duration-700 mx-2 md:mx-4",
-          isFocused
-            ? "bg-gradient-to-r from-todopolis-blue/35 via-todopolis-lavender/30 to-todopolis-blue/35 blur-2xl scale-110 opacity-100"
-            : "bg-surface-muted/30 blur-xl scale-100 opacity-50"
-        )}
-      />
-
-      {/* Floating particles when focused */}
-      {isFocused && (
-        <>
-          <div className="absolute -top-4 left-1/4 w-2 h-2 bg-todopolis-blue rounded-full animate-bounce opacity-60" style={{ animationDuration: '1.5s' }} />
-          <div className="absolute -top-2 right-1/3 w-1.5 h-1.5 bg-todopolis-lavender rounded-full animate-bounce opacity-70" style={{ animationDuration: '2s', animationDelay: '0.3s' }} />
-          <div className="absolute -bottom-3 left-1/3 w-2 h-2 bg-todopolis-blue rounded-full animate-bounce opacity-60" style={{ animationDuration: '1.8s', animationDelay: '0.5s' }} />
-          <div className="absolute -bottom-2 right-1/4 w-1.5 h-1.5 bg-todopolis-lime rounded-full animate-bounce opacity-70" style={{ animationDuration: '2.2s', animationDelay: '0.7s' }} />
-        </>
-      )}
-
-      {/* Search container — border azul al hacer focus */}
-      <div
-        className={cn(
-          "relative flex items-center gap-2 transition-all duration-500",
+          "relative flex items-center gap-2 transition-colors duration-200",
           compact
-            ? "px-4 py-1.5 rounded-xl bg-surface/95 backdrop-blur-2xl"
-            : "gap-4 px-3 py-3 md:px-6 md:py-5 rounded-2xl md:rounded-3xl bg-surface/95 backdrop-blur-2xl mx-0",
+            ? "h-11 pl-3.5 pr-1.5 rounded-xl bg-surface"
+            : "gap-3 px-3 py-3 md:px-5 md:py-4 rounded-2xl md:rounded-3xl bg-surface mx-0",
           isFocused
-            ? "border-2 border-todopolis-blue shadow-lg shadow-todopolis-blue/20 scale-[1.01]"
-            : "border-2 border-nav-inactive-border shadow-sm"
+            ? "border-2 border-todopolis-lavender-deep/50 shadow-md"
+            : "border-2 border-nav-inactive-border shadow-sm hover:border-todopolis-lavender-deep/25"
         )}
       >
-        {/* Wand icon */}
-        <div className={cn(
-          "hidden md:block rounded-xl transition-all duration-300",
-          compact ? "p-1.5" : "p-2.5",
-          isFocused
-            ? "bg-todopolis-blue/30"
-            : "bg-surface-muted"
-        )}>
-          <Wand2
-            className={cn(
-              "transition-all duration-300",
-              compact ? "w-4 h-4" : "w-5 h-5",
-              "text-todopolis-blue-deep"
-            )}
-          />
-        </div>
-        
+        <Search
+          aria-hidden
+          className={cn("shrink-0 transition-colors", compact ? "w-4 h-4" : "w-5 h-5", isFocused ? "text-todopolis-lavender-deep" : "text-foreground/40")}
+        />
+
         <input
           ref={inputRef}
           type="text"
@@ -113,6 +84,16 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto mág
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          // Enter busca YA (sin esperar los 300 ms) y, en móvil, baja el
+          // teclado para que se vean los resultados.
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            lastSent.current = query;
+            onSearch(query);
+            inputRef.current?.blur();
+          }}
+          enterKeyHint="search"
+          aria-label="Buscar productos"
           placeholder={placeholder}
           className={cn(
             "flex-1 w-full min-w-0 bg-transparent text-foreground placeholder:text-foreground/40 focus:outline-none font-sans font-medium",
@@ -124,7 +105,7 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto mág
           <button
             onClick={handleClear}
             className={cn(
-              "rounded-xl hover:bg-surface-muted transition-colors",
+              "shrink-0 rounded-lg hover:bg-surface-muted transition-colors",
               compact ? "p-1.5" : "p-2"
             )}
             aria-label="Limpiar busqueda"
@@ -133,19 +114,9 @@ export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto mág
           </button>
         )}
 
-        {/* Search button — azul, no coral */}
-        <button
-          className={cn(
-            "rounded-xl transition-all duration-300 shrink-0",
-            compact ? "p-2" : "p-2 md:p-3",
-            "bg-todopolis-blue hover:bg-todopolis-blue-deep",
-            "shadow-md shadow-todopolis-blue/30",
-            "hover:scale-105"
-          )}
-          aria-label="Buscar"
-        >
-          <Search className={cn("text-todopolis-blue-deep", compact ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5")} />
-        </button>
+        {/* La búsqueda es en vivo (300 ms), así que no hay botón «Buscar»:
+            el que había no hacía nada y, al pasar el ratón, se ponía azul
+            oscuro con el ícono también azul oscuro encima. */}
       </div>
 
       {/* Helper text */}

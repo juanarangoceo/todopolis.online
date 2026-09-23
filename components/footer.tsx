@@ -7,6 +7,7 @@ import { Instagram, Facebook, Sparkles, Heart, X } from 'lucide-react';
 import { advancePaymentVisible } from '@/components/payment-methods';
 import { BUSINESS, SOCIAL } from '@/lib/legal';
 import { CookiePreferences } from '@/components/cookie-preferences';
+import { FooterSubscribe } from '@/components/footer-subscribe';
 
 // ── Modal content ────────────────────────────────────────────────────────────
 
@@ -66,6 +67,14 @@ const supportContent: Record<string, { title: string; body: React.ReactNode }> =
   },
 };
 
+const EXPLORE_LINKS = [
+  { href: '/', label: 'Inicio' },
+  { href: '/destacados', label: 'Destacados' },
+  { href: '/ofertas', label: 'Ofertas' },
+  { href: '/colecciones', label: 'Colecciones' },
+  { href: '/blog', label: 'Blog' },
+] as const;
+
 const LEGAL_LINKS = [
   { href: '/privacidad', label: 'Política de Privacidad' },
   { href: '/terminos', label: 'Términos y Condiciones' },
@@ -114,7 +123,9 @@ function SupportModal({ item, onClose }: { item: string; onClose: () => void }) 
 // `flush`: sin margen superior. La ficha termina en el cierre, que ya tiene su
 // propio fondo; los 96 px del margen dejaban una franja blanca suelta entre el
 // cierre y el pie.
-export function Footer({ showPaymentExplainer = true, flush = false }: { showPaymentExplainer?: boolean; flush?: boolean } = {}) {
+// `productSlug`: en la ficha, la suscripción del pie guarda desde qué producto
+// llegó el suscriptor, como hacía el antiguo formulario de la ficha.
+export function Footer({ showPaymentExplainer = true, flush = false, productSlug }: { showPaymentExplainer?: boolean; flush?: boolean; productSlug?: string } = {}) {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   // Privacidad y Términos salieron de aquí: ahora son páginas con URL propia
@@ -133,6 +144,8 @@ export function Footer({ showPaymentExplainer = true, flush = false }: { showPay
         
         <div className="bg-[#2D2D2D] text-white">
           <div className="container mx-auto px-4 py-16">
+            <FooterSubscribe productSlug={productSlug} />
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               {/* Brand */}
               <div>
@@ -176,14 +189,16 @@ export function Footer({ showPaymentExplainer = true, flush = false }: { showPay
                   Explorar
                 </h4>
                 <ul className="space-y-4">
-                  {['Inicio', 'Productos', 'Categorias', 'Ofertas'].map((item) => (
-                    <li key={item}>
-                      <Link 
-                        href="/" 
+                  {/* Los cuatro enlaces de antes («Inicio», «Productos»,
+                      «Categorias», «Ofertas») llevaban TODOS a «/». */}
+                  {EXPLORE_LINKS.map(({ href, label }) => (
+                    <li key={href}>
+                      <Link
+                        href={href}
                         className="text-sm text-white/60 hover:text-[#FFB4AC] transition-colors font-serif flex items-center gap-2 group"
                       >
                         <span className="w-0 group-hover:w-2 h-0.5 bg-[#FFB4AC] transition-all duration-300" />
-                        {item}
+                        {label}
                       </Link>
                     </li>
                   ))}

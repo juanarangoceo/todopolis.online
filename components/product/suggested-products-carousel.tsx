@@ -8,9 +8,11 @@ import { cn } from '@/lib/utils';
 
 interface SuggestedProductsCarouselProps {
   products: Product[];
+  /** Ancho de cada tarjeta. Por defecto el de la ficha (70vw en móvil). */
+  itemClassName?: string;
 }
 
-export function SuggestedProductsCarousel({ products }: SuggestedProductsCarouselProps) {
+export function SuggestedProductsCarousel({ products, itemClassName = 'w-[70vw] md:w-[280px] lg:w-[300px]' }: SuggestedProductsCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -63,11 +65,11 @@ export function SuggestedProductsCarousel({ products }: SuggestedProductsCarouse
       <div
         ref={scrollRef}
         onScroll={updateButtons}
-        className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4"
+        className="flex gap-3 md:gap-6 overflow-x-auto snap-x snap-mandatory scroll-px-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:scroll-px-0"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {products.map((product, index) => (
-          <div key={product.id} data-suggested className="w-[70vw] md:w-[280px] lg:w-[300px] shrink-0 snap-start">
+          <div key={product.id} data-suggested className={cn(itemClassName, 'shrink-0 snap-start')}>
             <ProductCard product={product} index={index} />
           </div>
         ))}

@@ -20,20 +20,23 @@ interface ProductGridProps {
   // Si llega, el estado vacío ofrece quitar los filtros: sin resultados, la
   // única salida útil es volver atrás, y no debería tocar buscarla arriba.
   onClearFilters?: () => void;
+  /** Contenido extra bajo el estado vacío (p. ej. sugerencias de búsqueda). */
+  emptyExtra?: ReactNode;
 }
 
 const PAGE_SIZE = 24;
 // Posiciones donde insertar el slot. Mobile/sm: 2 cols → tras 4. lg+: 3-4 cols → tras 8.
 const SLOT_AFTER_MOBILE = 4;
 const SLOT_AFTER_DESKTOP = 8;
-// El slot repetido. El PRIMERO va alto a propósito —es inspiración, tiene que
-// verse pronto—: tras 4 productos, que con 4 columnas es justo después de la
-// primera fila y con 2 columnas después de la segunda. Luego cada 12, o sea una
-// fila de inspiración cada ~3 filas de productos.
-const REPEAT_FIRST_AFTER = 4;
-const REPEAT_EVERY = 12;
+// El slot repetido (carriles de inspiración). Primero tras 16 productos —4
+// filas en escritorio, justo después del banner promocional que va tras la
+// 2ª— y luego cada 24. Antes era tras 4 y cada 12: ~48 carriles en 574
+// productos con solo ~39 imágenes, así que el mismo carril volvía cada dos
+// pantallas y el catálogo se leía como relleno entre carriles.
+const REPEAT_FIRST_AFTER = 16;
+const REPEAT_EVERY = 24;
 
-export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, onClearFilters }: ProductGridProps) {
+export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, onClearFilters, emptyExtra }: ProductGridProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -70,9 +73,9 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, 
         <h3 className="text-2xl font-sans font-bold text-foreground mb-3">
           No encontramos resultados
         </h3>
-        <p className="text-foreground/60 text-center max-w-md font-serif">
+        <p className="text-foreground/60 text-center max-w-md">
           {searchQuery
-            ? `No hay productos que coincidan con "${searchQuery}". Intenta con otra busqueda.`
+            ? `No hay productos que coincidan con «${searchQuery}». Prueba con otra palabra.`
             : 'No hay productos disponibles en este momento.'
           }
         </p>
@@ -85,6 +88,7 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, 
             Quitar filtros y ver todo
           </button>
         )}
+        {emptyExtra}
       </div>
     );
   }

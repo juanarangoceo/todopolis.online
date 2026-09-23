@@ -4,7 +4,6 @@ import Script from 'next/script'
 import './globals.css'
 import { FavoritesProvider } from '@/app/providers/favorites-provider'
 import { CartProvider } from '@/app/providers/cart-provider'
-import { LucyChatButton } from '@/components/lucy/lucy-chat-button'
 import { WhatsAppButton } from '@/components/whatsapp-button'
 import { MetaPixel } from '@/components/analytics/meta-pixel'
 import { AttributionTracker } from '@/components/analytics/attribution-tracker'
@@ -137,7 +136,6 @@ export default async function RootLayout({
         <FavoritesProvider>
           <CartProvider>
             {children}
-            <LucyChatButton />
             <WhatsAppButton phone={storeSettings?.whatsappPhone ?? null} />
           </CartProvider>
         </FavoritesProvider>
