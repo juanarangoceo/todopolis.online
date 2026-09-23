@@ -73,7 +73,9 @@ const SANITY_BASE = `https://${PROJECT}.api.sanity.io/v${API_VERSION}/data`
 const GEMINI_MODEL = 'gemini-3.8-flash'
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`
 
-const CONCURRENCY = 5
+// 2 y no más: con 5 en paralelo JEV devolvía timeouts y «alta demanda» en
+// la mitad de las llamadas (23-sep-2026).
+const CONCURRENCY = 2
 const MAX_RETRIES = 2
 const MUTATION_BATCH = 50
 
