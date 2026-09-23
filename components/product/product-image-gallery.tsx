@@ -57,12 +57,9 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
           priority
           loading="eager"
         />
-        {discount > 0 && (
-          <span className="absolute top-4 left-4 px-3 py-1.5 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 bg-sale">
-            <Zap className="w-3.5 h-3.5" />
-            -{discount}%
-          </span>
-        )}
+        {/* Sin burbuja de descuento sobre la foto: el −X% ya va junto al
+            precio, que es donde se decide, y encima del producto tapaba la
+            foto que el comprador vino a ver. */}
       </div>
 
       {/* Miniaturas — fila horizontal bajo la imagen.

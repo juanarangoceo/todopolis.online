@@ -370,8 +370,17 @@ El formulario pide **nombre y apellido, celular, departamento, ciudad o municipi
 - **`price` se guarda POR UNIDAD en las dos vías** (total ÷ cantidad). El panel, los ingresos y el `Purchase` de Meta calculan `price × quantity`; contraentrega guardaba el total y un pedido de 2 unidades se habría contado doble.
 - Los datos del último pedido se recuerdan en el navegador (`localStorage`, `tp_delivery_v1`) para quien vuelve a comprar.
 
-### Los pedidos web NO llegan a Nitro
-Verificado el 23-sep-2026. Todopolis (Supabase `sfargytzulstppnbatjx`) y Nitro (`snbxdzytpwibctepuiwq`) son bases distintas, y lo único que viaja entre los dos es el **catálogo** (Todopolis → Nitro, HMAC, `/api/integrations/todopolis/catalog`), que funciona. Los pedidos de la web se quedan en la tabla `orders` de Todopolis y se gestionan en `/admin/pedidos`. En el panel de Nitro solo aparecen los que cierra el bot por WhatsApp (`nativo`) y los de Nitro Landing.
+### Los pedidos web llegan a Nitro (`order.v1`, desde 23-sep-2026)
+Todopolis (Supabase `sfargytzulstppnbatjx`) y Nitro (`snbxdzytpwibctepuiwq`) son bases distintas. Cada pedido viaja a Nitro con el mismo patrón que el catálogo:
+
+1. El trigger **`orders_enqueue_nitro`** encola un evento en `order_outbox` cada vez que un pedido nace o cambia algo que Nitro muestra (`order_nitro_payload`). Es un trigger y no código en cada ruta porque un pedido cambia por muchas vías (checkout, Confío, conciliación, panel); **no lo reemplaces por llamadas sueltas**. Si encolar falla, el pedido se guarda igual.
+2. El cron **`/api/cron/catalog-dispatch`** (cada minuto) despacha catálogo Y pedidos, cada uno por su lado. `lib/nitro-order-outbox.ts` firma con `TODOPOLIS_NITRO_INTEGRATION_SECRET` y reintenta hasta 8 veces.
+3. Nitro los recibe en `/api/integrations/todopolis/orders` y los guarda en **`web_orders`, no en `orders`**: su `orders` es la tabla de ventas del asesor, y un pedido web ahí contaría como venta del bot en métricas y facturación.
+
+- La URL sale de `NITRO_ORDERS_ENDPOINT` o, si no está, de `NITRO_CATALOG_ENDPOINT` cambiando `/catalog` por `/orders`.
+- **La fuente de verdad del estado es `/admin/pedidos` de Todopolis** (ahí se dispara el `Purchase`). En Nitro la sección «Pedidos de la web» es solo lectura.
+- Revisar la cola: `select status, count(*) from order_outbox group by 1`. `dead` = Nitro rechazó 8 veces; `last_error` dice por qué.
+- **Pendiente**: confirmación por WhatsApp al comprador desde Nitro. Necesita una plantilla aprobada en Meta.
 
 ## Pago anticipado con Confío — no romper
 
@@ -488,7 +497,8 @@ Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/de
 - **Estilo**: antetítulo gris con filete, no pastillas con estrella; beneficios abiertos y numerados, sin emoji; listas con filetes, no tarjetas. Los subtítulos «Sin filtros, sin retoques» y «Sin actores ni stock» se quitaron: son afirmaciones que la tienda no puede sostener sobre fotos que sube un editor.
 - El logo de `CampaignHeader` enlaza al home.
 - **Hero**: el titular de campaña reemplaza al gancho de la IA en Destacados; la descripción va en viñetas sin emoji; el subtítulo se oculta en móvil; bajo el botón van tres hechos en tres renglones (no el recuadro de pagos ni las cajas de confianza).
-- **WhatsApp en móvil va DENTRO de la barra fija de compra**; la burbuja flotante (`whatsapp-button.tsx`) no se pinta en la ficha en móvil, porque tapaba el nombre del producto.
+- **Barra fija de compra en móvil: solo en la ficha NORMAL.** En Destacados la cabecera de campaña ya lleva «Comprar» fijo arriba y la barra de abajo sobraba; ahí WhatsApp es una burbuja abajo a la izquierda (la pinta `product-hero.tsx`). En la ficha normal la barra se queda —su cabecera no tiene botón de compra— y WhatsApp va DENTRO de ella. La burbuja global (`whatsapp-button.tsx`) no se pinta en ninguna ficha en móvil.
+- **Sin burbuja de descuento sobre la foto principal.** El −X% va junto al precio.
 
 ### El precio de venta es `product.price`. El `price` de una variante es el COSTO
 En `variants[]`, el campo `price` («Precio Mastershop») es lo que cobra el proveedor, no lo que paga el cliente: el reloj infantil se vende a $82.900 y su variante dice $55.000. `app/api/checkout/confio` lo usaba como precio unitario, así que **Confío cobraba el costo** en los 65 productos con variantes (corregido sep 2026). Ninguna ruta de cobro, ficha ni checkout debe leer `variant.price` como precio.
