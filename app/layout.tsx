@@ -66,9 +66,8 @@ export const metadata: Metadata = {
     title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
     description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
   },
-  icons: {
-    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
-  },
+  // Sin `icons`: `/icon.svg` no existe y cada página pedía un 404. Next sirve
+  // solo `app/favicon.ico`, que sí existe.
 }
 
 // JSON-LD de marca — base para Google y agentes IA (GEO).
