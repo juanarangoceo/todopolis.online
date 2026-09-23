@@ -1,6 +1,7 @@
 'use client'
 
 import { Banknote, CircleCheck, Landmark, ShieldCheck, Smartphone } from 'lucide-react'
+import { ConfioLogo } from './confio-logo'
 import { cn } from '@/lib/utils'
 
 // Los medios de pago que aceptamos, en UN solo sitio. Antes cada bloque de la
@@ -107,8 +108,8 @@ export function PaymentMethods({
         {advance && (
           <div className="rounded-xl border border-todopolis-lavender bg-todopolis-lavender/25 p-3 shadow-sm">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface text-todopolis-lavender-deep shadow-sm">
-                <ShieldCheck className="h-4 w-4" />
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface shadow-sm">
+                <ConfioLogo variant="icon" className="h-6 w-6" />
               </span>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-todopolis-lavender-deep/70">

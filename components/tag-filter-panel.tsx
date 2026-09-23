@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { X, Search, ChevronDown } from 'lucide-react';
+import { X, Search, ChevronDown, Check } from 'lucide-react';
 import type { TagTaxonomyEntry } from '@/lib/types';
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   onToggle: (slug: string) => void;
   onClear: () => void;
   matchCounts: Map<string, number>;
+  resultCount?: number;
 }
 
 const GROUP_LABELS: Record<string, { label: string; icon: string }> = {
@@ -25,7 +26,7 @@ const GROUP_LABELS: Record<string, { label: string; icon: string }> = {
 
 const GROUP_ORDER = ['audiencia', 'nicho', 'beneficio', 'atributo', 'ocasion', 'promo'];
 
-export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClear, matchCounts }: Props) {
+export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClear, matchCounts, resultCount }: Props) {
   const [search, setSearch] = useState('');
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -95,7 +96,7 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-foreground">Filtros</h2>
             {selectedCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-cta text-cta-fg text-xs font-bold">
+              <span className="px-2 py-0.5 rounded-full bg-todopolis-lavender-deep text-white text-xs font-bold">
                 {selectedCount}
               </span>
             )}
@@ -138,7 +139,6 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
                   className="w-full flex items-center justify-between py-2 text-left"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-base">{meta.icon}</span>
                     <span className="text-sm font-bold text-foreground/80 uppercase tracking-wide">
                       {meta.label}
                     </span>
@@ -172,7 +172,7 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
                                 : 'bg-tag-inactive-bg text-tag-inactive-fg hover:bg-todopolis-lavender/25 hover:text-tag-active-fg border border-tag-inactive-border'
                             }`}
                         >
-                          {tag.icon && <span>{tag.icon}</span>}
+                          {isSelected && <Check className="w-3 h-3" strokeWidth={3} />}
                           <span>{tag.name}</span>
                           {count > 0 && (
                             <span className={`text-[10px] ${isSelected ? 'text-tag-active-fg/70' : 'text-foreground/40'}`}>
@@ -206,9 +206,11 @@ export function TagFilterPanel({ open, onClose, tags, selected, onToggle, onClea
           </button>
           <button
             onClick={onClose}
-            className="flex-[2] py-2.5 rounded-xl text-sm font-bold bg-cta text-cta-fg shadow-md hover:bg-cta-hover transition-colors"
+            className="flex-[2] py-2.5 rounded-xl text-sm font-bold bg-ink-title text-white shadow-md hover:opacity-90 transition-opacity"
           >
-            Ver resultados
+            {resultCount === undefined
+              ? 'Ver resultados'
+              : `Ver ${resultCount} ${resultCount === 1 ? 'producto' : 'productos'}`}
           </button>
         </div>
       </div>

@@ -22,6 +22,7 @@ export function GenerateContentButton(props: any) {
   const images = useFormValue(['images']) as any[]
   const mastershopImageUrl = useFormValue(['mastershopImageUrl']) as string | undefined
   const docId = useFormValue(['_id']) as string
+  const currentStory = useFormValue(['vipStory']) as Record<string, unknown> | undefined
   const client = useClient({ apiVersion: '2023-01-01' })
 
   // Las fotos son la mitad del input: la IA las mira para sacar material, color,
@@ -98,8 +99,10 @@ export function GenerateContentButton(props: any) {
 
       // Se guarda aun antes de activar Destacado. De ese modo el editor puede
       // revisar la historia y después encender la campaña sin regenerar todo.
+      // Se MEZCLA con lo que haya: el texto se reescribe, pero las imágenes
+      // que el editor subió a cada momento se conservan.
       if (generated.campaignStory) {
-        patchData.vipStory = generated.campaignStory
+        patchData.vipStory = { ...(currentStory ?? {}), ...generated.campaignStory }
       }
 
       // «¿Es para ti?» — misma validación que el import y el cron.

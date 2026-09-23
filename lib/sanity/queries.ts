@@ -158,7 +158,13 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
     turningPointTitle,
     turningPointText,
     outcomeTitle,
-    outcomeText
+    outcomeText,
+    "problemImage": problemImage.asset->url,
+    "problemImageAlt": problemImage.alt,
+    "turningPointImage": turningPointImage.asset->url,
+    "turningPointImageAlt": turningPointImage.alt,
+    "outcomeImage": outcomeImage.asset->url,
+    "outcomeImageAlt": outcomeImage.alt
   },
   "destacadoHeroVideo": vipHeroVideo {
     url,
@@ -185,7 +191,8 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
     "image": image.asset->url,
     "imageAlt": image.alt,
     intro,
-    items
+    items,
+    "pieces": pieces[defined(image.asset)] { _key, label, "image": image.asset->url }
   },
   "destacadoComparison": vipComparison {
     title,

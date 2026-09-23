@@ -13,7 +13,7 @@ import {
   Sparkles, Grid, Watch, HeartPulse,
   Laptop, Home, Shirt, Dumbbell, Gamepad2,
   Droplets, Utensils, SlidersHorizontal, X,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Check, Search
 } from 'lucide-react';
 import { AgeGate } from '@/components/age-gate';
 
@@ -81,11 +81,18 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const q = params.get('q');
-      if (q) setSearchQuery(q);
+      if (q) {
+        setSearchQuery(q);
+        // Las barras de búsqueda montan vacías: se les dice qué mostrar.
+        window.dispatchEvent(new CustomEvent('magic-search:set', { detail: q }));
+      }
       const tagsParam = params.get('tags');
       if (tagsParam) {
         setSelectedTags(new Set(tagsParam.split(',').filter(Boolean)));
       }
+      // Bienestar Íntimo no se restaura desde la URL: pasa por el aviso de edad.
+      const cat = params.get('categoria');
+      if (cat && cat !== 'Bienestar Íntimo') setActiveCategory(cat);
     }
 
     // Listen for logo click to reset home state
@@ -93,6 +100,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
       setActiveCategory('Todos');
       setSearchQuery('');
       setSelectedTags(new Set());
+      window.dispatchEvent(new CustomEvent('magic-search:set', { detail: '' }));
     };
     window.addEventListener('todopolis:reset-home', handleResetHome);
     return () => window.removeEventListener('todopolis:reset-home', handleResetHome);
@@ -105,7 +113,8 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     return () => window.removeEventListener('resize', updateTagsScrollState);
   }, [updateTagsScrollState, tagTaxonomy]);
 
-  // Persistir selección de tags en la URL sin recargar (compartible/bookmarkable).
+  // Persistir búsqueda, categoría y etiquetas en la URL sin recargar
+  // (compartible, y el botón «atrás» desde una ficha vuelve al mismo listado).
   // IMPORTANTE: preservar window.history.state — pasar null rompe el router de
   // Next.js (back navigation sale del sitio). Y evitar replaceState innecesarios
   // cuando la URL no cambió.
@@ -117,12 +126,33 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     } else {
       params.delete('tags');
     }
+    if (searchQuery.trim()) {
+      params.set('q', searchQuery.trim());
+    } else {
+      params.delete('q');
+    }
+    if (activeCategory !== 'Todos' && activeCategory !== 'Bienestar Íntimo') {
+      params.set('categoria', activeCategory);
+    } else {
+      params.delete('categoria');
+    }
     const newSearch = params.toString();
     const newUrl = `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
     if (currentUrl === newUrl) return;
     window.history.replaceState(window.history.state, '', newUrl);
-  }, [selectedTags]);
+  }, [selectedTags, activeCategory, searchQuery]);
+
+  // En móvil la fila de categorías se desliza: si la activa quedó fuera de la
+  // vista (p. ej. al llegar con `?categoria=Hogar`), se trae al centro.
+  const categoryNavRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const nav = categoryNavRef.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!nav || !active) return;
+    const target = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+    nav.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+  }, [activeCategory]);
 
   const categories = useMemo(() => {
     const masterCategories = [
@@ -202,6 +232,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
   // promocional y los carriles de inspiración.
   const isCleanListing = !searchQuery && activeCategory === 'Todos' && selectedTags.size === 0;
 
+
   const filteredProducts = useMemo(() => {
     const base = filterProducts(searchQuery, activeCategory, selectedTags);
     if (!isCleanListing || featuredIds.length === 0) return base;
@@ -257,8 +288,21 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
       setAgeGatePending(true);
       return;
     }
-    setActiveCategory(cat);
+    // Tocar la categoría activa la quita: es lo que se espera de un filtro, y
+    // antes la única salida era encontrar «Todos» al principio de la fila.
+    setActiveCategory((prev) => (prev === cat ? 'Todos' : cat));
   }, []);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    window.dispatchEvent(new CustomEvent('magic-search:set', { detail: '' }));
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setActiveCategory('Todos');
+    setSelectedTags(new Set());
+    clearSearch();
+  }, [clearSearch]);
 
   return (
     <>
@@ -272,216 +316,210 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
 
       {/* Portal: desktop search bar into header slot */}
       {headerSlot && createPortal(
-        <MagicSearchBar onSearch={handleSearch} compact />,
+        <MagicSearchBar onSearch={handleSearch} compact initialQuery={searchQuery} />,
         headerSlot
       )}
 
-      {/* Top Categories Navigation (Desktop & Mobile) */}
-      <div className="w-full relative z-30 bg-surface/80 backdrop-blur-md border-b border-todopolis-blue/20">
-        {/* Mobile Categories */}
-        <div className="md:hidden w-full flex overflow-x-auto gap-3 pt-4 pb-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {categories.map((cat) => {
-            const Icon = getCategoryIcon(cat);
-            const isActive = activeCategory === cat;
-            return (
-              <button
-                key={`mobile-cat-${cat}`}
-                onClick={() => handleCategoryClick(cat)}
-                className="flex flex-col items-center gap-2 shrink-0"
-              >
-                <div className={`w-15 h-15 md:w-16 md:h-16 rounded-full flex items-center justify-center border-[3px] p-0.5 transition-all ${isActive ? 'border-todopolis-blue-deep' : 'border-transparent'}`}>
-                  <div className={`w-12 h-12 md:w-full md:h-full rounded-full flex items-center justify-center ${isActive ? 'bg-nav-active-bg text-nav-active-fg shadow-md' : 'bg-nav-inactive-bg text-nav-inactive-fg'}`}>
-                    <Icon className="w-5 h-5 md:w-6 md:h-6" />
-                  </div>
-                </div>
-                <span className={`text-[10px] md:text-[11px] font-bold text-center w-16 md:w-20 truncate px-1 ${isActive ? 'text-foreground' : 'text-foreground/60'}`}>
-                  {cat}
-                </span>
-              </button>
-            )
-          })}
-          <div className="shrink-0 w-2" />
+      {/* ─── Filtros del catálogo ────────────────────────────────────────
+          Dos filas con UN solo estilo en móvil y escritorio:
+            1. Categorías — excluyentes, en lavanda (interfaz).
+            2. «Filtros» + etiquetas destacadas — acumulables, en contorno.
+          Antes las categorías eran círculos en móvil y botones en escritorio
+          (en escritorio partían en dos renglones con «Otros» solo en el
+          segundo), y lo activo no se podía quitar desde donde se veía.
+          Quitar vive ahora en «Filtros aplicados», justo sobre la cuadrícula. */}
+      <div className="w-full border-b border-nav-inactive-border bg-surface">
+        {/* Búsqueda en móvil: primero, que es lo que más se usa con el pulgar */}
+        <div className="md:hidden px-4 pt-3">
+          <MagicSearchBar onSearch={handleSearch} compact />
         </div>
 
-        {/* Desktop Categories */}
-        <div className="hidden md:flex container mx-auto px-4 py-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-            {categories.map((cat) => {
-              const Icon = getCategoryIcon(cat);
-              const isActive = activeCategory === cat;
-              return (
-                <button
-                  key={`desktop-cat-${cat}`}
-                  onClick={() => handleCategoryClick(cat)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105 ${
-                    isActive
-                      ? 'bg-nav-active-bg text-nav-active-fg shadow-md shadow-todopolis-blue/30'
-                      : 'bg-nav-inactive-bg text-nav-inactive-fg border border-nav-inactive-border hover:border-todopolis-blue hover:bg-todopolis-blue/15 hover:text-nav-active-fg'
-                  }`}
-                >
-                  <span className={`flex items-center justify-center w-6 h-6 rounded-full transition-all ${
-                    isActive ? 'bg-white/50' : 'bg-todopolis-blue/25'
-                  }`}>
-                    <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-nav-active-fg' : 'text-todopolis-blue-deep'}`} />
-                  </span>
-                  {cat}
-                </button>
-              );
-            })}
+        <nav aria-label="Categorías" className="container mx-auto px-4">
+          <div
+            ref={categoryNavRef}
+            className="-mx-4 overflow-x-auto px-4 py-3 md:py-4"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <div className="relative mx-auto flex w-max gap-2">
+              {categories.map((cat) => {
+                const Icon = getCategoryIcon(cat);
+                const isActive = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => handleCategoryClick(cat)}
+                    aria-pressed={isActive}
+                    className={`flex shrink-0 items-center gap-2 rounded-full border py-2 pl-2.5 pr-4 text-sm font-bold transition-colors ${
+                      isActive
+                        ? 'border-todopolis-lavender-deep bg-todopolis-lavender-deep text-white shadow-sm'
+                        : 'border-nav-inactive-border bg-surface text-foreground/75 hover:border-todopolis-lavender-deep/40 hover:text-ink-title'
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-todopolis-lavender-deep'}`} />
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </div>
+        </nav>
 
-      {/* Mobile Search Bar - Moved below categories */}
-      <div className="md:hidden px-6 py-4">
-        <MagicSearchBar onSearch={handleSearch} compact />
-      </div>
-
-      {/* Featured tag chips + "Más filtros" — desktop y mobile */}
-      {tagTaxonomy.length > 0 && (
-        <div className="w-full border-b border-todopolis-lavender/25 bg-surface-soft/60 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-2.5 relative">
-            {/* Slider de tags con fades laterales que indican que se puede deslizar */}
+        {tagTaxonomy.length > 0 && (
+          <div className="container relative mx-auto px-4 pb-3">
             <div
               ref={tagsScrollRef}
               onScroll={updateTagsScrollState}
-              className="flex items-center gap-2 overflow-x-auto"
+              className="-mx-4 flex items-center gap-2 overflow-x-auto px-4"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               <button
+                type="button"
                 onClick={() => setFilterPanelOpen(true)}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-foreground/90 text-white hover:bg-foreground transition-colors shadow-sm"
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink-title px-3.5 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                <span>Filtros</span>
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Más filtros
                 {selectedTags.size > 0 && (
-                  <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-cta text-cta-fg text-[10px] font-bold leading-none">
+                  <span className="ml-0.5 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-ink-title">
                     {selectedTags.size}
                   </span>
                 )}
               </button>
-              <div className="shrink-0 h-5 w-px bg-foreground/10" />
+              <span aria-hidden className="h-5 w-px shrink-0 bg-nav-inactive-border" />
               {featuredTags.map((tag) => {
                 const isActive = selectedTags.has(tag.slug);
                 return (
                   <button
                     key={tag.slug}
+                    type="button"
                     onClick={() => toggleTag(tag.slug)}
-                    className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    aria-pressed={isActive}
+                    className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
                       isActive
-                        ? 'bg-tag-active-bg text-tag-active-fg border border-todopolis-lavender-deep/20 shadow-sm'
-                        : 'bg-tag-inactive-bg text-tag-inactive-fg border border-tag-inactive-border hover:border-todopolis-lavender hover:bg-todopolis-lavender/25 hover:text-tag-active-fg'
+                        ? 'border-todopolis-lavender-deep/40 bg-tag-active-bg text-tag-active-fg'
+                        : 'border-nav-inactive-border bg-surface text-foreground/70 hover:border-todopolis-lavender-deep/40 hover:text-ink-title'
                     }`}
                   >
-                    {tag.icon && <span>{tag.icon}</span>}
-                    <span>{tag.name}</span>
+                    {isActive && <Check className="h-3 w-3" strokeWidth={3} />}
+                    {tag.name}
                   </button>
                 );
               })}
-              <div className="shrink-0 w-2" />
+              <span aria-hidden className="w-2 shrink-0" />
             </div>
 
-            {/* Fade izquierdo + flecha (solo cuando hay más tags a la izquierda) */}
             <div
               aria-hidden
-              className={`pointer-events-none absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-surface-soft to-transparent transition-opacity ${tagsScrollState.left ? 'opacity-100' : 'opacity-0'}`}
+              className={`pointer-events-none absolute bottom-3 left-0 top-0 w-12 bg-gradient-to-r from-surface to-transparent transition-opacity ${tagsScrollState.left ? 'opacity-100' : 'opacity-0'}`}
             />
             <button
               type="button"
-              aria-label="Deslizar tags a la izquierda"
+              aria-label="Ver etiquetas anteriores"
               onClick={() => scrollTagsBy(-220)}
-              className={`hidden md:flex absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 items-center justify-center rounded-full bg-surface border border-nav-inactive-border shadow-sm hover:bg-todopolis-blue/15 hover:border-todopolis-blue text-foreground/70 transition-all ${tagsScrollState.left ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              className={`absolute left-1 top-[calc(50%-6px)] hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-nav-inactive-border bg-surface text-foreground/70 shadow-sm transition-opacity md:flex ${tagsScrollState.left ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
-
-            {/* Fade derecho + flecha */}
             <div
               aria-hidden
-              className={`pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-surface-soft to-transparent transition-opacity ${tagsScrollState.right ? 'opacity-100' : 'opacity-0'}`}
+              className={`pointer-events-none absolute bottom-3 right-0 top-0 w-12 bg-gradient-to-l from-surface to-transparent transition-opacity ${tagsScrollState.right ? 'opacity-100' : 'opacity-0'}`}
             />
             <button
               type="button"
-              aria-label="Deslizar tags a la derecha"
+              aria-label="Ver más etiquetas"
               onClick={() => scrollTagsBy(220)}
-              className={`hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 items-center justify-center rounded-full bg-surface border border-nav-inactive-border shadow-sm hover:bg-todopolis-blue/15 hover:border-todopolis-blue text-foreground/70 transition-all ${tagsScrollState.right ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              className={`absolute right-1 top-[calc(50%-6px)] hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-nav-inactive-border bg-surface text-foreground/70 shadow-sm transition-opacity md:flex ${tagsScrollState.right ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Hero y políticas — se ocultan al buscar o filtrar */}
       {(!searchQuery && activeCategory === 'Todos' && selectedTags.size === 0) && children}
 
-      {/* Cuadrícula de productos, con los carriles de inspiración intercalados */}
-      <div className="md:flex md:items-start">
-
-        <section id="productos" className="flex-1 pt-4 pb-16 px-4 relative">
-          <div className="container mx-auto relative">
-
-            {/* La inspiración ya no vive en una columna lateral: va como filas
-                dentro de la cuadrícula (ver InspirationRail). La cuadrícula
-                recupera el ancho completo del contenedor. */}
+      {/* Cuadrícula de productos, con los carriles de inspiración intercalados.
+          Mismo `container px-4` que las secciones de arriba: antes llevaba un
+          `px-4` extra por fuera y sus bordes no coincidían con los del resto. */}
+      <section id="productos" className="scroll-mt-20 pb-16">
+        {isCleanListing ? (
+          <div className="container mx-auto px-4 pb-6 pt-8 md:pt-12">
             <div>
-
-              <div className="flex-1 min-w-0">
-                {/* Tags activos como chips removibles */}
-                {selectedTags.size > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-todopolis-lavender/30">
-                    <span className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Filtros:</span>
-                    {Array.from(selectedTags).map((slug) => {
-                      const tag = taxonomyBySlug.get(slug);
-                      const label = tag?.name ?? slug;
-                      const icon = tag?.icon;
-                      return (
-                        <button
-                          key={slug}
-                          onClick={() => toggleTag(slug)}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-tag-active-bg text-tag-active-fg border border-todopolis-lavender-deep/20 shadow-sm hover:bg-todopolis-lavender/80 transition-colors"
-                        >
-                          {icon && <span>{icon}</span>}
-                          <span>{label}</span>
-                          <X className="w-3 h-3" />
-                        </button>
-                      );
-                    })}
-                    <button
-                      onClick={clearTags}
-                      className="text-xs font-bold text-sale hover:underline ml-1"
-                    >
-                      Limpiar todo
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex flex-col items-center gap-2 mb-6 text-center">
-                  <p className="text-foreground/80 font-serif font-medium text-xs md:text-sm mt-1">
-                    {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos para ti'}
-                  </p>
-                </div>
-                <ProductGrid
-                  products={filteredProducts}
-                  searchQuery={searchQuery}
-                  // El banner solo tiene sentido en el listado "limpio". Cuando hay búsqueda,
-                  // filtros activos o una categoría específica, lo ocultamos para no romper foco.
-                  rowTwoSlot={isCleanListing ? rowTwoSlot : undefined}
-                  // Los carriles solo en el listado limpio: con búsqueda o
-                  // filtros activos partirían el foco del usuario.
-                  repeatingSlot={
-                    isCleanListing && aiImages.length > 0
-                      ? (occurrence) => <InspirationRail images={railSlice(aiImages, occurrence)} />
-                      : undefined
-                  }
-                />
-              </div>
-
+              <p className="mb-2 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
+                Catálogo
+              </p>
+              <h2 className="font-serif text-2xl font-extrabold leading-tight tracking-[-0.02em] text-ink-title md:text-[2rem]">
+                Todo lo de Todópolis
+              </h2>
             </div>
           </div>
-        </section>
+        ) : (
+          /* Filtros aplicados. Se queda pegada bajo la cabecera mientras se
+             baja por los resultados: quitar un filtro no debería exigir
+             volver arriba. Todo lo que filtra sale aquí —búsqueda, categoría y
+             etiquetas— con su ×, y «Borrar todo» al final. */
+          <div className="sticky top-16 z-30 mb-6 border-b border-nav-inactive-border bg-surface/95 backdrop-blur-md">
+            <div className="container mx-auto flex items-center gap-3 px-4 py-3">
+              <p className="shrink-0 text-sm font-bold tabular-nums text-ink-title">
+                {filteredProducts.length}
+                <span className="font-normal text-muted-foreground">
+                  {' '}{filteredProducts.length === 1 ? 'producto' : 'productos'}
+                </span>
+              </p>
+              <span aria-hidden className="h-5 w-px shrink-0 bg-nav-inactive-border" />
+              <div
+                className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {searchQuery && (
+                  <ActiveChip onRemove={clearSearch} label={`Quitar búsqueda ${searchQuery}`}>
+                    <Search className="h-3 w-3" />
+                    “{searchQuery}”
+                  </ActiveChip>
+                )}
+                {activeCategory !== 'Todos' && (
+                  <ActiveChip onRemove={() => setActiveCategory('Todos')} label={`Quitar categoría ${activeCategory}`}>
+                    {activeCategory}
+                  </ActiveChip>
+                )}
+                {Array.from(selectedTags).map((slug) => (
+                  <ActiveChip key={slug} onRemove={() => toggleTag(slug)} label={`Quitar ${taxonomyBySlug.get(slug)?.name ?? slug}`}>
+                    {taxonomyBySlug.get(slug)?.name ?? slug}
+                  </ActiveChip>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={clearAll}
+                className="shrink-0 text-xs font-bold text-foreground/60 underline-offset-4 hover:text-ink-title hover:underline"
+              >
+                Borrar todo
+              </button>
+            </div>
+          </div>
+        )}
 
-      </div>
+        <div className="container mx-auto px-4">
+          <ProductGrid
+            products={filteredProducts}
+            searchQuery={searchQuery}
+            onClearFilters={isCleanListing ? undefined : clearAll}
+            // El banner solo tiene sentido en el listado "limpio". Cuando hay búsqueda,
+            // filtros activos o una categoría específica, lo ocultamos para no romper foco.
+            rowTwoSlot={isCleanListing ? rowTwoSlot : undefined}
+            // Los carriles solo en el listado limpio: con búsqueda o
+            // filtros activos partirían el foco del usuario.
+            repeatingSlot={
+              isCleanListing && aiImages.length > 0
+                ? (occurrence) => <InspirationRail images={railSlice(aiImages, occurrence)} />
+                : undefined
+            }
+          />
+        </div>
+      </section>
 
       {/* Floating search button for mobile */}
       <MobileSearchFab />
@@ -495,7 +533,24 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
         onToggle={toggleTag}
         onClear={clearTags}
         matchCounts={tagMatchCounts}
+        resultCount={filteredProducts.length}
       />
     </>
+  );
+}
+
+function ActiveChip({ children, onRemove, label }: { children: ReactNode; onRemove: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onRemove}
+      aria-label={label}
+      className="group flex shrink-0 items-center gap-1.5 rounded-full border border-todopolis-lavender-deep/30 bg-tag-active-bg py-1 pl-3 pr-1.5 text-xs font-semibold text-tag-active-fg transition-colors hover:border-todopolis-lavender-deep/60"
+    >
+      {children}
+      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-todopolis-lavender-deep/15 transition-colors group-hover:bg-todopolis-lavender-deep group-hover:text-white">
+        <X className="h-2.5 w-2.5" strokeWidth={3} />
+      </span>
+    </button>
   );
 }

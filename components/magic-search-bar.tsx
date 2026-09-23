@@ -8,19 +8,38 @@ interface MagicSearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
   compact?: boolean;
+  /** Texto con el que monta. La barra de la cabecera entra por un portal
+   *  DESPUÉS de que el home lee `?q=`, así que no alcanza a oír el aviso. */
+  initialQuery?: string;
 }
 
-export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto magico...", compact = false }: MagicSearchBarProps) {
-  const [query, setQuery] = useState('');
+export function MagicSearchBar({ onSearch, placeholder = "Busca tu producto mágico…", compact = false, initialQuery = '' }: MagicSearchBarProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // El primer render no avisa: con `?q=` en la URL, mandar '' a los 300 ms
+  // borraba la búsqueda que el navegador acababa de restaurar.
+  // Se compara con lo último avisado y no con un «primer render»: en modo
+  // estricto los efectos corren dos veces y esa bandera fallaba.
+  const lastSent = useRef(query);
   useEffect(() => {
+    if (query === lastSent.current) return;
     const timer = setTimeout(() => {
+      lastSent.current = query;
       onSearch(query);
     }, 300);
     return () => clearTimeout(timer);
   }, [query, onSearch]);
+
+  // Quien filtra desde fuera (la × de la búsqueda en «filtros aplicados», el
+  // logo que resetea el home, un `?q=` en la URL) fija el texto por aquí. Hay
+  // dos instancias —cabecera y móvil— y las dos tienen que mostrar lo mismo.
+  useEffect(() => {
+    const handleSet = (e: Event) => setQuery((e as CustomEvent<string>).detail ?? '');
+    window.addEventListener('magic-search:set', handleSet);
+    return () => window.removeEventListener('magic-search:set', handleSet);
+  }, []);
 
   // Listen for focus event from mobile search FAB
   useEffect(() => {

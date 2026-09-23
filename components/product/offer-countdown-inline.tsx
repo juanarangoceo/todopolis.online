@@ -22,8 +22,15 @@ function getTimeLeft(endsAt: string) {
   return { days, hours, minutes, seconds, expired: diff <= 0 };
 }
 
-// Countdown compacto, solo texto, pensado para vivir justo debajo del precio.
-// Reemplaza la barra grande e invasiva del antiguo ProductOfferTimer.
+// Cuenta regresiva de la oferta, justo debajo del precio.
+//
+// Antes era una pastilla con «termina en 07:19:23:20»: cuatro pares de dígitos
+// sin unidades, y nadie sabía si el primero eran días u horas. Ahora cada
+// número lleva su unidad debajo y la fecha de cierre va escrita, que es lo que
+// el comprador usa para decidir («¿alcanzo a pedirlo con la quincena?»).
+//
+// Con más de un día por delante los segundos sobran —un reloj corriendo a 7
+// días vista se lee como presión, no como información— y se ocultan.
 export function OfferCountdownInline({ offerName, offerEndsAt }: OfferCountdownInlineProps) {
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(offerEndsAt));
   const [mounted, setMounted] = useState(false);
@@ -40,26 +47,52 @@ export function OfferCountdownInline({ offerName, offerEndsAt }: OfferCountdownI
 
   if (!mounted || timeLeft.expired) return null;
 
-  const clock =
-    (timeLeft.days > 0 ? `${pad(timeLeft.days)}:` : '') +
-    `${pad(timeLeft.hours)}:${pad(timeLeft.minutes)}:${pad(timeLeft.seconds)}`;
+  const endsLabel = new Date(offerEndsAt).toLocaleDateString('es-CO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
+  const units = [
+    ...(timeLeft.days > 0 ? [{ value: timeLeft.days, label: timeLeft.days === 1 ? 'día' : 'días' }] : []),
+    { value: timeLeft.hours, label: 'horas' },
+    { value: timeLeft.minutes, label: 'min' },
+    ...(timeLeft.days === 0 ? [{ value: timeLeft.seconds, label: 'seg' }] : []),
+  ];
 
   return (
-    <span
-      className="inline-flex items-center gap-2 rounded-full border border-sale/25 bg-sale/10 pl-2 pr-3 py-1.5"
-      style={{ color: 'var(--sale)' }}
+    <div
+      role="timer"
+      aria-label={`${offerName}: termina el ${endsLabel}`}
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl border border-sale/20 bg-sale-soft px-4 py-3 text-left"
     >
-      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-sale/15 shrink-0">
-        <Flame className="w-3.5 h-3.5 animate-pulse" />
-      </span>
-      <span className="text-[13px] font-extrabold uppercase tracking-wide leading-none">
-        {offerName}
-      </span>
-      <span className="text-sale/40 leading-none">·</span>
-      <span className="text-xs font-semibold leading-none">termina en</span>
-      <span className="font-mono text-sm font-bold tabular-nums tracking-tight leading-none">
-        {clock}
-      </span>
-    </span>
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sale text-sale-fg">
+          <Flame className="h-[18px] w-[18px]" fill="currentColor" />
+        </span>
+        <div className="min-w-0 leading-tight">
+          <p className="truncate text-sm font-extrabold text-ink-title">{offerName}</p>
+          <p className="text-xs text-foreground/60">
+            Termina el {endsLabel}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-start gap-1.5" aria-hidden>
+        {units.map((u, i) => (
+          <div key={u.label} className="flex items-start gap-1.5">
+            {i > 0 && <span className="pt-1.5 font-bold text-sale/50">:</span>}
+            <div className="flex w-11 flex-col items-center">
+              <span className="w-full rounded-lg bg-surface py-1 text-center font-serif text-lg font-extrabold tabular-nums leading-tight text-sale shadow-sm ring-1 ring-sale/15">
+                {pad(u.value)}
+              </span>
+              <span className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-foreground/50">
+                {u.label}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

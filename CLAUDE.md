@@ -211,6 +211,13 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - `railSlice` **da la vuelta** cuando se agotan las imágenes: con 574 productos salen ~35 carriles y solo hay ~39 imágenes. Repetir es aceptable en descubrimiento; quedarse sin carriles a mitad del scroll, no.
 - Los carriles solo salen en el listado limpio (sin búsqueda, categoría ni etiquetas), igual que el banner promocional.
 
+### Filtros del home — «Filtros aplicados» (sep 2026)
+`components/product-browser.tsx`. Categorías en UNA fila deslizable, mismo estilo en móvil y escritorio; debajo «Más filtros» + etiquetas destacadas. Todo lo que filtra (búsqueda, categoría, etiquetas) sale en la barra **«Filtros aplicados»**, pegada bajo la cabecera, cada uno con su × y «Borrar todo». Tocar la categoría activa la quita.
+
+- Búsqueda, categoría y etiquetas viven en la URL (`?q=`, `?categoria=`, `?tags=`). Bienestar Íntimo NO se restaura desde la URL: pasa por el aviso de edad.
+- Las barras de búsqueda no están controladas desde fuera: se les fija el texto con el evento `magic-search:set`. La de la cabecera entra por portal tarde y recibe `initialQuery`.
+- Las etiquetas se pintan sin emoji, como la ficha.
+
 ### Novedades del home (`NewArrivalsBanner`) — cupo fijo de 12
 `components/new-arrivals-banner.tsx`, con la selección en `lib/new-arrivals.ts` y su test.
 
@@ -484,6 +491,12 @@ Botón «🤖 Completar Destacado con IA» (pestaña Destacados, `sanity/compone
 - **Sin emojis en ningún campo.** Las descripciones viejas traen «✅🔥⭐»: `lib/description.ts` las parte en viñetas y quita el emoji al renderizar.
 - Nueva salida **`audienceFit`** («¿Es para ti?»: para quién sí / no), guardada por los tres consumidores con `audienceFitFromAi` (`lib/audience-fit.ts`).
 - **Imagen IA** (`app/api/generate-ai-image`): foto realista de la persona que de verdad usa el producto, con su tamaño real, y no una foto de estudio con «persona atractiva». Usa hasta 3 fotos de referencia.
+
+### Imágenes opcionales en los bloques de Destacados
+- **Historia**: `vipStory.problemImage`, `turningPointImage`, `outcomeImage`. Los botones de IA MEZCLAN la historia con lo existente (`{ ...actual, ...generado }`) para no borrar esas fotos; si añades otra vía que escriba `vipStory`, haz lo mismo.
+- **Caja**: `vipBoxContents.pieces` (foto + nombre por pieza), que SUMA a la lista `items`, no la reemplaza.
+- **Pasos**: la imagen por paso ya existía (`vipSteps[].image`).
+- **Logo de Confío**: `components/confio-logo.tsx` con el logo oficial en `public/brands/`. Úsalo donde se explique el pago protegido, no un escudo genérico.
 
 ### Bloques retirados de Destacados
 - **Citas destacadas** (`vipQuotes`): fuera del schema y de la landing. Se leían como relleno.

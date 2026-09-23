@@ -17,6 +17,9 @@ interface ProductGridProps {
   // Existe porque `rowTwoSlot` solo cubre una posición fija, y con scroll
   // infinito sobre 574 productos hace falta algo que siga apareciendo.
   repeatingSlot?: (occurrence: number) => ReactNode;
+  // Si llega, el estado vacío ofrece quitar los filtros: sin resultados, la
+  // única salida útil es volver atrás, y no debería tocar buscarla arriba.
+  onClearFilters?: () => void;
 }
 
 const PAGE_SIZE = 24;
@@ -30,7 +33,7 @@ const SLOT_AFTER_DESKTOP = 8;
 const REPEAT_FIRST_AFTER = 4;
 const REPEAT_EVERY = 12;
 
-export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot }: ProductGridProps) {
+export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, onClearFilters }: ProductGridProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +76,15 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot }
             : 'No hay productos disponibles en este momento.'
           }
         </p>
+        {onClearFilters && (
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="mt-6 rounded-full bg-ink-title px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          >
+            Quitar filtros y ver todo
+          </button>
+        )}
       </div>
     );
   }

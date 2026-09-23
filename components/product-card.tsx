@@ -28,40 +28,30 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     return '$ ' + price.toLocaleString('es-CO');
   };
 
-  // Card neutra con un borde-top sutil rotando colores de marca como acento decorativo.
-  // Sale del modelo anterior (gradiente completo por card) que saturaba el grid.
-  const accentVariants = [
-    'var(--todopolis-blue)',
-    'var(--todopolis-lavender)',
-    'var(--todopolis-pink)',
-    'var(--todopolis-lime)',
-  ];
-  const accent = accentVariants[index % accentVariants.length];
-
   return (
     <>
     <Link
       href={`/producto/${(product as any).slug || product.id}`}
       className="group block"
       style={index < 8 ? {
-        animationDelay: `${index * 60}ms`,
-        animation: 'fadeInUp 0.45s ease-out forwards',
+        animation: `fadeInUp 0.45s ease-out ${index * 60}ms forwards`,
         opacity: 0
       } : undefined}
     >
       <article className="relative h-full">
-        {/* Card neutra con borde superior de acento por categoría visual */}
+        {/* Card neutra. Tuvo un filete superior que rotaba azul, lavanda,
+            rosa y lima por posición: color sin significado, justo lo que se
+            quitó de la ficha (ver CLAUDE.md → «Color: tres significados»).
+            El hover también se calmó: escalar un 3 % y subir 8 px movía la
+            fila entera al pasar el ratón. */}
         <div
           className={cn(
             "relative h-full rounded-3xl overflow-hidden transition-all duration-500",
             "bg-surface border border-nav-inactive-border",
             "shadow-sm hover:shadow-xl",
-            "hover:scale-[1.03] hover:-translate-y-2",
+            "hover:-translate-y-1",
             "group-focus-visible:ring-2 group-focus-visible:ring-cta group-focus-visible:ring-offset-2"
           )}
-          style={{
-            borderTop: `3px solid ${accent}`,
-          }}
         >
           {/* Shine effect on hover */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">

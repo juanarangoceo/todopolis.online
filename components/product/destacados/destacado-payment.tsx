@@ -1,4 +1,5 @@
-import { Banknote, Landmark, ShieldCheck, Smartphone } from 'lucide-react'
+import { Banknote, Landmark, Smartphone } from 'lucide-react'
+import { ConfioLogo } from '@/components/confio-logo'
 import { DestacadoSection, DestacadoSectionHeader, DestacadoSplit } from './destacado-section-header'
 
 // «Cómo pagas», en la parte blanca de la landing, justo antes de las
@@ -64,9 +65,7 @@ export function DestacadoPayment() {
               cuándo la suelta. */}
           <div className="rounded-3xl border border-trust-border bg-trust-bg/60 p-6 md:col-span-3 md:p-7">
             <div className="mb-5 flex items-center justify-between gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-trust-fg text-white">
-                <ShieldCheck className="h-5 w-5" />
-              </span>
+              <ConfioLogo className="h-8 md:h-9" />
               <div className="flex flex-wrap justify-end gap-1.5">
                 {[
                   { icon: Landmark, label: 'PSE' },

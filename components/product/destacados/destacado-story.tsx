@@ -1,4 +1,6 @@
+import Image from 'next/image'
 import { DestacadoStory as DestacadoStoryData } from '@/lib/types'
+import { sanityCdnImage } from '@/lib/sanity/cdn-image'
 import { DestacadoSection, DestacadoSectionHeader } from './destacado-section-header'
 
 interface Props {
@@ -13,12 +15,18 @@ interface Props {
 // hablarle al comprador y que se repetía idéntica en cada Destacado.
 export function DestacadoStory({ story }: Props) {
   const acts = [
-    { label: 'Antes', title: story?.problemTitle, text: story?.problemText },
-    { label: 'Lo que cambia', title: story?.turningPointTitle, text: story?.turningPointText },
-    { label: 'Después', title: story?.outcomeTitle, text: story?.outcomeText },
+    { label: 'Antes', title: story?.problemTitle, text: story?.problemText, image: story?.problemImage, alt: story?.problemImageAlt },
+    { label: 'Lo que cambia', title: story?.turningPointTitle, text: story?.turningPointText, image: story?.turningPointImage, alt: story?.turningPointImageAlt },
+    { label: 'Después', title: story?.outcomeTitle, text: story?.outcomeText, image: story?.outcomeImage, alt: story?.outcomeImageAlt },
   ].filter((act) => act.title && act.text)
 
   if (acts.length < 2) return null
+
+  // Las imágenes son opcionales y por momento. Van ARRIBA del filete, así el
+  // número y el titular quedan alineados entre columnas aunque solo algunos
+  // momentos tengan foto: la que no tiene deja su hueco vacío en escritorio en
+  // vez de subir el texto y romper la fila.
+  const anyImage = acts.some((act) => act.image)
 
   return (
     <DestacadoSection tone="soft">
@@ -29,10 +37,26 @@ export function DestacadoStory({ story }: Props) {
 
       <div className={`grid gap-10 md:gap-8 ${acts.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} lg:gap-12`}>
         {acts.map((act, index) => (
-          <article
-            key={act.label}
-            className={`border-t-2 pt-6 ${index === acts.length - 1 ? 'border-todopolis-lavender-deep' : 'border-nav-inactive-border'}`}
-          >
+          <article key={act.label}>
+            {anyImage && (
+              <div
+                className={`relative mb-6 aspect-[4/3] overflow-hidden rounded-2xl ${act.image ? 'bg-surface-muted' : 'hidden md:block'}`}
+              >
+                {act.image && (
+                  <Image
+                    src={sanityCdnImage(act.image, 800)}
+                    alt={act.alt || act.title || ''}
+                    fill
+                    sizes="(min-width: 768px) 33vw, 100vw"
+                    className="object-cover"
+                    unoptimized
+                  />
+                )}
+              </div>
+            )}
+            <div
+              className={`border-t-2 pt-6 ${index === acts.length - 1 ? 'border-todopolis-lavender-deep' : 'border-nav-inactive-border'}`}
+            >
             <p className="mb-4 flex items-baseline gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
               <span className="font-serif text-sm tabular-nums text-todopolis-lavender-deep">
                 {String(index + 1).padStart(2, '0')}
@@ -43,6 +67,7 @@ export function DestacadoStory({ story }: Props) {
               {act.title}
             </h3>
             <p className="leading-relaxed text-foreground/70">{act.text}</p>
+            </div>
           </article>
         ))}
       </div>

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { ConfioLogo } from './confio-logo';
 import Link from 'next/link';
-import { Instagram, Facebook, Sparkles, Heart, X, ShieldCheck } from 'lucide-react';
+import { Instagram, Facebook, Sparkles, Heart, X } from 'lucide-react';
 import { advancePaymentVisible } from '@/components/payment-methods';
 import { BUSINESS, SOCIAL } from '@/lib/legal';
 import { CookiePreferences } from '@/components/cookie-preferences';
@@ -237,8 +238,8 @@ export function Footer({ showPaymentExplainer = true }: { showPaymentExplainer?:
             {showPaymentExplainer && advancePaymentVisible() && (
               <div className="mt-14 rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
                 <div className="flex items-start gap-3 mb-6">
-                  <span className="w-11 h-11 shrink-0 rounded-2xl bg-white/10 flex items-center justify-center">
-                    <ShieldCheck className="w-6 h-6 text-[#FFB4AC]" />
+                  <span className="w-11 h-11 shrink-0 rounded-2xl bg-white flex items-center justify-center">
+                    <ConfioLogo variant="icon" className="w-8 h-8" />
                   </span>
                   <div>
                     <h4 className="font-sans font-bold text-lg leading-tight">

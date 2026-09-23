@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingBag, X, MapPin, Phone, User, CheckCircle2, Truck, Star, ShieldCheck } from 'lucide-react';
+import { ConfioLogo } from './confio-logo';
+import { ShoppingBag, X, MapPin, Phone, User, CheckCircle2, Truck, Star } from 'lucide-react';
 import { createOrder } from '@/app/actions/create-order';
 import { cn } from '@/lib/utils';
 import { Product } from '@/lib/types';
@@ -328,13 +329,14 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
                       )}
                     >
                       <span className="flex items-center gap-2 font-bold text-sm text-gray-900">
-                        <ShieldCheck className="w-4 h-4 shrink-0" />
+                        <ConfioLogo variant="icon" className="h-4 w-4 shrink-0" />
                         Pago protegido
                       </span>
                       <span className="block mt-1 text-xs text-gray-500 leading-snug">
                         PSE, Nequi o Bancolombia. Tu dinero queda en custodia
                         hasta que recibas el pedido.
                       </span>
+                      <ConfioLogo className="mt-2 h-4" />
                     </button>
                   </div>
 

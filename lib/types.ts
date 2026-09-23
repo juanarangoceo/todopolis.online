@@ -70,6 +70,7 @@ export interface DestacadoBoxContents {
   imageAlt?: string
   intro?: string
   items?: string[]
+  pieces?: { _key?: string; label?: string; image: string }[]
 }
 
 export interface VipComparisonRow {
@@ -99,6 +100,12 @@ export interface DestacadoStory {
   turningPointText?: string
   outcomeTitle?: string
   outcomeText?: string
+  problemImage?: string
+  problemImageAlt?: string
+  turningPointImage?: string
+  turningPointImageAlt?: string
+  outcomeImage?: string
+  outcomeImageAlt?: string
 }
 
 export interface ImageDimensions {

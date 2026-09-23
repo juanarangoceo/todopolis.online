@@ -27,30 +27,34 @@ export function PolicyBadges({ policies }: PolicyBadgesProps) {
           return (
             <div
               key={i}
-              className="flex items-center gap-4 px-6 py-5 rounded-2xl bg-surface border border-nav-inactive-border hover:border-trust-border hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+              className="flex items-start gap-4 px-6 py-5 rounded-2xl bg-surface border border-nav-inactive-border"
             >
               <div className="w-12 h-12 shrink-0 rounded-xl flex items-center justify-center bg-trust-bg border border-trust-border">
                 <Icon className="w-6 h-6 text-trust-fg" />
               </div>
               <div className="min-w-0">
-                <p className="font-bold text-foreground text-sm leading-none truncate">{policy.title}</p>
-                <p className="text-xs text-foreground/55 mt-1 truncate">{policy.description}</p>
+                {/* Sin `truncate`: la frase que se cortaba con «…» era justo la
+                    que explica Confío. Un recuadro de confianza a medio leer
+                    no da confianza. */}
+                <p className="font-bold text-foreground text-sm leading-snug">{policy.title}</p>
+                <p className="text-xs text-foreground/60 mt-1 leading-relaxed">{policy.description}</p>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Mobile: icon + name text inline, evenly spaced */}
-      <div className="md:hidden flex justify-around items-center py-2">
+      {/* Móvil: tres columnas, ícono sobre el título. En fila los tres
+          títulos no cabían en 390 px y el tercero se salía de la pantalla. */}
+      <div className="md:hidden grid grid-cols-3 gap-2">
         {displayPolicies.map((policy, i) => {
           const Icon = IconMap[policy.iconName] || CheckCircle
           return (
-            <div key={i} className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-trust-bg border border-trust-border">
-                <Icon className="w-5 h-5 text-trust-fg" />
+            <div key={i} className="flex flex-col items-center gap-2 rounded-2xl border border-nav-inactive-border px-2 py-3 text-center">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-trust-bg border border-trust-border">
+                <Icon className="w-[18px] h-[18px] text-trust-fg" />
               </div>
-              <span className="text-xs font-bold text-foreground/80">{policy.title}</span>
+              <span className="text-[11px] font-bold leading-tight text-foreground/80 text-balance">{policy.title}</span>
             </div>
           )
         })}

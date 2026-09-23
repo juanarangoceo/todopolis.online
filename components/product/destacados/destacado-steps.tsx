@@ -17,7 +17,17 @@ export function DestacadoSteps({ steps }: Props) {
     <DestacadoSection>
         <DestacadoSectionHeader eyebrow="Cómo se usa" title="Así se usa, paso a paso" />
 
-        <DestacadoSlider slideClassName="w-[80%] sm:w-[280px]">
+        {/* En escritorio los pasos reparten el ancho del contenedor. Antes
+            cada tarjeta medía 280 px fijos y con cuatro pasos quedaba un
+            hueco de un tercio a la derecha. Con más de cuatro vuelve a ser
+            carrusel, de cuatro en cuatro. En móvil sigue deslizándose. */}
+        <DestacadoSlider
+          slideClassName={
+            valid.length <= 4
+              ? 'w-[80%] sm:w-[280px] lg:w-auto lg:flex-1 lg:basis-0 lg:min-w-0'
+              : 'w-[80%] sm:w-[280px] lg:w-[calc((100%-3rem)/4)]'
+          }
+        >
           {valid.map((step, i) => (
             <div
               key={step._key ?? i}
@@ -29,7 +39,7 @@ export function DestacadoSteps({ steps }: Props) {
                     src={sanityCdnImage(step.image, 700)}
                     alt={step.imageAlt || step.title}
                     fill
-                    sizes="290px"
+                    sizes="(min-width: 1024px) 25vw, 290px"
                     className="object-cover"
                     unoptimized
                   />

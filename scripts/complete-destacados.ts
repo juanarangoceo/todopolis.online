@@ -99,7 +99,7 @@ for (const pub of published) {
 
   const set: Record<string, unknown> = {}
   if (content.headline) set.destacadoHeadline = content.headline
-  if (content.story) set.vipStory = content.story
+  if (content.story) set.vipStory = { ...(doc.vipStory ?? {}), ...content.story }
   if (content.steps) set.vipSteps = content.steps.map((s) => ({ _type: 'step', _key: key(), ...s }))
   if (content.box) set.vipBoxContents = { ...(doc.vipBoxContents ?? {}), ...content.box }
 

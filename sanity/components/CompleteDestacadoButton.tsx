@@ -93,7 +93,7 @@ export function CompleteDestacadoButton() {
         const set: Record<string, unknown> = {}
         const filled: string[] = []
         if (data.headline) { set.destacadoHeadline = data.headline; filled.push('titular') }
-        if (data.story) { set.vipStory = data.story; filled.push('historia') }
+        if (data.story) { set.vipStory = { ...(story ?? {}), ...data.story }; filled.push('historia') }
         if (data.steps) {
           set.vipSteps = data.steps.map((s: any) => ({ _type: 'step', _key: key(), title: s.title, description: s.description }))
           filled.push(`${data.steps.length} pasos`)
