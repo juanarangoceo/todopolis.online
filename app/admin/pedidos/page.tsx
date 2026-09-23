@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic'
 
 const COLUMNS =
   'id, created_at, product_name, product_id, price, quantity, customer_name, customer_phone, ' +
-  'customer_city, customer_address, variant_name, status, payment_method, payment_status, ' +
+  'customer_city, customer_address, customer_department, customer_neighborhood, ' +
+  'customer_address_details, customer_city_code, variant_name, status, payment_method, payment_status, ' +
   'utm_source, utm_campaign, utm_content, fbclid, meta_purchase_sent_at'
 
 function formatCop(n: number) {

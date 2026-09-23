@@ -28,6 +28,7 @@ export interface PurchaseOrder {
   customer_phone?: string | null
   customer_name?: string | null
   customer_city?: string | null
+  customer_department?: string | null
   fbp?: string | null
   fbc?: string | null
   landing_path?: string | null
@@ -91,6 +92,7 @@ export async function sendOrderPurchase(
         phone: order.customer_phone ?? undefined,
         name: order.customer_name ?? undefined,
         city: order.customer_city ?? undefined,
+        state: order.customer_department ?? undefined,
       },
       // Cookies guardadas al crear el pedido: sin ellas, un evento enviado días
       // después no se puede atribuir al anuncio que lo produjo.
@@ -110,4 +112,4 @@ export async function sendOrderPurchase(
 
 /** Columnas mínimas que hay que traer de `orders` para poder mandar el evento. */
 export const PURCHASE_ORDER_COLUMNS =
-  'id, product_id, product_name, price, quantity, customer_phone, customer_name, customer_city, fbp, fbc, landing_path, meta_purchase_sent_at'
+  'id, product_id, product_name, price, quantity, customer_phone, customer_name, customer_city, customer_department, fbp, fbc, landing_path, meta_purchase_sent_at'

@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Play } from 'lucide-react'
 import { DestacadoHeroVideo as VipHeroVideoData } from '@/lib/types'
 import { sanityCdnImage } from '@/lib/sanity/cdn-image'
-import { DestacadoSection } from './destacado-section-header'
+import { DestacadoSection, DestacadoSectionHeader, DestacadoSplit } from './destacado-section-header'
 
 interface Props {
   video: VipHeroVideoData
@@ -20,6 +20,16 @@ function detectSource(url: string): 'youtube' | 'vimeo' | 'mp4' | 'gif' | 'other
   if (u.endsWith('.mp4') || u.includes('.mp4?')) return 'mp4'
   if (u.endsWith('.gif') || u.includes('.gif?')) return 'gif'
   return 'other'
+}
+
+// Cloudinary sirve cualquier fotograma de un video como imagen: basta cambiar
+// la extensión y pedir el segundo con `so_`. Sin póster el <video> se pintaba
+// como un recuadro negro de 700 px hasta que llegaba el primer fotograma.
+function cloudinaryPoster(url: string): string | undefined {
+  if (!url.includes('res.cloudinary.com') || !url.includes('/video/upload/')) return undefined
+  return url
+    .replace('/video/upload/', '/video/upload/so_1,w_1200,q_auto/')
+    .replace(/\.(mp4|mov|webm)(\?.*)?$/i, '.jpg')
 }
 
 function toEmbed(url: string, source: 'youtube' | 'vimeo'): string {
@@ -41,17 +51,36 @@ export function DestacadoHeroVideo({ video }: Props) {
   if (!video?.url) return null
   const source = detectSource(video.url)
 
+  const poster = video.posterImage ? sanityCdnImage(video.posterImage, 1400) : cloudinaryPoster(video.url)
+  const embedded = source === 'youtube' || source === 'vimeo' || source === 'other'
+
   return (
     <DestacadoSection>
-        {/* Ocupa el ancho completo de la rejilla, como el hero: a 4xl
-            centrado era otro borde distinto en la página. */}
-        <div className="relative mx-auto aspect-[4/5] max-w-sm overflow-hidden rounded-3xl bg-black md:aspect-video md:max-w-none">
+      <DestacadoSplit
+        header={
+          <DestacadoSectionHeader
+            eyebrow="En video"
+            title="Míralo en uso"
+            subtitle={video.caption}
+            className="lg:mb-0"
+          />
+        }
+      >
+        {/* MP4 y GIF conservan SU proporción: los hay horizontales (16:9) y
+            verticales (3:4). Forzar 4:5 en móvil y 16:9 en escritorio
+            recortaba siempre a uno de los dos. El tope de alto evita que un
+            vertical ocupe dos pantallas. Los embebidos sí necesitan caja fija. */}
+        <div
+          className={`relative mx-auto flex w-full items-center justify-center overflow-hidden rounded-3xl bg-surface-muted ${
+            embedded ? 'aspect-video' : ''
+          }`}
+        >
           {/* MP4 / GIF: render directo inline, sin click-to-play */}
           {source === 'mp4' && (
             <video
               src={video.url}
-              poster={video.posterImage}
-              className="w-full h-full object-cover"
+              poster={poster}
+              className="block h-auto max-h-[75vh] w-auto max-w-full"
               autoPlay
               loop
               muted
@@ -61,7 +90,7 @@ export function DestacadoHeroVideo({ video }: Props) {
           {source === 'gif' && (
             // GIF como imagen, autoreproducción del propio formato.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={video.url} alt={video.caption ?? 'Video del producto'} className="w-full h-full object-cover" />
+            <img src={video.url} alt={video.caption ?? 'Video del producto'} className="block h-auto max-h-[75vh] w-auto max-w-full" />
           )}
 
           {/* YouTube/Vimeo: click-to-play para no inflar Core Web Vitals */}
@@ -115,10 +144,7 @@ export function DestacadoHeroVideo({ video }: Props) {
             </a>
           )}
         </div>
-
-        {video.caption && (
-          <p className="mt-4 text-sm text-muted-foreground">{video.caption}</p>
-        )}
+      </DestacadoSplit>
     </DestacadoSection>
   )
 }

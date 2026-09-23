@@ -4,8 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies, headers } from 'next/headers';
 import { sendCapiEvent } from '@/lib/meta-capi';
 import { ATTRIBUTION_COOKIE, attributionToColumns, readStoredAttribution } from '@/lib/attribution';
+import { deliveryToOrderColumns, validateDelivery, type DeliveryField } from '@/lib/checkout/delivery';
+import { orderTotals, resolveOrderProduct } from '@/lib/checkout/order-pricing';
 
-export async function createOrder(formData: FormData) {
+export type CreateOrderResult =
+  | { success: true }
+  | { success: false; error: string; fields?: Partial<Record<DeliveryField, string>> };
+
+export async function createOrder(formData: FormData): Promise<CreateOrderResult> {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -24,23 +30,43 @@ export async function createOrder(formData: FormData) {
       : null
     const variantName = (formData.get('variantName') as string) || null
 
+    // Datos de entrega: mismas reglas que el formulario. El navegador ya avisó
+    // campo por campo; esto es la red por si alguien se lo salta.
+    const delivery = validateDelivery({
+      nombre: formData.get('nombre'),
+      telefono: formData.get('telefono'),
+      departamentoCode: formData.get('departamentoCode'),
+      ciudadCode: formData.get('ciudadCode'),
+      direccion: formData.get('direccion'),
+      barrio: formData.get('barrio'),
+      indicaciones: formData.get('indicaciones'),
+    });
+    if (!delivery.ok) {
+      return { success: false, error: 'Revisa los datos de entrega.', fields: delivery.errors };
+    }
+
+    // Precio desde Sanity, NUNCA del formulario (ver `lib/checkout/order-pricing`).
+    const slug = String(formData.get('productId') ?? '').trim();
+    const quantity = Math.max(1, Math.min(20, parseInt(formData.get('quantity') as string) || 1));
+    const product = await resolveOrderProduct(slug, variantId);
+    if (!product) {
+      return { success: false, error: 'Este producto no está disponible en este momento.' };
+    }
+    if (product.hasVariants && !variantId) {
+      return { success: false, error: 'Por favor selecciona una opción del producto.' };
+    }
+    const { total, pricePerUnit } = orderTotals(product, quantity);
+
     const orderData = {
-      product_id: formData.get('productId') as string,
-      product_name: formData.get('productName') as string,
-      price: parseFloat(formData.get('price') as string),
-      quantity: parseInt(formData.get('quantity') as string) || 1,
-      customer_name: formData.get('customerName') as string,
-      customer_phone: formData.get('customerPhone') as string,
-      customer_address: formData.get('customerAddress') as string,
-      customer_city: formData.get('customerCity') as string,
+      product_id: slug,
+      product_name: product.name,
+      price: pricePerUnit,
+      quantity,
+      ...deliveryToOrderColumns(delivery.data),
       variant_id: variantId,
       variant_name: variantName,
       status: 'pending',
     };
-
-    if (!orderData.customer_name || !orderData.customer_phone || !orderData.customer_address || !orderData.customer_city) {
-      return { success: false, error: 'Por favor completa todos los campos' };
-    }
 
     // ── Atribución ───────────────────────────────────────────────────────────
     // De qué anuncio vino este pedido. Se copia AL CREARLO y no se calcula
@@ -96,13 +122,14 @@ export async function createOrder(formData: FormData) {
             content_ids: [orderData.product_id],
             content_type: 'product',
             num_items: orderData.quantity,
-            value: orderData.price,
+            value: total,
             currency: 'COP',
           },
           userData: {
             phone: orderData.customer_phone,
             name: orderData.customer_name,
             city: orderData.customer_city,
+            state: delivery.data.departamento,
           },
           fbp: cookieStore.get('_fbp')?.value,
           fbc: cookieStore.get('_fbc')?.value,

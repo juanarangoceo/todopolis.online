@@ -2,14 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { ConfioLogo } from './confio-logo';
-import { ShoppingBag, X, MapPin, Phone, User, CheckCircle2, Truck, Star } from 'lucide-react';
+import { ShoppingBag, X, CheckCircle2, Truck, Star } from 'lucide-react';
 import { createOrder } from '@/app/actions/create-order';
 import { cn } from '@/lib/utils';
+import { sanityCdnImage } from '@/lib/sanity/cdn-image';
 import { Product } from '@/lib/types';
 import { useProductVariant } from '@/components/product/product-variant-context';
 import { VariantSelector } from '@/components/product/variant-selector';
 import { trackInitiateCheckout, trackLead, newEventId } from '@/lib/fbpixel';
 import { priceForQuantity, savingsForQuantity } from '@/lib/quantity-offers';
+import { validateDelivery, type DeliveryField, type DeliveryInput } from '@/lib/checkout/delivery';
+import {
+  DeliveryFields,
+  EMPTY_DELIVERY,
+  loadSavedDelivery,
+  saveDelivery,
+  type DeliveryErrors,
+} from '@/components/checkout/delivery-fields';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -26,6 +35,8 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [delivery, setDelivery] = useState<DeliveryInput>(EMPTY_DELIVERY);
+  const [fieldErrors, setFieldErrors] = useState<DeliveryErrors>({});
 
   // Variantes: si el producto las tiene, elegir una es obligatorio.
   const { variants, selectedVariant } = useProductVariant();
@@ -43,6 +54,8 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
       setLoading(false);
       setQuantity(initialQuantity);
       setPaymentMethod('cod');
+      setFieldErrors({});
+      setDelivery(loadSavedDelivery());
       trackInitiateCheckout({
         id: productId,
         value: priceForQuantity(product.price ?? 0, initialQuantity, offers),
@@ -71,24 +84,46 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
   // Mínimo de Confío. Debajo de eso la pasarela rechaza con 400.
   const canPayUpfront = confioEnabled && totalPrice >= 10000;
 
+  // Al corregir un campo se borra SU error, no los demás: el comprador ve qué
+  // le falta todavía.
+  const clearFieldError = (field: DeliveryField) =>
+    setFieldErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+
+  const showFieldErrors = (errors: DeliveryErrors) => {
+    setFieldErrors(errors);
+    setError('Revisa los campos marcados en rojo.');
+    // Lleva al primer campo con error: en el celular suele estar fuera de la
+    // pantalla, detrás del teclado.
+    requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLElement>('#checkout-form [aria-invalid="true"]')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
-    
-    // Validación de número de teléfono (Colombia - 10 dígitos)
-    const phone = formData.get('customerPhone') as string;
-    if (phone && !/^\d{10}$/.test(phone)) {
-      setError('El número de celular debe tener exactamente 10 dígitos.');
-      setLoading(false);
+    // Mismas reglas que aplica el servidor (`lib/checkout/delivery.ts`).
+    const checked = validateDelivery(delivery);
+    if (!checked.ok) {
+      showFieldErrors(checked.errors);
       return;
     }
+    const d = checked.data;
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append('nombre', d.nombre);
+    formData.append('telefono', d.telefono);
+    formData.append('departamentoCode', d.departamentoCode);
+    formData.append('ciudadCode', d.ciudadCode);
+    formData.append('direccion', d.direccion);
+    formData.append('barrio', d.barrio);
+    formData.append('indicaciones', d.indicaciones ?? '');
 
     formData.append('productId', productId);
-    formData.append('productName', product.name);
-    formData.append('price', totalPrice.toString());
     formData.append('quantity', quantity.toString());
 
     if (variantRequired && !selectedVariant) {
@@ -109,16 +144,18 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
           body: JSON.stringify({
             productId,
             quantity,
-            customerName: formData.get('customerName'),
-            customerPhone: formData.get('customerPhone'),
-            customerAddress: formData.get('customerAddress'),
-            customerCity: formData.get('customerCity'),
+            delivery,
             ...(selectedVariant
               ? { variantId: selectedVariant.idVariant, variantName: selectedVariant.name }
               : {}),
           }),
         });
         const data = await res.json();
+        if (res.status === 400 && data.fields) {
+          showFieldErrors(data.fields);
+          setLoading(false);
+          return;
+        }
         if (!res.ok || !data.checkoutUrl) {
           // Se queda en el modal con la contraentrega disponible: un fallo de
           // la pasarela no puede costar la venta.
@@ -127,6 +164,7 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
           setLoading(false);
           return;
         }
+        saveDelivery(delivery);
         window.location.href = data.checkoutUrl;
         return;
       } catch {
@@ -158,15 +196,14 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
           id: productId,
           value: totalPrice,
           quantity,
-          userData: {
-            phone: (formData.get('customerPhone') as string) || undefined,
-            name: (formData.get('customerName') as string) || undefined,
-            city: (formData.get('customerCity') as string) || undefined,
-          },
+          userData: { phone: d.telefono, name: d.nombre, city: d.ciudad },
         },
         fbEventId,
       );
+      saveDelivery(delivery);
       setStep(2); // Show success step
+    } else if (result.fields) {
+      showFieldErrors(result.fields);
     } else {
       setError(result.error || 'Algo salió mal, intenta de nuevo.');
     }
@@ -235,8 +272,11 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
               {/* Product Summary */}
               <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
                 <div className="w-20 h-20 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
-                  <img 
-                    src={product.image || (product as any).images?.[0]} 
+                  {/* Miniatura de 80 px: se pide al CDN de Sanity a 200 px. El
+                      original es un PNG de varios MB y dejaba el recuadro en
+                      blanco mientras el comprador llenaba el formulario. */}
+                  <img
+                    src={sanityCdnImage(product.image || (product as any).images?.[0] || '/placeholder.jpg', 200)}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
@@ -351,65 +391,19 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
               )}
 
               {/* Form */}
-              <form id="checkout-form" onSubmit={handleSubmit} className="space-y-4">
+              <form id="checkout-form" onSubmit={handleSubmit} noValidate className="space-y-4">
                 {error && (
                   <div className="p-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100 animate-in fade-in">
                     {error}
                   </div>
                 )}
                 
-                <div className="space-y-4">
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input 
-                      type="text" 
-                      name="customerName" 
-                      required
-                      placeholder="Tu nombre completo"
-                      className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-base"
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input 
-                      type="tel" 
-                      name="customerPhone" 
-                      required
-                      pattern="[0-9]{10}"
-                      minLength={10}
-                      maxLength={10}
-                      title="Debe ingresar exactamente 10 números"
-                      placeholder="Tu celular (WhatsApp)"
-                      className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-base"
-                      onInput={(e) => {
-                        e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
-                      }}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative col-span-2 sm:col-span-1">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input 
-                        type="text" 
-                        name="customerCity" 
-                        required
-                        placeholder="Ciudad / Municipio"
-                        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-base"
-                      />
-                    </div>
-                    <div className="relative col-span-2 sm:col-span-1">
-                      <input 
-                        type="text" 
-                        name="customerAddress" 
-                        required
-                        placeholder="Dirección completa"
-                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-base"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <DeliveryFields
+                  value={delivery}
+                  onChange={setDelivery}
+                  errors={fieldErrors}
+                  onFieldEdit={clearFieldError}
+                />
 
               </form>
             </div>

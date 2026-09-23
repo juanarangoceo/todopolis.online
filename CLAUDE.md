@@ -358,6 +358,21 @@ Detectados el 16-sep-2026 al revisar el flujo manual. Ninguno está resuelto:
   con el botón, producto por producto, o con un script equivalente al de
   categorías.
 
+## Checkout — datos de entrega (sep 2026)
+
+El formulario pide **nombre y apellido, celular, departamento, ciudad o municipio, dirección, barrio** (obligatorios) y **apto/torre/referencia** (opcional). Antes eran cuatro campos de texto libre, sin departamento ni barrio.
+
+- **`lib/checkout/delivery.ts` (con test) es la ÚNICA regla.** La usan el formulario, `create-order` y la ruta de Confío. Si validaran distinto, el formulario dejaría pasar algo que el servidor rechaza con un error genérico.
+- **Departamento y ciudad salen de DIVIPOLA** (`lib/colombia/divipola.ts`, 33 departamentos y 1.122 municipios, generado desde datos.gov.co). Se eligen con un selector con búsqueda (`components/checkout/location-combobox.tsx`), sin tildes, y solo se acepta un municipio de la lista. Se guarda también el **código DANE** (`customer_city_code`), que es lo que conviene mandar a una transportadora.
+- Los nombres de campo son los de Nitro en `delivery_data` (`nombre, telefono, direccion, barrio, ciudad, departamento`): el día que el pedido viaje a Nitro no hay que traducir.
+- Columnas nuevas en `orders`: `customer_department`, `customer_neighborhood`, `customer_address_details`, `customer_city_code` (migración `20260923120000_order_delivery_fields.sql`). `customer_address` y `customer_city` siguen siendo calle y ciudad.
+- **El precio de contraentrega ya NO viene del formulario**: `lib/checkout/order-pricing.ts` lo resuelve desde Sanity para las dos vías. Antes se podía pedir cualquier producto al precio que uno escribiera.
+- **`price` se guarda POR UNIDAD en las dos vías** (total ÷ cantidad). El panel, los ingresos y el `Purchase` de Meta calculan `price × quantity`; contraentrega guardaba el total y un pedido de 2 unidades se habría contado doble.
+- Los datos del último pedido se recuerdan en el navegador (`localStorage`, `tp_delivery_v1`) para quien vuelve a comprar.
+
+### Los pedidos web NO llegan a Nitro
+Verificado el 23-sep-2026. Todopolis (Supabase `sfargytzulstppnbatjx`) y Nitro (`snbxdzytpwibctepuiwq`) son bases distintas, y lo único que viaja entre los dos es el **catálogo** (Todopolis → Nitro, HMAC, `/api/integrations/todopolis/catalog`), que funciona. Los pedidos de la web se quedan en la tabla `orders` de Todopolis y se gestionan en `/admin/pedidos`. En el panel de Nitro solo aparecen los que cierra el bot por WhatsApp (`nativo`) y los de Nitro Landing.
+
 ## Pago anticipado con Confío — no romper
 
 Segundo método de pago en el checkout, junto a la contraentrega. El comprador paga por PSE, Nequi o Bancolombia, **Confío retiene el dinero en custodia** y solo lo libera cuando el comprador confirma que recibió. Portado de `nitro_bot`, donde este módulo ya está desplegado.
@@ -461,13 +476,13 @@ Si agregas un campo nuevo de Destacados, ponle nombre `destacado*` directo en el
 El toggle también controla el envío gratis en `components/checkout-modal.tsx`. Si algún día quieres separar "landing extendida" de "envío gratis", hay que partir el flag en dos.
 
 ### Ficha de producto — un solo recorrido y una sola rejilla (sep 2026)
-Normal y Destacado comparten el MISMO recorrido (`funnel` en `app/producto/[slug]/page.tsx`): historia → beneficios con galería → (bloques manuales de Destacados) → usos (solo normal) → ficha técnica → fotos de clientes → «Cómo pagas» → preguntas → cierre. Los componentes viven en `components/product/destacados/` por historia, pero ya los usan las dos fichas. Solo en la normal, DESPUÉS del cierre: un carrusel de venta cruzada (antes había otro a media ficha, una salida justo antes del botón) y la suscripción. `StorePolicies` ya no va en la ficha: el cierre dice envío, devolución y WhatsApp.
+Normal y Destacado comparten el MISMO recorrido (`funnel` en `app/producto/[slug]/page.tsx`): historia → beneficios con galería → (bloques manuales de Destacados) → usos (solo normal) → ficha técnica → fotos de clientes → preguntas → «Cómo pagas» → cierre. Los componentes viven en `components/product/destacados/` por historia, pero ya los usan las dos fichas. Solo en la normal, DESPUÉS del cierre: un carrusel de venta cruzada (antes había otro a media ficha, una salida justo antes del botón) y la suscripción. `StorePolicies` ya no va en la ficha: el cierre dice envío, devolución y WhatsApp.
 
 Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/destacados/destacado-section-header.tsx`): el MISMO `container` que el hero y **ningún `max-w-*` propio**. Antes cada bloque tenía su ancho (6xl, 4xl, md, 5xl, 2xl, lg) y en escritorio la página era una escalera de bordes. Lo que necesita renglones más cortos usa `DestacadoSplit` (título 4 columnas, contenido 8), no se encoge. Si añades un bloque, úsalos.
 
 - **Banner bajo el hero**: campo `destacadoBanner` (escritorio + móvil opcional + alt), de borde a borde, `<picture>` con URLs del CDN de Sanity. Las dimensiones del asset viajan en la query para que la página no salte.
 - **Galería lifestyle**: `aiLifestyleImage` sigue siendo la principal (y la de los carriles del home); `aiLifestyleGallery` suma más fotos. El botón de IA del Studio ahora elige **escena** y puede **añadir a la galería** en vez de reemplazar. Se pintan juntas con `ProductLifestyleGallery` y `lifestyleImages()` (`lib/lifestyle.ts`), también en la ficha normal.
-- **«Cómo pagas»** (`destacado-payment.tsx`) explica Confío en el cuerpo de la página, antes de las preguntas. Por eso la ficha pasa `showPaymentExplainer={false}` al `Footer`: el recuadro del pie sigue en el resto del sitio.
+- **«Cómo pagas»** (`destacado-payment.tsx`) explica Confío en el cuerpo de la página, pegado al cierre (entre las preguntas y el botón): es la última duda antes de comprar. No va dentro del cierre, que lo recargaría. Por eso la ficha pasa `showPaymentExplainer={false}` al `Footer`: el recuadro del pie sigue en el resto del sitio.
 - **El cierre** (`destacado-cta.tsx`) lleva la foto del producto al lado y abre el checkout del hero con el evento `product:buy`, no con un modal propio. El copy sale de `closingCopy()`, que descarta al renderizar las promesas viejas de la IA («envío rápido», «24-48h», «garantía de satisfacción»).
 - El cierre dice «Envío gratis» o «Envío $12.000» según `isDestacado`, el mismo flag que lo cobra en `checkout-modal.tsx`.
 - **Estilo**: antetítulo gris con filete, no pastillas con estrella; beneficios abiertos y numerados, sin emoji; listas con filetes, no tarjetas. Los subtítulos «Sin filtros, sin retoques» y «Sin actores ni stock» se quitaron: son afirmaciones que la tienda no puede sostener sobre fotos que sube un editor.

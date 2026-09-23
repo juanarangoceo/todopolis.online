@@ -6,6 +6,8 @@ import { Flame } from 'lucide-react';
 interface OfferCountdownInlineProps {
   offerName: string;
   offerEndsAt: string;
+  price?: number;
+  originalPrice?: number;
 }
 
 function pad(n: number) {
@@ -31,7 +33,7 @@ function getTimeLeft(endsAt: string) {
 //
 // Con más de un día por delante los segundos sobran —un reloj corriendo a 7
 // días vista se lee como presión, no como información— y se ocultan.
-export function OfferCountdownInline({ offerName, offerEndsAt }: OfferCountdownInlineProps) {
+export function OfferCountdownInline({ offerName, offerEndsAt, price, originalPrice }: OfferCountdownInlineProps) {
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(offerEndsAt));
   const [mounted, setMounted] = useState(false);
 
@@ -53,6 +55,8 @@ export function OfferCountdownInline({ offerName, offerEndsAt }: OfferCountdownI
     month: 'long',
   });
 
+  const savings = originalPrice && price && originalPrice > price ? originalPrice - price : 0;
+
   const units = [
     ...(timeLeft.days > 0 ? [{ value: timeLeft.days, label: timeLeft.days === 1 ? 'día' : 'días' }] : []),
     { value: timeLeft.hours, label: 'horas' },
@@ -73,6 +77,9 @@ export function OfferCountdownInline({ offerName, offerEndsAt }: OfferCountdownI
         <div className="min-w-0 leading-tight">
           <p className="truncate text-sm font-extrabold text-ink-title">{offerName}</p>
           <p className="text-xs text-foreground/60">
+            {savings > 0 && (
+              <span className="font-bold text-sale">Ahorras $ {savings.toLocaleString('es-CO')} · </span>
+            )}
             Termina el {endsLabel}
           </p>
         </div>

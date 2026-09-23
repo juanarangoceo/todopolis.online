@@ -2,8 +2,8 @@ import { Banknote, Landmark, Smartphone } from 'lucide-react'
 import { ConfioLogo } from '@/components/confio-logo'
 import { DestacadoSection, DestacadoSectionHeader, DestacadoSplit } from './destacado-section-header'
 
-// «Cómo pagas», en la parte blanca de la landing, justo antes de las
-// preguntas y el cierre. Antes esta explicación vivía en el pie de página,
+// «Cómo pagas», en la parte blanca de la landing, entre las preguntas y el
+// cierre: la última objeción se resuelve justo antes del botón. Antes esta explicación vivía en el pie de página,
 // sobre fondo oscuro, DESPUÉS del botón de compra: quien tenía la duda
 // «¿y si pago y no llega?» la resolvía cuando ya se había ido.
 //
@@ -46,7 +46,7 @@ export function DestacadoPayment() {
           />
         }
       >
-        <div className="grid gap-4 md:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-5 md:items-start">
           {/* Contraentrega — la de siempre, corta: no hay nada que explicar. */}
           <div className="flex flex-col rounded-3xl border border-nav-inactive-border p-6 md:col-span-2 md:p-7">
             <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-trust-bg text-trust-fg">

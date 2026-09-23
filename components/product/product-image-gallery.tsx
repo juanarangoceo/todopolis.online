@@ -5,6 +5,13 @@ import Image from 'next/image';
 import { Zap } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { sanityCdnImage } from '@/lib/sanity/cdn-image';
+
+// Las fotos de Sanity se piden ya redimensionadas a su CDN y NO pasan por el
+// optimizador de Next: con PNG de 1-4 MB se colgaba (timeout de 7 s) y las
+// miniaturas salían rotas, mostrando el texto alternativo. Las de Mastershop
+// (cdn.bemaster.com) no tienen ese CDN y siguen por el optimizador.
+const isSanity = (url: string) => url.includes('cdn.sanity.io');
 
 interface ProductImageGalleryProps {
   product: Product;
@@ -41,11 +48,12 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
       {/* Imagen principal — ancho completo de la columna */}
       <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted/30 shadow-2xl shadow-primary/10">
         <Image
-          src={images[selectedImage]}
+          src={sanityCdnImage(images[selectedImage], 1200)}
           alt={product.name}
           fill
           sizes="(max-width: 1024px) 100vw, 45vw"
           className="object-cover"
+          unoptimized={isSanity(images[selectedImage])}
           priority
           loading="eager"
         />
@@ -80,11 +88,12 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
               )}
             >
               <Image
-                src={image}
+                src={sanityCdnImage(image, 200)}
                 alt={`${product.name} - Vista ${index + 1}`}
                 fill
                 sizes="80px"
                 className="object-cover"
+                unoptimized={isSanity(image)}
               />
             </button>
           ))}

@@ -13,6 +13,7 @@ import { CheckoutModal } from '@/components/checkout-modal';
 import { useFavorites } from '@/app/providers/favorites-provider';
 import { VariantSelector } from './variant-selector';
 import { OfferCountdownInline } from './offer-countdown-inline';
+import { sanityCdnImage } from '@/lib/sanity/cdn-image';
 
 interface ProductHeroProps {
   product: Product;
@@ -80,10 +81,11 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
           {/* Main Image */}
           <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted/30 shadow-2xl shadow-primary/10">
             <Image
-              src={images[selectedImage]}
+              src={sanityCdnImage(images[selectedImage], 900)}
               alt={product.name}
               fill
               sizes="(max-width: 1023px) 100vw, 1px"
+              unoptimized={images[selectedImage].includes('cdn.sanity.io')}
               className="object-cover"
               priority
               loading="eager"
@@ -98,21 +100,25 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
 
           {/* Thumbnails */}
           {images.length > 1 && (
-            <div className="flex gap-3 justify-center">
+            // Con más de 4 fotos las miniaturas se aplastaban en óvalos: el
+            // flex las encogía para que cupieran. Ahora se deslizan.
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
+                  aria-label={`Ver imagen ${index + 1}`}
                   className={cn(
-                    "relative w-20 h-20 rounded-xl overflow-hidden ring-2 transition-all",
+                    "relative w-16 h-16 shrink-0 rounded-xl overflow-hidden ring-2 transition-all",
                     selectedImage === index ? "ring-primary" : "ring-border/50 hover:ring-primary/50 opacity-70 hover:opacity-100"
                   )}
                 >
                   <Image
-                    src={image}
+                    src={sanityCdnImage(image, 200)}
                     alt={`${product.name} - Vista ${index + 1}`}
                     fill
-                    sizes="80px"
+                    sizes="64px"
+                    unoptimized={image.includes('cdn.sanity.io')}
                     className="object-cover"
                   />
                 </button>
@@ -260,18 +266,12 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
             <p className="text-lg text-muted-foreground leading-relaxed">{bullets[0]}</p>
           ) : null}
 
-          {/* In Stock + señal de demanda honesta (solo si es best seller) */}
-          <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-sm text-muted-foreground">Disponible · llega en 3 a 7 días hábiles</span>
-            </div>
-            {product.isBestSeller && (
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-todopolis-coral-deep">
-                <Zap className="w-4 h-4 fill-current" />
-                Entre los más vendidos
-              </span>
-            )}
+          {/* Disponibilidad. «Entre los más vendidos» ya no se repite aquí:
+              la etiqueta «Más vendido» sobre el nombre dice lo mismo, y
+              decirlo dos veces en una pantalla suena a insistir. */}
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-sm text-muted-foreground">Disponible · llega en 3 a 7 días hábiles</span>
           </div>
 
           {/* Variant Selector — solo aparece si el producto tiene variantes.
@@ -316,6 +316,8 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
                 <OfferCountdownInline
                   offerName={(product as any).offerName}
                   offerEndsAt={(product as any).offerEndsAt}
+                  price={product.price ?? 0}
+                  originalPrice={(product as any).originalPrice ?? undefined}
                 />
               )}
             </div>

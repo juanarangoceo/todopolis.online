@@ -111,7 +111,10 @@ function SupportModal({ item, onClose }: { item: string; onClose: () => void }) 
 // `showPaymentExplainer={false}` en las páginas que ya explican Confío en su
 // propio cuerpo (la landing de Destacados, sección «Cómo pagas»): repetirlo en
 // el pie, en fondo oscuro y después del botón de compra, no aclara nada.
-export function Footer({ showPaymentExplainer = true }: { showPaymentExplainer?: boolean } = {}) {
+// `flush`: sin margen superior. La ficha termina en el cierre, que ya tiene su
+// propio fondo; los 96 px del margen dejaban una franja blanca suelta entre el
+// cierre y el pie.
+export function Footer({ showPaymentExplainer = true, flush = false }: { showPaymentExplainer?: boolean; flush?: boolean } = {}) {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   // Privacidad y Términos salieron de aquí: ahora son páginas con URL propia
@@ -120,7 +123,7 @@ export function Footer({ showPaymentExplainer = true }: { showPaymentExplainer?:
 
   return (
     <>
-      <footer id="site-footer" className="relative mt-24 overflow-hidden">
+      <footer id="site-footer" className={`relative overflow-hidden ${flush ? '' : 'mt-24'}`}>
         {/* Curved top decoration */}
         <div className="absolute top-0 left-0 right-0 h-24 -translate-y-full">
           <svg viewBox="0 0 1440 100" fill="none" className="w-full h-full" preserveAspectRatio="none">

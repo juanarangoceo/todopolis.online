@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { bestColumns } from '@/lib/new-arrivals';
+import { PRODUCT_CATEGORIES } from '@/lib/categories';
 
 // Sección de novedades del home.
 //
@@ -31,42 +32,51 @@ export function NewArrivalsBanner({ products = [] }: NewArrivalsBannerProps) {
 
   const shown = products.slice(0, 12);
   const columns = bestColumns(shown.length);
-  const formatPrice = (price: number) => '$' + price.toLocaleString('es-CO');
 
+  const formatCardPrice = (price: number) => '$ ' + price.toLocaleString('es-CO');
+  // La categoría llega cruda del dataset (`electronica`); se muestra el
+  // nombre con tilde, como en la cuadrícula.
+  const categoryTitle = (value: string) =>
+    PRODUCT_CATEGORIES.find((c) => c.value === value?.toLowerCase())?.title ?? value;
+
+  // Franja de fondo gris suave, a todo el ancho, con el mismo encabezado que
+  // las secciones de la ficha (antetítulo gris con filete + titular). Antes
+  // era una caja con degradado azul-lavanda y dos manchas difuminadas: el
+  // único bloque del sitio con ese adorno, y sus tarjetas —blancas
+  // translúcidas, precio en negro grueso sin espacio— no se parecían a las
+  // del catálogo que venían justo debajo.
   return (
-    <section className="w-full pt-5 md:pt-8 pb-2" aria-labelledby="novedades-titulo">
+    <section className="w-full bg-surface-soft py-8 md:py-12" aria-labelledby="novedades-titulo">
       <div className="container mx-auto px-4">
-        <div
-          className="relative w-full rounded-3xl overflow-hidden shadow-sm border border-todopolis-lavender/25"
-          style={{ background: 'linear-gradient(135deg, #F0F7FF 0%, #F5E9FF 55%, #EBF4FF 100%)' }}
-        >
-          <div aria-hidden className="absolute top-0 right-0 w-80 h-80 bg-todopolis-lavender/35 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-          <div aria-hidden className="absolute bottom-0 left-1/4 w-56 h-56 bg-todopolis-blue/25 rounded-full blur-3xl translate-y-1/2 pointer-events-none" />
-
-          <div className="relative z-10 px-5 md:px-8 pt-6 md:pt-8 pb-6 md:pb-8">
+          <div>
             {/* El nombre de la marca en el titular: Todópolis es "todo" +
                 polis, la ciudad de todo, y es lo único que ningún competidor
-                puede copiar. El catálogo deja de ser una lista de inventario y
-                pasa a ser un sitio con movimiento propio.
+                puede copiar.
 
                 No hay subtítulo a propósito. Los dos que hubo antes describían
                 el bloque ("Llegaron 12 productos nuevos", "Doce novedades del
                 catálogo") — contaban el estante en vez de decirle algo al
-                cliente, y el titular ya dice qué es esto. Uno de ellos además
-                repetía envío y medios de pago, que es exactamente lo que dicen
-                los tres recuadros diez píxeles más abajo.
-
-                Queda solo el sello de fecha, que es el único dato verificable
-                y cambia solo. Va en su propia línea porque `whenLabel` devuelve
-                "hoy", "ayer", "hace 3 días" o "el 12 de septiembre", y así
-                encajan las cuatro sin reescribir la frase. */}
-            <div className="mb-5 md:mb-6">
-              <h2
-                id="novedades-titulo"
-                className="font-serif text-2xl md:text-4xl font-extrabold text-neutral-900 leading-tight text-balance"
+                cliente, y el titular ya dice qué es esto. */}
+            <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
+              <div>
+                <p className="mb-2 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
+                  Novedades
+                </p>
+                <h2
+                  id="novedades-titulo"
+                  className="font-serif text-2xl font-extrabold leading-tight tracking-[-0.02em] text-ink-title text-balance md:text-[2rem]"
+                >
+                  Lo último que llegó a Todópolis
+                </h2>
+              </div>
+              <Link
+                href="/ofertas"
+                className="hidden shrink-0 items-center gap-1.5 pb-1 text-sm font-bold text-todopolis-lavender-deep transition-all hover:gap-2.5 sm:inline-flex"
               >
-                Lo último que llegó a Todópolis
-              </h2>
+                Ver también las ofertas
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
 
             {/* En móvil es un carrusel: 12 tarjetas en rejilla de 2 columnas
@@ -79,7 +89,7 @@ export function NewArrivalsBanner({ products = [] }: NewArrivalsBannerProps) {
                 cantidades sin divisor cómodo (7, 11…): la fila incompleta se
                 centra y se lee como decisión, no como hueco. */}
             <div
-              className="na-rail flex gap-3 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-1 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none na-grid sm:grid sm:grid-cols-3 md:gap-4 sm:justify-center"
+              className="na-rail flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 -mx-4 px-4 pb-1 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none na-grid sm:grid sm:grid-cols-3 md:gap-4 sm:justify-center"
               style={{ ['--na-cols' as string]: String(columns) }}
             >
               {shown.map((product) => {
@@ -88,29 +98,29 @@ export function NewArrivalsBanner({ products = [] }: NewArrivalsBannerProps) {
                   <Link
                     key={product.id}
                     href={`/producto/${slug}`}
-                    className="group w-[42vw] max-w-[190px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink rounded-2xl overflow-hidden bg-white/85 border border-white hover:border-todopolis-blue hover:shadow-md transition-all duration-200"
+                    className="group w-[42vw] max-w-[190px] shrink-0 snap-start overflow-hidden rounded-3xl border border-nav-inactive-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-auto sm:max-w-none sm:shrink"
                   >
-                    {/* 3/4 y no cuadrado: el recorte cuadrado decapitaba las
-                        fotos de producto, que vienen verticales. */}
-                    <div className="relative w-full aspect-[3/4]">
+                    {/* 4:5, como las tarjetas del catálogo. */}
+                    <div className="relative aspect-[4/5] w-full overflow-hidden">
                       <Image
                         src={product.image || '/placeholder.jpg'}
                         alt={product.name}
                         fill
                         sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 42vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                         loading="lazy"
                       />
                     </div>
-                    {/* Nombre y precio SIEMPRE visibles. Antes el precio salía
-                        solo en hover, a 9px — invisible en móvil, donde no hay
-                        hover. */}
-                    <div className="px-3 py-2.5">
-                      <p className="text-xs md:text-sm font-medium text-neutral-700 leading-snug line-clamp-2 min-h-[2.4em] group-hover:text-todopolis-blue-deep transition-colors">
+                    {/* Nombre y precio SIEMPRE visibles: en móvil no hay hover. */}
+                    <div className="p-3 sm:p-4">
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">
+                        {categoryTitle(product.category)}
+                      </p>
+                      <p className="line-clamp-2 min-h-[2.5em] text-sm font-semibold leading-snug text-ink-title">
                         {product.name}
                       </p>
-                      <p className="mt-1 text-sm md:text-base font-black text-neutral-900">
-                        {formatPrice(product.price)}
+                      <p className="mt-2 font-serif text-base font-extrabold tabular-nums text-ink-title sm:text-lg">
+                        {formatCardPrice(product.price)}
                       </p>
                     </div>
                   </Link>
@@ -120,13 +130,12 @@ export function NewArrivalsBanner({ products = [] }: NewArrivalsBannerProps) {
 
             <Link
               href="/ofertas"
-              className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-todopolis-blue-deep hover:gap-2.5 transition-all"
+              className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-todopolis-lavender-deep transition-all hover:gap-2.5 sm:hidden"
             >
               Ver también las ofertas
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-        </div>
       </div>
     </section>
   );

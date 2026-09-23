@@ -26,7 +26,7 @@ export function DestacadoBoxContents({ data }: Props) {
       eyebrow="Qué viene en la caja"
       title={data.title || 'Todo lo que recibes'}
       subtitle={data.intro}
-      className={data.image ? undefined : 'lg:mb-0'}
+      className={data.image ? 'md:mb-8' : 'lg:mb-0'}
     />
   )
 
@@ -42,11 +42,7 @@ export function DestacadoBoxContents({ data }: Props) {
   )
 
   const pieceRow = pieces.length > 0 && (
-    <ul
-      className={`mt-8 grid grid-cols-2 gap-4 ${
-        data.image ? 'sm:grid-cols-3 lg:grid-cols-6' : 'sm:grid-cols-3 lg:grid-cols-4'
-      }`}
-    >
+    <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {pieces.map((piece, i) => (
         <li key={piece._key ?? i}>
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface-muted ring-1 ring-nav-inactive-border">
@@ -78,23 +74,30 @@ export function DestacadoBoxContents({ data }: Props) {
     )
   }
 
+  // Con foto: la foto a la izquierda (5 columnas, vertical, que es como
+  // llegan casi todas) y a la derecha título, lista y piezas juntos. Antes la
+  // foto iba en 4:3 bajo el título —recortando la mitad de una imagen
+  // vertical— y una lista de un solo renglón quedaba flotando a media altura
+  // en la otra mitad de la pantalla.
   return (
     <DestacadoSection>
-      {header}
-      <div className={`grid gap-8 lg:gap-16 ${items.length > 0 ? 'md:grid-cols-2 md:items-center' : ''}`}>
-        <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-surface-muted">
+      <div className="grid gap-8 lg:grid-cols-12 lg:items-center lg:gap-16">
+        <div className="lg:order-2 lg:col-span-7">
+          {header}
+          {list}
+          {pieceRow}
+        </div>
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-3xl bg-surface-muted lg:order-1 lg:col-span-5 lg:max-w-none">
           <Image
-            src={sanityCdnImage(data.image, 1000)}
+            src={sanityCdnImage(data.image, 900)}
             alt={data.imageAlt || 'Contenido de la caja'}
             fill
-            sizes="(min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 1024px) 40vw, 100vw"
             className="object-cover"
             unoptimized
           />
         </div>
-        {list}
       </div>
-      {pieceRow}
     </DestacadoSection>
   )
 }

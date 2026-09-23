@@ -40,6 +40,8 @@ export interface CapiUserData {
   phone?: string
   name?: string
   city?: string
+  /** Departamento. Meta lo llama `st` fuera de EE. UU. */
+  state?: string
   email?: string
 }
 
@@ -68,7 +70,9 @@ function hashField(raw: string | undefined, kind: 'email' | 'phone' | 'text'): s
     // Colombia: número local de 10 dígitos → anteponer código de país 57.
     if (v.length === 10) v = `57${v}`
   } else if (kind === 'text') {
-    v = v.replace(/\s+/g, '')
+    // Meta pide a-z sin espacios ni signos. Sin quitar tildes, «medellín» y
+    // «medellin» dan hashes distintos y el evento no coincide con el perfil.
+    v = v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
   }
   if (!v) return undefined
   return sha256(v)
@@ -80,13 +84,21 @@ export async function sendCapiEvent(args: SendCapiArgs): Promise<void> {
   if (!pixelId) return
 
   const u = args.userData ?? {}
-  const firstName = u.name?.trim().split(/\s+/)[0]
+  const nameParts = u.name?.trim().split(/\s+/) ?? []
+  const firstName = nameParts[0]
+  // Apellido: la última palabra. Con «Ana María Gómez Ruiz» no es exacto, pero
+  // Meta combina varias señales y un apellido aproximado suma coincidencia.
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : undefined
 
   const user_data: Record<string, unknown> = {
     em: hashField(u.email, 'email'),
     ph: hashField(u.phone, 'phone'),
     fn: hashField(firstName, 'text'),
+    ln: hashField(lastName, 'text'),
     ct: hashField(u.city, 'text'),
+    st: hashField(u.state, 'text'),
+    // La tienda solo vende en Colombia: el país es un dato cierto de todos.
+    country: hashField('co', 'text'),
     fbp: args.fbp,
     fbc: args.fbc,
     client_ip_address: args.clientIp,

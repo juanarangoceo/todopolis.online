@@ -35,9 +35,21 @@ export function DestacadoStory({ story }: Props) {
         title={story?.eyebrow?.trim() || 'Del día a día a algo que por fin funciona'}
       />
 
-      <div className={`grid gap-10 md:gap-8 ${acts.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} lg:gap-12`}>
+      {/* Con fotos, en móvil los momentos se deslizan de lado: tres fotos a
+          todo el ancho una bajo otra alargaban la historia a tres pantallas.
+          Sin fotos se apilan, que el texto solo es corto. */}
+      <div
+        className={`${
+          anyImage
+            ? '-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:mx-0 md:grid md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden'
+            : 'grid gap-10'
+        } md:gap-8 ${acts.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} lg:gap-12`}
+      >
         {acts.map((act, index) => (
-          <article key={act.label}>
+          <article
+            key={act.label}
+            className={anyImage ? 'w-[82%] shrink-0 snap-start md:w-auto' : undefined}
+          >
             {anyImage && (
               <div
                 className={`relative mb-6 aspect-[4/3] overflow-hidden rounded-2xl ${act.image ? 'bg-surface-muted' : 'hidden md:block'}`}

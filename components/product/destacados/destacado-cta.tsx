@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { MessageCircle, RotateCcw, ShoppingBag, Truck } from 'lucide-react'
 import { PaymentMethods } from '@/components/payment-methods'
+import { OfferCountdownInline } from '../offer-countdown-inline'
 import { Product } from '@/lib/types'
 import { DestacadoSection } from './destacado-section-header'
 
@@ -100,6 +101,21 @@ export function DestacadoCTA({ product, whatsappHref }: Props) {
               </span>
             )}
           </div>
+
+          {/* La misma cuenta regresiva del hero, y con los mismos datos: quien
+              llega al cierre tras leer la página ya no tiene el reloj a la
+              vista, y es justo cuando decide. Sin fecha o vencida no pinta
+              nada. */}
+          {(product as any).offerName && (product as any).offerEndsAt && (
+            <div className="mt-5 max-w-md">
+              <OfferCountdownInline
+                offerName={(product as any).offerName}
+                offerEndsAt={(product as any).offerEndsAt}
+                price={product.price ?? 0}
+                originalPrice={originalPrice ?? undefined}
+              />
+            </div>
+          )}
 
           <button
             type="button"

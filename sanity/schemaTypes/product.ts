@@ -511,6 +511,20 @@ export const productType = defineType({
       type: 'datetime',
       group: 'offer',
       description: 'Fecha y hora exacta. El countdown desaparece automáticamente al llegar a cero.',
+      // Una cuenta regresiva sin rebaja es urgencia fabricada: el comprador
+      // corre a pagar un precio que es el de siempre. Con tráfico pagado eso
+      // es publicidad engañosa para la SIC. Se avisa, no se bloquea.
+      validation: (rule) =>
+        rule
+          .custom((value, context) => {
+            if (!value) return true
+            const doc = context.document as { price?: number; originalPrice?: number } | undefined
+            const hasDiscount = !!doc?.originalPrice && !!doc?.price && doc.originalPrice > doc.price
+            return hasDiscount
+              ? true
+              : 'La oferta no tiene rebaja: llena «Precio Original» (mayor que el precio) o quita la fecha. Una cuenta regresiva sin descuento es urgencia falsa.'
+          })
+          .warning(),
     }),
 
     // ─── Destacados — Contenido extendido de campaña ────────────────────────

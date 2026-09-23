@@ -25,7 +25,10 @@ export function DestacadoSection({ children, tone = 'white', className, id }: De
   return (
     <section
       id={id}
-      className={cn('py-12 md:py-20', tone === 'soft' ? 'bg-surface-soft' : 'bg-surface', className)}
+      // 56 px por lado en escritorio. Con 80 px, dos secciones blancas
+      // seguidas quedaban separadas por 160 px de nada y la landing se leía
+      // como bloques sueltos en vez de un recorrido.
+      className={cn('py-10 md:py-14', tone === 'soft' ? 'bg-surface-soft' : 'bg-surface', className)}
     >
       <div className="container mx-auto px-4">{children}</div>
     </section>

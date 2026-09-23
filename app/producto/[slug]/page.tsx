@@ -21,7 +21,6 @@ import { DestacadoSteps } from '@/components/product/destacados/destacado-steps'
 import { DestacadoBoxContents } from '@/components/product/destacados/destacado-box-contents'
 import { DestacadoComparison } from '@/components/product/destacados/destacado-comparison'
 import { DestacadoStory } from '@/components/product/destacados/destacado-story'
-import { OfferBanner } from '@/components/product/offer-banner'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 import { GlobalSearch } from '@/components/global-search'
 import { buildWhatsAppUrl, resolveWhatsAppPhone } from '@/lib/whatsapp'
@@ -192,8 +191,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // rejilla (`destacados/destacado-section-header.tsx`):
   //
   //   reconocimiento (banner) → contexto (historia) → beneficios con fotos →
-  //   demostración → ¿es para ti? → contenido → datos → prueba → cómo se
-  //   paga → dudas → cierre
+  //   demostración → ¿es para ti? → contenido → datos → prueba → dudas →
+  //   cómo se paga → cierre
   //
   // Los bloques manuales de Destacados solo salen si el producto es Destacado
   // y el editor los llenó. La historia no es exclusiva: la IA la escribe para
@@ -231,12 +230,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         photos={adaptedProduct.customerPhotos}
         productName={adaptedProduct.name}
       />
-      <DestacadoPayment />
       <DestacadoFaq
         faqs={adaptedProduct.faqs}
         articleSlug={adaptedProduct.articleSlug}
         articleTopic={adaptedProduct.articleTopic}
       />
+      {/* «Cómo pagas» pegado al cierre: es la última duda antes del botón
+          («¿y si pago y no llega?»), así que se resuelve justo antes de él y
+          no dos secciones atrás. No va DENTRO del cierre: lo recargaría y le
+          quitaría el foco al botón. */}
+      <DestacadoPayment />
       <DestacadoCTA product={adaptedProduct} whatsappHref={whatsappHref} />
     </>
   )
@@ -354,7 +357,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <ProductImageGallery product={adaptedProduct} />
             </div>
             <div className="min-w-0 space-y-0">
-              <OfferBanner product={adaptedProduct} />
+              {/* Sin franja de descuento encima del hero (se quitó sep 2026):
+                  repetía el −X% que ya dicen la foto y el precio, metía un
+                  segundo «Comprar ya» que competía con el botón, en móvil
+                  cortaba el texto y prometía «por tiempo limitado» aunque la
+                  oferta no tuviera fecha. El descuento vive junto al precio y,
+                  si hay fecha, en la cuenta regresiva. */}
               <ProductHero product={adaptedProduct} whatsappHref={whatsappHref} />
             </div>
           </div>
@@ -398,7 +406,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         }}
       />
 
-      <Footer showPaymentExplainer={false} />
+      <Footer showPaymentExplainer={false} flush />
     </div>
   )
 }

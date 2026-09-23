@@ -20,6 +20,10 @@ export interface OrderRow {
   customer_phone: string | null
   customer_city: string | null
   customer_address: string | null
+  customer_department: string | null
+  customer_neighborhood: string | null
+  customer_address_details: string | null
+  customer_city_code: string | null
   variant_name: string | null
   status: string
   payment_method: string | null
@@ -149,9 +153,20 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
                       <p className="text-xs text-muted-foreground">×{o.quantity}</p>
                     )}
                   </td>
-                  <td className="px-4 py-3 max-w-[200px]">
+                  <td className="px-4 py-3 max-w-[240px]">
                     <p className="font-medium text-foreground leading-snug">{o.customer_name ?? '—'}</p>
-                    <p className="text-xs text-muted-foreground">{o.customer_city}</p>
+                    {/* Dirección completa: es lo que se copia a la guía. Antes
+                        el panel ni siquiera la mostraba, solo la ciudad. Los
+                        pedidos viejos no tienen barrio ni departamento. */}
+                    {o.customer_address && (
+                      <p className="text-xs text-foreground/80 leading-snug mt-0.5">
+                        {o.customer_address}
+                        {o.customer_address_details && ` · ${o.customer_address_details}`}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground leading-snug">
+                      {[o.customer_neighborhood, o.customer_city, o.customer_department].filter(Boolean).join(', ')}
+                    </p>
                     {o.customer_phone && (
                       <a
                         href={`https://wa.me/${o.customer_phone.replace(/\D/g, '').replace(/^(\d{10})$/, '57$1')}`}
