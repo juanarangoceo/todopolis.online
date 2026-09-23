@@ -28,14 +28,17 @@ export async function POST(request: NextRequest) {
     path: '/',
   })
   // La cookie vieja vivía en /admin con el valor fijo; se borra para que no
-  // quede una sombra que confunda al navegador.
-  response.cookies.set(ADMIN_COOKIE, '', { path: '/admin', maxAge: 0 })
+  // quede una sombra que confunda al navegador. OJO: con `response.cookies.set`
+  // dos cookies del MISMO nombre se pisan —gana la última— y el borrado se
+  // comía la sesión nueva (nadie podía entrar, 23-sep-2026). Por eso el
+  // borrado va como cabecera aparte.
+  response.headers.append('Set-Cookie', `${ADMIN_COOKIE}=; Path=/admin; Max-Age=0`)
   return response
 }
 
 export async function DELETE() {
   const response = NextResponse.json({ success: true })
-  response.cookies.set(ADMIN_COOKIE, '', { path: '/', maxAge: 0 })
-  response.cookies.set(ADMIN_COOKIE, '', { path: '/admin', maxAge: 0 })
+  response.headers.append('Set-Cookie', `${ADMIN_COOKIE}=; Path=/; Max-Age=0`)
+  response.headers.append('Set-Cookie', `${ADMIN_COOKIE}=; Path=/admin; Max-Age=0`)
   return response
 }
