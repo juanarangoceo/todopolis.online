@@ -419,7 +419,7 @@ Detectados el 16-sep-2026 al revisar el flujo manual. Ninguno está resuelto:
   categorías.
 
 ## Logo para redes — `public/marca/`
-Isotipo (la «T» con destello), fotos de perfil 1080 en azul/blanco/oscuro, logo horizontal claro y oscuro con el slogan, y firma para publicaciones. Se descargan de `todopolis.online/marca/<archivo>`. Reglas de uso: §10 bis de la guía de marca.
+Isotipo (la «T» con destello), fotos de perfil 1080 en azul/blanco/oscuro, logo horizontal claro y oscuro con el slogan, y firma para publicaciones. **Todo junto: `todopolis.online/marca/todopolis-logo.zip`** (si cambias un archivo, regenera el ZIP). Reglas de uso: §10 bis de la guía de marca.
 
 ## Favicon e íconos
 `app/favicon.ico` (16/32/48), `app/icon.svg` y `app/apple-icon.png`: una «T» blanca con el destello del logo sobre el azul del logo. Hasta el 24-sep-2026 el `favicon.ico` era el de `create-next-app` — el triángulo de Vercel en todas las pestañas. Si cambias el ícono, se regeneran los tres (y los del panel, abajo).
