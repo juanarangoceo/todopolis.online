@@ -275,7 +275,7 @@ El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del men
 `components/promo-banner.tsx`. Las piezas traen texto (y a veces botón) pintado en la imagen; el botón superpuesto caía encima.
 
 ### `/ofertas` (sep 2026)
-`components/offers-browser.tsx`. Mismo lenguaje que el home: antetítulo + titular, píldoras de categoría con cuántas ofertas tiene cada una, orden (mayor descuento, menor y mayor precio), buscador también en móvil y la misma `ProductCard`. Se quitaron el banner con degradado, manchas y brillo animado, la franja rosa «Hasta 42% off», y las frases «precios que solo duran lo que dura el cronómetro» y «Precios válidos por tiempo limitado»: el listado no tiene fecha de fin. La foto sale de `mastershopImageUrl ?? image`, como en el home.
+`components/offers-browser.tsx`. Mismo lenguaje que el home: antetítulo + titular, **las mismas categorías que el home** (`CategoryCards` con foto en móvil y `CategoryBar` en escritorio, desde el 24-sep-2026; íconos y grupo de moda en `components/category-icons.ts`) con cuántas ofertas tiene cada una, orden (mayor descuento, menor y mayor precio), buscador también en móvil y la misma `ProductCard`. Se quitaron el banner con degradado, manchas y brillo animado, la franja rosa «Hasta 42% off», y las frases «precios que solo duran lo que dura el cronómetro» y «Precios válidos por tiempo limitado»: el listado no tiene fecha de fin. La foto sale de `mastershopImageUrl ?? image`, como en el home.
 
 ### Query de productos — campo `aiLifestyleImage`
 El campo `aiLifestyleImage` está en **ambos** queries de Sanity:
@@ -629,6 +629,8 @@ Botón «🤖 Completar Destacado con IA» (pestaña Destacados, `sanity/compone
 - **Testimonios visuales** (`vipTestimonials`): fusionados con «Fotos Reales de Clientes», que ahora admite `quote` (textual del cliente). El campo viejo está `deprecated` y oculto si está vacío; la query junta los dos en `customerPhotos`, así que lo existente se sigue viendo.
 
 ## Colecciones de Marca (`collectionLanding`) — no romper
+
+**Narrativa (24-sep-2026): una colección es una GUÍA PARA ELEGIR**, no «una selección curada para ti». El índice dice «Compara y elige el tuyo» y ordena primero las colecciones de moda. El detalle sigue el recorrido qué es → los productos → cómo elegir → comparativa → lo que tienen en común → preguntas → cierre con WhatsApp, con las secciones de la ficha (`DestacadoSection`/`DestacadoSplit`), sin emojis ni degradados. Se quitó «Despacho 24-48h» (falso: son 3 a 7 días hábiles). La fila «Precio» de la comparativa sale SIEMPRE del precio de hoy; la que escribió la IA se descarta. «Te puede interesar» usa `relatedProducts`. Emite `ItemList` en JSON-LD.
 
 Documento que agrupa 3–6 productos de un segmento y genera con IA una landing paraguas. Flujo: schema `collectionLanding` → botón `GenerateCollectionButton` → `/api/generate-collection-content` → landing pública `/coleccion/[slug]` + índice `/colecciones`.
 

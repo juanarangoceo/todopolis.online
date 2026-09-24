@@ -1,14 +1,28 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ShieldCheck, Truck, Clock, ArrowRight } from 'lucide-react'
+import { ArrowDown } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { GlobalSearch } from '@/components/global-search'
 import { ProductGrid } from '@/components/product-grid'
-import { ProductFaq } from '@/components/product/product-faq'
 import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
-import { getAllCollectionSlugs, getCollectionLandingBySlug, getSanityProducts } from '@/lib/sanity/queries'
+import { DestacadoFaq } from '@/components/product/destacados/destacado-faq'
+import {
+  DestacadoSection,
+  DestacadoSectionHeader,
+  DestacadoSplit,
+} from '@/components/product/destacados/destacado-section-header'
+import { WhatsAppIcon } from '@/components/whatsapp-icon'
+import { advancePaymentEnabled } from '@/lib/payments/config'
+import { relatedProducts } from '@/lib/related-products'
+import { resolveWhatsAppPhone } from '@/lib/whatsapp'
+import {
+  getAllCollectionSlugs,
+  getCollectionLandingBySlug,
+  getSanityProducts,
+  getSanityStoreSettings,
+} from '@/lib/sanity/queries'
 
 export const revalidate = 86400
 
@@ -50,18 +64,20 @@ export async function generateMetadata({
   }
 }
 
-// Encabezado de sección con la barra-gradiente de marca.
-function SectionHeading({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div className="text-center mb-10">
-      <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">{title}</h2>
-      <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-gradient-to-r from-todopolis-blue to-todopolis-lavender" />
-      {subtitle && (
-        <p className="text-muted-foreground text-sm md:text-base mt-3 max-w-2xl mx-auto">{subtitle}</p>
-      )}
-    </div>
-  )
-}
+// Landing de una colección (rehecha el 24-sep-2026).
+//
+// Una colección es una GUÍA PARA ELEGIR: 3 a 6 productos del mismo tipo,
+// comparados, para que el comprador se quede con uno. La página cuenta eso en
+// orden: qué es → los productos → cómo elegir → la comparativa → lo que tienen
+// en común → preguntas → cierre con WhatsApp.
+//
+// Antes tenía manchas difuminadas, degradados, una barrita de colores bajo
+// cada título, un ancho distinto por sección, emojis en los beneficios, un
+// botón ROJO que solo bajaba a la cuadrícula (el rojo es comprar) y una
+// promesa falsa: «Despacho 24-48h». La política es 3 a 7 días hábiles
+// (`store-policies.tsx`). Ahora usa las secciones de la ficha
+// (`DestacadoSection`, `DestacadoSplit`), el mismo contenedor y ningún
+// `max-w-*` propio.
 
 export default async function CollectionPage({
   params,
@@ -96,10 +112,12 @@ export default async function CollectionPage({
     tags: p.tags ?? [],
   }))
 
-  // Todos los productos → búsqueda del header + carrusel de sugerencias.
-  const allProducts = await getSanityProducts().catch(() => [])
-  const otherProducts = allProducts
-    .filter((p: any) => !collectionIds.has(p._id) && p.category?.toLowerCase() !== 'bienestar-intimo')
+  const [allProducts, storeSettings] = await Promise.all([
+    getSanityProducts().catch(() => []),
+    getSanityStoreSettings(),
+  ])
+  const catalog = allProducts
+    .filter((p: any) => p.category?.toLowerCase() !== 'bienestar-intimo')
     .map((p: any) => ({
       id: p._id,
       name: p.name,
@@ -113,298 +131,289 @@ export default async function CollectionPage({
       rating: 4.8,
       isNew: p.isNew ?? false,
       isBestSeller: p.isBestSeller ?? false,
+      isDestacado: p.isDestacado ?? false,
       reviewsCount: p.reviewsCount,
+      tags: p.tags ?? [],
     }))
-  const suggestedProducts = otherProducts.slice(0, 12)
 
-  const searchableProducts = allProducts
-    .filter((p: any) => p.category?.toLowerCase() !== 'bienestar-intimo')
-    .map((p: any) => ({
-      id: p._id,
-      name: p.name,
-      slug: p.slug,
-      shortDescription: p.shortDescription ?? '',
-      price: p.price ?? 0,
-      image: p.mastershopImageUrl ?? p.image ?? '/placeholder.jpg',
-      category: p.category ?? 'Otros',
-    }))
+  // «Te puede interesar»: lo más parecido a la colección (su categoría más
+  // común y sus etiquetas), no los 12 primeros del catálogo.
+  const categoryCounts = new Map<string, number>()
+  for (const p of products) categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1)
+  const mainCategory = [...categoryCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
+  const suggestedProducts = relatedProducts<(typeof catalog)[number]>(
+    {
+      id: `collection:${slug}`,
+      category: mainCategory,
+      price: products.length ? products.reduce((sum: number, p: any) => sum + p.price, 0) / products.length : undefined,
+      tags: products.flatMap((p: any) => p.tags ?? []),
+    },
+    catalog.filter((p: any) => !collectionIds.has(p.id)),
+  )
+
+  const searchableProducts = catalog.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    shortDescription: p.shortDescription,
+    price: p.price,
+    image: p.image,
+    category: p.category,
+  }))
 
   const productNames = sanityProducts.map((p: any) => p.name as string)
   const heroThumbs = sanityProducts
     .map((p: any) => p.mastershopImageUrl ?? p.image)
     .filter(Boolean) as string[]
+  // La fila «Precio» que escribe la IA se descarta: es el precio del día en
+  // que se generó. Al final va siempre el de hoy.
   const comparisonRows = (collection.comparisonRows ?? []).filter(
-    (r) => r.feature && Array.isArray(r.values) && r.values.length > 0
+    (r) => r.feature && Array.isArray(r.values) && r.values.length > 0 && !/precio/i.test(r.feature)
   )
+  const benefits = (collection.segmentBenefits ?? []).filter((b) => b.title || b.description)
+  const guide = (collection.buyersGuide ?? []).filter((g) => g.title || g.body)
 
-  // ── Bloques reutilizables (desktop dos columnas / mobile apilado) ──
+  const n = products.length
+  const prices = products.map((p: any) => p.price).filter((v: number) => v > 0)
+  const priceFrom = prices.length ? Math.min(...prices) : null
+  const cop = (v: number) => `$${v.toLocaleString('es-CO')}`
 
-  // Collage de productos (columna visual del hero).
-  const heroCollage = heroThumbs.length > 0 && (
-    <div className="grid grid-cols-2 gap-3">
-      {heroThumbs.slice(0, 4).map((src, i) => (
-        <div
-          key={i}
-          className={`relative overflow-hidden rounded-2xl bg-surface-muted border border-border shadow-sm aspect-square ${heroThumbs.length === 3 && i === 0 ? 'col-span-2 aspect-[2/1]' : ''}`}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={sanityOptimized(src, 500)} alt="" className="w-full h-full object-cover" />
-        </div>
-      ))}
-    </div>
-  )
+  const whatsappPhone = resolveWhatsAppPhone(storeSettings?.whatsappPhone, process.env.NEXT_PUBLIC_WHATSAPP_PHONE)
+  const whatsappHref = whatsappPhone
+    ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(`Hola, estoy mirando la colección «${collection.title}» y no sé cuál elegir.`)}`
+    : null
 
-  // Info del hero (eyebrow, título, subtítulo, conteo, CTA, confianza).
-  const heroInfo = (
-    <div>
-      {collection.heroEyebrow && (
-        <span className="inline-block mb-4 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-tag-active-bg text-tag-active-fg shadow-sm">
-          {collection.heroEyebrow}
-        </span>
-      )}
-      <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4 leading-[1.08] text-balance">
-        {collection.heroTitle ?? collection.title}
-      </h1>
-      {collection.heroSubtitle && (
-        <p className="text-foreground/70 text-base md:text-lg mb-6 leading-relaxed">
-          {collection.heroSubtitle}
-        </p>
-      )}
-      <p className="text-sm font-semibold text-foreground/60 mb-6">
-        {products.length} {products.length === 1 ? 'producto curado' : 'productos curados'} en esta colección
-      </p>
-      {collection.heroCta && (
-        <a
-          href="#productos"
-          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-cta text-cta-fg font-bold shadow-lg shadow-cta-ring hover:bg-cta-hover hover:-translate-y-0.5 transition-all"
-        >
-          {collection.heroCta}
-          <ArrowRight className="w-4 h-4" />
-        </a>
-      )}
-      <div className="flex flex-wrap items-center gap-2.5 mt-7">
-        {[
-          { icon: ShieldCheck, label: 'Pago contraentrega' },
-          { icon: Truck, label: 'Envío a todo Colombia' },
-          { icon: Clock, label: 'Despacho 24-48h' },
-        ].map(({ icon: Icon, label }) => (
-          <div
-            key={label}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-trust-bg text-xs font-bold text-trust-fg border border-trust-border shadow-sm"
-          >
-            <Icon className="w-3.5 h-3.5" />
-            {label}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  // Hechos de la tienda, con las cifras de `store-policies.tsx`.
+  const facts = [
+    advancePaymentEnabled() ? 'Pagas al recibir, o con Confío' : 'Pagas al recibir',
+    'Llega en 3 a 7 días hábiles',
+    'Envío $12.000 a todo el país',
+  ]
 
-  // Intro de marca.
-  const brandIntroBlock = collection.brandIntro && (
-    <div className="relative rounded-3xl bg-gradient-to-br from-todopolis-blue/10 to-todopolis-lavender/15 border border-border p-7 md:p-9 shadow-sm">
-      <p className="text-foreground/80 text-base md:text-lg leading-relaxed">{collection.brandIntro}</p>
-    </div>
-  )
+  // ItemList: le dice a Google qué productos forman la colección.
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: collection.heroTitle ?? collection.title,
+    numberOfItems: n,
+    itemListElement: products.map((p: any, i: number) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'}/producto/${p.slug}`,
+      name: p.name,
+    })),
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
       <Header />
       <GlobalSearch products={searchableProducts} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
 
       <main className="flex-1">
-        {/* ── Hero ── */}
-        <section className="relative overflow-hidden">
-          {/* Blobs decorativos de marca */}
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-gradient-to-b from-todopolis-lavender/20 via-surface to-surface" />
-            <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-todopolis-blue/25 blur-3xl" />
-            <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-todopolis-pink/25 blur-3xl" />
-          </div>
-
-          <div className="container mx-auto px-4 pt-8 md:pt-12 pb-10">
-            {/* Desktop: dos columnas — collage sticky + info */}
-            <div className="hidden lg:grid lg:grid-cols-2 gap-12 items-start">
-              <div className="lg:sticky lg:top-24 lg:self-start">{heroCollage}</div>
-              <div>{heroInfo}</div>
+        {/* ── Qué es: una guía para elegir ── */}
+        <section className="border-b border-nav-inactive-border bg-surface">
+          <div className="container mx-auto grid gap-8 px-4 py-8 md:py-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+            <div className="lg:col-span-6">
+              <p className="mb-3 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
+                <Link href="/colecciones" className="hover:text-ink-title">Colección</Link>
+                {collection.heroEyebrow && <span className="normal-case tracking-normal">· {collection.heroEyebrow}</span>}
+              </p>
+              <h1 className="font-serif text-[1.75rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-ink-title text-balance md:text-[2.5rem]">
+                {collection.heroTitle ?? collection.title}
+              </h1>
+              {collection.heroSubtitle && (
+                <p className="mt-4 text-base leading-relaxed text-foreground/75 md:text-lg">{collection.heroSubtitle}</p>
+              )}
+              <p className="mt-5 text-sm font-bold text-ink-title">
+                {n} {n === 1 ? 'producto' : 'productos'} comparados
+                {priceFrom && <span className="font-normal text-muted-foreground"> · desde {cop(priceFrom)}</span>}
+              </p>
+              <a
+                href="#productos"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink-title px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
+              >
+                Ver los {n} productos
+                <ArrowDown className="h-4 w-4" />
+              </a>
+              <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-1.5 text-xs font-semibold text-trust-fg">
+                {facts.map((f) => (
+                  <li key={f} className="flex items-center gap-1.5">
+                    <span aria-hidden className="h-1 w-1 rounded-full bg-trust-fg" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {/* Mobile: apilado — collage arriba, info abajo */}
-            <div className="lg:hidden space-y-7 max-w-xl mx-auto text-center">
-              {heroCollage && <div className="text-left">{heroCollage}</div>}
-              <div className="[&_h1]:text-balance">{heroInfo}</div>
-            </div>
+            {heroThumbs.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 md:gap-3 lg:col-span-6">
+                {heroThumbs.slice(0, 3).map((src, i) => (
+                  <div
+                    key={i}
+                    className={`relative aspect-[4/5] overflow-hidden rounded-2xl bg-surface-muted ${heroThumbs.length <= 2 ? 'col-span-3 sm:col-span-1' : ''}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={sanityOptimized(src, 400)} alt="" className="h-full w-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
-        {/* ── Intro de marca ── */}
-        {brandIntroBlock && (
-          <section className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto">{brandIntroBlock}</div>
-          </section>
+        {/* ── Por qué esta colección ── */}
+        {collection.brandIntro && (
+          <DestacadoSection>
+            <DestacadoSplit header={<DestacadoSectionHeader eyebrow="Por qué esta colección" title="Lo que necesitas saber" />}>
+              <p className="text-base leading-relaxed text-foreground/80 md:text-lg">{collection.brandIntro}</p>
+            </DestacadoSplit>
+          </DestacadoSection>
         )}
 
-        {/* ── Grid de productos ── */}
-        <section id="productos" className="container mx-auto px-4 py-12 scroll-mt-24">
-          <SectionHeading
-            title="La colección"
-            subtitle={`${products.length} ${products.length === 1 ? 'producto seleccionado' : 'productos seleccionados'} para ti`}
-          />
-          {products.length === 0 ? (
+        {/* ── Los productos ── */}
+        <DestacadoSection tone="soft" id="productos" className="scroll-mt-20">
+          <DestacadoSectionHeader eyebrow="La colección" title={n === 1 ? 'El producto' : `Los ${n} productos`} />
+          {n === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-foreground/60 mb-4">Esta colección aún no tiene productos.</p>
-              <Link
-                href="/"
-                className="px-5 py-2.5 rounded-full bg-foreground/90 text-white font-bold text-sm hover:bg-foreground transition-colors"
-              >
+              <p className="mb-4 text-muted-foreground">Esta colección aún no tiene productos.</p>
+              <Link href="/" className="rounded-full bg-ink-title px-5 py-2.5 text-sm font-bold text-white hover:opacity-90">
                 Ir al catálogo
               </Link>
             </div>
           ) : (
             <ProductGrid products={products} />
           )}
-        </section>
+        </DestacadoSection>
 
-        {/* ── Beneficios del segmento ── */}
-        {collection.segmentBenefits && collection.segmentBenefits.length > 0 && (
-          <section className="py-12 bg-surface-soft">
-            <div className="container mx-auto px-4">
-              <SectionHeading title="Por qué comprar aquí" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 max-w-4xl mx-auto">
-                {collection.segmentBenefits.map((b, i) => (
-                  <div
-                    key={b._key ?? i}
-                    className="group flex items-start gap-4 p-5 md:p-6 rounded-2xl bg-surface border border-nav-inactive-border shadow-sm hover:shadow-md hover:border-todopolis-lavender/40 hover:-translate-y-0.5 transition-all duration-300"
-                  >
-                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-todopolis-blue/15 to-todopolis-lavender/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">
-                      {b.icon || '✨'}
+        {/* ── Cómo elegir ── */}
+        {guide.length > 0 && (
+          <DestacadoSection>
+            <DestacadoSplit header={<DestacadoSectionHeader eyebrow="Guía" title="Cómo elegir el tuyo" />}>
+              <ol className="divide-y divide-nav-inactive-border">
+                {guide.map((g, i) => (
+                  <li key={g._key ?? i} className="flex gap-5 py-5 first:pt-0 last:pb-0">
+                    <span className="w-6 shrink-0 font-serif text-sm font-extrabold tabular-nums text-muted-foreground">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <div className="min-w-0">
+                      {g.title && <h3 className="font-serif text-lg font-extrabold text-ink-title">{g.title}</h3>}
+                      {g.body && <p className="mt-1 text-sm leading-relaxed text-foreground/75 md:text-base">{g.body}</p>}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      {b.title && <h3 className="font-bold text-foreground mb-1 leading-snug">{b.title}</h3>}
-                      {b.description && (
-                        <p className="text-muted-foreground text-sm leading-relaxed">{b.description}</p>
-                      )}
-                    </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
-            </div>
-          </section>
+              </ol>
+            </DestacadoSplit>
+          </DestacadoSection>
         )}
 
-        {/* ── Guía de compra ── */}
-        {collection.buyersGuide && collection.buyersGuide.length > 0 && (
-          <section className="container mx-auto px-4 py-12">
-            <SectionHeading title="Cómo elegir" subtitle="La guía rápida para acertar con tu compra" />
-            <div className="max-w-3xl mx-auto space-y-4">
-              {collection.buyersGuide.map((g, i) => (
-                <div
-                  key={g._key ?? i}
-                  className="flex gap-5 p-5 md:p-6 rounded-2xl bg-surface border border-nav-inactive-border shadow-sm"
-                >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-todopolis-blue to-todopolis-lavender text-white font-bold flex items-center justify-center shadow-sm">
-                    {i + 1}
-                  </div>
-                  <div className="min-w-0 flex-1 pt-1">
-                    {g.title && (
-                      <h3 className="font-serif font-bold text-lg text-foreground mb-1">{g.title}</h3>
-                    )}
-                    {g.body && (
-                      <p className="text-muted-foreground text-sm md:text-base leading-relaxed">{g.body}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── Tabla comparativa ── */}
+        {/* ── Comparativa ── */}
         {comparisonRows.length > 0 && productNames.length > 0 && (
-          <section className="py-12 bg-surface-soft">
-            <div className="container mx-auto px-4">
-              <SectionHeading title="Compara los modelos" subtitle="Encuentra el que mejor encaja contigo" />
-              <div className="max-w-5xl mx-auto overflow-x-auto rounded-3xl border border-border shadow-sm bg-surface">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="sticky left-0 z-10 bg-surface-muted text-left font-bold text-foreground/70 px-4 py-4 whitespace-nowrap">
-                        Característica
+          <DestacadoSection tone="soft">
+            <DestacadoSectionHeader eyebrow="Comparativa" title="Uno al lado del otro" />
+            <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+              <table className="w-full min-w-[560px] border-collapse overflow-hidden rounded-3xl border border-nav-inactive-border bg-surface text-sm">
+                <thead>
+                  <tr>
+                    <th className="sticky left-0 z-10 bg-surface px-4 py-4 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                      &nbsp;
+                    </th>
+                    {productNames.map((name, i) => (
+                      <th key={i} className="min-w-[140px] border-l border-nav-inactive-border px-4 py-4 text-left font-bold text-ink-title">
+                        <Link href={`/producto/${products[i]?.slug}`} className="hover:text-todopolis-lavender-deep">{name}</Link>
                       </th>
-                      {productNames.map((name, i) => (
-                        <th
-                          key={i}
-                          className="text-left font-bold text-foreground px-4 py-4 min-w-[130px] bg-gradient-to-br from-todopolis-blue/15 to-todopolis-lavender/20 border-l border-border"
-                        >
-                          {name}
-                        </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonRows.map((row, i) => (
+                    <tr key={row._key ?? i}>
+                      <td className="sticky left-0 z-10 whitespace-nowrap border-t border-nav-inactive-border bg-surface px-4 py-3.5 font-semibold text-foreground/70">
+                        {row.feature}
+                      </td>
+                      {productNames.map((_, j) => (
+                        <td key={j} className="border-l border-t border-nav-inactive-border px-4 py-3.5 text-foreground/80">
+                          {row.values?.[j] ?? '—'}
+                        </td>
                       ))}
                     </tr>
-                  </thead>
-                  <tbody>
-                    {comparisonRows.map((row, i) => (
-                      <tr key={row._key ?? i} className={i % 2 === 1 ? 'bg-surface-soft/60' : ''}>
-                        <td className="sticky left-0 z-10 bg-inherit font-semibold text-foreground/70 px-4 py-3.5 whitespace-nowrap border-t border-border">
-                          {row.feature}
-                        </td>
-                        {productNames.map((_, j) => (
-                          <td key={j} className="text-foreground/80 px-4 py-3.5 border-t border-l border-border">
-                            {row.values?.[j] ?? '—'}
-                          </td>
-                        ))}
-                      </tr>
+                  ))}
+                  <tr>
+                    <td className="sticky left-0 z-10 border-t border-nav-inactive-border bg-surface px-4 py-3.5 font-semibold text-foreground/70">Precio</td>
+                    {products.map((p: any, j: number) => (
+                      <td key={j} className="border-l border-t border-nav-inactive-border px-4 py-3.5 font-extrabold tabular-nums text-ink-title">
+                        {p.price > 0 ? cop(p.price) : '—'}
+                      </td>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </section>
+          </DestacadoSection>
         )}
 
-        {/* ── FAQ (componente de marca reutilizado) ── */}
-        {collection.faqs && collection.faqs.length > 0 && <ProductFaq faqs={collection.faqs} />}
+        {/* ── Lo que tienen en común ── */}
+        {benefits.length > 0 && (
+          <DestacadoSection>
+            <DestacadoSplit header={<DestacadoSectionHeader eyebrow="En común" title="Lo que tienen todos" />}>
+              <ol className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
+                {benefits.map((b, i) => (
+                  <li key={b._key ?? i} className="border-t border-nav-inactive-border pt-4">
+                    <span className="font-serif text-sm font-extrabold tabular-nums text-muted-foreground">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    {b.title && <h3 className="mt-1 font-serif text-lg font-extrabold text-ink-title">{b.title}</h3>}
+                    {b.description && <p className="mt-1 text-sm leading-relaxed text-foreground/75">{b.description}</p>}
+                  </li>
+                ))}
+              </ol>
+            </DestacadoSplit>
+          </DestacadoSection>
+        )}
 
-        {/* ── CTA final ── */}
-        {(collection.ctaHeadline || collection.ctaText) && (
-          <section className="py-12 md:py-16 relative overflow-hidden">
-            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-accent-aspirational/10 via-surface to-accent-trust/10" />
-            <div className="container mx-auto px-4">
-              <div className="max-w-2xl mx-auto text-center">
-                {collection.ctaHeadline && (
-                  <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground mb-4 text-balance">
-                    {collection.ctaHeadline}
-                  </h2>
-                )}
-                {collection.ctaText && (
-                  <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">{collection.ctaText}</p>
-                )}
+        {/* ── Preguntas ── */}
+        {collection.faqs && collection.faqs.length > 0 && <DestacadoFaq faqs={collection.faqs} />}
+
+        {/* ── Cierre: si todavía no sabe cuál, que pregunte ── */}
+        <DestacadoSection tone="soft">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="font-serif text-2xl font-extrabold leading-tight tracking-[-0.02em] text-ink-title text-balance md:text-[2rem]">
+                {collection.ctaHeadline ?? '¿Todavía no sabes cuál?'}
+              </h2>
+              <p className="mt-2 max-w-xl text-base leading-relaxed text-foreground/75">
+                {collection.ctaText ?? 'Cuéntanos para qué lo quieres y te decimos cuál te sirve.'}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-3">
+              {whatsappHref && (
                 <a
-                  href="#productos"
-                  className="inline-flex items-center gap-2 px-9 py-4 rounded-full bg-cta text-cta-fg font-bold text-lg shadow-lg shadow-cta-ring hover:bg-cta-hover hover:-translate-y-0.5 transition-all"
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
                 >
-                  {collection.heroCta ?? 'Ver la colección'}
-                  <ArrowRight className="w-5 h-5" />
+                  <WhatsAppIcon className="h-4 w-4" />
+                  Pregúntanos por WhatsApp
                 </a>
-              </div>
+              )}
+              <a
+                href="#productos"
+                className="inline-flex items-center gap-2 rounded-full border border-nav-inactive-border bg-surface px-6 py-3 text-sm font-bold text-ink-title transition-shadow hover:shadow-sm"
+              >
+                Volver a los productos
+              </a>
             </div>
-          </section>
-        )}
+          </div>
+        </DestacadoSection>
 
-        {/* ── Sugerencias: productos que te pueden interesar ── */}
+        {/* ── Te puede interesar ── */}
         {suggestedProducts.length > 0 && (
-          <section className="pt-6 pb-14 md:pb-20 bg-surface-soft">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-8">
-                <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3">
-                  Productos que te pueden interesar
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Sigue explorando nuestra selección de productos de alta calidad.
-                </p>
-              </div>
-              <SuggestedProductsCarousel products={suggestedProducts} />
-            </div>
-          </section>
+          <DestacadoSection>
+            <DestacadoSectionHeader eyebrow="Sigue mirando" title="Te puede interesar" />
+            <SuggestedProductsCarousel products={suggestedProducts} />
+          </DestacadoSection>
         )}
       </main>
 

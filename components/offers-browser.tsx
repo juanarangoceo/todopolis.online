@@ -8,6 +8,10 @@ import { MobileSearchFab } from './mobile-search-fab'
 import { ProductGrid } from './product-grid'
 import { Product } from '@/lib/types'
 import { PRODUCT_CATEGORIES, categoryTitle } from '@/lib/categories'
+import { CategoryBar } from './category-bar'
+import { CategoryCards } from './category-cards'
+import { FASHION_TITLES, getCategoryIcon } from './category-icons'
+import { ADULT_TITLE } from '@/lib/catalog-filters'
 
 export type DiscountedProduct = Product & { _discount: number }
 
@@ -30,7 +34,7 @@ const SORTS: { value: Sort; label: string }[] = [
 // productos.
 //
 // Ahora usa el mismo lenguaje que el home: antetítulo gris con filete, titular,
-// categorías en píldoras, «Filtros aplicados» implícitos en el contador y la
+// las MISMAS categorías (tarjetas con foto en móvil, barra en escritorio), «Filtros aplicados» implícitos en el contador y la
 // MISMA tarjeta del catálogo. El descuento ya lo dice cada tarjeta junto al
 // precio; la página no necesita gritarlo.
 export function OffersBrowser({ products }: { products: DiscountedProduct[] }) {
@@ -47,16 +51,32 @@ export function OffersBrowser({ products }: { products: DiscountedProduct[] }) {
 
   const handleSearch = useCallback((q: string) => setSearchQuery(q), [])
 
-  // Categorías que tienen ofertas, en el orden de la lista única, con cuántas.
-  const categories = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const p of products) counts.set(p.category, (counts.get(p.category) ?? 0) + 1)
-    return PRODUCT_CATEGORIES.filter((c) => counts.has(c.value)).map((c) => ({
-      value: c.value,
-      title: c.title,
-      count: counts.get(c.value) ?? 0,
-    }))
+  // Categorías que tienen ofertas, en el orden de la lista única, con cuántas y
+  // la foto de la oferta más grande de cada una. Los componentes de categoría
+  // son los del home (`CategoryCards` en móvil, `CategoryBar` en escritorio) y
+  // trabajan con títulos; aquí el estado guarda el `value`.
+  const { titles, counts, images, valueByTitle } = useMemo(() => {
+    const byValue = new Map<string, number>()
+    const imageByValue = new Map<string, string>()
+    for (const p of products) {
+      byValue.set(p.category, (byValue.get(p.category) ?? 0) + 1)
+      if (!imageByValue.has(p.category) && p.image && p.image !== '/placeholder.jpg') imageByValue.set(p.category, p.image)
+    }
+    const present = PRODUCT_CATEGORIES.filter((c) => byValue.has(c.value))
+    return {
+      titles: ['Todos', ...present.map((c) => c.title)],
+      counts: new Map<string, number>([['Todos', products.length], ...present.map((c) => [c.title, byValue.get(c.value) ?? 0] as [string, number])]),
+      images: new Map(present.flatMap((c) => (imageByValue.has(c.value) ? [[c.title, imageByValue.get(c.value)!] as [string, string]] : []))),
+      valueByTitle: new Map(present.map((c) => [c.title, c.value])),
+    }
   }, [products])
+
+  const activeTitle = category ? categoryTitle(category) : 'Todos'
+  // Tocar la activa la quita, como en el home.
+  const selectCategory = (title: string) => {
+    const value = title === 'Todos' ? null : valueByTitle.get(title) ?? null
+    setCategory((current) => (current === value ? null : value))
+  }
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
@@ -79,13 +99,6 @@ export function OffersBrowser({ products }: { products: DiscountedProduct[] }) {
     window.dispatchEvent(new CustomEvent('magic-search:set', { detail: '' }))
   }
 
-  const pill = (active: boolean) =>
-    `flex shrink-0 items-center gap-1.5 rounded-full border py-2 px-4 text-sm font-bold transition-colors ${
-      active
-        ? 'border-todopolis-lavender-deep bg-todopolis-lavender-deep text-white shadow-sm'
-        : 'border-nav-inactive-border bg-surface text-foreground/75 hover:border-todopolis-lavender-deep/40 hover:text-ink-title'
-    }`
-
   return (
     <>
       {headerSlot &&
@@ -106,29 +119,27 @@ export function OffersBrowser({ products }: { products: DiscountedProduct[] }) {
           </h1>
         </div>
 
-        <nav aria-label="Categorías en oferta" className="container mx-auto px-4">
-          <div
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 py-4"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            <button type="button" onClick={() => setCategory(null)} aria-pressed={category === null} className={pill(category === null)}>
-              Todas
-              <span className={`text-xs font-semibold ${category === null ? 'text-white/75' : 'text-muted-foreground'}`}>{products.length}</span>
-            </button>
-            {categories.map((c) => (
-              <button
-                key={c.value}
-                type="button"
-                // Tocar la activa la quita, como en el home.
-                onClick={() => setCategory(category === c.value ? null : c.value)}
-                aria-pressed={category === c.value}
-                className={pill(category === c.value)}
-              >
-                {c.title}
-                <span className={`text-xs font-semibold ${category === c.value ? 'text-white/75' : 'text-muted-foreground'}`}>{c.count}</span>
-              </button>
-            ))}
-          </div>
+        <nav aria-label="Categorías en oferta" className="container mx-auto px-4 md:mt-2">
+          <CategoryCards
+            categories={titles}
+            fashionTitles={FASHION_TITLES}
+            adultTitle={ADULT_TITLE}
+            active={activeTitle}
+            counts={counts}
+            images={images}
+            getIcon={getCategoryIcon}
+            onSelect={selectCategory}
+          />
+          <CategoryBar
+            categories={titles}
+            fashionTitles={FASHION_TITLES}
+            adultTitle={ADULT_TITLE}
+            active={activeTitle}
+            counts={counts}
+            getIcon={getCategoryIcon}
+            onSelect={selectCategory}
+            activeFilters={0}
+          />
         </nav>
       </section>
 

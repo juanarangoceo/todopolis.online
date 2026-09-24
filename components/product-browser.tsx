@@ -1,8 +1,7 @@
 'use client';
 
-import { Fragment, useState, useCallback, useMemo, ReactNode, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, ReactNode, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import Image from 'next/image';
 import { Product, TagTaxonomyEntry } from '@/lib/types';
 import { MagicSearchBar } from './magic-search-bar';
 import { MobileSearchFab } from './mobile-search-fab';
@@ -11,14 +10,8 @@ import { InspirationRail } from './inspiration-rail';
 import { railSlice, type AiImage } from '@/lib/inspiration';
 import { TagFilterPanel } from './tag-filter-panel';
 import { SearchSuggestions } from './search-suggestions';
-import {
-  Sparkles, Grid, Watch, HeartPulse,
-  Laptop, Home, Shirt, Dumbbell, Gamepad2,
-  Droplets, CookingPot, Baby, PawPrint, Car, Lock, Footprints, Hourglass,
-  SlidersHorizontal, X,
-  Search,
-  type LucideIcon,
-} from 'lucide-react';
+import { X, Search } from 'lucide-react';
+import { FASHION_TITLES, getCategoryIcon } from './category-icons';
 import { PRODUCT_CATEGORIES } from '@/lib/categories';
 import {
   applyCatalogFilters, categoryCounts, isCleanListing as isCleanCatalog, panelFilterCount, ADULT_TITLE,
@@ -26,31 +19,8 @@ import {
 } from '@/lib/catalog-filters';
 import { AgeGate } from '@/components/age-gate';
 import { CategoryBar } from './category-bar';
+import { CategoryCards } from './category-cards';
 
-
-// Ícono por categoría (por `value`, no por título: el título se puede
-// cambiar —«Electrónica» pasó a «Tecnología»— sin romper el ícono).
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  belleza: Droplets,
-  hogar: Home,
-  cocina: CookingPot,
-  electronica: Laptop,
-  moda: Shirt,
-  fajas: Hourglass,
-  calzado: Footprints,
-  accesorios: Watch,
-  'salud-bienestar': HeartPulse,
-  deportes: Dumbbell,
-  bebes: Baby,
-  juguetes: Gamepad2,
-  mascotas: PawPrint,
-  'carro-moto': Car,
-  'bienestar-intimo': Lock,
-  otros: Sparkles,
-};
-const TITLE_TO_VALUE = new Map(PRODUCT_CATEGORIES.map((c) => [c.title, c.value]));
-const getCategoryIcon = (title: string) =>
-  title === 'Todos' ? Grid : CATEGORY_ICONS[TITLE_TO_VALUE.get(title) ?? ''] ?? Sparkles;
 
 // La categoría llega como `value` (`electronica`) y se muestra con su título.
 // Los valores viejos del dataset (`sexshop`, «Electrónica») se traducen aquí.
@@ -58,8 +28,6 @@ const LEGACY_TITLES: Record<string, string> = { sexshop: ADULT_TITLE, 'electrón
 // Títulos viejos que pueden llegar en enlaces `?categoria=`: «Electrónica»
 // (hasta sep 2026) y «Moda», que desde el 24-sep-2026 se llama Ropa.
 const LEGACY_URL_TITLES: Record<string, string> = { 'Electrónica': 'Tecnología', Moda: 'Ropa' };
-// El grupo de moda va primero y separado del resto («Eleva tu estilo»).
-const FASHION_TITLES = new Set(PRODUCT_CATEGORIES.filter((c) => c.group === 'moda').map((c) => c.title));
 function categoryTitleOf(raw: string): string {
   const v = (raw ?? '').trim().toLowerCase();
   return PRODUCT_CATEGORIES.find((c) => c.value === v)?.title ?? LEGACY_TITLES[v] ?? 'Otros';
@@ -183,17 +151,6 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     window.history.replaceState(window.history.state, '', newUrl);
   }, [selectedTags, activeCategory, searchQuery, price, onlyOffers, freeShipping, sort]);
 
-  // En móvil la fila de categorías se desliza: si la activa quedó fuera de la
-  // vista (p. ej. al llegar con `?categoria=Hogar`), se trae al centro.
-  const categoryNavRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const nav = categoryNavRef.current;
-    const active = nav?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    if (!nav || !active) return;
-    const target = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
-    nav.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
-  }, [activeCategory]);
-
   // Pestañas desde la lista única (`lib/categories.ts`), en su orden, y solo
   // las que tienen productos: una pestaña que abre vacía es un callejón.
   // Antes eran nueve títulos escritos a mano aquí, que ya no coincidían con
@@ -203,7 +160,6 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     const present = new Set(initialProducts.map((p) => categoryTitleOf(p.category)));
     return ['Todos', ...PRODUCT_CATEGORIES.map((c) => c.title).filter((t) => present.has(t))];
   }, [initialProducts]);
-  const firstStoreTitle = categories.find((c) => c !== 'Todos' && !FASHION_TITLES.has(c));
 
 
   // Productos con la categoría ya en título, una sola vez.
@@ -351,68 +307,18 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
             El número es «cuántos verías si la tocas», con los demás filtros
             puestos (lib/catalog-filters.ts). */}
         <nav aria-label="Categorías" className="container mx-auto px-4">
-          <div
-            ref={categoryNavRef}
-            className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-3 pt-3 md:hidden"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {tagTaxonomy.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setFilterPanelOpen(true)}
-                className="flex w-[74px] shrink-0 flex-col items-center gap-1.5 text-center"
-              >
-                <span className="relative flex h-[62px] w-[62px] items-center justify-center rounded-2xl bg-ink-title text-white">
-                  <SlidersHorizontal className="h-5 w-5" />
-                  {activePanelFilters > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-surface bg-todopolis-lavender-deep px-1 text-[10px] font-extrabold">
-                      {activePanelFilters}
-                    </span>
-                  )}
-                </span>
-                <span className="text-[11px] font-bold leading-tight text-ink-title">Filtros</span>
-              </button>
-            )}
-            {categories.map((cat) => {
-              const isActive = activeCategory === cat;
-              const count = countsByCategory.get(cat) ?? 0;
-              const img = cat === 'Todos' ? null : categoryImages.get(cat);
-              const Icon = getCategoryIcon(cat);
-              // Adultos sin foto: la miniatura sería contenido sensible antes
-              // del aviso de edad.
-              const showImg = img && cat !== ADULT_TITLE;
-              // Filete entre el grupo de moda y el resto de la tienda.
-              const startsStore = cat === firstStoreTitle;
-              return (
-                <Fragment key={cat}>
-                {startsStore && <span aria-hidden className="mx-1 h-14 w-px shrink-0 self-start bg-nav-inactive-border mt-1" />}
-                <button
-                  type="button"
-                  onClick={() => handleCategoryClick(cat)}
-                  aria-pressed={isActive}
-                  className={`flex w-[74px] shrink-0 flex-col items-center gap-1.5 text-center transition-opacity ${count === 0 && !isActive ? 'opacity-40' : ''}`}
-                >
-                  <span
-                    className={`relative flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-2xl border-2 bg-surface-muted transition-colors ${
-                      isActive ? 'border-todopolis-lavender-deep' : 'border-transparent'
-                    }`}
-                  >
-                    {showImg ? (
-                      <Image src={img} alt="" fill sizes="62px" className="object-cover" />
-                    ) : (
-                      <Icon className={`h-6 w-6 ${isActive ? 'text-todopolis-lavender-deep' : 'text-foreground/60'}`} />
-                    )}
-                  </span>
-                  <span className={`line-clamp-2 text-[11px] leading-tight ${isActive ? 'font-extrabold text-todopolis-lavender-deep' : 'font-bold text-ink-title'}`}>
-                    {cat}
-                  </span>
-                  <span className="-mt-1 text-[10px] tabular-nums text-muted-foreground">{count}</span>
-                </button>
-                </Fragment>
-              );
-            })}
-          </div>
-
+          <CategoryCards
+            categories={categories}
+            fashionTitles={FASHION_TITLES}
+            adultTitle={ADULT_TITLE}
+            active={activeCategory}
+            counts={countsByCategory}
+            images={categoryImages}
+            getIcon={getCategoryIcon}
+            onSelect={handleCategoryClick}
+            onOpenFilters={tagTaxonomy.length > 0 ? () => setFilterPanelOpen(true) : undefined}
+            activeFilters={activePanelFilters}
+          />
           <CategoryBar
             categories={categories}
             fashionTitles={FASHION_TITLES}

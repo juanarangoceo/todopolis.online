@@ -561,7 +561,9 @@ const COLLECTIONS_LIST_QUERY = `*[_type == "collectionLanding" && defined(slug.c
   heroSubtitle,
   seoDescription,
   "productCount": count(products),
-  "covers": products[0...4]->{ "image": coalesce(mastershopImageUrl, images[0].asset->url) }
+  "covers": products[0...4]->{ "image": coalesce(mastershopImageUrl, images[0].asset->url) },
+  "categories": products[]->category,
+  "minPrice": math::min(products[]->price)
 }`
 
 export interface CollectionListItem {
@@ -574,6 +576,9 @@ export interface CollectionListItem {
   seoDescription?: string
   productCount: number
   covers: { image: string | null }[]
+  /** Categoría de cada producto: ordena primero las colecciones de moda. */
+  categories?: (string | null)[]
+  minPrice?: number | null
 }
 
 export async function getCollectionsList(): Promise<CollectionListItem[]> {
