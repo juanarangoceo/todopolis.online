@@ -198,6 +198,9 @@ git push origin main
 ```
 No hay que hacer nada más. Vercel toma ~2-3 min. No correr `vercel deploy` manualmente.
 
+### Si un deploy falla en las fuentes de Google
+`Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` en `nunito_*.module.css` es una falla PASAJERA de Vercel al bajar Google Fonts, no del código (pasó el 24-sep-2026 con un commit que solo agregaba un `.zip`). Producción se queda en el último deploy bueno. Se arregla redesplegando ese mismo deploy (Vercel → Redeploy, o `create_deployment` con `deploymentId` y `forceNew`); no hace falta tocar `app/layout.tsx`.
+
 ## Después de reiniciar Docker
 
 El túnel SSH muere cuando el contenedor se reinicia. Siempre volver a abrirlo:
@@ -276,6 +279,15 @@ El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del men
 
 ### `/ofertas` (sep 2026)
 `components/offers-browser.tsx`. Mismo lenguaje que el home: antetítulo + titular, **las mismas categorías que el home** (`CategoryCards` con foto en móvil y `CategoryBar` en escritorio, desde el 24-sep-2026; íconos y grupo de moda en `components/category-icons.ts`) con cuántas ofertas tiene cada una, orden (mayor descuento, menor y mayor precio), buscador también en móvil y la misma `ProductCard`. Se quitaron el banner con degradado, manchas y brillo animado, la franja rosa «Hasta 42% off», y las frases «precios que solo duran lo que dura el cronómetro» y «Precios válidos por tiempo limitado»: el listado no tiene fecha de fin. La foto sale de `mastershopImageUrl ?? image`, como en el home.
+
+### SEO — revisión del 24-sep-2026
+- El H1 del home es «Eleva tu estilo» (`style-spotlight.tsx`); el título del home usa `absolute` para que la plantilla no añada otro «| Todópolis».
+- `app/opengraph-image.tsx` es la imagen por defecto al compartir (logo + slogan). Las fichas la reemplazan con la foto del producto.
+- `/favoritos` va con `noindex` y fuera del sitemap: su contenido vive en el navegador de cada quien.
+- `/destacados` lleva canonical y está en el sitemap.
+- El `seoTitle` de las colecciones trae «| Todopolis» de la IA; `generateMetadata` lo quita para no duplicar el sufijo.
+- `Organization` en el JSON-LD lleva `slogan` y `logo`; las colecciones emiten `ItemList`.
+- Pendiente (Linear NIT-38): landings de categoría indexables. Hoy `?categoria=` apunta a `/` y para Google no existe una página de moda.
 
 ### Query de productos — campo `aiLifestyleImage`
 El campo `aiLifestyleImage` está en **ambos** queries de Sanity:

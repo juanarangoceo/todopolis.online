@@ -5,7 +5,7 @@ decisiones concretas y su historia están en `CLAUDE.md`; esto es el criterio
 que las une. **Si un cambio nuevo contradice esta guía, gana la guía, salvo que
 la actualices a propósito y digas por qué.**
 
-Última revisión: 24-sep-2026.
+Última revisión: 24-sep-2026 (moda, lencería, logo, colecciones).
 
 ---
 
@@ -160,6 +160,9 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 | Hablar con el cliente | `WhatsAppButton` (burbuja global) o el botón dentro de la barra de compra. |
 | Pedir el correo | `FooterSubscribe`, en el pie. Nunca en medio del recorrido de compra. |
 | Explicar el pago | `payment-methods.tsx`, `destacado-payment.tsx`, `ConfioLogo`. |
+| Contar cómo se compra (pago → entrega → defecto) | `PolicyBadges` («Así compras en Todópolis»): pasos numerados con filetes, sin cajas. |
+| Categorías en móvil / escritorio | `CategoryCards` (tarjetas con foto) / `CategoryBar` (pestañas de texto + «Más categorías»). Home y ofertas. |
+| Una sección de ficha o de colección | `DestacadoSection`, `DestacadoSectionHeader`, `DestacadoSplit`. |
 | Nombrar una categoría | `categoryTitle(value)` de `lib/categories.ts`. |
 
 ---
@@ -206,6 +209,8 @@ sep 2026: la atención es por WhatsApp.
 ## 10 bis. Logo e isotipo
 
 Los archivos viven en `public/marca/` (se sirven en `todopolis.online/marca/…`).
+**Todo junto para descargar: `todopolis.online/marca/todopolis-logo.zip`.** Si
+cambias un archivo, regenera el ZIP.
 
 - **Isotipo:** la «T» redondeada del logotipo con el destello de cuatro puntas.
   Blanca sobre el azul del logo (`#7EBEF6`). Es el favicon, el ícono de la app
