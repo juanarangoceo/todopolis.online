@@ -3,7 +3,8 @@
 import { Fragment, ReactNode, useEffect, useRef, useState } from 'react';
 import { Product } from '@/lib/types';
 import { ProductCard } from './product-card';
-import { Package, Sparkles } from 'lucide-react';
+import { ChevronDown, Package, Sparkles } from 'lucide-react';
+import { PAGE_SIZE, listSignature, railAfterIndex, remaining, shouldAutoLoad } from '@/lib/catalog-paging';
 
 interface ProductGridProps {
   products: Product[];
@@ -12,10 +13,9 @@ interface ProductGridProps {
   // 2ª fila de productos. Se renderiza dos veces con clases responsive para que
   // siempre aparezca cerca de la 2ª fila en cada breakpoint.
   rowTwoSlot?: ReactNode;
-  // Slot REPETIDO (ej: carriles de inspiración). Recibe el número de aparición,
+  // Slot REPETIDO (carriles de inspiración). Recibe el número de aparición,
   // empezando en 0, para que el llamador decida qué contenido va en cada uno.
-  // Existe porque `rowTwoSlot` solo cubre una posición fija, y con scroll
-  // infinito sobre 574 productos hace falta algo que siga apareciendo.
+  // Sale en las posiciones de `RAIL_AFTER` (lib/catalog-paging.ts): dos.
   repeatingSlot?: (occurrence: number) => ReactNode;
   // Si llega, el estado vacío ofrece quitar los filtros: sin resultados, la
   // única salida útil es volver atrás, y no debería tocar buscarla arriba.
@@ -24,29 +24,61 @@ interface ProductGridProps {
   emptyExtra?: ReactNode;
 }
 
-const PAGE_SIZE = 24;
 // Posiciones donde insertar el slot. Mobile/sm: 2 cols → tras 4. lg+: 3-4 cols → tras 8.
 const SLOT_AFTER_MOBILE = 4;
 const SLOT_AFTER_DESKTOP = 8;
-// El slot repetido (carriles de inspiración). Primero tras 16 productos —4
-// filas en escritorio, justo después del banner promocional que va tras la
-// 2ª— y luego cada 24. Antes era tras 4 y cada 12: ~48 carriles en 574
-// productos con solo ~39 imágenes, así que el mismo carril volvía cada dos
-// pantallas y el catálogo se leía como relleno entre carriles.
-const REPEAT_FIRST_AFTER = 16;
-const REPEAT_EVERY = 24;
+
+// Lo cargado y la posición, guardados al abrir una ficha desde la cuadrícula.
+const RESTORE_KEY = 'tp_grid_v1';
 
 export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, onClearFilters, emptyExtra }: ProductGridProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const signature = listSignature(products.map((p) => p.id));
 
-  // Resetear visibleCount cuando cambia el set de productos (búsqueda/categoría).
-  useEffect(() => {
+  // Otra lista (búsqueda, categoría, orden) vuelve a la primera tanda. Se
+  // ajusta durante el render y no en un efecto: así no hay un render de más
+  // pintando 200 productos de la lista anterior.
+  const [shownFor, setShownFor] = useState(signature);
+  if (shownFor !== signature) {
+    setShownFor(signature);
     setVisibleCount(PAGE_SIZE);
-  }, [products]);
+  }
 
+  // Al volver de una ficha: si la lista es la misma, recuperar lo que estaba
+  // cargado y la posición. Next restaura el scroll, pero sobre una página que
+  // ya solo tiene 24 productos, y el comprador aparecía en otra parte.
   useEffect(() => {
-    if (visibleCount >= products.length) return;
+    let saved: { sig: string; visible: number; y: number } | null = null;
+    try {
+      saved = JSON.parse(sessionStorage.getItem(RESTORE_KEY) ?? 'null');
+      sessionStorage.removeItem(RESTORE_KEY);
+    } catch {
+      return;
+    }
+    if (!saved || saved.sig !== signature) return;
+    const { visible, y } = saved;
+    const t = window.setTimeout(() => {
+      setVisibleCount(visible);
+      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: y })));
+    }, 0);
+    return () => window.clearTimeout(t);
+    // Solo al montar: después, la firma cambia por filtros del propio usuario.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const rememberPosition = (event: React.MouseEvent) => {
+    if (!(event.target as HTMLElement).closest('a[href^="/producto/"]')) return;
+    try {
+      sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ sig: signature, visible: visibleCount, y: window.scrollY }));
+    } catch {
+      // Sin almacenamiento (modo privado): se vuelve a la primera tanda.
+    }
+  };
+
+  const autoLoad = shouldAutoLoad(visibleCount, products.length);
+  useEffect(() => {
+    if (!autoLoad) return;
     const node = sentinelRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
@@ -59,7 +91,7 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, 
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [visibleCount, products.length]);
+  }, [autoLoad, visibleCount, products.length]);
 
   if (products.length === 0) {
     return (
@@ -94,11 +126,11 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, 
   }
 
   const visibleProducts = products.slice(0, visibleCount);
-  const hasMore = visibleCount < products.length;
+  const left = remaining(visibleCount, products.length);
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-8">
+      <div onClickCapture={rememberPosition} className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-8">
         {visibleProducts.map((product, index) => {
           // Solo emitimos los slots si tenemos slot y suficientes productos para no
           // dejar el banner colgando arriba del contenido.
@@ -106,14 +138,7 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, 
             rowTwoSlot && index === SLOT_AFTER_MOBILE - 1 && visibleProducts.length > SLOT_AFTER_MOBILE;
           const showDesktopSlot =
             rowTwoSlot && index === SLOT_AFTER_DESKTOP - 1 && visibleProducts.length > SLOT_AFTER_DESKTOP;
-
-          // Slot repetido: solo si quedan productos DESPUÉS, para no dejar un
-          // carril colgando al final de lo cargado.
-          const sinceFirst = index + 1 - REPEAT_FIRST_AFTER;
-          const occurrence =
-            repeatingSlot && sinceFirst >= 0 && sinceFirst % REPEAT_EVERY === 0 && visibleProducts.length > index + 1
-              ? sinceFirst / REPEAT_EVERY
-              : null;
+          const occurrence = repeatingSlot ? railAfterIndex(index, visibleProducts.length) : null;
 
           return (
             <Fragment key={product.id}>
@@ -133,9 +158,24 @@ export function ProductGrid({ products, searchQuery, rowTwoSlot, repeatingSlot, 
           );
         })}
       </div>
-      {hasMore && (
+      {autoLoad && (
         <div ref={sentinelRef} className="h-10 mt-6 flex items-center justify-center">
           <div className="text-xs text-foreground/40 animate-pulse">Cargando más productos…</div>
+        </div>
+      )}
+      {!autoLoad && left > 0 && (
+        <div className="mt-10 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setVisibleCount((c) => Math.min(c + PAGE_SIZE, products.length))}
+            className="inline-flex items-center gap-2 rounded-full border border-nav-inactive-border bg-surface px-6 py-3 text-sm font-bold text-ink-title shadow-sm transition-shadow hover:shadow-md"
+          >
+            Ver más productos
+            <ChevronDown className="h-4 w-4" />
+          </button>
+          <p className="text-xs tabular-nums text-muted-foreground">
+            Viste {visibleCount} de {products.length}
+          </p>
         </div>
       )}
     </>

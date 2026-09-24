@@ -10,6 +10,7 @@ export const metadata = {
   title: 'Productos Destacados',
   description:
     'Productos Destacados de Todópolis: ficha extendida con video en uso, antes y después, paso a paso y comparativas, más envío gratis y despacho prioritario.',
+  alternates: { canonical: '/destacados' },
 }
 
 export default async function DestacadosPage() {

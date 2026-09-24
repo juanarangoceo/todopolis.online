@@ -3,6 +3,7 @@ import { generateAndSaveArticle } from './generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from './auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from './product-content-prompt'
 import { classifyFromSource } from './category-classifier'
+import { ADULT_CATEGORY, isAllowedAdultProduct } from './adult-policy'
 import { createUsageCollector, geminiUsage } from './ai/usage'
 import type { UsageSink } from './ai/pricing'
 import { audienceFitFromAi } from './audience-fit'
@@ -181,6 +182,13 @@ async function importProductInner(
   // La categoría la decide JEV con la de Mastershop como pista y respaldo
   // (lib/category-classifier.ts). Va antes del tagging porque lo alimenta.
   const { category } = await classifyFromSource({ name, description, sourceCategory: categoryRaw }, undefined, [], { onUsage })
+
+  // La tienda vende lencería, no juguetes para adultos (lib/adult-policy.ts).
+  // Sin esto, el próximo juguete que se agregue en Mastershop entraría solo.
+  if (category === ADULT_CATEGORY && !isAllowedAdultProduct(name, description)) {
+    log(`Producto ${idProduct} («${name}») es para adultos y no es lencería: no se importa.`)
+    return null
+  }
 
   const genAI = new GoogleGenerativeAI(geminiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' })

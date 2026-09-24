@@ -11,7 +11,11 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Panel /admin: sesión firmada (lib/admin-session.ts).
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+  // `/admin` o `/admin/…`, no cualquier cosa que empiece por «/admin»: el
+  // manifest de la app del panel es `/admin.webmanifest`. `/admin/launch.html`
+  // queda fuera del matcher (ver abajo).
+  const isAdminPage = pathname === '/admin' || pathname.startsWith('/admin/')
+  if (isAdminPage && !pathname.startsWith('/admin/login')) {
     if (!(await verifyAdminToken(request.cookies.get(ADMIN_COOKIE)?.value))) {
       const loginUrl = new URL('/admin/login', request.url)
       loginUrl.searchParams.set('from', pathname)
@@ -41,7 +45,15 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     *
+     * La app instalable del panel (`public/admin.webmanifest` y
+     * `public/admin/launch.html`) va fuera a propósito. El navegador pide el
+     * manifest SIN cookies, y el minador de la WebAPK de Android pide el
+     * start_url también sin cookies: con el portón de sesión, los dos recibían
+     * un 307 a /admin/login y la app no se podía instalar (pasó en nitro_bot).
+     * Ninguno de los dos tiene datos: launch.html solo salta a /admin, donde el
+     * portón sigue intacto.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|admin/launch\\.html$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|webmanifest)$).*)',
   ],
 }

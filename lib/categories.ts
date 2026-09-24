@@ -22,6 +22,11 @@ export interface ProductCategory {
    * frontera es lo que evita que un shampoo termine en «Otros».
    */
   description: string
+  /**
+   * `moda`: el grupo al que se enfoca la tienda («Eleva tu estilo»). Sale
+   * primero en las pestañas, separado del resto (`tienda`).
+   */
+  group: 'moda' | 'tienda'
 }
 
 // Taxonomía revisada el 23-sep-2026. Antes eran 11 categorías y 170 de 578
@@ -31,78 +36,113 @@ export interface ProductCategory {
 // que llegaba como «Animales y Mascotas», «Vehículos» o «Herramientas».
 //
 // Se sumaron Cocina, Salud y bienestar, Bebés, Mascotas y Carro y moto, y se
-// retiró Alimentos, que tenía cero productos. El ORDEN es el de las pestañas
-// del home: primero lo que más se compra, al final lo que pasa por aviso de
-// edad y el cajón de sastre.
+// retiró Alimentos, que tenía cero productos.
+//
+// 24-sep-2026: Todópolis se enfoca en moda y accesorios («Eleva tu estilo»).
+// Moda era un cajón con 57 productos, 26 de ellos fajas: se partió en Ropa
+// (conserva el valor `moda`), Fajas y moldeadores y Calzado. «Bienestar Íntimo»
+// pasó a llamarse Lencería y solo tiene lencería: los juguetes para adultos se
+// retiraron de la tienda (`lib/adult-policy.ts`). Conserva el valor
+// `bienestar-intimo`, del que dependen el aviso de edad, el Píxel, el feed y
+// el sitemap.
+//
+// El ORDEN es el de las pestañas del home: primero el grupo de moda, después
+// lo que más se compra, al final el cajón de sastre.
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
+  {
+    value: 'moda',
+    title: 'Ropa',
+    group: 'moda',
+    description: 'Ropa de mujer y de hombre: conjuntos, conjuntos deportivos, blusas, camisetas, pantalones, jeans, vestidos, enterizos de vestir y ropa de dormir. No incluye fajas ni moldeadores, ni calzado, ni lencería.',
+  },
+  {
+    value: 'fajas',
+    title: 'Fajas y moldeadores',
+    group: 'moda',
+    description: 'Fajas, bodys y enterizos reductores o moldeadores, shorts y pantys moldeadores o levanta cola, brasieres de realce o de control, cinturillas y fajas deportivas o de sudoración.',
+  },
+  {
+    value: 'calzado',
+    title: 'Calzado',
+    group: 'moda',
+    description: 'Tenis, zapatillas deportivas, sandalias, zapatos, botas, chanclas y pantuflas.',
+  },
+  {
+    value: 'accesorios',
+    title: 'Accesorios',
+    group: 'moda',
+    description: 'Relojes de pulsera no inteligentes, gafas de sol, bolsos, morrales y maletas de viaje, billeteras, gorras, pañoletas, joyería y bisutería, llaveros y organizadores de viaje.',
+  },
+  {
+    value: 'bienestar-intimo',
+    title: 'Lencería',
+    group: 'moda',
+    description: 'Lencería sensual: pantys, tangas, sets y conjuntos de encaje, bodys y disfraces sensuales, babydolls y ligueros. No incluye juguetes para adultos (la tienda no los vende), ni fajas o ropa interior de uso diario.',
+  },
   {
     value: 'belleza',
     title: 'Belleza',
+    group: 'tienda',
     description: 'Maquillaje, cuidado de la piel (cremas, sérums, limpiadores), cuidado del cabello (shampoo, acondicionador, mascarillas, tratamientos, cepillos, secadores, planchas), uñas y manicure, perfumes, depilación y organizadores de maquillaje.',
   },
   {
     value: 'hogar',
     title: 'Hogar',
+    group: 'tienda',
     description: 'Decoración, iluminación y lámparas del hogar, organización (zapateros, organizadores), limpieza (trapeadores, aspiradoras de casa), textiles (cojines, cobijas, protectores de sofá), jardín y plantas artificiales, herramientas y bricolaje (taladros, destornilladores). No incluye utensilios de cocina.',
   },
   {
     value: 'cocina',
     title: 'Cocina',
+    group: 'tienda',
     description: 'Utensilios y accesorios de cocina, moldes, cubiertos, ollas, termos, botellas y vasos, batidoras, licuadoras, extractores y pequeños electrodomésticos para preparar comida o bebidas, coctelería.',
   },
   {
     value: 'electronica',
     title: 'Tecnología',
+    group: 'tienda',
     description: 'Audífonos y parlantes, accesorios de celular, cargadores, relojes inteligentes (smartwatch), cámaras de seguridad y espía, proyectores, TV y streaming, gaming, aros de luz y equipo para crear contenido, gadgets electrónicos.',
-  },
-  {
-    value: 'moda',
-    title: 'Moda',
-    description: 'Ropa de mujer y de hombre, conjuntos, blusas, pantalones, fajas y moldeadores, ropa interior no erótica, calzado y tenis.',
-  },
-  {
-    value: 'accesorios',
-    title: 'Accesorios',
-    description: 'Relojes de pulsera no inteligentes, gafas de sol, bolsos, morrales y maletas de viaje, billeteras, joyería y bisutería, llaveros y organizadores de viaje.',
   },
   {
     value: 'salud-bienestar',
     title: 'Salud y bienestar',
+    group: 'tienda',
     description: 'Masajeadores y aparatos de masaje, terapia de calor o frío, soportes y fajas ortopédicas, cojines ortopédicos, alivio de dolor, suplementos y vitaminas, humidificadores y aromaterapia para relajarse, productos para dormir mejor en adultos.',
   },
   {
     value: 'deportes',
     title: 'Deportes',
+    group: 'tienda',
     description: 'Fitness y gimnasio (bandas, pesas, TRX, lazos, ruedas abdominales), ropa y accesorios deportivos, ciclismo, natación, camping, rodilleras y protecciones deportivas, hidratación deportiva.',
   },
   {
     value: 'bebes',
     title: 'Bebés',
+    group: 'tienda',
     description: 'Productos para bebés y maternidad: calentadores de tetero, portabebés, cámaras y monitores de bebé, arrulladores, tapetes gateadores, higiene del bebé, pañitos, peluches para dormir bebés.',
   },
   {
     value: 'juguetes',
     title: 'Juguetes',
+    group: 'tienda',
     description: 'Juguetes, juegos de mesa y didácticos, peluches y figuras coleccionables, juguetes a control remoto, burbujas, alcancías infantiles, relojes y carros para niños, marcadores y arte para niños.',
   },
   {
     value: 'mascotas',
     title: 'Mascotas',
+    group: 'tienda',
     description: 'Todo para perros y gatos: camas, rascadores, transportadores, bebederos, comederos, juguetes de mascota, cepillos y cuidado de mascotas, ropa para mascotas.',
   },
   {
     value: 'carro-moto',
     title: 'Carro y moto',
+    group: 'tienda',
     description: 'Accesorios para carro y moto: infladores de llantas, cargadores de batería, aspiradoras y limpieza de carro, intercomunicadores y accesorios de casco, impermeables de moto, linternas y organizadores para el carro.',
-  },
-  {
-    value: 'bienestar-intimo',
-    title: 'Bienestar Íntimo',
-    description: 'Productos para adultos: juguetes eróticos, lubricantes, lencería erótica, estimulantes y productos de sexualidad.',
   },
   {
     value: 'otros',
     title: 'Otros',
+    group: 'tienda',
     description: 'Solo si el producto no encaja en NINGUNA de las demás categorías (por ejemplo, artículos de defensa personal o papelería de oficina).',
   },
 ]

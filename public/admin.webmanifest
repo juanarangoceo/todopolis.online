@@ -1,0 +1,22 @@
+{
+  "id": "/admin",
+  "name": "Todopolis Admin",
+  "short_name": "Todopolis",
+  "description": "Panel de Todopolis: pedidos, importacion de productos y costo de la IA.",
+  "start_url": "/admin/launch.html",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#FAFAFB",
+  "theme_color": "#FFFFFF",
+  "lang": "es-CO",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icons/admin-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/admin-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/admin-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Pedidos", "short_name": "Pedidos", "url": "/admin/pedidos" },
+    { "name": "Importar productos", "short_name": "Importar", "url": "/admin/mastershop" }
+  ]
+}

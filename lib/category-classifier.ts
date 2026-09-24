@@ -21,6 +21,7 @@
 import { experimental_evaluate as evaluate } from 'ai'
 import { MASTERSHOP_CATEGORY_MAP, PRODUCT_CATEGORIES, isProductCategory } from './categories.ts'
 import { JEV_MODEL, jevConfigured } from './jev.ts'
+import { ADULT_CATEGORY } from './adult-policy.ts'
 import type { UsageSink } from './ai/pricing.ts'
 
 export { jevConfigured }
@@ -49,7 +50,12 @@ export interface CategoryDecision {
 
 /** La pregunta que recibe JEV. Pura: se prueba sin red. */
 export function buildCategoryRequest(product: ClassifiableProduct) {
-  const criteria = Object.fromEntries(PRODUCT_CATEGORIES.map((c) => [c.value, `${c.title}: ${c.description}`]))
+  // Sin la categoría de adultos: esa la decide SOLO el proveedor
+  // (`classifyFromSource`). De ella dependen el aviso de edad y el Píxel, y
+  // como Lencería una faja o un brasier de realce podía terminar escondido.
+  const criteria = Object.fromEntries(
+    PRODUCT_CATEGORIES.filter((c) => c.value !== ADULT_CATEGORY).map((c) => [c.value, `${c.title}: ${c.description}`]),
+  )
   return {
     state: {
       producto: product.name.trim().slice(0, 200),
@@ -79,12 +85,14 @@ export function buildCategoryRequest(product: ClassifiableProduct) {
  * Un respaldo «otros» no gana a nada: es la ausencia de respuesta.
  */
 export function decideCategory(jev: JevCategoryAnswer | null, fallbacks: (string | null | undefined)[] = []): CategoryDecision {
-  if (jev && isProductCategory(jev.category) && jev.confidence !== null && jev.confidence >= MIN_CONFIDENCE) {
+  // Ni JEV ni Gemini pueden mandar un producto a la categoría de adultos.
+  const allowed = (c: string | null | undefined): c is string => isProductCategory(c) && c !== ADULT_CATEGORY
+  if (jev && allowed(jev.category) && jev.confidence !== null && jev.confidence >= MIN_CONFIDENCE) {
     return { category: jev.category, confidence: jev.confidence, source: 'jev' }
   }
-  const fallback = fallbacks.find((f): f is string => isProductCategory(f) && f !== 'otros')
+  const fallback = fallbacks.find((f): f is string => allowed(f) && f !== 'otros')
   if (fallback) return { category: fallback, confidence: null, source: 'respaldo' }
-  if (jev && isProductCategory(jev.category) && jev.category !== 'otros') {
+  if (jev && allowed(jev.category) && jev.category !== 'otros') {
     return { category: jev.category, confidence: jev.confidence, source: 'jev-dudoso' }
   }
   return { category: 'otros', confidence: jev?.confidence ?? null, source: 'otros' }

@@ -37,7 +37,7 @@ export const SOCIAL = {
 } as const
 
 /** Fecha de última revisión de los documentos legales. */
-export const LEGAL_UPDATED_AT = '17 de septiembre de 2026'
+export const LEGAL_UPDATED_AT = '24 de septiembre de 2026'
 
 /** Enlace de WhatsApp al responsable, con el mensaje ya escrito. */
 export function whatsappLink(message: string): string {

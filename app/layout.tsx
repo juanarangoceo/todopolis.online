@@ -31,19 +31,26 @@ const montserrat = Montserrat({
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
 
+// Slogan desde sep 2026: Todópolis se enfoca poco a poco en moda y accesorios.
+const SLOGAN = 'Eleva tu estilo'
+const DEFAULT_TITLE = `Todópolis | ${SLOGAN}: moda, accesorios y más en Colombia`
+const DEFAULT_DESCRIPTION =
+  'Moda, accesorios, belleza y hogar en una tienda online colombiana. Pagas al recibir o con Confío por PSE, Nequi o Bancolombia. Llega a todo el país en 3 a 7 días hábiles.'
+const LOGO_URL = 'https://res.cloudinary.com/dohwyszdj/image/upload/f_png,w_600/v1779801383/logo_nuevo_todopolis_1_ljlqn6.png'
+
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
+    default: DEFAULT_TITLE,
     // Las páginas internas ponen solo su nombre; el sufijo lo añade esta
     // plantilla. Antes varias repetían "| Todópolis" en su propio título y el
     // resultado salía duplicado: "Ofertas | Todópolis | Todópolis".
     template: '%s | Todópolis',
   },
-  description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
+  description: DEFAULT_DESCRIPTION,
   generator: 'Todópolis',
   applicationName: 'Todópolis',
-  keywords: ['tienda online colombia', 'hogar', 'moda', 'tecnología', 'belleza', 'contraentrega', 'ofertas'],
+  keywords: ['tienda online colombia', 'moda', 'accesorios', 'ropa', 'bolsos', 'relojes', 'belleza', 'hogar', 'contraentrega'],
   authors: [{ name: 'Todópolis', url: BASE_URL }],
   creator: 'Todópolis',
   publisher: 'Todópolis',
@@ -57,16 +64,17 @@ export const metadata: Metadata = {
     locale: 'es_CO',
     url: BASE_URL,
     siteName: 'Todópolis',
-    title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
-    description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
-    description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
   },
-  // Sin `icons`: `/icon.svg` no existe y cada página pedía un 404. Next sirve
-  // solo `app/favicon.ico`, que sí existe.
+  // Sin `icons` a mano: los pone Next desde `app/favicon.ico`, `app/icon.svg`
+  // y `app/apple-icon.png`. El favicon.ico fue hasta sep 2026 el de
+  // create-next-app, el triángulo de Vercel, en todas las pestañas.
 }
 
 // JSON-LD de marca — base para Google y agentes IA (GEO).
@@ -78,8 +86,10 @@ const orgJsonLd = {
       '@id': `${BASE_URL}/#organization`,
       name: 'Todópolis',
       url: BASE_URL,
+      slogan: SLOGAN,
+      logo: LOGO_URL,
       description:
-        'Tienda online colombiana de productos de belleza, hogar, tecnología, moda y bienestar. Pago contraentrega en toda Colombia.',
+        'Tienda online colombiana de moda, accesorios, belleza y hogar. Pago contraentrega o con Confío, envío a toda Colombia.',
     },
     {
       '@type': 'WebSite',

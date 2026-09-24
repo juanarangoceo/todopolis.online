@@ -201,8 +201,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // rejilla (`destacados/destacado-section-header.tsx`):
   //
   //   reconocimiento (banner) → contexto (historia) → beneficios con fotos →
-  //   demostración → ¿es para ti? → contenido → datos → prueba → dudas →
-  //   cómo se paga → cierre
+  //   demostración → ¿es para ti? → contenido → datos → prueba →
+  //   cómo se paga → cierre → preguntas frecuentes
   //
   // Los bloques manuales de Destacados solo salen si el producto es Destacado
   // y el editor los llenó. La historia no es exclusiva: la IA la escribe para
@@ -240,17 +240,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         photos={adaptedProduct.customerPhotos}
         productName={adaptedProduct.name}
       />
-      <DestacadoFaq
-        faqs={adaptedProduct.faqs}
-        articleSlug={adaptedProduct.articleSlug}
-        articleTopic={adaptedProduct.articleTopic}
-      />
       {/* «Cómo pagas» pegado al cierre: es la última duda antes del botón
           («¿y si pago y no llega?»), así que se resuelve justo antes de él y
           no dos secciones atrás. No va DENTRO del cierre: lo recargaría y le
           quitaría el foco al botón. */}
       <DestacadoPayment />
       <DestacadoCTA product={adaptedProduct} whatsappHref={whatsappHref} />
+      {/* Las preguntas van DESPUÉS del cierre (sep 2026): son de consulta, y
+          quien tiene una duda baja a buscarla; el que ya se decidió llega al
+          botón una sección antes. «Cómo pagas» NO baja con ellas: «¿y si pago
+          y no me llega?» es la duda que frena la compra, y se resuelve antes. */}
+      <DestacadoFaq
+        faqs={adaptedProduct.faqs}
+        articleSlug={adaptedProduct.articleSlug}
+        articleTopic={adaptedProduct.articleTopic}
+      />
     </>
   )
 

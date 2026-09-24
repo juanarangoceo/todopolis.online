@@ -32,9 +32,12 @@ test('nada sirve: «otros», nunca un valor inventado', () => {
   assert.equal(decideCategory(null).category, 'otros')
 })
 
-test('la pregunta ofrece exactamente las categorías de la lista', () => {
+test('la pregunta ofrece las categorías de la lista, menos la de adultos', () => {
   const r = buildCategoryRequest({ name: 'Cama para perro', description: 'x', sourceCategory: 'Animales y Mascotas' })
-  assert.deepEqual(Object.keys(r.questions.category.criteria).sort(), [...PRODUCT_CATEGORY_VALUES].sort())
+  assert.deepEqual(
+    Object.keys(r.questions.category.criteria).sort(),
+    PRODUCT_CATEGORY_VALUES.filter((v) => v !== 'bienestar-intimo').sort(),
+  )
   assert.equal(r.state.categoria_del_proveedor, 'Animales y Mascotas')
 })
 
@@ -68,4 +71,11 @@ test('la tabla del proveedor es respaldo, JEV decide', async () => {
   })) as never
   const d = await classifyFromSource({ name: 'Shampoo', sourceCategory: 'Otros' }, undefined, [], { evaluateFn: fake })
   assert.equal(d.category, 'belleza')
+})
+
+test('ningún modelo manda un producto a la categoría de adultos', () => {
+  const req = buildCategoryRequest({ name: 'Brasier de realce' })
+  assert.ok(!('bienestar-intimo' in req.questions.category.criteria))
+  assert.notEqual(decideCategory({ category: 'bienestar-intimo', confidence: 0.95 }, ['moda']).category, 'bienestar-intimo')
+  assert.equal(decideCategory({ category: 'bienestar-intimo', confidence: 0.95 }, ['bienestar-intimo']).category, 'otros')
 })

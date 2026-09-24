@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  ADULT_TITLE,
   applyCatalogFilters,
   categoryCounts,
   EMPTY_FILTERS,
@@ -16,7 +17,7 @@ const items = [
   { id: 'a', name: 'Shampoo anticaída', category: 'Belleza', price: 25_000, tags: [{ slug: 'capilar' }] },
   { id: 'b', name: 'Crema facial', category: 'Belleza', price: 45_000, originalPrice: 60_000, tags: [] },
   { id: 'c', name: 'Licuadora portátil', category: 'Cocina', price: 89_000, isDestacado: true, tags: [] },
-  { id: 'd', name: 'Lubricante', category: 'Bienestar Íntimo', price: 30_000, tags: [] },
+  { id: 'd', name: 'Set de encaje', category: ADULT_TITLE, price: 30_000, tags: [] },
   { id: 'e', name: 'Sartén', category: 'Cocina', price: 120_000, originalPrice: 200_000, tags: [] },
 ]
 const f = (patch: Partial<CatalogFilters>): CatalogFilters => ({ ...EMPTY_FILTERS, tags: new Set(), ...patch })
@@ -24,7 +25,7 @@ const ids = (list: { id: string }[]) => list.map((p) => p.id)
 
 test('«Todos» nunca muestra adultos; su pestaña sí', () => {
   assert.deepEqual(ids(applyCatalogFilters(items, f({}))), ['a', 'b', 'c', 'e'])
-  assert.deepEqual(ids(applyCatalogFilters(items, f({ category: 'Bienestar Íntimo' }))), ['d'])
+  assert.deepEqual(ids(applyCatalogFilters(items, f({ category: ADULT_TITLE }))), ['d'])
 })
 
 test('el conteo de cada pestaña es lo que se ve al tocarla', () => {

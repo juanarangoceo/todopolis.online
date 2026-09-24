@@ -1,4 +1,4 @@
-import { Truck, ShieldCheck, WalletCards, Star, RefreshCw, Box, CheckCircle, Headphones } from 'lucide-react'
+import { Truck, ShieldCheck, WalletCards, Star, RefreshCw, Box, CheckCircle, Headphones, ArrowRight } from 'lucide-react'
 import { StorePolicy } from '@/lib/types'
 
 const IconMap: Record<string, React.ElementType> = {
@@ -7,9 +7,19 @@ const IconMap: Record<string, React.ElementType> = {
 
 interface PolicyBadgesProps {
   policies: StorePolicy[]
+  /** Enlace de WhatsApp para el cierre de la sección. Sin número, no se pinta. */
+  whatsappHref?: string | null
 }
 
-export function PolicyBadges({ policies }: PolicyBadgesProps) {
+// «Así compras en Todópolis»: el recorrido de una compra en tres pasos, en el
+// home entre Novedades y el catálogo.
+//
+// Fueron tres recuadros sueltos sin encabezado, con el ícono en su propia caja
+// dentro de la tarjeta (cajas dentro de cajas), y en móvil solo el título a
+// 11 px. Eran tres datos, no una respuesta. Ahora se leen en orden, que es
+// justo la duda del comprador que llega del anuncio: ¿cómo pago?, ¿cuándo me
+// llega?, ¿y si llega mal? Listas con filetes, no tarjetas, igual que la ficha.
+export function PolicyBadges({ policies, whatsappHref }: PolicyBadgesProps) {
   // Filtramos legacy 'Lock' (privacidad) que ya no aplica para contraentrega.
   const displayPolicies = (policies?.length > 0 ? policies : [])
     .filter(p => p.iconName !== 'Lock')
@@ -18,48 +28,54 @@ export function PolicyBadges({ policies }: PolicyBadgesProps) {
   if (displayPolicies.length === 0) return null
 
   return (
-    <div className="container mx-auto px-4 py-4 md:py-6">
+    <section className="w-full border-y border-nav-inactive-border bg-surface py-8 md:py-12" aria-labelledby="como-compras-titulo">
+      <div className="container mx-auto px-4">
+        <p className="mb-2 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
+          Cómo compras
+        </p>
+        <h2
+          id="como-compras-titulo"
+          className="font-serif text-2xl font-extrabold leading-tight tracking-[-0.02em] text-ink-title text-balance md:text-[2rem]"
+        >
+          Así compras en Todópolis
+        </h2>
 
-      {/* Desktop: 3-col grid, larger badges — sistema unificado de confianza */}
-      <div className="hidden md:grid md:grid-cols-3 gap-4">
-        {displayPolicies.map((policy, i) => {
-          const Icon = IconMap[policy.iconName] || CheckCircle
-          return (
-            <div
-              key={i}
-              className="flex items-start gap-4 px-6 py-5 rounded-2xl bg-surface border border-nav-inactive-border"
-            >
-              <div className="w-12 h-12 shrink-0 rounded-xl flex items-center justify-center bg-trust-bg border border-trust-border">
-                <Icon className="w-6 h-6 text-trust-fg" />
-              </div>
-              <div className="min-w-0">
-                {/* Sin `truncate`: la frase que se cortaba con «…» era justo la
-                    que explica Confío. Un recuadro de confianza a medio leer
-                    no da confianza. */}
-                <p className="font-bold text-foreground text-sm leading-snug">{policy.title}</p>
-                <p className="text-xs text-foreground/60 mt-1 leading-relaxed">{policy.description}</p>
-              </div>
-            </div>
-          )
-        })}
+        <ol className="mt-6 divide-y divide-nav-inactive-border md:mt-8 md:grid md:grid-cols-3 md:divide-x md:divide-y-0">
+          {displayPolicies.map((policy, i) => {
+            const Icon = IconMap[policy.iconName] || CheckCircle
+            return (
+              <li
+                key={i}
+                className="flex gap-4 py-4 first:pt-0 last:pb-0 md:flex-col md:gap-3 md:px-8 md:py-0 md:first:pl-0 md:last:pr-0"
+              >
+                <div className="flex shrink-0 items-center gap-3 md:gap-4">
+                  <span className="w-5 font-serif text-sm font-extrabold tabular-nums text-muted-foreground md:w-auto">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <Icon className="h-6 w-6 text-trust-fg" strokeWidth={1.75} aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-serif text-base font-extrabold leading-snug text-ink-title md:text-lg">{policy.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{policy.description}</p>
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+
+        {whatsappHref && (
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-todopolis-lavender-deep transition-all hover:gap-2.5 md:mt-8"
+          >
+            ¿Dudas antes de pedir? Escríbenos por WhatsApp
+            <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        )}
       </div>
-
-      {/* Móvil: tres columnas, ícono sobre el título. En fila los tres
-          títulos no cabían en 390 px y el tercero se salía de la pantalla. */}
-      <div className="md:hidden grid grid-cols-3 gap-2">
-        {displayPolicies.map((policy, i) => {
-          const Icon = IconMap[policy.iconName] || CheckCircle
-          return (
-            <div key={i} className="flex flex-col items-center gap-2 rounded-2xl border border-nav-inactive-border px-2 py-3 text-center">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-trust-bg border border-trust-border">
-                <Icon className="w-[18px] h-[18px] text-trust-fg" />
-              </div>
-              <span className="text-[11px] font-bold leading-tight text-foreground/80 text-balance">{policy.title}</span>
-            </div>
-          )
-        })}
-      </div>
-
-    </div>
+    </section>
   )
 }

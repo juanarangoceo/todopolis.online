@@ -209,7 +209,7 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 ## Arquitectura home — no romper
 
 ### ProductBrowser y los carriles de inspiración
-`components/product-browser.tsx` recibe la prop `aiImages` desde `app/page.tsx` y la pasa a `ProductGrid` como **slot repetido**: un carril horizontal (`components/inspiration-rail.tsx`) que se inserta como fila `col-span-full` tras el producto 16 y luego cada 24 (antes tras el 4 y cada 12: ~48 carriles con ~39 imágenes, el mismo carril cada dos pantallas). Mismo componente en móvil y escritorio.
+`components/product-browser.tsx` recibe la prop `aiImages` desde `app/page.tsx` y la pasa a `ProductGrid` como **slot repetido**: un carril horizontal (`components/inspiration-rail.tsx`) que se inserta como fila `col-span-full` tras el producto 16 y tras el 48, y ninguno más (ver «Catálogo: carga sola hasta 48»). Mismo componente en móvil y escritorio.
 
 **Antes había una columna lateral sticky en escritorio y un carrusel suelto en móvil. Se eliminaron (sep 2026) y no hay que reponerlos.** La columna era incompatible con la cuadrícula: el catálogo carga de 24 en 24 sobre 574 productos, así que `sticky` dejaba 3 imágenes congeladas al lado de un scroll interminable, y `max-h-screen overflow-y-auto` creaba un scroll anidado con contenido inalcanzable (una vez pegado el sticky, su parte baja no se puede ver).
 
@@ -220,14 +220,25 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 ### Filtros del home — categorías con conteo, panel y «Filtros aplicados» (sep 2026)
 `components/product-browser.tsx` pinta; **la lógica está en `lib/catalog-filters.ts` (con test)**: filtros, orden y conteos. No la dupliques en el componente.
 
-- **Categorías**: en móvil, tarjetas con la foto del producto más nuevo de cada una y su conteo (con 14 categorías las píldoras dejaban ver 3); la primera tarjeta es «Filtros». En escritorio, píldoras con conteo que se reparten en dos filas, sin deslizamiento. Solo salen las categorías con productos; con 0 en la vista actual se atenúan. Adultos nunca lleva foto en su tarjeta (sería contenido sensible antes del aviso de edad).
-- **El conteo es «cuántos verías si la tocas»**, con los demás filtros puestos (`categoryCounts`). «Todos» excluye Bienestar Íntimo, igual que el listado.
+- **Categorías**: en móvil, tarjetas con la foto del producto más nuevo de cada una y su conteo (con 14 categorías las píldoras dejaban ver 3); la primera tarjeta es «Filtros». En escritorio, **una sola barra** (`components/category-bar.tsx`, 24-sep-2026): pestañas de texto con subrayado para el grupo de moda, «Más categorías ▾» con el resto de la tienda y «Filtros» a la derecha. Eran tres franjas centradas (dos filas de píldoras y una de etiquetas) y nada se leía primero. Las etiquetas destacadas ya no van arriba en ninguna pantalla: viven en el panel Filtros. Solo salen las categorías con productos; con 0 en la vista actual se atenúan. Adultos nunca lleva foto en su tarjeta (sería contenido sensible antes del aviso de edad).
+- **El conteo es «cuántos verías si la tocas»**, con los demás filtros puestos (`categoryCounts`). «Todos» excluye Lencería (adultos), igual que el listado.
 - **Panel «Filtros»** (`tag-filter-panel.tsx`, prop `extras`): ordenar (recomendados, menor y mayor precio, mayor descuento), precio (hasta $30.000 · $30–60.000 · $60–100.000 · más de $100.000; tramos del catálogo real, mediana $58.900), solo ofertas, envío gratis (Destacados) y las etiquetas por grupo con nombres para el comprador («Para quién», «Tipo de producto», «Para qué», «Características»). El botón dice cuántos quedan.
 - **Ordenar** también está junto al titular del catálogo y en la barra de filtros aplicados (en escritorio; en móvil solo en el panel, para no taparle espacio a los chips).
 - Todo lo que filtra sale en **«Filtros aplicados»**, pegada bajo la cabecera, con su × y «Borrar todo». Cualquier filtro u orden distinto de «recomendados» saca al home del listado limpio (sin Novedades, banner ni carriles).
-- Todo vive en la URL: `?q=`, `?categoria=`, `?tags=`, `?precio=`, `?oferta=1`, `?envio=gratis`, `?orden=`. Bienestar Íntimo NO se restaura desde la URL: pasa por el aviso de edad.
+- Todo vive en la URL: `?q=`, `?categoria=`, `?tags=`, `?precio=`, `?oferta=1`, `?envio=gratis`, `?orden=`. Lencería NO se restaura desde la URL: pasa por el aviso de edad.
 - Las barras de búsqueda no están controladas desde fuera: se les fija el texto con el evento `magic-search:set`. La de la cabecera entra por portal tarde y recibe `initialQuery`.
-- **Búsqueda sin resultados → sugerencias de JEV** (`components/search-suggestions.tsx` → `/api/search-suggest` → `lib/search-suggest.ts`, con test): una categoría y hasta 3 etiquetas donde sí hay productos («cafetera» → Cocina; «dolor de espalda» → Salud y bienestar · Alivio de dolor). Solo con CERO resultados, nunca por tecla; la respuesta se cachea en la CDN una semana por búsqueda. Nunca sugiere Bienestar Íntimo ni «Otros», ni una categoría o etiqueta sin productos. Sin JEV, no pinta nada.
+- **Búsqueda sin resultados → sugerencias de JEV** (`components/search-suggestions.tsx` → `/api/search-suggest` → `lib/search-suggest.ts`, con test): una categoría y hasta 3 etiquetas donde sí hay productos («cafetera» → Cocina; «dolor de espalda» → Salud y bienestar · Alivio de dolor). Solo con CERO resultados, nunca por tecla; la respuesta se cachea en la CDN una semana por búsqueda. Nunca sugiere Lencería ni «Otros», ni una categoría o etiqueta sin productos. Sin JEV, no pinta nada.
+
+### «Eleva tu estilo» — moda y accesorios, y el H1 del home (sep 2026)
+`components/style-spotlight.tsx`, con la selección en `lib/style-picks.ts` y su test. Es la primera sección del home, encima de Novedades: los 12 productos de Moda y Accesorios más recientes que NO salen ya en Novedades. Lleva el slogan como **H1** (el home no tenía ninguno). Con menos de 4 productos no se pinta.
+
+- El slogan va AQUÍ y no como franja sobre todo el home: el catálogo sigue siendo sobre todo hogar y belleza, y «Eleva tu estilo» encima de una cafetera no se sostiene. Ver §1 de la guía de marca.
+- «Ver toda la moda» dispara el evento `todopolis:show-category` (que escucha `product-browser.tsx`). Un `<Link>` a `?categoria=Moda` no sirve: el home ya está montado y la URL solo se lee al montar.
+- El grupo de moda (Ropa, Fajas, Calzado, Accesorios, Lencería) va primero en `PRODUCT_CATEGORIES`. La sección toma todo el grupo MENOS Lencería; «Ver toda la ropa» abre Ropa.
+- El slogan también está en el título del home, en `metadata` del layout, en el JSON-LD de `Organization` (`slogan`, `logo`) y en `app/opengraph-image.tsx`, la imagen por defecto al compartir (antes no había ninguna).
+
+### «Así compras en Todópolis» — la sección de confianza del home (sep 2026)
+`components/policy-badges.tsx`, entre Novedades y el catálogo. Tres pasos numerados en el ORDEN de una compra —cómo pago → cuándo llega → y si llega mal— con filetes, sin tarjetas ni el ícono en su propia caja, y con la explicación completa también en móvil (antes solo el título a 11 px). Cierra con un enlace a WhatsApp. Los textos salen del respaldo de `app/page.tsx` porque `storeSettings.policies` está vacío en Sanity; si alguien lo llena, manda Sanity. Se quitó el recuadro «Lucy responde 24/7» (el chat se retiró).
 
 ### Novedades del home (`NewArrivalsBanner`) — cupo fijo de 12
 `components/new-arrivals-banner.tsx`, con la selección en `lib/new-arrivals.ts` y su test.
@@ -239,6 +250,11 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - **No lleva subtítulo, y es deliberado.** Los dos que hubo describían el bloque en vez de decirle algo al cliente, y uno repetía envío y medios de pago, que ya dicen los tres recuadros de `store-policies` diez píxeles más abajo.
 - **Es una sola fila deslizable en todos los tamaños** (`SuggestedProductsCarousel`) y usa **la misma `ProductCard` que el catálogo**. Fue rejilla desde `sm` con tarjeta propia: 3 filas enteras en escritorio antes del catálogo, y dos estilos de tarjeta uno encima del otro. `bestColumns` quedó sin uso.
 
+### Catálogo: carga sola hasta 48, después «Ver más» (24-sep-2026)
+`ProductGrid` con la lógica en `lib/catalog-paging.ts` (con test). Era scroll infinito sobre ~560 productos: **el pie de página era inalcanzable en el home** (Privacidad y Términos, que Meta exige encontrables) y al volver de una ficha se perdía todo lo cargado. Ahora carga sola hasta `AUTO_LOAD_LIMIT` (48) y después pide el botón «Ver más productos». Al abrir una ficha desde la cuadrícula se guarda lo cargado y la posición (`sessionStorage`, `tp_grid_v1`) y se recuperan al volver, si la lista es la misma (`listSignature`).
+
+**Carriles de inspiración: solo dos**, tras el producto 16 y tras el 48 (`RAIL_AFTER`). Eran ~23 con ~41 imágenes: el mismo carril volvía cada cinco.
+
 ### Los carriles de inspiración NO se mueven solos (sep 2026)
 `components/inspiration-rail.tsx`. Fueron una marquesina CSS que pasaba a manual al primer gesto; se quitó. Un blanco en movimiento cuesta tocarlo (se abre la tarjeta de al lado), con ~24 carriles siempre había algo corriéndose de lado mientras el ojo baja por la cuadrícula, y la primera tarjeta salía cortada. Ahora es scroll nativo con `snap` y flechas en la cabecera que se apagan en los extremos. **No reponer el movimiento automático.**
 
@@ -248,7 +264,7 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - Fondo al 95 %: al 80 % el texto de las fotos se leía a través del logo.
 - **Sin burbuja de chat en el header**: se confundía con un buzón de mensajes junto al corazón y el carrito.
 - **Buscador** (`magic-search-bar.tsx`): lupa a la izquierda, sin botón «Buscar» (la búsqueda es en vivo; el botón no hacía nada y al pasar el ratón quedaba azul oscuro sobre azul oscuro), sin halo ni partículas. Enter busca ya y baja el teclado. El texto dice «Busca entre N productos».
-- **Móvil, filtros**: «Filtros» va al principio de la fila de categorías y la fila de etiquetas destacadas solo se pinta desde `md`. Eran tres franjas y ~170 px antes del primer producto.
+- **Móvil, filtros**: «Filtros» va al principio de la fila de categorías. No hay fila de etiquetas destacadas (tampoco en escritorio). Eran tres franjas y ~170 px antes del primer producto.
 
 ### Atención: SOLO WhatsApp (sep 2026)
 El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del menú móvil y las rutas `/api/lucy-chat` y `/api/lucy-recommend` (eran públicas y sin autenticación: cualquiera podía gastar cuota de Gemini). **No reponerlo.** Queda `VoiceLucy` (asistente de voz en la ficha), que solo sale en los productos donde se enciende desde el panel.
@@ -332,6 +348,10 @@ Antes el botón mandaba `imageAssetId` y la ruta lo descartaba: el copy se escri
 ### Categorías — fuente única en `lib/categories.ts`, clasificadas por JEV
 `PRODUCT_CATEGORIES` alimenta el dropdown del schema, las pestañas del home (solo las que tienen productos), `/ofertas`, los títulos del blog (`categoryTitle`), el clasificador y el script de limpieza. **Cualquier vía que escriba `category` valida contra esa lista.** Cada categoría lleva `description`: es el criterio que recibe el clasificador, escrito para los casos de frontera.
 
+**Reestructuración de moda del 24-sep-2026** (16): Moda se partió en **Ropa** (conserva el valor `moda`; los enlaces `?categoria=Moda` se traducen), **Fajas y moldeadores** (`fajas`) y **Calzado** (`calzado`), y «Bienestar Íntimo» pasó a llamarse **Lencería** (conserva `bienestar-intimo`). Cada categoría lleva `group`: el grupo `moda` (Ropa, Fajas, Calzado, Accesorios, Lencería) va en la fila principal del home y el resto en una fila discreta. Los datos se movieron con `node scripts/restructure-fashion.ts` (dry-run; `--apply` escribe y revalida). **Correrlo solo con el código desplegado.**
+
+**Lencería y adultos:** la tienda vende lencería, NO juguetes para adultos (`lib/adult-policy.ts`, con test). El import y el sync de Mastershop rechazan lo que el proveedor marca como adulto y no parece lencería («en duda, fuera»). Los 9 juguetes que había se DESPUBLICARON (quedan como borrador): despublicar y no borrar, porque el sync busca por `mastershopId` también en borradores y así no los reimporta. Ni JEV ni Gemini pueden asignar `bienestar-intimo` (`decideCategory` la descarta y no está entre las opciones de JEV): la decide solo el proveedor. `ADULT_TITLE` (`lib/catalog-filters.ts`) sale de la lista; no escribas «Lencería» ni «Bienestar Íntimo» a mano.
+
 **Taxonomía del 23-sep-2026** (14): Belleza, Hogar, **Cocina**, Tecnología (`electronica`, antes «Electrónica»; los enlaces `?categoria=Electrónica` se traducen), Moda, Accesorios, **Salud y bienestar**, Deportes, **Bebés**, Juguetes, **Mascotas**, **Carro y moto**, Bienestar Íntimo, Otros. Se retiró Alimentos (0 productos). Motivo: 170 de 578 productos (29 %) estaban en «Otros»; no faltaba criterio sino casillas.
 
 **Quién decide: JEV** (`lib/category-classifier.ts`, `typesafe-ai/jev` por AI Gateway con `experimental_evaluate` del paquete `ai`), el mismo modelo que clasifica etapas en nitro_bot. Es un clasificador: pregunta de opción múltiple → opción + confianza, ~0,4 s. Lo usan:
@@ -398,7 +418,17 @@ Detectados el 16-sep-2026 al revisar el flujo manual. Ninguno está resuelto:
   con el botón, producto por producto, o con un script equivalente al de
   categorías.
 
+## Logo para redes — `public/marca/`
+Isotipo (la «T» con destello), fotos de perfil 1080 en azul/blanco/oscuro, logo horizontal claro y oscuro con el slogan, y firma para publicaciones. Se descargan de `todopolis.online/marca/<archivo>`. Reglas de uso: §10 bis de la guía de marca.
+
+## Favicon e íconos
+`app/favicon.ico` (16/32/48), `app/icon.svg` y `app/apple-icon.png`: una «T» blanca con el destello del logo sobre el azul del logo. Hasta el 24-sep-2026 el `favicon.ico` era el de `create-next-app` — el triángulo de Vercel en todas las pestañas. Si cambias el ícono, se regeneran los tres (y los del panel, abajo).
+
 ## Panel /admin (sep 2026)
+
+**Se instala como app en el celular**, igual que el de nitro_bot. Ícono propio (T azul sobre tinta, `public/icons/admin-*`, con sus SVG fuente) para no confundirse con la tienda. Botón «Instalar app» en la barra lateral y en la cabecera móvil (`_components/install-app.tsx`; en iPhone explica cómo hacerlo a mano).
+- El manifest es **estático** (`public/admin.webmanifest`), no un Route Handler, y su nombre va **sin tildes**. Las dos cosas vienen de Nitro, donde Android no generaba la WebAPK hasta quitarlas.
+- `start_url` es `/admin/launch.html`, una página pública que salta a `/admin`. El manifest y `launch.html` están **fuera del matcher de `proxy.ts`**: el navegador y el minador de Android los piden sin cookies, y con el portón de sesión recibían un 307 al login. El portón compara `/admin` o `/admin/…`, no `startsWith('/admin')`, que atrapaba también `/admin.webmanifest`.
 
 Layout propio con barra lateral (`app/admin/layout.tsx`, `_components/admin-nav.tsx`) y piezas comunes en `app/admin/_components/ui.tsx` (`AdminPage`, `Section`, `Card`, `StatCard`, `StatusPill`). Mismo lenguaje que la tienda (`docs/identidad-de-marca.md`): **no** temas oscuros ni CSS propio por página — Mastershop y el login los tenían y se rehicieron. La burbuja de WhatsApp no se pinta en `/admin`.
 
@@ -553,7 +583,7 @@ Si agregas un campo nuevo de Destacados, ponle nombre `destacado*` directo en el
 El toggle también controla el envío gratis en `components/checkout-modal.tsx`. Si algún día quieres separar "landing extendida" de "envío gratis", hay que partir el flag en dos.
 
 ### Ficha de producto — un solo recorrido y una sola rejilla (sep 2026)
-Normal y Destacado comparten el MISMO recorrido (`funnel` en `app/producto/[slug]/page.tsx`): historia → beneficios con galería → (bloques manuales de Destacados) → usos (solo normal) → ficha técnica → fotos de clientes → preguntas → «Cómo pagas» → cierre. Los componentes viven en `components/product/destacados/` por historia, pero ya los usan las dos fichas. Solo en la normal, DESPUÉS del cierre: un carrusel de venta cruzada, «Te puede interesar» (antes había otro a media ficha, una salida justo antes del botón).
+Normal y Destacado comparten el MISMO recorrido (`funnel` en `app/producto/[slug]/page.tsx`): historia → beneficios con galería → (bloques manuales de Destacados) → usos (solo normal) → ficha técnica → fotos de clientes → «Cómo pagas» → cierre → preguntas frecuentes. **Las preguntas van después del cierre (24-sep-2026)**: son de consulta y quien tiene una duda baja a buscarla. «Cómo pagas» se queda ANTES del botón: «¿y si pago y no me llega?» es la duda que frena la compra. Los componentes viven en `components/product/destacados/` por historia, pero ya los usan las dos fichas. Solo en la normal, DESPUÉS del cierre: un carrusel de venta cruzada, «Te puede interesar» (antes había otro a media ficha, una salida justo antes del botón).
 
 - **La venta cruzada sale de `relatedProducts` (`lib/related-products.ts`, con test)**: etiquetas compartidas pesadas por rareza, misma categoría y precio parecido; si faltan, se rellena con lo más nuevo, detrás. Antes cortaba los 12 primeros del catálogo y TODAS las fichas sugerían los mismos recién llegados. Las etiquetas del producto actual salen de su fila en `getSanityProducts`, porque la query de detalle no las trae.
 - **La suscripción («Acceso prioritario») ya no va en la ficha**: es una franja en el pie (`components/footer-subscribe.tsx`, `source: 'footer'`), en todas las páginas. En la ficha, `Footer` recibe `productSlug` para guardar desde dónde llegó. Sin campo de WhatsApp: nadie envía mensajes desde Todópolis. `StorePolicies` ya no va en la ficha: el cierre dice envío, devolución y WhatsApp.

@@ -3,6 +3,9 @@
 // parte que falla en silencio (un conteo que no cuadra con lo que se ve, un
 // orden que ignora un filtro).
 
+import { categoryTitle } from './categories.ts'
+import { ADULT_CATEGORY } from './adult-policy.ts'
+
 export type CatalogSort = 'recomendado' | 'menor-precio' | 'mayor-precio' | 'descuento'
 
 export const CATALOG_SORTS: { value: CatalogSort; label: string }[] = [
@@ -45,7 +48,10 @@ export interface CatalogItem {
   tags?: { slug: string }[]
 }
 
-export const ADULT_TITLE = 'Bienestar Íntimo'
+// Título visible de la categoría de adultos («Lencería» desde el 24-sep-2026;
+// antes «Bienestar Íntimo»). Sale de la lista única para que renombrarla no
+// deje el aviso de edad comparando contra el nombre viejo.
+export const ADULT_TITLE = categoryTitle(ADULT_CATEGORY)
 
 export const EMPTY_FILTERS: CatalogFilters = {
   query: '',

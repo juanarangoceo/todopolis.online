@@ -1,6 +1,6 @@
 'use client'
 
-// Verificación de edad para las fichas de bienestar íntimo.
+// Verificación de edad para la lencería (categoría `bienestar-intimo`).
 //
 // El encabezado dice "Contenido sensible" y NO "Contenido para adultos": la
 // segunda formulación describe la categoría entera con el término que las
@@ -55,7 +55,7 @@ export function AgeGate({ open, onConfirm, onReject }: AgeGateProps = {}) {
         </div>
         <h2 className="text-xl font-bold text-gray-900 mb-2">Contenido sensible</h2>
         <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-          Esta página muestra productos de bienestar íntimo. Para continuar debes confirmar que
+          Esta sección muestra lencería. Para continuar debes confirmar que
           eres mayor de 18 años.
         </p>
         <div className="flex flex-col gap-3">

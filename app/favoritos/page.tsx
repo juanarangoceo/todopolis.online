@@ -7,6 +7,9 @@ import { Footer } from '@/components/footer'
 export const metadata = {
   title: 'Tus Favoritos',
   description: 'Explora y guarda tus productos favoritos en Todópolis. Tus selecciones guardadas localmente.',
+  // Los favoritos viven en el navegador de cada quien: para Google la página
+  // es una lista vacía. Fuera del índice y del sitemap.
+  robots: { index: false, follow: true },
 }
 
 export default async function FavoritosPage() {

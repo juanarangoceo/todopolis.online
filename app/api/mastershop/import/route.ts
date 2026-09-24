@@ -5,6 +5,7 @@ import { generateAndSaveArticle } from '@/lib/generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from '@/lib/product-content-prompt'
 import { classifyFromSource } from '@/lib/category-classifier'
+import { ADULT_CATEGORY, isAllowedAdultProduct } from '@/lib/adult-policy'
 import { createUsageCollector, geminiUsage } from '@/lib/ai/usage'
 import { audienceFitFromAi } from '@/lib/audience-fit'
 import { slugifyProductName } from '@/lib/slugify'
@@ -123,6 +124,15 @@ export async function POST(request: NextRequest) {
     // La categoría la decide JEV con la de Mastershop como pista y respaldo
   // (lib/category-classifier.ts). Va antes del tagging porque lo alimenta.
   const { category } = await classifyFromSource({ name, description, sourceCategory: categoryRaw }, undefined, [], { onUsage: usage.sink })
+
+    // La tienda vende lencería, no juguetes para adultos (lib/adult-policy.ts).
+    if (category === ADULT_CATEGORY && !isAllowedAdultProduct(name, description)) {
+      await usage.flush()
+      return NextResponse.json(
+        { error: `«${name}» es un producto para adultos que no es lencería. Todópolis no vende juguetes para adultos.` },
+        { status: 422 }
+      )
+    }
 
     // ── STEP 2: Generate AI content with Gemini (en paralelo con auto-tagging) ──
     const genAI = new GoogleGenerativeAI(geminiKey)

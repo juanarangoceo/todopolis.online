@@ -3,7 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ExternalLink, Gauge, LayoutDashboard, LogOut, Package, PenSquare, ShoppingBag } from 'lucide-react'
+import { Download, ExternalLink, Gauge, LayoutDashboard, LogOut, Package, PenSquare, ShoppingBag } from 'lucide-react'
+import { InstallAppButton } from './install-app'
 
 const LOGO_URL = 'https://res.cloudinary.com/dohwyszdj/image/upload/f_auto,q_auto,w_320/v1779801383/logo_nuevo_todopolis_1_ljlqn6.png'
 
@@ -61,10 +62,16 @@ export function AdminNav() {
             </a>
           ))}
         </div>
-        <button type="button" onClick={logout} className={`${item(false)} mt-auto`}>
-          <LogOut className="h-4 w-4" />
-          Cerrar sesión
-        </button>
+        <div className="mt-auto flex flex-col gap-1">
+          <InstallAppButton className={item(false)}>
+            <Download className="h-4 w-4" />
+            Instalar app
+          </InstallAppButton>
+          <button type="button" onClick={logout} className={item(false)}>
+            <LogOut className="h-4 w-4" />
+            Cerrar sesión
+          </button>
+        </div>
       </aside>
 
       {/* Móvil */}
@@ -73,9 +80,15 @@ export function AdminNav() {
           <Link href="/admin">
             <Image src={LOGO_URL} alt="Todópolis" width={112} height={28} style={{ height: 28, width: 'auto' }} priority />
           </Link>
-          <button type="button" onClick={logout} className="rounded-full p-2 text-foreground/60" aria-label="Cerrar sesión">
-            <LogOut className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <InstallAppButton className="flex items-center gap-1.5 rounded-full border border-nav-inactive-border px-3 py-1.5 text-xs font-bold text-ink-title">
+              <Download className="h-3.5 w-3.5" />
+              Instalar
+            </InstallAppButton>
+            <button type="button" onClick={logout} className="rounded-full p-2 text-foreground/60" aria-label="Cerrar sesión">
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
         <nav className="-mt-1 flex gap-1 overflow-x-auto px-3 pb-2" style={{ scrollbarWidth: 'none' }} aria-label="Panel">
           {LINKS.map(({ href, label, icon: Icon, ...rest }) => (

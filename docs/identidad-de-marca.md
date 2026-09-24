@@ -5,7 +5,7 @@ decisiones concretas y su historia están en `CLAUDE.md`; esto es el criterio
 que las une. **Si un cambio nuevo contradice esta guía, gana la guía, salvo que
 la actualices a propósito y digas por qué.**
 
-Última revisión: 23-sep-2026.
+Última revisión: 24-sep-2026.
 
 ---
 
@@ -14,6 +14,13 @@ la actualices a propósito y digas por qué.**
 Todópolis es «la ciudad de todo»: una tienda online colombiana con un catálogo
 amplio (hogar, belleza, cocina, tecnología, moda y más) que se paga al recibir
 o con Confío, y llega a todo el país.
+
+**Slogan: «Eleva tu estilo».** Desde el 24-sep-2026 Todópolis se enfoca poco a
+poco en **moda y accesorios**. El catálogo sigue siendo amplio (a esa fecha,
+moda y accesorios eran 77 de 580 productos), así que el slogan va pegado a
+productos que lo cumplen —la sección de moda del home, que es el H1— y no
+encima de todo el catálogo. Moda y Accesorios son las primeras pestañas.
+Cuando el catálogo cambie de peso, se revisa esta sección.
 
 **A quién le vende.** A un comprador colombiano que casi siempre llega desde un
 anuncio o un video en el celular, que no conoce la tienda y que desconfía de
@@ -148,7 +155,7 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 | Una fila de productos que se desliza | `SuggestedProductsCarousel` (con `itemClassName` para el ancho). |
 | Una cuadrícula con carga infinita | `ProductGrid`. |
 | Encabezar una sección | Antetítulo gris con filete + titular (ver §5). En la ficha: `DestacadoSectionHeader`. |
-| Filtrar por categoría | Píldoras en una fila deslizable; la activa en lavanda, tocarla la quita. |
+| Filtrar por categoría | Móvil: tarjetas con foto en una fila deslizable. Escritorio: `CategoryBar`, pestañas de texto con subrayado lavanda y «Más categorías». Tocar la activa la quita. |
 | Buscar | `MagicSearchBar` con `placeholder` «Busca entre N …». |
 | Hablar con el cliente | `WhatsAppButton` (burbuja global) o el botón dentro de la barra de compra. |
 | Pedir el correo | `FooterSubscribe`, en el pie. Nunca en medio del recorrido de compra. |
@@ -196,18 +203,51 @@ sep 2026: la atención es por WhatsApp.
 
 ---
 
+## 10 bis. Logo e isotipo
+
+Los archivos viven en `public/marca/` (se sirven en `todopolis.online/marca/…`).
+
+- **Isotipo:** la «T» redondeada del logotipo con el destello de cuatro puntas.
+  Blanca sobre el azul del logo (`#7EBEF6`). Es el favicon, el ícono de la app
+  y la **foto de perfil en todas las redes**.
+- **Foto de perfil:** `perfil-azul-1080.png` es la principal. `perfil-blanco`
+  y `perfil-oscuro` solo cuando el fondo de la plataforma se coma el azul. Van
+  a sangre, sin esquinas redondeadas: la red las recorta en círculo, y la «T»
+  cabe dentro.
+- **Logo horizontal** (isotipo + logotipo + «Eleva tu estilo»): portadas,
+  encabezados de correo, presentaciones. `claro` sobre fondos claros (es
+  transparente) y `oscuro` sobre tinta.
+- **Firma para publicaciones** (`firma-blanca.png`): isotipo + slogan en
+  blanco, en una esquina de la foto, sobre la zona más oscura. No encima del
+  producto.
+- El destello va en blanco sobre azul y en lavanda (`#C99BEA`) sobre blanco o
+  tinta. No se le cambia el color al isotipo ni se le añaden sombras,
+  contornos o degradados.
+- El logotipo «Todópolis» es una imagen (Cloudinary), no una fuente: no se
+  reescribe a mano con otra tipografía.
+
+---
+
 ## 11. Categorías
 
-La lista única está en `lib/categories.ts`, en el orden de las pestañas:
-Belleza, Hogar, Cocina, Tecnología, Moda, Accesorios, Salud y bienestar,
-Deportes, Bebés, Juguetes, Mascotas, Carro y moto, Bienestar Íntimo y Otros.
+La lista única está en `lib/categories.ts`. Desde el 24-sep-2026 hay dos grupos:
+
+- **Moda** (primero, en la fila principal): Ropa, Fajas y moldeadores,
+  Calzado, Accesorios y Lencería.
+- **El resto de la tienda** (en una fila más discreta): Belleza, Hogar, Cocina,
+  Tecnología, Salud y bienestar, Deportes, Bebés, Juguetes, Mascotas, Carro y
+  moto y Otros.
 
 - Se decide por **dónde lo buscaría el comprador**, no por el material.
 - La clasifica **JEV** (`lib/category-classifier.ts`) en todas las vías
   automáticas. «Otros» es para lo que de verdad no encaja: si crece, falta una
   categoría o una descripción.
-- **Bienestar Íntimo** se nombra «Contenido sensible» en sus avisos, no carga el
-  Píxel y nunca la mueve un modelo.
+- **Lencería** (antes «Bienestar Íntimo»; en los datos sigue siendo
+  `bienestar-intimo`) pasa por aviso de edad, que dice «Contenido sensible»; no
+  carga el Píxel, no sale en el feed ni en el sitemap y nunca la asigna un
+  modelo: solo el proveedor. **La tienda no vende juguetes para adultos**
+  (`lib/adult-policy.ts`): el revisor de Meta ve el home, y no encajan con
+  «Eleva tu estilo».
 - Para sumar una categoría: agrégala a la lista con una `description` que
   resuelva los casos de frontera, ponle ícono en `product-browser.tsx` y corre
   `node scripts/fix-product-categories.ts --all`.

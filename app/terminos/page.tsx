@@ -192,7 +192,7 @@ export default function TerminosPage() {
 
       <LegalSection id="adultos" title="11. Productos para mayores de 18 años">
         <p>
-          Algunas secciones contienen productos de bienestar íntimo, reservados a mayores de
+          La sección de lencería está reservada a mayores de
           edad. Al continuar en esas páginas declaras ser mayor de 18 años. Estos productos no
           se anuncian en plataformas publicitarias ni se incluyen en el mapa del sitio.
         </p>

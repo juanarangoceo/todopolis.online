@@ -133,7 +133,7 @@ ${lista}
 
 REGLAS:
 - Elige la categoría donde un comprador colombiano iría a buscar el producto, no la que describe su material.
-- "bienestar-intimo" es para productos sexuales o de lencería íntima. No lo uses para masajeadores corporales ni cosmética.
+- "bienestar-intimo" (Lencería) no se asigna nunca desde aquí: solo la decide el proveedor.
 - Si ninguna encaja de verdad, usa "otros". No inventes slugs.
 
 PRODUCTO:

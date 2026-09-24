@@ -16,11 +16,12 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
     changeFrequency: 'daily',
     priority: 0.8,
   },
+  // Sin /favoritos: vive en el navegador de cada quien y va con noindex.
   {
-    url: `${BASE_URL}/favoritos`,
+    url: `${BASE_URL}/destacados`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
-    priority: 0.5,
+    priority: 0.8,
   },
   {
     url: `${BASE_URL}/blog`,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, ReactNode, useEffect, useRef } from 'react';
+import { Fragment, useState, useCallback, useMemo, ReactNode, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Product, TagTaxonomyEntry } from '@/lib/types';
@@ -14,17 +14,18 @@ import { SearchSuggestions } from './search-suggestions';
 import {
   Sparkles, Grid, Watch, HeartPulse,
   Laptop, Home, Shirt, Dumbbell, Gamepad2,
-  Droplets, CookingPot, Baby, PawPrint, Car, Lock,
+  Droplets, CookingPot, Baby, PawPrint, Car, Lock, Footprints, Hourglass,
   SlidersHorizontal, X,
-  ChevronLeft, ChevronRight, Check, Search,
+  Search,
   type LucideIcon,
 } from 'lucide-react';
 import { PRODUCT_CATEGORIES } from '@/lib/categories';
 import {
-  applyCatalogFilters, categoryCounts, isCleanListing as isCleanCatalog, panelFilterCount,
+  applyCatalogFilters, categoryCounts, isCleanListing as isCleanCatalog, panelFilterCount, ADULT_TITLE,
   CATALOG_SORTS, PRICE_RANGES, type CatalogFilters, type CatalogSort, type PriceRange,
 } from '@/lib/catalog-filters';
 import { AgeGate } from '@/components/age-gate';
+import { CategoryBar } from './category-bar';
 
 
 // Ícono por categoría (por `value`, no por título: el título se puede
@@ -35,6 +36,8 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   cocina: CookingPot,
   electronica: Laptop,
   moda: Shirt,
+  fajas: Hourglass,
+  calzado: Footprints,
   accesorios: Watch,
   'salud-bienestar': HeartPulse,
   deportes: Dumbbell,
@@ -51,7 +54,12 @@ const getCategoryIcon = (title: string) =>
 
 // La categoría llega como `value` (`electronica`) y se muestra con su título.
 // Los valores viejos del dataset (`sexshop`, «Electrónica») se traducen aquí.
-const LEGACY_TITLES: Record<string, string> = { sexshop: 'Bienestar Íntimo', 'electrónica': 'Tecnología' };
+const LEGACY_TITLES: Record<string, string> = { sexshop: ADULT_TITLE, 'electrónica': 'Tecnología' };
+// Títulos viejos que pueden llegar en enlaces `?categoria=`: «Electrónica»
+// (hasta sep 2026) y «Moda», que desde el 24-sep-2026 se llama Ropa.
+const LEGACY_URL_TITLES: Record<string, string> = { 'Electrónica': 'Tecnología', Moda: 'Ropa' };
+// El grupo de moda va primero y separado del resto («Eleva tu estilo»).
+const FASHION_TITLES = new Set(PRODUCT_CATEGORIES.filter((c) => c.group === 'moda').map((c) => c.title));
 function categoryTitleOf(raw: string): string {
   const v = (raw ?? '').trim().toLowerCase();
   return PRODUCT_CATEGORIES.find((c) => c.value === v)?.title ?? LEGACY_TITLES[v] ?? 'Otros';
@@ -81,25 +89,6 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
   const [onlyOffers, setOnlyOffers] = useState(false);
   const [freeShipping, setFreeShipping] = useState(false);
   const [sort, setSort] = useState<CatalogSort>('recomendado');
-  const tagsScrollRef = useRef<HTMLDivElement | null>(null);
-  const [tagsScrollState, setTagsScrollState] = useState<{ left: boolean; right: boolean }>({ left: false, right: false });
-
-  // Recalcula si hay overflow visible a izquierda/derecha en el slider de tags,
-  // para mostrar fades + flechas solo cuando aplica.
-  const updateTagsScrollState = useCallback(() => {
-    const el = tagsScrollRef.current;
-    if (!el) return;
-    const left = el.scrollLeft > 4;
-    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
-    setTagsScrollState((prev) => (prev.left === left && prev.right === right ? prev : { left, right }));
-  }, []);
-
-  const scrollTagsBy = useCallback((delta: number) => {
-    const el = tagsScrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: delta, behavior: 'smooth' });
-  }, []);
-
   useEffect(() => {
     // Find the header search slot once it mounts
     const slot = document.getElementById('header-search-slot');
@@ -124,11 +113,10 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
       if (tagsParam) {
         setSelectedTags(new Set(tagsParam.split(',').filter(Boolean)));
       }
-      // Bienestar Íntimo no se restaura desde la URL: pasa por el aviso de edad.
+      // Lencería (adultos) no se restaura desde la URL: pasa por el aviso de edad.
       const cat = params.get('categoria');
-      // «Electrónica» se llamó así hasta sep 2026: los enlaces viejos siguen sirviendo.
-      const title = cat === 'Electrónica' ? 'Tecnología' : cat;
-      if (title && title !== 'Bienestar Íntimo') setActiveCategory(title);
+      const title = cat ? LEGACY_URL_TITLES[cat] ?? cat : null;
+      if (title && title !== ADULT_TITLE && title !== 'Bienestar Íntimo') setActiveCategory(title);
     }
 
     // Listen for logo click to reset home state
@@ -143,15 +131,22 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
       window.dispatchEvent(new CustomEvent('magic-search:set', { detail: '' }));
     };
     window.addEventListener('todopolis:reset-home', handleResetHome);
-    return () => window.removeEventListener('todopolis:reset-home', handleResetHome);
-  }, []);
 
-  // Recalcular fades del slider cuando cambian las tags o el viewport.
-  useEffect(() => {
-    updateTagsScrollState();
-    window.addEventListener('resize', updateTagsScrollState);
-    return () => window.removeEventListener('resize', updateTagsScrollState);
-  }, [updateTagsScrollState, tagTaxonomy]);
+    // «Ver toda la moda» y cualquier enlace del home que abra una categoría.
+    // Con un <Link> a `?categoria=` no basta: el home ya está montado y la URL
+    // solo se lee al montar. Lencería no entra por aquí (aviso de edad).
+    const handleShowCategory = (event: Event) => {
+      const title = (event as CustomEvent<string>).detail;
+      if (!title || title === ADULT_TITLE) return;
+      setActiveCategory(title);
+      requestAnimationFrame(() => document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' }));
+    };
+    window.addEventListener('todopolis:show-category', handleShowCategory);
+    return () => {
+      window.removeEventListener('todopolis:reset-home', handleResetHome);
+      window.removeEventListener('todopolis:show-category', handleShowCategory);
+    };
+  }, []);
 
   // Persistir búsqueda, categoría y etiquetas en la URL sin recargar
   // (compartible, y el botón «atrás» desde una ficha vuelve al mismo listado).
@@ -171,7 +166,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     } else {
       params.delete('q');
     }
-    if (activeCategory !== 'Todos' && activeCategory !== 'Bienestar Íntimo') {
+    if (activeCategory !== 'Todos' && activeCategory !== ADULT_TITLE) {
       params.set('categoria', activeCategory);
     } else {
       params.delete('categoria');
@@ -208,6 +203,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     const present = new Set(initialProducts.map((p) => categoryTitleOf(p.category)));
     return ['Todos', ...PRODUCT_CATEGORIES.map((c) => c.title).filter((t) => present.has(t))];
   }, [initialProducts]);
+  const firstStoreTitle = categories.find((c) => c !== 'Todos' && !FASHION_TITLES.has(c));
 
 
   // Productos con la categoría ya en título, una sola vez.
@@ -268,11 +264,6 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
     return m;
   }, [tagTaxonomy]);
 
-  const featuredTags = useMemo(
-    () => tagTaxonomy.filter((t) => t.isFeatured).sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0)),
-    [tagTaxonomy],
-  );
-
   const toggleTag = useCallback((slug: string) => {
     setSelectedTags((prev) => {
       const next = new Set(prev);
@@ -288,7 +279,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
   }, []);
 
   const handleCategoryClick = useCallback((cat: string) => {
-    if (cat === 'Bienestar Íntimo' && typeof window !== 'undefined' && !sessionStorage.getItem('ageVerified')) {
+    if (cat === ADULT_TITLE && typeof window !== 'undefined' && !sessionStorage.getItem('ageVerified')) {
       setAgeGatePending(true);
       return;
     }
@@ -325,7 +316,7 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
       {ageGatePending && (
         <AgeGate
           open={true}
-          onConfirm={() => { setAgeGatePending(false); setActiveCategory('Bienestar Íntimo'); }}
+          onConfirm={() => { setAgeGatePending(false); setActiveCategory(ADULT_TITLE); }}
           onReject={() => setAgeGatePending(false)}
         />
       )}
@@ -355,8 +346,8 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
             Con 14 categorías, las píldoras dejaban ver 3 y escondían 11 a la
             derecha; una foto se reconoce sin leer y la tarjeta cortada al
             borde invita a deslizar.
-            Escritorio: píldoras con conteo que se reparten en dos filas, sin
-            deslizamiento: ahí sí caben todas a la vista.
+            Escritorio: una sola barra (`category-bar.tsx`): pestañas de moda,
+            «Más categorías» para el resto y el botón Filtros a la derecha.
             El número es «cuántos verías si la tocas», con los demás filtros
             puestos (lib/catalog-filters.ts). */}
         <nav aria-label="Categorías" className="container mx-auto px-4">
@@ -389,10 +380,13 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
               const Icon = getCategoryIcon(cat);
               // Adultos sin foto: la miniatura sería contenido sensible antes
               // del aviso de edad.
-              const showImg = img && cat !== 'Bienestar Íntimo';
+              const showImg = img && cat !== ADULT_TITLE;
+              // Filete entre el grupo de moda y el resto de la tienda.
+              const startsStore = cat === firstStoreTitle;
               return (
+                <Fragment key={cat}>
+                {startsStore && <span aria-hidden className="mx-1 h-14 w-px shrink-0 self-start bg-nav-inactive-border mt-1" />}
                 <button
-                  key={cat}
                   type="button"
                   onClick={() => handleCategoryClick(cat)}
                   aria-pressed={isActive}
@@ -414,106 +408,23 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
                   </span>
                   <span className="-mt-1 text-[10px] tabular-nums text-muted-foreground">{count}</span>
                 </button>
+                </Fragment>
               );
             })}
           </div>
 
-          <div className="hidden flex-wrap justify-center gap-2 py-4 md:flex">
-            {categories.map((cat) => {
-              const Icon = getCategoryIcon(cat);
-              const isActive = activeCategory === cat;
-              const count = countsByCategory.get(cat) ?? 0;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => handleCategoryClick(cat)}
-                  aria-pressed={isActive}
-                  className={`flex shrink-0 items-center gap-2 rounded-full border py-2 pl-2.5 pr-3.5 text-sm font-bold transition-colors ${count === 0 && !isActive ? 'opacity-40' : ''} ${
-                    isActive
-                      ? 'border-todopolis-lavender-deep bg-todopolis-lavender-deep text-white shadow-sm'
-                      : 'border-nav-inactive-border bg-surface text-foreground/75 hover:border-todopolis-lavender-deep/40 hover:text-ink-title'
-                  }`}
-                >
-                  <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-todopolis-lavender-deep'}`} />
-                  {cat}
-                  <span className={`text-xs font-semibold tabular-nums ${isActive ? 'text-white/75' : 'text-muted-foreground'}`}>{count}</span>
-                </button>
-              );
-            })}
-          </div>
+          <CategoryBar
+            categories={categories}
+            fashionTitles={FASHION_TITLES}
+            adultTitle={ADULT_TITLE}
+            active={activeCategory}
+            counts={countsByCategory}
+            getIcon={getCategoryIcon}
+            onSelect={handleCategoryClick}
+            onOpenFilters={tagTaxonomy.length > 0 ? () => setFilterPanelOpen(true) : undefined}
+            activeFilters={activePanelFilters}
+          />
         </nav>
-
-        {tagTaxonomy.length > 0 && (
-          <div className="container relative mx-auto hidden px-4 pb-3 md:block">
-            <div
-              ref={tagsScrollRef}
-              onScroll={updateTagsScrollState}
-              className="-mx-4 flex items-center gap-2 overflow-x-auto px-4"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              <button
-                type="button"
-                onClick={() => setFilterPanelOpen(true)}
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink-title px-3.5 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Más filtros
-                {activePanelFilters > 0 && (
-                  <span className="ml-0.5 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-ink-title">
-                    {activePanelFilters}
-                  </span>
-                )}
-              </button>
-              <span aria-hidden className="h-5 w-px shrink-0 bg-nav-inactive-border" />
-              {featuredTags.map((tag) => {
-                const isActive = selectedTags.has(tag.slug);
-                return (
-                  <button
-                    key={tag.slug}
-                    type="button"
-                    onClick={() => toggleTag(tag.slug)}
-                    aria-pressed={isActive}
-                    className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                      isActive
-                        ? 'border-todopolis-lavender-deep/40 bg-tag-active-bg text-tag-active-fg'
-                        : 'border-nav-inactive-border bg-surface text-foreground/70 hover:border-todopolis-lavender-deep/40 hover:text-ink-title'
-                    }`}
-                  >
-                    {isActive && <Check className="h-3 w-3" strokeWidth={3} />}
-                    {tag.name}
-                  </button>
-                );
-              })}
-              <span aria-hidden className="w-2 shrink-0" />
-            </div>
-
-            <div
-              aria-hidden
-              className={`pointer-events-none absolute bottom-3 left-0 top-0 w-12 bg-gradient-to-r from-surface to-transparent transition-opacity ${tagsScrollState.left ? 'opacity-100' : 'opacity-0'}`}
-            />
-            <button
-              type="button"
-              aria-label="Ver etiquetas anteriores"
-              onClick={() => scrollTagsBy(-220)}
-              className={`absolute left-1 top-[calc(50%-6px)] hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-nav-inactive-border bg-surface text-foreground/70 shadow-sm transition-opacity md:flex ${tagsScrollState.left ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <div
-              aria-hidden
-              className={`pointer-events-none absolute bottom-3 right-0 top-0 w-12 bg-gradient-to-l from-surface to-transparent transition-opacity ${tagsScrollState.right ? 'opacity-100' : 'opacity-0'}`}
-            />
-            <button
-              type="button"
-              aria-label="Ver más etiquetas"
-              onClick={() => scrollTagsBy(220)}
-              className={`absolute right-1 top-[calc(50%-6px)] hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-nav-inactive-border bg-surface text-foreground/70 shadow-sm transition-opacity md:flex ${tagsScrollState.right ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Hero y políticas — se ocultan al buscar o filtrar */}

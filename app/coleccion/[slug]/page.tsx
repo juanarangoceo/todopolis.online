@@ -32,7 +32,9 @@ export async function generateMetadata({
   if (!collection) {
     return { title: 'Colección' }
   }
-  const title = collection.seoTitle || (collection.heroTitle ?? collection.title)
+  // La IA escribe el `seoTitle` con «| Todopolis» al final, y la plantilla del
+  // layout añade otro «| Todópolis»: salía «… | Todopolis | Todópolis».
+  const title = (collection.seoTitle || (collection.heroTitle ?? collection.title)).replace(/\s*[|·-]\s*Tod[oó]polis\s*$/i, '')
   const description =
     collection.seoDescription || collection.heroSubtitle || collection.brandIntro || ''
   return {

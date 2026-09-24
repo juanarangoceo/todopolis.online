@@ -2,22 +2,32 @@ import type { Metadata } from 'next'
 import { Header } from '@/components/header';
 import { NewArrivalsBanner } from '@/components/new-arrivals-banner';
 import { newestProductIds } from '@/lib/new-arrivals';
+import { StyleSpotlight } from '@/components/style-spotlight';
+import { stylePickIds } from '@/lib/style-picks';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
 import { PromoBanner } from '@/components/promo-banner';
 import { advancePaymentEnabled } from '@/lib/payments/config';
+import { resolveWhatsAppPhone } from '@/lib/whatsapp';
 import { getSanityProducts, getSanityStoreSettings, getSanityTags, getActivePromoCampaign } from '@/lib/sanity/queries';
 
+// El título del home lleva el slogan y el sector al que se enfoca la tienda
+// (moda y accesorios, sep 2026), sin dejar de decir que hay más.
+const HOME_TITLE = 'Todópolis | Eleva tu estilo: moda, accesorios y más en Colombia'
+const HOME_DESCRIPTION =
+  'Moda, accesorios, belleza y hogar en una tienda online colombiana. Pagas al recibir o con Confío por PSE, Nequi o Bancolombia. Llega a todo el país en 3 a 7 días hábiles.'
+
 export const metadata: Metadata = {
-  title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
-  description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
+  // `absolute`: la plantilla del layout añadiría otro «| Todópolis».
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     url: '/',
-    title: 'Todópolis | Tienda Online en Colombia: Hogar, Moda y Tecnología',
-    description: 'Tienda online colombiana con hogar, moda, tecnología, belleza y más. Pago contraentrega o pago protegido con PSE, Nequi y Bancolombia. Envío a todo el país en 3 a 7 días.',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
   },
 }
 
@@ -48,6 +58,12 @@ export default async function Home() {
   const recentIds = newestProductIds(sanityProducts);
   const newArrivals = initialProducts.filter((p: { id: string }) => recentIds.has(p.id));
 
+  // «Eleva tu estilo»: moda y accesorios más recientes, sin repetir Novedades.
+  const byId = new Map(initialProducts.map((p: { id: string }) => [p.id, p]));
+  const stylePicks = stylePickIds(sanityProducts, recentIds)
+    .map((id) => byId.get(id))
+    .filter((p): p is (typeof initialProducts)[number] => Boolean(p));
+
   const aiImages = sanityProducts
     .filter((p: any) => p.aiLifestyleImage)
     .map((p: any) => ({
@@ -63,27 +79,32 @@ export default async function Home() {
     getActivePromoCampaign(),
   ]);
 
+  const whatsappPhone = resolveWhatsAppPhone(storeSettings?.whatsappPhone, process.env.NEXT_PUBLIC_WHATSAPP_PHONE)
+  const whatsappHref = whatsappPhone
+    ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hola, tengo una pregunta antes de pedir en Todópolis.')}`
+    : null
+
   const policies = storeSettings?.policies && storeSettings.policies.length > 0 
     ? storeSettings.policies 
     : [
-        // Cada recuadro responde UNA objeción concreta con un DATO, no con un
-        // adjetivo. "Envío rápido" y "Calidad 100%" no significaban nada y no
-        // resolvían ninguna duda; un plazo y un número de días de devolución sí.
-        // Todos los datos son ciertos: el envío y el plazo salen del checkout y
-        // de los prompts de venta, y los 30 días de devolución del footer.
-        { iconName: 'Truck', title: 'Llega en 3 a 7 días', description: '$12.000 a todo el país. Gratis en Destacados.' },
+        // En el ORDEN de una compra (sep 2026): cómo pago → cuándo llega → y
+        // si llega mal. Es la duda del que llega desde un anuncio, contada de
+        // principio a fin. Cada paso responde con un DATO, no con un adjetivo,
+        // y las cifras son las de `store-policies.tsx`.
         {
           iconName: 'WalletCards',
           // "No pagas hasta recibir" era media verdad desde que hay prepago:
           // con Confío sí pagas antes, solo que la plata la retiene la app y no
           // nosotros. El título nombra las dos vías y a quién la custodia.
-          title: advancePaymentEnabled() ? 'Paga al recibir, o con Confío' : 'Pagas cuando lo recibes',
+          title: advancePaymentEnabled() ? 'Pagas al recibir, o con Confío' : 'Pagas cuando lo recibes',
           description: advancePaymentEnabled()
-            ? 'En efectivo cuando te lo entregan, o por PSE, Nequi y Bancolombia: Confío retiene tu plata hasta que confirmes que llegó.'
+            ? 'En efectivo cuando te lo entregan, o por PSE, Nequi o Bancolombia: Confío retiene tu plata hasta que confirmes que llegó.'
             : 'En efectivo, en la puerta de tu casa. Sin tarjetas ni adelantos.',
         },
-        { iconName: 'RefreshCw', title: '30 días para devolver', description: 'Si llega con un defecto, lo reponemos o te devolvemos.' },
-        { iconName: 'Headphones', title: 'Te contestamos por WhatsApp', description: 'Lucy responde 24/7 y un humano cuando lo necesites.' }
+        { iconName: 'Truck', title: 'Llega en 3 a 7 días hábiles', description: 'Envío $12.000 a todo el país. Gratis en Destacados.' },
+        { iconName: 'RefreshCw', title: '30 días si llega con un defecto', description: 'Lo reponemos o te devolvemos la plata.' },
+        // Se quitó un cuarto recuadro, «Lucy responde 24/7»: el chat de Lucy se
+        // retiró y el recuadro solo no se veía porque se cortaba en tres.
       ];
 
   return (
@@ -95,9 +116,9 @@ export default async function Home() {
           initialProducts={initialProducts}
           aiImages={aiImages}
           tagTaxonomy={tagTaxonomy}
-          // Lo que ya sale en "Llegaron N productos nuevos" no se repite en la
-          // cuadrícula limpia. Con búsqueda o filtros vuelve a aparecer.
-          featuredIds={newArrivals.map((p: { id: string }) => p.id)}
+          // Lo que ya sale en «Eleva tu estilo» y en Novedades no se repite en
+          // la cuadrícula limpia. Con búsqueda o filtros vuelve a aparecer.
+          featuredIds={[...newArrivals, ...stylePicks].map((p: { id: string }) => p.id)}
           rowTwoSlot={
             promoCampaign ? (
               <>
@@ -111,9 +132,11 @@ export default async function Home() {
             ) : undefined
           }
         >
+          <StyleSpotlight products={stylePicks} />
+
           <NewArrivalsBanner products={newArrivals} />
 
-          <PolicyBadges policies={policies} />
+          <PolicyBadges policies={policies} whatsappHref={whatsappHref} />
         </ProductBrowser>
         
       </main>
