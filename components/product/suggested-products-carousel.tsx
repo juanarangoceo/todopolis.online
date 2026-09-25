@@ -6,6 +6,16 @@ import { Product } from '@/lib/types';
 import { ProductCard } from '@/components/product-card';
 import { cn } from '@/lib/utils';
 
+/**
+ * Ancho de las filas compactas del home (Novedades, «Eleva tu estilo»).
+ *
+ * En móvil son 40vw y no 44vw: con 44vw dos tarjetas llenaban justo los 390 px
+ * y de la tercera asomaban ~7 px, así que la fila parecía una rejilla de dos y
+ * nadie la deslizaba. A 40vw asoman ~40 px de la siguiente: se ve la foto
+ * cortada y se entiende que sigue.
+ */
+export const COMPACT_ROW_ITEM = 'w-[40vw] max-w-[200px] sm:w-[240px] sm:max-w-none lg:w-[270px]';
+
 interface SuggestedProductsCarouselProps {
   products: Product[];
   /** Ancho de cada tarjeta. Por defecto el de la ficha (70vw en móvil). */

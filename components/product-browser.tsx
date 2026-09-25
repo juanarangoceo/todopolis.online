@@ -39,6 +39,9 @@ interface ProductBrowserProps {
   aiImages?: AiImage[];
   tagTaxonomy?: TagTaxonomyEntry[];
   rowTwoSlot?: ReactNode;
+  /** Arriba del todo, antes del buscador y las categorías. Solo en el listado
+   *  limpio: con una búsqueda o un filtro puesto, estorba. */
+  intro?: ReactNode;
   // Ids que la sección de novedades ya muestra arriba. Se ocultan de la
   // cuadrícula SOLO en la vista limpia, para no enseñarlos dos veces seguidas.
   // Con búsqueda, categoría o etiquetas vuelven a entrar: excluirlos siempre
@@ -46,7 +49,7 @@ interface ProductBrowserProps {
   featuredIds?: string[];
 }
 
-export function ProductBrowser({ initialProducts, children, aiImages = [], tagTaxonomy = [], rowTwoSlot, featuredIds = [] }: ProductBrowserProps) {
+export function ProductBrowser({ initialProducts, children, aiImages = [], tagTaxonomy = [], rowTwoSlot, intro, featuredIds = [] }: ProductBrowserProps) {
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
@@ -292,6 +295,8 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
           segundo), y lo activo no se podía quitar desde donde se veía.
           Quitar vive ahora en «Filtros aplicados», justo sobre la cuadrícula. */}
       <div className="w-full border-b border-nav-inactive-border bg-surface">
+        {isCleanListing && intro}
+
         {/* Búsqueda en móvil: primero, que es lo que más se usa con el pulgar */}
         <div className="md:hidden px-4 pt-3">
           <MagicSearchBar onSearch={handleSearch} compact placeholder={searchPlaceholder} />

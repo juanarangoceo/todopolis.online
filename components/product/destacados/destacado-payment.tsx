@@ -16,7 +16,7 @@ import { DestacadoSection, DestacadoSectionHeader, DestacadoSplit } from './dest
 // CUIDADO CON LA PROMESA (ver CLAUDE.md → Confío): Confío retiene el PAGO, no
 // garantiza la ENTREGA. Aquí se dice quién guarda el dinero y cuándo lo
 // suelta; del despacho respondemos nosotros y eso no se le atribuye a Confío.
-const STEPS = [
+const CONFIO_STEPS = [
   {
     title: 'Pagas en Confío',
     text: 'Con PSE, Nequi o Bancolombia. Tus datos bancarios nunca pasan por Todópolis.',
@@ -30,6 +30,47 @@ const STEPS = [
     text: 'Ahí, y solo ahí, Confío nos entrega el pago. Si no llega, el dinero vuelve a ti.',
   },
 ]
+
+// Plazos y cobertura: los de `store-policies.tsx`.
+const COD_STEPS = [
+  {
+    title: 'Pides sin pagar nada',
+    text: 'Solo llenas tus datos de entrega. No te pedimos tarjeta ni transferencia.',
+  },
+  {
+    title: 'Te llega en 3 a 7 días hábiles',
+    text: 'A la dirección que nos diste, en cualquier parte del país.',
+  },
+  {
+    title: 'Pagas en efectivo al recibirlo',
+    text: 'Le pagas al mensajero el total del pedido, con el envío incluido.',
+  },
+]
+
+function Steps({ steps }: { steps: { title: string; text: string }[] }) {
+  return (
+    <ol className="mt-6 space-y-5">
+      {steps.map((step, i) => (
+        <li key={step.title} className="flex gap-4">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface font-serif text-sm font-extrabold text-trust-fg ring-1 ring-trust-border">
+            {i + 1}
+          </span>
+          <div>
+            <p className="font-bold leading-snug text-ink-title">{step.title}</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+// Las dos tarjetas son GEMELAS: mismo ancho, mismo alto y la misma estructura
+// (cabecera, antetítulo, titular, tres pasos). Eran 2/5 contra 3/5 y la de
+// contraentrega quedaba chata al lado de la de Confío: se veía descuadrado y,
+// peor, sugería que una vía era la de verdad y la otra un apéndice. Las dos
+// valen igual; el comprador elige en el último paso.
+const card = 'flex flex-col rounded-3xl border p-6 md:p-7'
 
 export function DestacadoPayment() {
   if (process.env.NEXT_PUBLIC_CONFIO_ENABLED !== 'true') return null
@@ -46,25 +87,26 @@ export function DestacadoPayment() {
           />
         }
       >
-        <div className="grid gap-4 md:grid-cols-5 md:items-start">
-          {/* Contraentrega — la de siempre, corta: no hay nada que explicar. */}
-          <div className="flex flex-col rounded-3xl border border-nav-inactive-border p-6 md:col-span-2 md:p-7">
-            <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-trust-bg text-trust-fg">
-              <Banknote className="h-5 w-5" />
-            </span>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className={`${card} border-nav-inactive-border bg-surface`}>
+            <div className="mb-5 flex h-9 items-center justify-between gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-trust-bg text-trust-fg">
+                <Banknote className="h-5 w-5" />
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-trust-border bg-surface px-2.5 py-1 text-[11px] font-bold text-trust-fg">
+                <Banknote className="h-3 w-3" />
+                Efectivo
+              </span>
+            </div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Contraentrega</p>
             <h3 className="mt-1 font-serif text-xl font-bold leading-tight text-ink-title">
-              Pagas en efectivo cuando te lo entregan
+              No adelantas nada: pagas cuando te lo entregan
             </h3>
-            <p className="mt-3 leading-relaxed text-muted-foreground">
-              No adelantas nada. Recibes el paquete, lo miras y le pagas al mensajero.
-            </p>
+            <Steps steps={COD_STEPS} />
           </div>
 
-          {/* Confío — la que necesita explicación: quién guarda la plata y
-              cuándo la suelta. */}
-          <div className="rounded-3xl border border-trust-border bg-trust-bg/60 p-6 md:col-span-3 md:p-7">
-            <div className="mb-5 flex items-center justify-between gap-3">
+          <div className={`${card} border-trust-border bg-trust-bg/60`}>
+            <div className="mb-5 flex h-9 items-center justify-between gap-3">
               <ConfioLogo className="h-8 md:h-9" />
               <div className="flex flex-wrap justify-end gap-1.5">
                 {[
@@ -82,24 +124,11 @@ export function DestacadoPayment() {
                 ))}
               </div>
             </div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-trust-fg/70">Pago protegido</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Pago protegido</p>
             <h3 className="mt-1 font-serif text-xl font-bold leading-tight text-ink-title">
               Pagas ahora, pero la plata la guarda Confío
             </h3>
-
-            <ol className="mt-6 space-y-5">
-              {STEPS.map((step, i) => (
-                <li key={step.title} className="flex gap-4">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface font-serif text-sm font-extrabold text-trust-fg ring-1 ring-trust-border">
-                    {i + 1}
-                  </span>
-                  <div>
-                    <p className="font-bold leading-snug text-ink-title">{step.title}</p>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <Steps steps={CONFIO_STEPS} />
           </div>
         </div>
 

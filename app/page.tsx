@@ -3,6 +3,7 @@ import { Header } from '@/components/header';
 import { NewArrivalsBanner } from '@/components/new-arrivals-banner';
 import { newestProductIds } from '@/lib/new-arrivals';
 import { StyleSpotlight } from '@/components/style-spotlight';
+import { HomeGreeting } from '@/components/home-greeting';
 import { stylePickIds } from '@/lib/style-picks';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
@@ -119,6 +120,7 @@ export default async function Home() {
           // Lo que ya sale en «Eleva tu estilo» y en Novedades no se repite en
           // la cuadrícula limpia. Con búsqueda o filtros vuelve a aparecer.
           featuredIds={[...newArrivals, ...stylePicks].map((p: { id: string }) => p.id)}
+          intro={<HomeGreeting />}
           rowTwoSlot={
             promoCampaign ? (
               <>

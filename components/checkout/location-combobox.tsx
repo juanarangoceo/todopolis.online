@@ -136,7 +136,7 @@ export function LocationCombobox({
             'w-full rounded-xl border bg-gray-50/50 py-3 pl-4 pr-16 text-base font-medium outline-none transition-all focus:bg-white focus:ring-2',
             error
               ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-              : 'border-gray-200 focus:border-primary focus:ring-primary/20',
+              : 'border-gray-200 focus:border-todopolis-lavender-deep focus:ring-todopolis-lavender-deep/20',
             disabled && 'cursor-not-allowed opacity-60',
           )}
         />
@@ -184,14 +184,14 @@ export function LocationCombobox({
                 onMouseEnter={() => setActive(i)}
                 className={cn(
                   'flex cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-[15px]',
-                  i === active ? 'bg-primary/10' : '',
+                  i === active ? 'bg-todopolis-lavender-deep/10' : '',
                 )}
               >
                 <span className="min-w-0">
                   <span className="font-medium text-gray-900">{o.label}</span>
                   {o.hint && <span className="ml-1.5 text-sm text-gray-500">· {o.hint}</span>}
                 </span>
-                {o.value === selectedValue && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                {o.value === selectedValue && <Check className="h-4 w-4 shrink-0 text-todopolis-lavender-deep" />}
               </li>
             ))
           )}

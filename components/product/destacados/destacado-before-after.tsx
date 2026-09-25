@@ -68,7 +68,7 @@ function BeforeAfterSlider({ pair }: { pair: DestacadoBeforeAfterPair }) {
             draggable={false}
             unoptimized
           />
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-cta text-cta-fg text-[10px] font-black uppercase tracking-widest shadow">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-ink-title text-white text-[10px] font-black uppercase tracking-widest shadow">
             Después
           </span>
         </div>

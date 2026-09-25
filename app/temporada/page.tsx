@@ -52,7 +52,7 @@ export default async function TemporadaPage() {
           </p>
           <Link
             href="/"
-            className="px-6 py-3 rounded-full bg-cta text-cta-fg font-bold shadow-md hover:bg-cta-hover transition-all"
+            className="px-6 py-3 rounded-full bg-ink-title text-white font-bold shadow-sm hover:bg-ink-title/90 transition-colors"
           >
             Ir al catálogo
           </Link>

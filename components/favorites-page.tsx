@@ -37,11 +37,11 @@ export function FavoritesPage({ allProducts }: FavoritesPageProps) {
         <Heart className="w-16 h-16 text-muted-foreground/30 mb-4" />
         <h2 className="text-2xl font-bold text-foreground mb-2">Aún no tienes favoritos</h2>
         <p className="text-muted-foreground max-w-md mx-auto mb-8">
-          Explora nuestro catálogo y presiona el ❤️ en los productos que más te gusten para guardarlos aquí.
+          Explora nuestro catálogo y toca el corazón en los productos que más te gusten para guardarlos aquí.
         </p>
         <Link 
           href="/"
-          className="px-8 py-4 bg-primary text-primary-foreground font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all"
+          className="px-8 py-4 bg-ink-title text-white font-bold rounded-2xl shadow-sm hover:bg-ink-title/90 transition-colors"
         >
           Ir a explorar productos
         </Link>

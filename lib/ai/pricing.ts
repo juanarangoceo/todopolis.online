@@ -79,6 +79,17 @@ export const AI_MODELS: Record<string, ModelInfo> = {
     rates: [{ effectiveFrom: '2026-01-01', input: 5 * M, imageInput: 8 * M, output: 30 * M, cachedInput: 2 * M }],
     source: 'developers.openai.com/api/docs/pricing — verificado 23-sep-2026',
   },
+  // GPT Image 2.5 salió en dos versiones con la misma tarifa: Flare (rápida) y
+  // Sunburst (precisión al editar). Usamos Sunburst porque la foto se hace
+  // EDITANDO las fotos reales del producto y lo primero es que se parezca.
+  'gpt-image-2.5-sunburst': {
+    label: 'GPT Image 2.5 Sunburst',
+    provider: 'OpenAI',
+    unit: 'token',
+    rates: [{ effectiveFrom: '2026-09-08', input: 5 * M, imageInput: 8 * M, output: 30 * M, cachedInput: 2 * M }],
+    source: 'developers.openai.com/api/docs/models/gpt-image-2.5-sunburst — verificado 25-sep-2026',
+    note: 'Misma tarifa que GPT Image 2, pero OpenAI avisa que el consumo de tokens puede ser distinto: manda lo medido.',
+  },
   'gpt-realtime': {
     label: 'GPT Realtime (voz)',
     provider: 'OpenAI',
@@ -114,7 +125,7 @@ export const COST_SOURCES: Record<string, CostSource> = {
   article: { label: 'Artículo de blog', group: 'Contenido', model: 'gemini-3.8-flash' },
   collection: { label: 'Landing de colección', group: 'Contenido', model: 'gemini-3.8-flash' },
   destacado: { label: 'Completar Destacado', group: 'Contenido', model: 'gemini-3.8-flash' },
-  ai_image: { label: 'Foto de estilo de vida (IA)', group: 'Imágenes', model: 'gpt-image-2' },
+  ai_image: { label: 'Foto de estilo de vida (IA)', group: 'Imágenes', model: 'gpt-image-2.5-sunburst' },
   search_suggest: { label: 'Sugerencias del buscador', group: 'Tienda', model: 'typesafe-ai/jev' },
   voice_prompt: { label: 'Guion de voz de Lucy', group: 'Voz', model: 'gemini-3-flash-preview' },
   voice_session: { label: 'Sesiones de voz de Lucy', group: 'Voz', model: 'gpt-realtime', unmeasured: true },
@@ -180,7 +191,8 @@ export function costUsd(usage: Usage, model: string, date: Date = new Date()): n
 //   - JEV: tokens reportados por el SDK en las pruebas del 23-sep-2026
 //     (categoría ~900; etiquetas y sugerencias ~2.800 de entrada).
 //   - GPT Image 2 a 1024×1536 «high»: ~5.500 tokens de salida (≈ US$0,165 según
-//     varias fuentes) + hasta 3 fotos de referencia.
+//     varias fuentes) + hasta 3 fotos de referencia. Desde el 25-sep-2026 es
+//     GPT Image 2.5 Sunburst, misma tarifa; el consumo real lo dirá lo medido.
 export const MIN_MEASURED = 3
 
 export const ESTIMATED_PROFILES: Record<string, Usage> = {

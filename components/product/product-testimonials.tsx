@@ -131,7 +131,7 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
 
           {isCarousel && (
             <div className="flex items-center justify-center gap-4 mt-6">
-              <button onClick={prev} aria-label="Anteriores" className="w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:border-primary/40 transition-colors">
+              <button onClick={prev} aria-label="Anteriores" className="w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:border-todopolis-lavender-deep/40 transition-colors">
                 <ChevronLeft className="w-4 h-4 text-foreground/60" />
               </button>
               <div className="flex gap-2">
@@ -142,12 +142,12 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
                     aria-label={`Ir al uso ${i + 1}`}
                     className={cn(
                       'w-2 h-2 rounded-full transition-all duration-300',
-                      i === currentIndex ? 'bg-primary w-5' : 'bg-border hover:bg-primary/40'
+                      i === currentIndex ? 'bg-todopolis-lavender-deep w-5' : 'bg-border hover:bg-todopolis-lavender-deep/40'
                     )}
                   />
                 ))}
               </div>
-              <button onClick={next} aria-label="Siguientes" className="w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:border-primary/40 transition-colors">
+              <button onClick={next} aria-label="Siguientes" className="w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:border-todopolis-lavender-deep/40 transition-colors">
                 <ChevronRight className="w-4 h-4 text-foreground/60" />
               </button>
             </div>

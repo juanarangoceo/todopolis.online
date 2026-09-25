@@ -16,7 +16,14 @@ export async function resolveOrderProduct(slug: string, variantId: number | null
   const product = await getSanityProductBySlug(slug)
   if (!product) return null
 
-  if (variantId && !(product.variants ?? []).some((v: ProductVariant) => v.idVariant === variantId)) {
+  // La variante sale de Sanity, no del navegador: su NOMBRE es lo que ve quien
+  // despacha (aquí y en Nitro), y el del formulario podía no corresponder al
+  // id. Una agotada tampoco se acepta: el botón ya viene apagado, pero una
+  // pestaña abierta desde antes podía mandarla.
+  const variant = variantId
+    ? (product.variants ?? []).find((v: ProductVariant) => v.idVariant === variantId) ?? null
+    : null
+  if (variantId && (!variant || (typeof variant.stock === 'number' && variant.stock <= 0))) {
     return null
   }
 
@@ -36,6 +43,8 @@ export async function resolveOrderProduct(slug: string, variantId: number | null
     quantityOffers: product.quantityOffers,
     isDestacado: product.isDestacado === true,
     hasVariants: (product.variants ?? []).length > 0,
+    /** Nombre original de Mastershop de la variante elegida (p. ej. «2xl/Cocoa»). */
+    variantName: (variant?.name as string | undefined) ?? null,
     mediaAssets: [...new Set(mediaAssets)].slice(0, 5),
   }
 }

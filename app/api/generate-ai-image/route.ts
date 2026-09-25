@@ -66,6 +66,9 @@ function buildImagePrompt(name: string, heroTitle: string, description: string, 
   ].filter(Boolean).join('\n\n')
 }
 
+// Tiene que existir en AI_MODELS (lib/ai/pricing.ts) o Nitro Profit lo cuenta en cero.
+const IMAGE_MODEL = 'gpt-image-2.5-sunburst'
+
 const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 function resolveContentType(url: string, header: string | null): string {
@@ -135,7 +138,7 @@ export async function POST(request: NextRequest) {
       // Use /edits endpoint — model sees the real product and replicates it faithfully
 
       const formData = new FormData()
-      formData.append('model', 'gpt-image-2')
+      formData.append('model', IMAGE_MODEL)
       formData.append('prompt', prompt)
       formData.append('n', '1')
       formData.append('size', '1024x1536')
@@ -153,7 +156,7 @@ export async function POST(request: NextRequest) {
 
       if (!editsRes.ok) {
         const errBody = await editsRes.json().catch(() => ({}))
-        throw new Error(errBody?.error?.message ?? `gpt-image-2 edits error ${editsRes.status}`)
+        throw new Error(errBody?.error?.message ?? `${IMAGE_MODEL} edits error ${editsRes.status}`)
       }
 
       const editsData = await editsRes.json()
@@ -168,7 +171,7 @@ export async function POST(request: NextRequest) {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-image-2',
+          model: IMAGE_MODEL,
           prompt,
           n: 1,
           size: '1024x1536',
@@ -178,7 +181,7 @@ export async function POST(request: NextRequest) {
 
       if (!genRes.ok) {
         const errBody = await genRes.json().catch(() => ({}))
-        throw new Error(errBody?.error?.message ?? `gpt-image-2 generations error ${genRes.status}`)
+        throw new Error(errBody?.error?.message ?? `${IMAGE_MODEL} generations error ${genRes.status}`)
       }
 
       const genData = await genRes.json()
@@ -190,6 +193,7 @@ export async function POST(request: NextRequest) {
     const productRef = typeof docId === 'string' ? docId.replace(/^drafts\./, '').slice(0, 120) : null
     await recordAiUsage({
       source: 'ai_image',
+      model: IMAGE_MODEL,
       flow: productRef ? `image:${productRef}` : null,
       productRef,
       ...openaiImageUsage(imageUsage),
@@ -197,7 +201,7 @@ export async function POST(request: NextRequest) {
       meta: { references: referenceImages.length, scene: scene ?? null },
     })
 
-    if (!b64) throw new Error('gpt-image-2 no devolvió datos de imagen.')
+    if (!b64) throw new Error(`${IMAGE_MODEL} no devolvió datos de imagen.`)
 
     const imageBuffer = Buffer.from(b64, 'base64')
     const client = getSanityWriteClient()
@@ -212,7 +216,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ assetId: asset._id, assetUrl: asset.url })
   } catch (error: any) {
     const message = error?.message ?? 'Error desconocido'
-    console.error('Error generando imagen con gpt-image-2:', message)
+    console.error(`Error generando imagen con ${IMAGE_MODEL}:`, message)
     return NextResponse.json({ error: `Error al generar imagen: ${message}` }, { status: 500 })
   }
 }

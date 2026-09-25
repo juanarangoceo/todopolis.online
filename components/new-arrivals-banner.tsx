@@ -1,7 +1,7 @@
 import { Product } from '@/lib/types';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel';
+import { COMPACT_ROW_ITEM, SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel';
 
 // Sección de novedades del home.
 //
@@ -76,7 +76,7 @@ export function NewArrivalsBanner({ products = [] }: NewArrivalsBannerProps) {
                 catálogo, que es lo que la gente viene a recorrer. */}
             <SuggestedProductsCarousel
               products={shown}
-              itemClassName="w-[44vw] max-w-[210px] sm:w-[240px] sm:max-w-none lg:w-[270px]"
+              itemClassName={COMPACT_ROW_ITEM}
             />
 
             <Link

@@ -253,56 +253,61 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
                 pago anticipado está encendido: si no, prometeríamos una
                 custodia que el checkout no puede ofrecer. Mismo criterio que
                 PaymentMethods y los prompts de Lucy. */}
+            {/* Rehecho el 25-sep-2026. Era una caja con tres cajas dentro,
+                números en salmón (un color sin significado en la guía) y un
+                titular que empezaba por «Si pagas por adelantado»: el ángulo
+                que NO queremos (ver CLAUDE.md → Confío). Ahora es una franja
+                separada por filete, con las dos vías en el titular y los
+                pasos como texto con filetes, igual que «Así compras». */}
             {showPaymentExplainer && advancePaymentVisible() && (
-              <div className="mt-14 rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
-                <div className="flex items-start gap-3 mb-6">
-                  <span className="w-11 h-11 shrink-0 rounded-2xl bg-white flex items-center justify-center">
-                    <ConfioLogo variant="icon" className="w-8 h-8" />
-                  </span>
+              <div className="mt-14 border-t border-white/10 pt-10">
+                <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
                   <div>
-                    <h4 className="font-sans font-bold text-lg leading-tight">
-                      Si pagas por adelantado, tu dinero no nos llega todavía
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
+                        <ConfioLogo variant="icon" className="h-7 w-7" />
+                      </span>
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">Cómo pagas</p>
+                    </div>
+                    <h4 className="mt-4 font-serif text-xl font-extrabold leading-tight tracking-[-0.01em] md:text-2xl">
+                      Paga al recibir, o paga con Confío
                     </h4>
-                    <p className="text-white/60 text-sm leading-relaxed mt-1 max-w-2xl">
-                      Lo guarda <strong className="text-white/90">Confío</strong>, un
-                      servicio independiente de pagos protegidos. Nosotros solo lo
-                      recibimos cuando tú confirmas que el pedido llegó.
+                    <p className="mt-2 max-w-md text-sm leading-relaxed text-white/60">
+                      Con <strong className="font-bold text-white/90">Confío</strong> pagas por PSE, Nequi o
+                      Bancolombia y tu plata queda en custodia: nos llega solo cuando confirmas que el
+                      pedido está en tus manos.
                     </p>
                   </div>
+
+                  <ol className="grid gap-5 sm:grid-cols-3 sm:gap-6">
+                    {[
+                      {
+                        t: 'Pagas en Confío',
+                        d: 'Tus datos bancarios nunca pasan por Todópolis.',
+                      },
+                      {
+                        t: 'Confío guarda el dinero',
+                        d: 'Mientras preparamos y enviamos tu pedido. Nosotros no podemos tocarlo.',
+                      },
+                      {
+                        t: 'Confirmas que llegó',
+                        d: 'Ahí, y solo ahí, Confío nos entrega el pago. Si no llega, el dinero vuelve a ti.',
+                      },
+                    ].map((step, i) => (
+                      <li key={step.t} className="border-t border-white/15 pt-4">
+                        <span className="font-serif text-sm font-extrabold tabular-nums text-white/40">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <p className="mt-1 text-sm font-bold">{step.t}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-white/55">{step.d}</p>
+                      </li>
+                    ))}
+                  </ol>
                 </div>
 
-                <ol className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    {
-                      n: '1',
-                      t: 'Pagas en Confío',
-                      d: 'Con PSE, Nequi o Bancolombia. Nunca pasas tus datos bancarios por Todópolis.',
-                    },
-                    {
-                      n: '2',
-                      t: 'Confío retiene el dinero',
-                      d: 'Queda en custodia mientras preparamos y enviamos tu pedido. No podemos tocarlo.',
-                    },
-                    {
-                      n: '3',
-                      t: 'Confirmas que llegó',
-                      d: 'Ahí, y solo ahí, Confío nos entrega el pago. Si no llega, te lo devuelven a ti.',
-                    },
-                  ].map((step) => (
-                    <li key={step.n} className="rounded-2xl bg-white/5 border border-white/10 p-4">
-                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#FFB4AC] text-[#2D2D2D] text-sm font-black mb-3">
-                        {step.n}
-                      </span>
-                      <p className="font-bold text-sm mb-1">{step.t}</p>
-                      <p className="text-white/55 text-xs leading-relaxed">{step.d}</p>
-                    </li>
-                  ))}
-                </ol>
-
-                <p className="text-white/40 text-xs mt-5 leading-relaxed">
-                  El cobro vence a los 3 días si no lo pagas, y no se genera ningún
-                  cargo. ¿Prefieres no pagar por adelantado? La contraentrega sigue
-                  disponible en todos los productos.
+                <p className="mt-6 text-xs leading-relaxed text-white/40">
+                  El cobro de Confío vence a los 3 días si no lo pagas, sin ningún cargo. Si prefieres
+                  no pagar antes, la contraentrega en efectivo sigue disponible en todos los productos.
                 </p>
               </div>
             )}

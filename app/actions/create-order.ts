@@ -28,7 +28,6 @@ export async function createOrder(formData: FormData): Promise<CreateOrderResult
     const variantId = variantIdRaw && !Number.isNaN(Number(variantIdRaw))
       ? Number(variantIdRaw)
       : null
-    const variantName = (formData.get('variantName') as string) || null
 
     // Datos de entrega: mismas reglas que el formulario. El navegador ya avisó
     // campo por campo; esto es la red por si alguien se lo salta.
@@ -64,7 +63,7 @@ export async function createOrder(formData: FormData): Promise<CreateOrderResult
       quantity,
       ...deliveryToOrderColumns(delivery.data),
       variant_id: variantId,
-      variant_name: variantName,
+      variant_name: product.variantName,
       status: 'pending',
     };
 

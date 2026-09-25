@@ -25,6 +25,13 @@ import { type AiImage } from '@/lib/inspiration'
 //   - La tarjeta de la izquierda salía siempre cortada a la mitad.
 // Ahora es scroll nativo con `snap`: arranca alineado y la última tarjeta
 // asomada al borde dice que hay más.
+//
+// MÁS GRANDES QUE UNA TARJETA DE PRODUCTO (25-sep-2026). Eran 168 px en móvil,
+// más chicas que las tarjetas del catálogo que las rodean: una foto de
+// inspiración que se ve en miniatura no inspira. Ahora son ~62 % del ancho en
+// móvil (una y media a la vista, que además dice «desliza») y 260 px en
+// escritorio. Solo hay dos carriles en el home, así que la altura extra no
+// aleja el catálogo.
 
 function sanityOptimized(url: string, width: number): string {
   if (!url || !url.includes('cdn.sanity.io')) return url
@@ -35,27 +42,27 @@ function Card({ item, priority }: { item: AiImage; priority: boolean }) {
   return (
     <Link
       href={`/producto/${item.slug}`}
-      className="group shrink-0 snap-start w-[168px] md:w-[212px] mr-3 last:mr-0 active:scale-[0.98] transition-transform"
+      className="group shrink-0 snap-start w-[62vw] max-w-[260px] md:w-[240px] lg:w-[260px] mr-3 last:mr-0 active:scale-[0.98] transition-transform"
     >
       <div className="rounded-2xl overflow-hidden shadow-sm border border-nav-inactive-border group-hover:border-todopolis-lavender-deep/40 group-hover:shadow-md transition-all">
         <div className="relative w-full aspect-[3/4]">
           <Image
-            src={sanityOptimized(item.image, 440)}
+            src={sanityOptimized(item.image, 560)}
             alt={item.name}
             fill
-            sizes="(min-width: 768px) 212px, 168px"
+            sizes="(min-width: 1024px) 260px, (min-width: 768px) 240px, 62vw"
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             loading={priority ? undefined : 'lazy'}
             unoptimized
           />
         </div>
-        <div className="px-2.5 py-2 bg-surface">
-          <p className="text-[11px] md:text-xs font-medium text-foreground/75 leading-snug line-clamp-2 min-h-[2.5em]">
+        <div className="px-3 py-2.5 bg-surface">
+          <p className="text-xs md:text-sm font-medium text-foreground/75 leading-snug line-clamp-2 min-h-[2.5em]">
             {item.name}
           </p>
           {/* El precio es lo que convierte una foto bonita en un clic. */}
           {item.price ? (
-            <p className="mt-1 text-sm font-extrabold tabular-nums text-ink-title">
+            <p className="mt-1 text-sm md:text-base font-extrabold tabular-nums text-ink-title">
               $ {item.price.toLocaleString('es-CO')}
             </p>
           ) : null}

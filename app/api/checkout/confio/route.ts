@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
   const quantity = Math.max(1, Math.min(20, Number(body.quantity) || 1))
   const variantIdRaw = Number(body.variantId)
   const variantId = Number.isFinite(variantIdRaw) && variantIdRaw > 0 ? variantIdRaw : null
-  const variantName = body.variantName ? String(body.variantName) : null
 
   // Mismas reglas que el formulario (`lib/checkout/delivery.ts`).
   const delivery = validateDelivery((body.delivery ?? {}) as Record<string, unknown>)
@@ -51,6 +50,11 @@ export async function POST(request: NextRequest) {
   const resolved = await resolveOrderProduct(slug, variantId)
   if (!resolved) {
     return NextResponse.json({ error: 'Producto no disponible' }, { status: 404 })
+  }
+  // Misma regla que contraentrega (`create-order`): con variantes, elegir una
+  // es obligatorio. Sin esto, un pedido prepagado podía llegar sin talla.
+  if (resolved.hasVariants && !variantId) {
+    return NextResponse.json({ error: 'Por favor selecciona una opción del producto.' }, { status: 400 })
   }
   if (!resolved.mediaAssets.length) {
     // Problema del catálogo, no del comprador. Se corta antes de la red.
@@ -88,7 +92,7 @@ export async function POST(request: NextRequest) {
       quantity,
       ...deliveryToOrderColumns(delivery.data),
       variant_id: variantId,
-      variant_name: variantName,
+      variant_name: resolved.variantName,
       status: 'pending_payment',
       payment_method: 'confio',
       payment_status: 'awaiting',

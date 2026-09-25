@@ -142,7 +142,7 @@ export function CartSidebar() {
                 'active:scale-[0.98]'
               )}
             >
-              Pagar ahora 🚀
+              Pagar ahora
             </button>
           </div>
         )}

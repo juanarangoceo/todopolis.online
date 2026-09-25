@@ -2,7 +2,7 @@
 
 import { ArrowRight } from 'lucide-react'
 import { Product } from '@/lib/types'
-import { SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
+import { COMPACT_ROW_ITEM, SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
 
 // «Eleva tu estilo»: la sección de moda y accesorios del home, y el H1 de la
 // página (sep 2026). Todópolis se enfoca poco a poco en ese sector y el slogan
@@ -21,7 +21,7 @@ export function StyleSpotlight({ products }: { products: Product[] }) {
   const showAll = () => window.dispatchEvent(new CustomEvent('todopolis:show-category', { detail: 'Ropa' }))
 
   return (
-    <section className="w-full bg-surface py-8 md:py-12" aria-labelledby="estilo-titulo">
+    <section className="w-full bg-surface pb-8 pt-6 md:py-12" aria-labelledby="estilo-titulo">
       <div className="container mx-auto px-4">
         <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
           <div>
@@ -49,7 +49,7 @@ export function StyleSpotlight({ products }: { products: Product[] }) {
 
         <SuggestedProductsCarousel
           products={products}
-          itemClassName="w-[44vw] max-w-[210px] sm:w-[240px] sm:max-w-none lg:w-[270px]"
+          itemClassName={COMPACT_ROW_ITEM}
         />
       </div>
     </section>

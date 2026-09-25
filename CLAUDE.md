@@ -232,6 +232,12 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - Las barras de búsqueda no están controladas desde fuera: se les fija el texto con el evento `magic-search:set`. La de la cabecera entra por portal tarde y recibe `initialQuery`.
 - **Búsqueda sin resultados → sugerencias de JEV** (`components/search-suggestions.tsx` → `/api/search-suggest` → `lib/search-suggest.ts`, con test): una categoría y hasta 3 etiquetas donde sí hay productos («cafetera» → Cocina; «dolor de espalda» → Salud y bienestar · Alivio de dolor). Solo con CERO resultados, nunca por tecla; la respuesta se cachea en la CDN una semana por búsqueda. Nunca sugiere Lencería ni «Otros», ni una categoría o etiqueta sin productos. Sin JEV, no pinta nada.
 
+### Saludo y frase al abrir el home (25-sep-2026)
+`components/home-greeting.tsx`, con las frases en `lib/home-phrases.ts` y su test. Arriba del todo, antes del buscador y las categorías, solo en el listado limpio: «Buenos días / Buenas tardes / Buenas noches» y una frase de ánimo (no de venta) del grupo de ese momento más las de «siempre».
+- **Se elige en el navegador** (`useSyncExternalStore`): el home está en caché y la hora del servidor es UTC. El bloque reserva su altura para que nada salte.
+- **Quieta**: la misma durante la sesión (`sessionStorage`), otra en la visita siguiente y nunca la última (`localStorage`). No rotar con temporizador: la guía prohíbe lo que se mueve solo.
+- Para editar las frases, cambia la lista: el test exige máximo 36 caracteres (una línea a 390 px), sin emojis, con punto final y sin palabras con género.
+
 ### «Eleva tu estilo» — moda y accesorios, y el H1 del home (sep 2026)
 `components/style-spotlight.tsx`, con la selección en `lib/style-picks.ts` y su test. Es la primera sección del home, encima de Novedades: los 12 productos de Moda y Accesorios más recientes que NO salen ya en Novedades. Lleva el slogan como **H1** (el home no tenía ninguno). Con menos de 4 productos no se pinta.
 
@@ -466,7 +472,7 @@ Mismo patrón que `nitro_bot/app/admin/profit`, adaptado:
 
 **Regla: toda llamada nueva a un modelo registra su consumo** con `createUsageCollector`/`recordAiUsage`, y su fuente va en `COST_SOURCES` con modelo y perfil estimado (el test lo exige). Si no, Nitro Profit se queda corto sin que nadie lo note.
 
-Estimado al 23-sep-2026 (a reemplazarse por lo medido): importar de Mastershop ≈ US$0,042 (~$134 COP); crear a mano ≈ US$0,023 (~$74), o ≈ $747 con foto IA; la foto IA (GPT Image 2, 1024×1536 high) ≈ US$0,19 es lo más caro.
+Estimado al 23-sep-2026 (a reemplazarse por lo medido): importar de Mastershop ≈ US$0,042 (~$134 COP); crear a mano ≈ US$0,023 (~$74), o ≈ $747 con foto IA; la foto IA (GPT Image 2, 1024×1536 high) ≈ US$0,19 es lo más caro. Desde el 25-sep-2026 la foto la hace **`gpt-image-2.5-sunburst`** (la versión de GPT Image 2.5 hecha para editar con precisión; `IMAGE_MODEL` en `app/api/generate-ai-image/route.ts`). Misma tarifa por token que la 2, pero OpenAI avisa que consume distinto: manda lo medido.
 
 ## Checkout — datos de entrega (sep 2026)
 
@@ -617,6 +623,13 @@ Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/de
 En `variants[]`, el campo `price` («Precio Mastershop») es lo que cobra el proveedor, no lo que paga el cliente: el reloj infantil se vende a $82.900 y su variante dice $55.000. `app/api/checkout/confio` lo usaba como precio unitario, así que **Confío cobraba el costo** en los 65 productos con variantes (corregido sep 2026). Ninguna ruta de cobro, ficha ni checkout debe leer `variant.price` como precio.
 
 **Pendiente, coordinar con Nitro:** `lib/catalog/project-sanity-product.ts` (el feed hacia Nitro) sigue tomando los precios de las variantes. No se tocó porque es un contrato con un consumidor externo.
+
+### Variantes: Talla y Color en dos filas — `lib/variant-options.ts` (con test)
+Mastershop manda combinaciones sueltas («XS/NEGRO», «2xl/Beige»), hasta 50 por producto. El selector las parte en dos ejes (Talla o Tamaño, y Color) cuando TODAS se pueden partir con seguridad, con las tallas en orden; si no, lista única. Al 25-sep-2026: 35 de 72 productos con variantes se parten. El pedido sigue llevando la variante REAL (`idVariant` y el nombre original de Mastershop).
+- La talla y el color a medio elegir viven en `ProductVariantProvider` (`picks`), para que la ficha y el checkout muestren lo mismo.
+- La elegida va en lavanda, no en rojo.
+- **El nombre de la variante lo pone el servidor** (`resolveOrderProduct` → `variantName`), no el formulario, y una agotada se rechaza. Las dos vías (contraentrega y Confío) exigen variante si el producto la tiene.
+- A Nitro viaja `variant_name`, **no el `idVariant`**. Pendiente, coordinar con Nitro: sumar `variant_external_id` al payload y a `web_orders`.
 
 ### Combos por cantidad — `lib/quantity-offers.ts` (con test)
 Campo `quantityOffers` («Lleva 2 por $X»). Es la ÚNICA fuente del cálculo: el selector del hero, el checkout y la ruta de Confío llaman a `priceForQuantity`. Si alguien calcula el total por su cuenta, el comprador ve un número y paga otro (en Confío eso deja el pedido en `mismatch`). Un combo que no ahorra frente a las unidades sueltas se ignora.
