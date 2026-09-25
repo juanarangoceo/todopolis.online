@@ -5,7 +5,7 @@ decisiones concretas y su historia están en `CLAUDE.md`; esto es el criterio
 que las une. **Si un cambio nuevo contradice esta guía, gana la guía, salvo que
 la actualices a propósito y digas por qué.**
 
-Última revisión: 24-sep-2026 (moda, lencería, logo, colecciones).
+Última revisión: 25-sep-2026 (saludo del home, variantes, «Cómo pagas», carruseles).
 
 ---
 
@@ -164,6 +164,9 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 | Categorías en móvil / escritorio | `CategoryCards` (tarjetas con foto) / `CategoryBar` (pestañas de texto + «Más categorías»). Home y ofertas. |
 | Una sección de ficha o de colección | `DestacadoSection`, `DestacadoSectionHeader`, `DestacadoSplit`. |
 | Nombrar una categoría | `categoryTitle(value)` de `lib/categories.ts`. |
+| Elegir talla, color u opción | `VariantSelector`: chips compactos; si las variantes son «talla/color», dos filas (`lib/variant-options.ts`). La elegida en lavanda. |
+| Saludar al abrir el home | `HomeGreeting`: saludo por hora + frase de `lib/home-phrases.ts`. Una por visita, quieta. |
+| Una fila deslizable en móvil | Siempre debe asomar la tarjeta siguiente (≥ 30 px). En el home, `COMPACT_ROW_ITEM`. |
 
 ---
 
@@ -173,7 +176,7 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 gana sombra; entrada suave de las primeras tarjetas (`fadeInUp`); desplazamiento
 con `snap` en carruseles.
 
-**No:** carruseles o marquesinas que avanzan solos, anillos girando, pulsos de
+**No:** textos que rotan con temporizador (la frase del home cambia por visita, no mientras miras), carruseles o marquesinas que avanzan solos, anillos girando, pulsos de
 radar, partículas, brillos que barren, globos que aparecen solos a los N
 segundos, zoom fuerte de la foto al pasar el ratón (máximo `scale-105`).
 Respeta `prefers-reduced-motion`.

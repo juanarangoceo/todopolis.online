@@ -258,6 +258,7 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - `newestProductIds` **ordena por fecha** en vez de cortar los N primeros del array. La query viene ordenada hoy, pero si alguien le cambia el `order()`, cortar los primeros volvería a llamar "nuevo" a lo que no lo es — el fallo que esta sección ya tuvo una vez.
 - **No lleva subtítulo, y es deliberado.** Los dos que hubo describían el bloque en vez de decirle algo al cliente, y uno repetía envío y medios de pago, que ya dicen los tres recuadros de `store-policies` diez píxeles más abajo.
 - **Es una sola fila deslizable en todos los tamaños** (`SuggestedProductsCarousel`) y usa **la misma `ProductCard` que el catálogo**. Fue rejilla desde `sm` con tarjeta propia: 3 filas enteras en escritorio antes del catálogo, y dos estilos de tarjeta uno encima del otro. `bestColumns` quedó sin uso.
+- **En móvil TIENE que asomar la tarjeta siguiente** (`COMPACT_ROW_ITEM`, 40vw; también en «Eleva tu estilo»). A 44vw dos tarjetas llenaban justo los 390 px, asomaban ~7 px de la tercera y la fila parecía una rejilla de dos que nadie deslizaba. Si cambias el ancho, cuenta: 16 px de margen + dos tarjetas + dos huecos de 12 px deben dejar ≥ 30 px visibles.
 
 ### Catálogo: carga sola hasta 48, después «Ver más» (24-sep-2026)
 `ProductGrid` con la lógica en `lib/catalog-paging.ts` (con test). Era scroll infinito sobre ~560 productos: **el pie de página era inalcanzable en el home** (Privacidad y Términos, que Meta exige encontrables) y al volver de una ficha se perdía todo lo cargado. Ahora carga sola hasta `AUTO_LOAD_LIMIT` (48) y después pide el botón «Ver más productos». Al abrir una ficha desde la cuadrícula se guarda lo cargado y la posición (`sessionStorage`, `tp_grid_v1`) y se recuperan al volver, si la lista es la misma (`listSignature`).
@@ -266,6 +267,8 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 
 ### Los carriles de inspiración NO se mueven solos (sep 2026)
 `components/inspiration-rail.tsx`. Fueron una marquesina CSS que pasaba a manual al primer gesto; se quitó. Un blanco en movimiento cuesta tocarlo (se abre la tarjeta de al lado), con ~24 carriles siempre había algo corriéndose de lado mientras el ojo baja por la cuadrícula, y la primera tarjeta salía cortada. Ahora es scroll nativo con `snap` y flechas en la cabecera que se apagan en los extremos. **No reponer el movimiento automático.**
+
+**Más grandes que una tarjeta de producto (25-sep-2026)**: 62 % del ancho en móvil (una y media a la vista) y 240–260 px en escritorio. Eran 168 px, más chicas que las tarjetas que las rodean: una foto de inspiración en miniatura no inspira. Como solo hay dos carriles, la altura extra no aleja el catálogo.
 
 ### Header (sep 2026)
 - **Escritorio**: las secciones son texto (Ofertas, Colecciones, Blog), no píldoras de colores en mayúsculas; solo Destacados conserva el dorado. «Ofertas» iba en rojo, el color del botón de compra. Íconos sin caja. Se quitó el contador de productos junto al logo (sigue en el menú móvil) para darle el espacio al buscador.
@@ -610,6 +613,7 @@ Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/de
 
 - **Banner bajo el hero**: campo `destacadoBanner` (escritorio + móvil opcional + alt), de borde a borde, `<picture>` con URLs del CDN de Sanity. Las dimensiones del asset viajan en la query para que la página no salte.
 - **Galería lifestyle**: `aiLifestyleImage` sigue siendo la principal (y la de los carriles del home); `aiLifestyleGallery` suma más fotos. El botón de IA del Studio ahora elige **escena** y puede **añadir a la galería** en vez de reemplazar. Se pintan juntas con `ProductLifestyleGallery` y `lifestyleImages()` (`lib/lifestyle.ts`), también en la ficha normal.
+- **«Cómo pagas»: las dos tarjetas son GEMELAS** (25-sep-2026): mismo ancho, mismo alto, misma estructura (cabecera, antetítulo, titular, tres pasos). Eran 2/5 contra 3/5 y contraentrega quedaba chata, como un apéndice de Confío. Las dos vías valen igual.
 - **«Cómo pagas»** (`destacado-payment.tsx`) explica Confío en el cuerpo de la página, pegado al cierre (entre las preguntas y el botón): es la última duda antes de comprar. No va dentro del cierre, que lo recargaría. Por eso la ficha pasa `showPaymentExplainer={false}` al `Footer`: el recuadro del pie sigue en el resto del sitio.
 - **El cierre** (`destacado-cta.tsx`) lleva la foto del producto al lado y abre el checkout del hero con el evento `product:buy`, no con un modal propio. El copy sale de `closingCopy()`, que descarta al renderizar las promesas viejas de la IA («envío rápido», «24-48h», «garantía de satisfacción»).
 - El cierre dice «Envío gratis» o «Envío $12.000» según `isDestacado`, el mismo flag que lo cobra en `checkout-modal.tsx`.
@@ -629,7 +633,7 @@ Mastershop manda combinaciones sueltas («XS/NEGRO», «2xl/Beige»), hasta 50 p
 - La talla y el color a medio elegir viven en `ProductVariantProvider` (`picks`), para que la ficha y el checkout muestren lo mismo.
 - La elegida va en lavanda, no en rojo.
 - **El nombre de la variante lo pone el servidor** (`resolveOrderProduct` → `variantName`), no el formulario, y una agotada se rechaza. Las dos vías (contraentrega y Confío) exigen variante si el producto la tiene.
-- A Nitro viaja `variant_name`, **no el `idVariant`**. Pendiente, coordinar con Nitro: sumar `variant_external_id` al payload y a `web_orders`.
+- **A Nitro viajan el nombre Y el id** (desde el 25-sep-2026): `order_nitro_payload` manda `variant_external_id` (= `orders.variant_id`, el `idVariant` de Mastershop, como texto). Nitro lo guarda en `web_orders.variant_external_id` (su migración `20260925120000`) y lo muestra en «Pedidos de la web» como «Variante Mastershop #…». Con él se despacha; el nombre viene con mayúsculas al azar.
 
 ### Combos por cantidad — `lib/quantity-offers.ts` (con test)
 Campo `quantityOffers` («Lleva 2 por $X»). Es la ÚNICA fuente del cálculo: el selector del hero, el checkout y la ruta de Confío llaman a `priceForQuantity`. Si alguien calcula el total por su cuenta, el comprador ve un número y paga otro (en Confío eso deja el pedido en `mismatch`). Un combo que no ahorra frente a las unidades sueltas se ignora.
@@ -762,3 +766,14 @@ Por lo mismo, «Reseñas» pasó a **«Para qué lo usan»**, sin estrellas, sin
 propio y sin sello de verificado: los escribe la IA. La prueba social auténtica
 es `customerPhotos` («Así les llegó»). **No volver a rotular eso como reseñas**
 hasta que existan las reales atadas a un pedido.
+
+## Carrito — ROTO para más de un producto (detectado 25-sep-2026, sin resolver)
+`components/cart-sidebar.tsx` → «Pagar ahora» abre `CheckoutModal` con el PRIMER producto del carrito y `price` = subtotal de todos. Pero el servidor resuelve precio y producto desde Sanity por slug (`resolveOrderProduct`), así que:
+
+1. **Carrito con varios productos → el pedido se guarda SOLO con el primero, a su propio precio**, mientras el comprador vio el total de todos. Los demás productos se pierden.
+2. **Cualquier producto con variantes falla siempre desde el carrito**: el modal del carrito no está dentro de `ProductVariantProvider`, no hay dónde elegir talla y `create-order` lo rechaza.
+
+La tabla `orders` es de UN producto por fila. Al 25-sep-2026 ningún pedido real salió del carrito con varios productos. Recomendación pendiente de decisión: quitar la bolsa de la tarjeta (`product-card.tsx`) y el carrito, y que la tarjeta lleve a la ficha, que es donde se compra bien. La alternativa (pedidos de varios productos) toca `orders`, Nitro (`order.v1`) y Confío.
+
+## Color: dónde NO va el rojo (25-sep-2026)
+Además de la regla de §Color, se quitaron rojos que no eran «comprar»: la variante elegida (ahora lavanda), los puntos de «Para qué lo usan», el foco del selector de ciudad, la etiqueta «Después» del antes/después (tinta) y los botones de navegación «Ir al catálogo» / «Ir a explorar productos» (tinta). El rojo que queda: botón de compra, bolsa de la tarjeta y contador del carrito, y «Ver producto» del artículo del blog (lleva a comprar).
