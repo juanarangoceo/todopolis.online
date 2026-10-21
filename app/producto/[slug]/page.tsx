@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { Header } from '@/components/header'
 import { CampaignHeader } from '@/components/campaign-header'
+import { isSoldOut } from '@/lib/supplier-stock'
 import { Footer } from '@/components/footer'
 import { ProductHero } from '@/components/product/product-hero'
 import { ProductImageGallery } from '@/components/product/product-image-gallery'
@@ -131,7 +132,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   )
 
   // Adapt SanityProduct shape to the component interface
+  const soldOut = isSoldOut(product)
   const adaptedProduct = {
+    // Los lee `isSoldOut` en el hero.
+    mastershopId: product.mastershopId,
+    mastershopStock: product.mastershopStock,
+    mastershopAvailable: product.mastershopAvailable,
+    dropiId: product.dropiId,
+    dropiStock: product.dropiStock,
     id: product._id,
     name: product.name,
     slug: product.slug,
@@ -244,8 +252,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           («¿y si pago y no llega?»), así que se resuelve justo antes de él y
           no dos secciones atrás. No va DENTRO del cierre: lo recargaría y le
           quitaría el foco al botón. */}
-      <DestacadoPayment />
-      <DestacadoCTA product={adaptedProduct} whatsappHref={whatsappHref} />
+      {/* Agotado: sin explicación de pago ni botón de cierre que no lleva a nada. */}
+      {!soldOut && <DestacadoPayment />}
+      {!soldOut && <DestacadoCTA product={adaptedProduct} whatsappHref={whatsappHref} />}
       {/* Las preguntas van DESPUÉS del cierre (sep 2026): son de consulta, y
           quien tiene una duda baja a buscarla; el que ya se decidió llega al
           botón una sección antes. «Cómo pagas» NO baja con ellas: «¿y si pago
@@ -337,7 +346,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
-      {adaptedProduct.isDestacado ? <CampaignHeader /> : <Header />}
+      {adaptedProduct.isDestacado ? <CampaignHeader soldOut={soldOut} /> : <Header />}
       {/* Ni ViewContent ni ningún otro evento en bienestar íntimo: Meta prohíbe
           anunciar productos para adultos y esos eventos alimentarían audiencias
           publicitarias. El Píxel tampoco carga en estas rutas (ver el

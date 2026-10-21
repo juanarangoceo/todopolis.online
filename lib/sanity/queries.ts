@@ -40,7 +40,13 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 8): Promise<T> {
 // `PRODUCTS_COUNT_QUERY` ya lo excluía; las otras doce no. Si añades una
 // consulta pública nueva, lleva el mismo filtro.
 
-const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**"))] | order(_createdAt desc) {
+// Fuera de los listados lo agotado en el proveedor (lib/supplier-stock.ts,
+// `isSoldOut`): los datos los pone la sincronización horaria de Mastershop y
+// Dropi. `coalesce` porque un producto sin el dato se sigue vendiendo. La
+// ficha SÍ se sirve (llegan enlaces de anuncios): dice «Agotado».
+const SELLABLE = `coalesce(mastershopAvailable, true) && coalesce(mastershopStock, 1) > 0 && coalesce(dropiStock, 1) > 0`
+
+const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**")) && ${SELLABLE}] | order(_createdAt desc) {
   _id,
   _createdAt,
   name,
@@ -71,7 +77,11 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
   price,
   originalPrice,
   mastershopImageUrl,
+  mastershopId,
+  mastershopStock,
+  mastershopAvailable,
   dropiId,
+  dropiStock,
   "image": images[0].asset->url,
   "images": images[].asset->url,
   variants[] {
@@ -233,7 +243,7 @@ export async function getSanityProductBySlug(slug: string) {
 // Conteo total de productos publicados. Usa GROQ count() para no traer documentos
 // ni metadata — devuelve un entero. Cachéa 60s con tag 'products' para que se
 // revalide en el mismo flujo que el catálogo (importaciones manuales o cron).
-const PRODUCTS_COUNT_QUERY = `count(*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**"))])`
+const PRODUCTS_COUNT_QUERY = `count(*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**")) && ${SELLABLE}])`
 
 export async function getSanityProductsCount(): Promise<number> {
   try {
@@ -365,8 +375,8 @@ export async function getProductsByTags(slugs: string[], mode: 'any' | 'all'): P
   if (!slugs.length) return []
   const filter =
     mode === 'all'
-      ? `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**")) && count((tags[]->slug.current)[@ in $slugs]) == $required]`
-      : `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**")) && count((tags[]->slug.current)[@ in $slugs]) > 0]`
+      ? `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**")) && ${SELLABLE} && count((tags[]->slug.current)[@ in $slugs]) == $required]`
+      : `*[_type == "product" && defined(slug.current) && !(_id in path("drafts.**")) && ${SELLABLE} && count((tags[]->slug.current)[@ in $slugs]) > 0]`
   const query = `${filter} | order(_createdAt desc) {
     _id,
     name,

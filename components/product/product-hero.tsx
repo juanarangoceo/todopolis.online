@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Star, Heart, ShoppingBag, Truck, ShieldCheck, RotateCcw, Zap, Check } from 'lucide-react';
 import { PaymentMethods } from '@/components/payment-methods';
 import { sanitizeHeroCta } from '@/lib/cta';
+import { isSoldOut } from '@/lib/supplier-stock';
 import { descriptionBullets } from '@/lib/description';
 import { priceForQuantity, savingsForQuantity, validOffers } from '@/lib/quantity-offers';
 import { Product } from '@/lib/types';
@@ -33,11 +34,15 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
   const [selectedQty, setSelectedQty] = useState(1);
 
   // Listen for buy event dispatched from the desktop image gallery banner
+  // Agotado o retirado en el proveedor (lo pone la sincronización horaria).
+  // El checkout lo rechaza igual en el servidor; aquí no se ofrece.
+  const soldOut = isSoldOut(product as any);
   useEffect(() => {
+    if (soldOut) return;
     const handler = () => setIsCheckoutOpen(true);
     window.addEventListener('product:buy', handler);
     return () => window.removeEventListener('product:buy', handler);
-  }, []);
+  }, [soldOut]);
 
   const formatPrice = (price: number) => {
     return '$ ' + price.toLocaleString('es-CO');
@@ -365,7 +370,22 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
             )}
 
             {/* Actions */}
+            {soldOut && (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Se agotó donde lo despachamos.{' '}
+                {whatsappHref ? (
+                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-ink-title underline underline-offset-2">
+                    Escríbenos y te avisamos cuando vuelva
+                  </a>
+                ) : 'Vuelve pronto.'}
+              </p>
+            )}
             <div className="flex gap-4">
+              {soldOut ? (
+                <span className="flex-1 flex items-center justify-center px-5 py-4 rounded-2xl font-bold text-base md:text-lg bg-surface-muted text-muted-foreground cursor-not-allowed" aria-disabled="true">
+                  Agotado
+                </span>
+              ) : (
               <button
                 onClick={() => setIsCheckoutOpen(true)}
                 className={cn(
@@ -378,6 +398,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
                 <ShoppingBag className="w-5 h-5 shrink-0" />
                 {heroCta}
               </button>
+              )}
               <button
                 onClick={() => toggleFavorite(slug)}
                 className={cn(
@@ -462,7 +483,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
         comprador perdería el botón al bajar. WhatsApp va DENTRO, a la
         izquierda: flotando encima de la barra tapaba el nombre del producto
         (ver whatsapp-button.tsx, que en la ficha no se pinta en móvil). */}
-    {!product.isDestacado && !isCheckoutOpen && (
+    {!product.isDestacado && !isCheckoutOpen && !soldOut && (
     <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 flex gap-2 animate-in slide-in-from-bottom-5">
       {whatsappHref && (
         <a

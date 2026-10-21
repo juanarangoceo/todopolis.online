@@ -12,6 +12,7 @@ import { createUsageCollector } from '@/lib/ai/usage'
 import { audienceFitFromAi } from '@/lib/audience-fit'
 import { slugifyProductName } from '@/lib/slugify'
 import { strategicPrice } from '@/lib/supplier-pricing'
+import { mastershopStockFields } from '@/lib/supplier-stock'
 
 // Copy y artículo son dos generaciones secuenciales, más las escrituras.
 export const maxDuration = 240
@@ -201,6 +202,7 @@ export async function POST(request: NextRequest) {
       _type: 'product',
       mastershopId: idProduct,
       mastershopImageUrl: imageUrl,
+      ...mastershopStockFields(p, basePrice),
       name: finalName,
       slug: { _type: 'slug', current: slug },
       shortDescription: ai.improvedDescription ?? description,

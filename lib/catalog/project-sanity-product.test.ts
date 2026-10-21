@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { projectSanityProduct } from './project-sanity-product'
 
-test('proyecta precio, media y contenido comercial sin asumir autoridad de stock', () => {
+test('proyecta precio de venta (no el costo de las variantes), media y contenido sin asumir stock', () => {
   const projected = projectSanityProduct({
     _id: 'product-1',
     _updatedAt: '2026-09-14T12:00:00.000Z',
@@ -23,8 +23,10 @@ test('proyecta precio, media y contenido comercial sin asumir autoridad de stock
 
   assert.ok(projected)
   assert.equal(projected.external_id, 'product-1')
-  assert.equal(projected.price_min, 115000)
-  assert.equal(projected.price_max, 125000)
+  // Las variantes traen el costo del proveedor; Nitro tiene que ver el precio de venta.
+  assert.equal(projected.price_min, 120000)
+  assert.equal(projected.price_max, 120000)
+  assert.deepEqual(projected.variants.map((v) => v.price), [120000, 120000])
   assert.equal(projected.track_stock, false)
   assert.equal(projected.stock_total, null)
   assert.deepEqual(projected.image_urls, [
@@ -59,4 +61,15 @@ test('un cambio solo de _updatedAt no genera una nueva versión de contenido', (
   const first = projectSanityProduct({ ...base, _updatedAt: '2026-09-14T12:00:00Z' })
   const second = projectSanityProduct({ ...base, _updatedAt: '2026-09-14T13:00:00Z' })
   assert.equal(first?.content_hash, second?.content_hash)
+})
+
+test('un producto de Dropi no se le entrega al bot: viaja archivado', () => {
+  assert.equal(projectSanityProduct({ _id: 'd', _updatedAt: '2026-10-21T00:00:00Z', name: 'Cobija', slug: 'cobija', price: 76900, dropiId: 2028704 }), null)
+})
+
+test('lo agotado o retirado en Mastershop viaja archivado', () => {
+  const base = { _id: 'm', _updatedAt: '2026-10-21T00:00:00Z', name: 'Faja', slug: 'faja', price: 62900, mastershopId: 164268 }
+  assert.ok(projectSanityProduct(base))
+  assert.equal(projectSanityProduct({ ...base, mastershopAvailable: false }), null)
+  assert.equal(projectSanityProduct({ ...base, mastershopStock: 0 }), null)
 })

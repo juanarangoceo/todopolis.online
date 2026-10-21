@@ -157,6 +157,12 @@ export interface SanityProduct {
   price?: number
   image?: string
   mastershopImageUrl?: string
+  /** Proveedor y su stock: solo los trae la query de detalle (lib/supplier-stock.ts). */
+  mastershopId?: number
+  mastershopStock?: number
+  mastershopAvailable?: boolean
+  dropiId?: number
+  dropiStock?: number
   images?: string[]
   variants?: ProductVariant[]
   category?: string

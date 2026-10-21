@@ -1,5 +1,6 @@
 import type { CanonicalCatalogProduct, CatalogVariant } from './canonical-types'
 import { sha256Json } from './content-hash'
+import { isSoldOut } from '../supplier-stock'
 
 type SanityCatalogDocument = Record<string, unknown> & {
   _id?: string
@@ -9,6 +10,7 @@ type SanityCatalogDocument = Record<string, unknown> & {
   price?: number
   originalPrice?: number
   mastershopId?: number
+  dropiId?: number
   mastershopImageUrl?: string
   images?: string[]
   variants?: Array<Record<string, unknown>>
@@ -42,6 +44,12 @@ export function projectSanityProduct(document: SanityCatalogDocument): Canonical
   const basePrice = finiteNumber(document.price)
   const sourceUpdatedAt = text(document._updatedAt)
   if (!sanityId || !title || !slug || !basePrice || !Number.isInteger(basePrice) || basePrice <= 0 || !sourceUpdatedAt) return null
+  // Los pedidos de Dropi se crean a mano en Dropi y Nitro no sabe
+  // despacharlos: el producto viaja archivado y el bot no lo ofrece.
+  if (finiteNumber(document.dropiId) !== null) return null
+  // Agotado o retirado en Mastershop: archivado hasta que vuelva el stock (la
+  // sincronización reescribe el documento y el webhook lo vuelve a mandar).
+  if (isSoldOut(document as Parameters<typeof isSoldOut>[0])) return null
 
   const variants = objectList<CatalogVariant>(document.variants, (variant) => {
     const externalId = finiteNumber(variant.idVariant)?.toString() ?? text(variant.idVariant)
@@ -51,15 +59,14 @@ export function projectSanityProduct(document: SanityCatalogDocument): Canonical
       external_id: externalId,
       title: variantTitle,
       sku: text(variant.sku),
-      price: Number.isInteger(finiteNumber(variant.price)) ? finiteNumber(variant.price) : null,
+      // `variant.price` en Sanity es el COSTO del proveedor. Todópolis cobra
+      // todas las variantes a `product.price` (lib/checkout/order-pricing.ts);
+      // mandar el costo hacía que el bot de Nitro lo cotizara al cliente.
+      price: basePrice,
       stock: Number.isInteger(finiteNumber(variant.stock)) ? finiteNumber(variant.stock) : null,
       enabled: variant.isEnable !== false,
     }
   })
-  const enabledPrices = variants
-    .filter((variant) => variant.enabled && variant.price !== null && variant.price > 0)
-    .map((variant) => variant.price as number)
-  const prices = enabledPrices.length ? enabledPrices : [basePrice]
   const trackStock = document.trackStock === true
   const stockTotal = trackStock
     ? variants.filter((variant) => variant.enabled).reduce((sum, variant) => sum + Math.max(0, variant.stock ?? 0), 0)
@@ -115,8 +122,8 @@ export function projectSanityProduct(document: SanityCatalogDocument): Canonical
     description: text(document.shortDescription),
     currency: 'COP' as const,
     price: basePrice,
-    price_min: Math.min(...prices),
-    price_max: Math.max(...prices),
+    price_min: basePrice,
+    price_max: basePrice,
     compare_at_price: finiteNumber(document.originalPrice),
     brand: text(document.brand),
     category: text(document.category),
@@ -159,6 +166,9 @@ export const SANITY_CATALOG_PRODUCT_PROJECTION = `{
   _updatedAt,
   mastershopId,
   mastershopImageUrl,
+  mastershopStock,
+  mastershopAvailable,
+  dropiId,
   name,
   "slug": slug.current,
   shortDescription,

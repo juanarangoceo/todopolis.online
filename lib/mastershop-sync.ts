@@ -9,6 +9,8 @@ import { ADULT_CATEGORY, isAllowedAdultProduct } from './adult-policy'
 import { createUsageCollector } from './ai/usage'
 import type { UsageSink } from './ai/pricing'
 import { audienceFitFromAi } from './audience-fit'
+import { changedFields, mastershopStockFields, mergeVariants, type StoredVariant } from './supplier-stock'
+import { strategicPrice } from './supplier-pricing'
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 const PAGE_LIMIT = 50
@@ -46,12 +48,17 @@ function extractVariants(p: any): any[] {
   }))
 }
 
-async function fetchAllMastershopIds(apiKey: string): Promise<number[]> {
-  const ids: number[] = []
+/**
+ * Todos los productos de «mis productos», ya con costo, stock y variantes.
+ * `complete` solo es true si se leyeron todos: de eso depende marcar como
+ * retirado lo que no aparezca (una página fallida no puede retirar nada).
+ */
+async function fetchAllMastershopProducts(apiKey: string): Promise<{ products: any[]; complete: boolean }> {
+  const all: any[] = []
   let page = 1
   let total = Infinity
 
-  while (ids.length < total) {
+  while (all.length < total) {
     const res = await fetch(`${MS_BASE}/products?page=${page}&limit=${PAGE_LIMIT}`, {
       headers: { 'ms-api-key': apiKey },
     })
@@ -62,14 +69,81 @@ async function fetchAllMastershopIds(apiKey: string): Promise<number[]> {
     total = data.resultsCount?.totalProducts ?? products.length
 
     for (const p of products) {
-      if (p.idProduct) ids.push(p.idProduct)
+      if (p.idProduct) all.push(p)
     }
 
     if (products.length < PAGE_LIMIT) break
     page++
   }
 
-  return ids
+  const ids = new Set(all.map((p) => p.idProduct))
+  return { products: all, complete: Number.isFinite(total) && ids.size >= total }
+}
+
+interface StockDoc {
+  _id: string
+  mastershopId: number
+  mastershopCost?: number
+  mastershopStock?: number
+  mastershopAvailable?: boolean
+  variants?: StoredVariant[]
+}
+
+/**
+ * Pone al día costo, stock y variantes de los productos YA importados
+ * (publicados y borradores) con la lista que se acaba de descargar: no cuesta
+ * llamadas extra. El precio de venta no se toca. Solo escribe lo que cambió,
+ * porque cada escritura viaja también a Nitro.
+ */
+async function refreshExistingProducts(
+  list: { products: any[]; complete: boolean },
+  projectId: string,
+  dataset: string,
+  apiVersion: string,
+  token: string,
+  dryRun = false,
+): Promise<{ updated: number; retired: number; publishedChanged: boolean }> {
+  const query = encodeURIComponent('*[_type == "product" && defined(mastershopId)]{ _id, mastershopId, mastershopCost, mastershopStock, mastershopAvailable, variants }')
+  const res = await fetch(`https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}?query=${query}&perspective=raw`, { headers: { Authorization: `Bearer ${token}` } })
+  if (!res.ok) throw new Error(`Sanity GROQ error ${res.status}`)
+  const docs: StockDoc[] = (await res.json()).result ?? []
+  const byId = new Map(list.products.map((p) => [p.idProduct, p]))
+
+  const mutations: unknown[] = []
+  let retired = 0
+  let publishedChanged = false
+  for (const doc of docs) {
+    const p = byId.get(doc.mastershopId)
+    // Sin la lista completa no se sabe si falta o solo no se leyó.
+    if (!p && !list.complete) continue
+    const stored = Array.isArray(doc.variants) ? doc.variants : []
+    const next: Record<string, unknown> = p
+      ? {
+          mastershopCost: typeof p.basePrice === 'number' ? p.basePrice : doc.mastershopCost ?? null,
+          mastershopStock: typeof p.stockTotal === 'number' ? p.stockTotal : doc.mastershopStock ?? null,
+          mastershopAvailable: true,
+          // Si el proveedor quedó con una sola opción no hay qué elegir: se
+          // dejan las guardadas antes que apagarlas todas y bloquear la compra.
+          ...(stored.length > 0 && extractVariants(p).length > 0 && { variants: mergeVariants(stored, extractVariants(p)) }),
+        }
+      : { mastershopStock: 0, mastershopAvailable: false, ...(stored.length > 0 && { variants: mergeVariants(stored, []) }) }
+    const set = changedFields(doc as unknown as Record<string, unknown>, next)
+    if (!set) continue
+    if (!p && doc.mastershopAvailable !== false) retired++
+    if (!doc._id.startsWith('drafts.')) publishedChanged = true
+    mutations.push({ patch: { id: doc._id, set: { ...set, mastershopSyncedAt: new Date().toISOString() } } })
+  }
+
+  if (dryRun) return { updated: mutations.length, retired, publishedChanged }
+  for (let i = 0; i < mutations.length; i += 100) {
+    const r = await fetch(`https://${projectId}.api.sanity.io/v${apiVersion}/data/mutate/${dataset}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mutations: mutations.slice(i, i + 100) }),
+    })
+    if (!r.ok) throw new Error(`Sanity mutate error ${r.status}: ${(await r.text()).slice(0, 200)}`)
+  }
+  return { updated: mutations.length, retired, publishedChanged }
 }
 
 async function fetchSanityImportedIds(
@@ -237,11 +311,8 @@ async function importProductInner(
     .replace(/(^-|-$)+/g, '')
     .substring(0, 96)
 
-  const rawPrice = basePrice || suggestedPrice || 0
-  let markup = 1.3
-  if (rawPrice < 50000) markup = 1.7
-  else if (rawPrice < 150000) markup = 1.5
-  const strategicPrice = rawPrice > 0 ? Math.max(0, Math.floor(rawPrice * markup / 1000) * 1000 + 900) : 0
+  // La misma regla que el import manual y Dropi (lib/supplier-pricing.ts).
+  const price = strategicPrice(basePrice || suggestedPrice || 0)
 
   const variants = extractVariants(p)
 
@@ -253,10 +324,11 @@ async function importProductInner(
     _type: 'product',
     mastershopId: idProduct,
     mastershopImageUrl: imageUrl,
+    ...mastershopStockFields(p, basePrice),
     name: finalName,
     slug: { _type: 'slug', current: slug },
     shortDescription: ai.improvedDescription ?? description,
-    price: strategicPrice,
+    price,
     category,
     isNew: true,
     isBestSeller: false,
@@ -329,6 +401,11 @@ export interface SyncResult {
   imported: number
   errors: number
   articlesCreated: string[]
+  /** Productos existentes con costo, stock o variantes actualizados. */
+  stockUpdated: number
+  /** Desaparecieron de Mastershop en esta corrida. */
+  retired: number
+  publishedChanged: boolean
 }
 
 async function runSync(): Promise<SyncResult> {
@@ -341,15 +418,26 @@ async function runSync(): Promise<SyncResult> {
 
   if (!apiKey || !geminiKey || !sanityToken || !projectId) {
     log('Variables de entorno incompletas, saltando sync.')
-    return { imported: 0, errors: 0, articlesCreated: [] }
+    return { imported: 0, errors: 0, articlesCreated: [], stockUpdated: 0, retired: 0, publishedChanged: false }
   }
 
   log('Iniciando sincronización...')
 
-  const [allIds, importedIds] = await Promise.all([
-    fetchAllMastershopIds(apiKey),
+  const [list, importedIds] = await Promise.all([
+    fetchAllMastershopProducts(apiKey),
     fetchSanityImportedIds(projectId, dataset, apiVersion, sanityToken),
   ])
+  const allIds = list.products.map((p) => p.idProduct as number)
+
+  // ── Phase 0: costo, stock y variantes de lo ya importado ───────────────────
+  let refresh = { updated: 0, retired: 0, publishedChanged: false }
+  try {
+    refresh = await refreshExistingProducts(list, projectId, dataset, apiVersion, sanityToken)
+    log(`Stock: ${refresh.updated} productos actualizados, ${refresh.retired} retirados en Mastershop.`)
+  } catch (err: any) {
+    // No bloquea el import de lo nuevo.
+    log(`Error actualizando stock: ${err.message}`)
+  }
 
   const pending = allIds.filter(id => !importedIds.has(id))
   log(`${allIds.length} en Mastershop, ${importedIds.size} en Sanity, ${pending.length} pendientes.`)
@@ -418,7 +506,20 @@ async function runSync(): Promise<SyncResult> {
   }
 
   log(`Sync completado. ${newlyImported.length} importados, ${importErrors} errores, ${articlesCreated.length} artículos.`)
-  return { imported: newlyImported.length, errors: importErrors, articlesCreated }
+  return { imported: newlyImported.length, errors: importErrors, articlesCreated, stockUpdated: refresh.updated, retired: refresh.retired, publishedChanged: refresh.publishedChanged }
 }
 
 export { runSync as startMastershopSync }
+
+/** Solo el paso de stock, para `scripts/mastershop-stock.ts`. */
+export async function refreshMastershopStock(dryRun: boolean) {
+  const apiKey = process.env.MASTERSHOP_API_KEY
+  const token = process.env.SANITY_API_TOKEN
+  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+  if (!apiKey || !token || !projectId) throw new Error('Faltan MASTERSHOP_API_KEY, SANITY_API_TOKEN o NEXT_PUBLIC_SANITY_PROJECT_ID.')
+  const list = await fetchAllMastershopProducts(apiKey)
+  const result = await refreshExistingProducts(
+    list, projectId, process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production', process.env.NEXT_PUBLIC_SANITY_API_VERSION ?? '2025-01-01', token, dryRun,
+  )
+  return { inMastershop: list.products.length, complete: list.complete, ...result }
+}

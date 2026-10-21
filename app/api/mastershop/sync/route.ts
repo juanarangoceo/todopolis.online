@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Si entraron productos nuevos, refresca el home y el catálogo de inmediato.
-    if (result.imported > 0) {
+    if (result.imported > 0 || result.publishedChanged) {
       revalidateTag('products', 'max')
       revalidatePath('/')
     }

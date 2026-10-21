@@ -1,6 +1,7 @@
 import { getSanityProductBySlug } from '@/lib/sanity/queries'
 import type { ProductVariant } from '@/lib/types'
 import { priceForQuantity } from '@/lib/quantity-offers'
+import { isSoldOut } from '@/lib/supplier-stock'
 
 // El precio de un pedido SIEMPRE se resuelve en el servidor desde Sanity, para
 // las dos vías de pago. El del formulario es un dato del navegador: aceptarlo
@@ -15,6 +16,8 @@ import { priceForQuantity } from '@/lib/quantity-offers'
 export async function resolveOrderProduct(slug: string, variantId: number | null) {
   const product = await getSanityProductBySlug(slug)
   if (!product) return null
+  // Agotado o retirado en el proveedor: no hay qué despachar.
+  if (isSoldOut(product)) return null
 
   // La variante sale de Sanity, no del navegador: su NOMBRE es lo que ve quien
   // despacha (aquí y en Nitro), y el del formulario podía no corresponder al

@@ -213,6 +213,13 @@ export const productType = defineType({
       readOnly: true,
       hidden: ({ document }) => !document?.mastershopId,
     }),
+    // La sincronización horaria los pone al día (lib/mastershop-sync.ts). Con
+    // stock 0 o retirado de Mastershop el producto sale de los listados y la
+    // ficha dice «Agotado» (lib/supplier-stock.ts).
+    defineField({ name: 'mastershopCost', title: 'Costo Mastershop (lo que cobra el proveedor)', type: 'number', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.mastershopId, description: 'El precio de venta es «Precio»; este es el costo y se actualiza solo.' }),
+    defineField({ name: 'mastershopStock', title: 'Stock en Mastershop', type: 'number', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.mastershopId }),
+    defineField({ name: 'mastershopAvailable', title: 'Sigue en Mastershop', type: 'boolean', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.mastershopId, description: 'Falso si el proveedor lo retiró: ya no se puede vender.' }),
+    defineField({ name: 'mastershopSyncedAt', title: 'Última sincronización con Mastershop', type: 'datetime', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.mastershopId }),
 
     // ─── Dropi (TOD-16): los escriben el import y la sincronización ────────
     defineField({

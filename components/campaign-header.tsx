@@ -12,7 +12,7 @@ const LOGO_URL =
  * confianza y una salida hacia compra, pero elimina las rutas que invitan a
  * abandonar el producto antes de entender la oferta.
  */
-export function CampaignHeader() {
+export function CampaignHeader({ soldOut = false }: { soldOut?: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b border-nav-inactive-border bg-surface/92 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-3 px-4">
@@ -41,6 +41,7 @@ export function CampaignHeader() {
           </span>
         </div>
 
+        {!soldOut && (
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('product:buy'))}
@@ -50,6 +51,7 @@ export function CampaignHeader() {
           <span className="hidden sm:inline">Comprar ahora</span>
           <span className="sm:hidden">Comprar</span>
         </button>
+        )}
       </div>
     </header>
   )
