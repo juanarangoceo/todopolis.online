@@ -15,6 +15,14 @@
 import { advancePaymentEnabled } from './config.ts'
 import { CONFIO_MIN_COP } from './confio/protocol.ts'
 
+// La rapidez del PAGO, con la narrativa de Nitro Complete (oct 2026). Es del
+// pago, no del envío: pagar antes no hace que el pedido llegue antes (siguen
+// siendo 3 a 7 días hábiles), y la confirmación tarda lo que tarda la
+// reconciliación con Confío (cada 5 min, /api/cron/confio-reconcile): minutos,
+// no «al instante».
+const CONFIO_SPEED =
+  'Pagar con Confío toma segundos desde el celular, y el pago se confirma solo en minutos: el cliente no manda capturas ni comprobantes. Eso es del pago; no digas que el pedido llega más rápido por pagar antes.'
+
 /**
  * Las políticas de pago para un prompt de venta. El ángulo no es «paga por
  * adelantado» —que suena a riesgo y compite con la contraentrega— sino que el
@@ -35,6 +43,7 @@ export function paymentPolicyForPrompt(): string {
     'Hay DOS formas de pagar y el cliente elige. Ofrece siempre las dos; nunca digas que solo hay contraentrega.',
     cod,
     `- Pago protegido por adelantado (desde $${CONFIO_MIN_COP.toLocaleString('es-CO')}): paga con PSE, Nequi o Bancolombia a través de Confío. NO es pagar y confiar: Confío RETIENE el dinero en custodia y solo nos lo entrega cuando el cliente confirma que recibió el pedido. Si no llega, se lo devuelven. Preséntalo como una garantía MÁS fuerte que la contraentrega, no como un riesgo.`,
+    `- ${CONFIO_SPEED}`,
     '- No aceptamos tarjeta de crédito ni débito.',
     '- Para pagar por adelantado, el cliente elige "Pago protegido" en el checkout del producto y lo llevamos a Confío. Tú no generas links ni compartes URLs.',
     '- Si el cliente duda, cierra preguntando literalmente: "¿lo prefieres contraentrega o con pago protegido?".',
@@ -50,6 +59,7 @@ export function paymentPolicyForVoice(): string {
     'Envío: doce mil pesos a todo Colombia, 3 a 7 días hábiles.',
     'Hay dos formas de pagar y el cliente elige: contraentrega, que paga al recibir, o pago protegido por adelantado con P S E, Nequi o Bancolombia.',
     'El pago protegido no es pagar y confiar: el dinero queda retenido en custodia y solo nos lo entregan cuando el cliente confirma que recibió el pedido. Dilo así, porque es una garantía más fuerte que la contraentrega.',
+    'Pagarlo toma segundos desde el celular y se confirma solo en unos minutos, sin mandar comprobantes. No digas que el pedido llega más rápido por pagar antes.',
     'Nunca digas que solo manejamos contraentrega. Si el cliente duda, pregunta: lo prefieres contraentrega o con pago protegido.',
   ].join(' ')
 }
@@ -71,6 +81,7 @@ export function paymentFactsForCopy(): string {
     ? [
         '- Hay DOS formas de pagar y el cliente elige en el checkout: contraentrega (paga en efectivo al recibir) o pago protegido con PSE, Nequi o Bancolombia a través de Confío, que retiene el dinero en custodia hasta que el cliente confirma que recibió.',
         '- Nunca digas que "solo" hay contraentrega, ni nombres un único medio de pago como si fuera el único. Confío protege el PAGO; no digas que garantiza la entrega.',
+        `- ${CONFIO_SPEED}`,
         '- No se acepta tarjeta de crédito ni débito.',
       ]
     : [

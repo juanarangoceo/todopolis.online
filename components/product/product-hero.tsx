@@ -239,7 +239,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
             {/* Oculto en móvil: el bloque de confianza de más abajo ya lista
                 los mismos medios y con contexto. Repetirlos aquí solo gastaba
                 dos renglones de una pantalla donde el precio todavía no se ve. */}
-            <PaymentMethods variant="inline" className="hidden sm:flex justify-center" />
+            <PaymentMethods className="hidden sm:flex justify-center" />
           </div>
 
           {/* Subtitle — a la izquierda: son 160 caracteres, ya es texto de

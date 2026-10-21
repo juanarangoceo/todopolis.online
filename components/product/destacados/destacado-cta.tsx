@@ -126,7 +126,7 @@ export function DestacadoCTA({ product, whatsappHref }: Props) {
             Lo quiero, pedir ahora
           </button>
           <p className="mt-3 text-sm text-muted-foreground">Eliges cómo pagar en el siguiente paso.</p>
-          <PaymentMethods variant="inline" className="mt-3" />
+          <PaymentMethods className="mt-3" />
 
           {/* Los hechos, como están en la política real
               (components/store-policies.tsx). El envío sale del mismo flag

@@ -482,8 +482,20 @@ Todópolis entra al MCP de Dropi (`https://mcp.dropi.co/mcp`) con OAuth y la cue
 - `list_products` **no filtra por id ni trae descripción**: se reencuentra un producto buscando por su nombre original (`dropiName`) y proveedor. El copy sale del nombre y las fotos. Da menos ítems que `page_size` aun habiendo más páginas, oculta los agotados y su backend responde **504 a menudo** (un reintento; si sigue, otra búsqueda).
 - **Import** (`/admin/dropi` → buscar → «Importar como borrador», `app/api/dropi/import`): crea un BORRADOR, sube las fotos de CloudFront a Sanity (no hay que autorizar otro dominio de imágenes), genera el copy con Gemini mirando las fotos, categoría con JEV y etiquetas. No publica, no revalida ni escribe artículo. Si Dropi lo marca «Sex Shop», solo entra si es lencería (`lib/adult-policy.ts`).
 - **Sincronización** `/api/cron/dropi-sync` cada hora (min 15): costo, stock y variantes en publicados y borradores; si Dropi ya no lo lista, `dropiStock: 0`. Exige `CRON_SECRET` definido.
-- **Pedidos: se crean A MANO en Dropi** (decisión del 21-oct-2026). Se venden como cualquier producto y `/admin/pedidos` marca «Dropi · crear a mano · producto #… · variación #…» (busca el `dropiId` en Sanity por el slug del pedido). Nadie llama `create_order`. Ojo: Nitro rotula `variant_external_id` como «Variante Mastershop», y en un pedido de Dropi es la variación de Dropi.
+- **Pedidos: se crean A MANO en Dropi** (decisión del 21-oct-2026). Se venden como cualquier producto y `/admin/pedidos` marca «Dropi · crear a mano · producto #… · variación #…» (busca el `dropiId` en Sanity por el slug del pedido). Nadie llama `create_order`. **Los productos de Dropi NO viajan a Nitro** (salen archivados del feed, `projectSanityProduct`): el bot no sabría despacharlos.
+- **Agotado** (`dropiStock` 0): igual que Mastershop, ver abajo.
 - Consola: `node scripts/dropi-mcp.ts tools | schema <herramienta> | call <herramienta> '<json>'` (solo herramientas de lectura).
+
+### Stock y costo del proveedor — Mastershop y Dropi (21-oct-2026)
+Hasta oct-2026 un producto de Mastershop se quedaba con el costo y el stock del día del import: el 21-oct, de 402 publicados, **54 ya no existían en Mastershop (404) y 32 tenían stock 0**, y la tienda los seguía vendiendo.
+
+- **El sync de Mastershop (`lib/mastershop-sync.ts`, cron horario) ahora también pone al día lo ya importado**: `mastershopCost`, `mastershopStock`, `mastershopAvailable` y las variantes (costo, stock, activa), en publicados Y borradores. Usa la misma lista paginada que ya bajaba para buscar nuevos (`GET /products`, que trae `basePrice`, `stockTotal` y `variation[]` con stock): **cero llamadas extra**. Solo escribe lo que cambió, porque cada escritura viaja a Nitro. El precio de venta no lo toca.
+- **Retirado** (no sale en la lista): `mastershopAvailable: false`, solo si la lista se leyó COMPLETA. Una página fallida no retira nada.
+- **`isSoldOut`** (`lib/supplier-stock.ts`, con test) es la regla única: Mastershop retirado o con stock 0, o Dropi con stock 0. Sin dato, se vende (los productos viejos hasta la primera sincronización). Lo usan el checkout (`resolveOrderProduct` rechaza), la ficha («Agotado», sin botón de compra, sin «Cómo pagas» ni cierre, y enlace a WhatsApp para avisar cuando vuelva), el feed a Nitro (viaja archivado) y el filtro `SELLABLE` de los listados en `lib/sanity/queries.ts` (home, ofertas, búsqueda por etiquetas, conteo). La ficha sí se sirve: llegan enlaces de anuncios.
+- El import de Mastershop guarda esos campos desde el primer día (`mastershopStockFields`). Para correrlo a mano: `npx tsx scripts/mastershop-stock.ts` (dry-run) / `--apply`.
+
+### Feed a Nitro: el precio es el de VENTA (21-oct-2026)
+`lib/catalog/project-sanity-product.ts` mandaba `price_min`/`price_max` y el precio de cada variante desde `variants[].price`, que es el COSTO: en los 72 productos con variantes el bot de Nitro cotizaba el costo. Ahora todo sale de `product.price` (Todópolis cobra todas las variantes a ese precio). Después de desplegar, `npx tsx scripts/backfill-catalog-products.ts --apply` reenvía el catálogo.
 
 ### Nitro Profit — costo de la IA (`/admin/profit`)
 Mismo patrón que `nitro_bot/app/admin/profit`, adaptado:
@@ -636,7 +648,8 @@ Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/de
 
 - **Banner bajo el hero**: campo `destacadoBanner` (escritorio + móvil opcional + alt), de borde a borde, `<picture>` con URLs del CDN de Sanity. Las dimensiones del asset viajan en la query para que la página no salte.
 - **Galería lifestyle**: `aiLifestyleImage` sigue siendo la principal (y la de los carriles del home); `aiLifestyleGallery` suma más fotos. El botón de IA del Studio ahora elige **escena** y puede **añadir a la galería** en vez de reemplazar. Se pintan juntas con `ProductLifestyleGallery` y `lifestyleImages()` (`lib/lifestyle.ts`), también en la ficha normal.
-- **«Cómo pagas»: las dos tarjetas son GEMELAS** (25-sep-2026): mismo ancho, mismo alto, misma estructura (cabecera, antetítulo, titular, tres pasos). Eran 2/5 contra 3/5 y contraentrega quedaba chata, como un apéndice de Confío. Las dos vías valen igual.
+- **«Cómo pagas»: las dos tarjetas son GEMELAS** (25-sep-2026): mismo ancho, mismo alto, misma estructura (cabecera, antetítulo, titular, tres pasos y, abajo, «Pagas con»). Eran 2/5 contra 3/5 y contraentrega quedaba chata, como un apéndice de Confío. Las dos vías valen igual.
+- **Narrativa de rapidez, la de Nitro Complete (21-oct-2026)**: una fila con filetes «Segundos (pagar) · Minutos (se confirma solo, sin comprobantes) · 3 a 7 días hábiles (llega, pagues como pagues)» y los logos de **PSE, Nequi y Bancolombia** (`components/payment-logos.tsx`, en gris, copiados de Nitro). La rapidez es del PAGO, no del envío: no escribas que pagar antes hace llegar antes. «Minutos» y no «al instante»: la reconciliación con Confío corre cada 5 min. **Sin Visa, Mastercard ni Daviplata**: Nitro los muestra porque allá cada comercio conecta su cuenta; esta tienda no los cobra. La misma frase de rapidez está en `lib/payments/narrative.ts` para los prompts.
 - **«Cómo pagas»** (`destacado-payment.tsx`) explica Confío en el cuerpo de la página, pegado al cierre (entre las preguntas y el botón): es la última duda antes de comprar. No va dentro del cierre, que lo recargaría. Por eso la ficha pasa `showPaymentExplainer={false}` al `Footer`: el recuadro del pie sigue en el resto del sitio.
 - **El cierre** (`destacado-cta.tsx`) lleva la foto del producto al lado y abre el checkout del hero con el evento `product:buy`, no con un modal propio. El copy sale de `closingCopy()`, que descarta al renderizar las promesas viejas de la IA («envío rápido», «24-48h», «garantía de satisfacción»).
 - El cierre dice «Envío gratis» o «Envío $12.000» según `isDestacado`, el mismo flag que lo cobra en `checkout-modal.tsx`.
@@ -649,7 +662,7 @@ Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/de
 ### El precio de venta es `product.price`. El `price` de una variante es el COSTO
 En `variants[]`, el campo `price` («Precio Mastershop») es lo que cobra el proveedor, no lo que paga el cliente: el reloj infantil se vende a $82.900 y su variante dice $55.000. `app/api/checkout/confio` lo usaba como precio unitario, así que **Confío cobraba el costo** en los 65 productos con variantes (corregido sep 2026). Ninguna ruta de cobro, ficha ni checkout debe leer `variant.price` como precio.
 
-**Pendiente, coordinar con Nitro:** `lib/catalog/project-sanity-product.ts` (el feed hacia Nitro) sigue tomando los precios de las variantes. No se tocó porque es un contrato con un consumidor externo.
+El feed hacia Nitro también usa ya `product.price` (21-oct-2026, ver «Feed a Nitro»).
 
 ### Variantes: Talla y Color en dos filas — `lib/variant-options.ts` (con test)
 Mastershop manda combinaciones sueltas («XS/NEGRO», «2xl/Beige»), hasta 50 por producto. El selector las parte en dos ejes (Talla o Tamaño, y Color) cuando TODAS se pueden partir con seguridad, con las tallas en orden; si no, lista única. Al 25-sep-2026: 35 de 72 productos con variantes se parten. El pedido sigue llevando la variante REAL (`idVariant` y el nombre original de Mastershop).
@@ -674,7 +687,7 @@ Botón «🤖 Completar Destacado con IA» (pestaña Destacados, `sanity/compone
 - **Historia**: `vipStory.problemImage`, `turningPointImage`, `outcomeImage`. Los botones de IA MEZCLAN la historia con lo existente (`{ ...actual, ...generado }`) para no borrar esas fotos; si añades otra vía que escriba `vipStory`, haz lo mismo.
 - **Caja**: `vipBoxContents.pieces` (foto + nombre por pieza), que SUMA a la lista `items`, no la reemplaza.
 - **Pasos**: la imagen por paso ya existía (`vipSteps[].image`).
-- **Logo de Confío**: `components/confio-logo.tsx` con el logo oficial en `public/brands/`. Úsalo donde se explique el pago protegido, no un escudo genérico.
+- **Logo de Confío**: `components/confio-logo.tsx` con el logo oficial en `public/brands/`. Úsalo donde se explique el pago protegido, no un escudo genérico. Los de los medios de pago: `PaymentLogos` (`public/brands/pagos/`).
 
 ### Bloques retirados de Destacados
 - **Citas destacadas** (`vipQuotes`): fuera del schema y de la landing. Se leían como relleno.

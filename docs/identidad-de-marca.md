@@ -5,7 +5,7 @@ decisiones concretas y su historia están en `CLAUDE.md`; esto es el criterio
 que las une. **Si un cambio nuevo contradice esta guía, gana la guía, salvo que
 la actualices a propósito y digas por qué.**
 
-Última revisión: 25-sep-2026 (saludo del home, variantes, «Cómo pagas», carruseles).
+Última revisión: 21-oct-2026 («Cómo pagas» con rapidez y logos de medios de pago; antes, 25-sep-2026).
 
 ---
 
@@ -159,7 +159,7 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 | Buscar | `MagicSearchBar` con `placeholder` «Busca entre N …». |
 | Hablar con el cliente | `WhatsAppButton` (burbuja global) o el botón dentro de la barra de compra. |
 | Pedir el correo | `FooterSubscribe`, en el pie. Nunca en medio del recorrido de compra. |
-| Explicar el pago | `payment-methods.tsx`, `destacado-payment.tsx`, `ConfioLogo`. |
+| Explicar el pago | `payment-methods.tsx`, `destacado-payment.tsx`, `ConfioLogo`, `PaymentLogos` (PSE, Nequi y Bancolombia en gris; nunca tarjetas). La rapidez se dice del pago («segundos», «minutos»), nunca del envío. |
 | Contar cómo se compra (pago → entrega → defecto) | `PolicyBadges` («Así compras en Todópolis»): pasos numerados con filetes, sin cajas. |
 | Categorías en móvil / escritorio | `CategoryCards` (tarjetas con foto) / `CategoryBar` (pestañas de texto + «Más categorías»). Home y ofertas. |
 | Una sección de ficha o de colección | `DestacadoSection`, `DestacadoSectionHeader`, `DestacadoSplit`. |
