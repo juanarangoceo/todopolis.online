@@ -9,7 +9,7 @@ interface Tool { name: string; title?: string; description?: string; readOnly: b
 
 const ERRORS: Record<string, string> = {
   config: 'Falta DROPI_TOKEN_KEY en el servidor. Sin ella los tokens no se pueden guardar cifrados.',
-  host: 'Dropi solo acepta volver a una dirección https o a localhost. En local, abre el panel en http://localhost:3001/admin/dropi y conecta desde ahí.',
+  host: 'Dropi solo acepta volver a una dirección https o a localhost. En local, abre el panel en https://openclawagent.tail8ed093.ts.net/admin/dropi y conecta desde ahí.',
   discovery: 'Dropi no respondió con sus datos de autorización. Vuelve a intentarlo en unos minutos.',
   storage: 'No se pudo leer la conexión en la base de datos. Revisa que la migración 20261021120000_dropi_connection.sql esté aplicada en Supabase.',
   register: 'Dropi no aceptó registrar a Todópolis como aplicación. Vuelve a intentarlo.',
