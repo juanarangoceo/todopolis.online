@@ -6,6 +6,9 @@ import type { DropiConnectionSummary } from '@/lib/dropi/connection'
 
 interface Status { discovery: DropiDiscovery; connection: DropiConnectionSummary; configured: boolean }
 interface Tool { name: string; title?: string; description?: string; readOnly: boolean | null }
+interface Found { id: number; name: string; cost: number; suggestedPrice: number; stock: number; supplierId: number | null; images: string[]; variations: unknown[]; sanityId: string | null }
+
+const cop = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`
 
 const ERRORS: Record<string, string> = {
   config: 'Falta DROPI_TOKEN_KEY en el servidor. Sin ella los tokens no se pueden guardar cifrados.',
@@ -109,6 +112,8 @@ export default function DropiPage() {
         )}
       </section>
 
+      {connection?.connected && <CatalogSearch />}
+
       {tools && (
         <section className="text-sm leading-relaxed" aria-labelledby="tools-title">
           <h2 id="tools-title" className="font-serif text-lg font-bold text-ink-title">Lo que Dropi permite ({tools.length})</h2>
@@ -123,5 +128,75 @@ export default function DropiPage() {
         </section>
       )}
     </div>
+  )
+}
+
+function CatalogSearch() {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Found[] | null>(null)
+  const [next, setNext] = useState<number | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [importing, setImporting] = useState<number | null>(null)
+  const [message, setMessage] = useState('')
+
+  async function search(start = 0) {
+    setBusy(true)
+    setMessage('')
+    try {
+      const res = await fetch(`/api/dropi/products?q=${encodeURIComponent(query)}&start=${start}`, { cache: 'no-store' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'No se pudo buscar en Dropi.')
+      setResults(start ? [...(results ?? []), ...data.products] : data.products)
+      setNext(data.next)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'No se pudo buscar en Dropi.')
+    } finally { setBusy(false) }
+  }
+
+  async function importProduct(p: Found) {
+    setImporting(p.id)
+    setMessage(`Importando «${p.name}»: fotos, textos con IA y etiquetas. Tarda cerca de un minuto.`)
+    try {
+      const res = await fetch('/api/dropi/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dropiId: p.id, name: p.name, supplierId: p.supplierId }) })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'No se pudo importar.')
+      setResults((list) => list?.map((r) => (r.id === p.id ? { ...r, sanityId: data.sanityId } : r)) ?? null)
+      setMessage(data.alreadyImported ? 'Ese producto ya estaba importado.' : `Quedó como borrador: «${data.name}», precio sugerido ${cop(data.price)} sobre un costo de ${cop(data.cost)}. Revísalo en el Studio antes de publicar.`)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'No se pudo importar.')
+    } finally { setImporting(null) }
+  }
+
+  return (
+    <section className="rounded-3xl border border-nav-inactive-border bg-surface p-5 shadow-sm" aria-labelledby="catalog-title">
+      <h2 id="catalog-title" className="font-serif text-lg font-bold text-ink-title">Importar del catálogo de Dropi</h2>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Cada producto entra como borrador, con sus fotos, textos e etiquetas hechos con IA y un precio sugerido desde el costo. Costo, stock y variantes se actualizan solos cada hora. Todavía no se pueden vender: el checkout los rechaza hasta conectar los pedidos con Dropi.</p>
+      <form className="mt-4 flex flex-wrap gap-3" onSubmit={(e) => { e.preventDefault(); search() }}>
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Busca por nombre: cobija, faja, audífonos…" aria-label="Buscar en Dropi" className="min-w-0 flex-1 rounded-xl border border-nav-inactive-border px-4 py-2.5 text-sm" />
+        <button type="submit" disabled={busy} className="rounded-xl bg-ink-title px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">{busy ? 'Buscando…' : 'Buscar'}</button>
+      </form>
+      <p aria-live="polite" className="mt-3 text-sm">{message}</p>
+      {results && (results.length === 0
+        ? <p className="mt-3 text-sm text-muted-foreground">Dropi no encontró productos con esa búsqueda.</p>
+        : <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {results.map((p) => (
+            <li key={p.id} className="flex gap-3 rounded-2xl border border-nav-inactive-border p-3">
+              {p.images[0]
+                // eslint-disable-next-line @next/next/no-img-element -- foto externa de Dropi solo para elegir; no pasa por el optimizador
+                ? <img src={p.images[0]} alt="" className="h-20 w-20 flex-none rounded-xl object-cover" loading="lazy" />
+                : <div className="h-20 w-20 flex-none rounded-xl bg-surface-soft" />}
+              <div className="min-w-0 flex-1 text-sm">
+                <p className="line-clamp-2 font-semibold">{p.name}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Costo {cop(p.cost)} · sugerido {cop(p.suggestedPrice)}</p>
+                <p className="text-xs text-muted-foreground">{p.stock > 0 ? `${p.stock.toLocaleString('es-CO')} en stock` : 'Agotado'}{p.variations.length ? ` · ${p.variations.length} variantes` : ''}</p>
+                {p.sanityId
+                  ? <a href={`/studio/desk/product;${p.sanityId}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-bold text-todopolis-lavender-deep underline">Ya importado · abrir en el Studio</a>
+                  : <button type="button" disabled={importing !== null} onClick={() => importProduct(p)} className="mt-2 rounded-lg border border-nav-inactive-border px-3 py-1.5 text-xs font-bold disabled:opacity-50">{importing === p.id ? 'Importando…' : 'Importar como borrador'}</button>}
+              </div>
+            </li>
+          ))}
+        </ul>)}
+      {next !== null && <button type="button" disabled={busy} onClick={() => search(next)} className="mt-4 rounded-xl border border-nav-inactive-border px-4 py-2.5 text-sm font-bold disabled:opacity-50">Ver más</button>}
+    </section>
   )
 }

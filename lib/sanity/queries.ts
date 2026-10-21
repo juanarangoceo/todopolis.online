@@ -71,6 +71,7 @@ const PRODUCT_DETAIL_QUERY = `*[_type == "product" && slug.current == $slug && !
   price,
   originalPrice,
   mastershopImageUrl,
+  dropiId,
   "image": images[0].asset->url,
   "images": images[].asset->url,
   variants[] {

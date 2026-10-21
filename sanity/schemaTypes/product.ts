@@ -214,7 +214,24 @@ export const productType = defineType({
       hidden: ({ document }) => !document?.mastershopId,
     }),
 
-    // ─── Variantes (sincronizadas desde Mastershop) ─────────────────────────
+    // ─── Dropi (TOD-16): los escriben el import y la sincronización ────────
+    defineField({
+      name: 'dropiId',
+      title: 'ID en Dropi',
+      type: 'number',
+      group: 'basics',
+      description: 'Producto importado de Dropi. Todavía NO se puede vender: el checkout lo rechaza hasta conectar los pedidos con Dropi.',
+      readOnly: true,
+      hidden: ({ document }) => !document?.dropiId,
+    }),
+    defineField({ name: 'dropiName', title: 'Nombre original en Dropi', type: 'string', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.dropiId }),
+    defineField({ name: 'dropiSupplierId', title: 'Proveedor en Dropi', type: 'number', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.dropiId }),
+    defineField({ name: 'dropiCost', title: 'Costo Dropi (lo que cobra Dropi)', type: 'number', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.dropiId, description: 'El precio de venta es «Precio»; este es el costo y se actualiza solo.' }),
+    defineField({ name: 'dropiSuggestedPrice', title: 'Precio sugerido por el proveedor', type: 'number', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.dropiId }),
+    defineField({ name: 'dropiStock', title: 'Stock en Dropi', type: 'number', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.dropiId }),
+    defineField({ name: 'dropiSyncedAt', title: 'Última sincronización con Dropi', type: 'datetime', group: 'basics', readOnly: true, hidden: ({ document }) => !document?.dropiId }),
+
+    // ─── Variantes (sincronizadas desde Mastershop o Dropi) ─────────────────
     defineField({
       name: 'variants',
       title: 'Variantes (talla, color, etc.)',
@@ -227,10 +244,10 @@ export const productType = defineType({
           name: 'variant',
           type: 'object',
           fields: [
-            defineField({ name: 'idVariant', title: 'ID Variante (Mastershop)', type: 'number' }),
+            defineField({ name: 'idVariant', title: 'ID Variante (Mastershop o Dropi)', type: 'number' }),
             defineField({ name: 'name', title: 'Nombre (ej: "39 / Beige")', type: 'string' }),
             defineField({ name: 'sku', title: 'SKU', type: 'string' }),
-            defineField({ name: 'price', title: 'Precio Mastershop', type: 'number' }),
+            defineField({ name: 'price', title: 'Costo del proveedor', type: 'number' }),
             defineField({ name: 'stock', title: 'Stock', type: 'number' }),
             defineField({ name: 'isEnable', title: 'Activa', type: 'boolean' }),
           ],

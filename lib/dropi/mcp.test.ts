@@ -11,6 +11,7 @@ test('lee la respuesta JSON-RPC dentro de un stream SSE', async () => {
 test('el texto JSON de una herramienta se entrega como objeto', () => {
   assert.deepEqual(toolPayload({ content: [{ type: 'text', text: '{"a":1}' }] }), { a: 1 })
   assert.deepEqual(toolPayload({ structuredContent: { b: 2 }, content: [] }), { b: 2 })
+  assert.deepEqual(toolPayload({ content: [{ type: 'text', text: 'count: 1' }] }), { count: 1 })
 })
 
 test('ante 401 renueva el token una vez y conserva la sesión MCP', async () => {

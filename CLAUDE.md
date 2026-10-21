@@ -476,7 +476,14 @@ Todópolis entra al MCP de Dropi (`https://mcp.dropi.co/mcp`) con OAuth y la cue
 - **Renovación con CAS sobre `version`**: dos procesos que renuevan a la vez no se pisan; el que pierde usa el token del ganador. `invalid_grant` marca `needs_reauth` y el panel pide volver a conectar.
 - **Callback: Dropi solo acepta `https://…` o `http://localhost…`** (la IP de Tailscale da 400 en el registro). En local, conectar desde **`https://openclawagent.tail8ed093.ts.net/admin/dropi`** (Tailscale Serve), con sesión del panel en ese mismo origen.
 - **Una sola sesión abierta por cuenta de Dropi**: conectar la misma cuenta en otra herramienta (p. ej. el conector de Claude) puede invalidar la de la tienda.
-- Herramientas: «Buscar productos», «Listar categorías», órdenes, envíos y «huella» del comprador. **Ninguna ruta de Todópolis llama herramientas de órdenes**; si se añade una, que sea una lista explícita de herramientas de lectura.
+- **Herramientas (11)**: `list_products`, `list_categories`, `quote_shipping`, `list_carriers`, `search_cities`, `list_departments`, `list_orders`, `get_order`, `list_statuses`, `get_customer_fingerprint_profile` y **`create_order`, que crea un despacho REAL**. Todo lo que llama Todópolis pasa por la lista positiva `DROPI_READ_TOOLS` (`lib/dropi/catalog.ts`, con test que exige que `create_order` no esté).
+- **Responde en TOON, no en JSON** (`lib/dropi/toon.ts`, con test sobre una respuesta real). Los errores son texto plano: no se decodifican.
+- **Costo vs. precio**: `sale_price` es lo que Dropi le COBRA a la tienda → `dropiCost` y `variants[].price`. El precio de venta (`price`) se sugiere con `strategicPrice` (`lib/supplier-pricing.ts`, la misma regla de Mastershop) y es editorial: la sincronización nunca lo toca.
+- `list_products` **no filtra por id ni trae descripción**: se reencuentra un producto buscando por su nombre original (`dropiName`) y proveedor. El copy sale del nombre y las fotos. Da menos ítems que `page_size` aun habiendo más páginas, oculta los agotados y su backend responde **504 a menudo** (un reintento; si sigue, otra búsqueda).
+- **Import** (`/admin/dropi` → buscar → «Importar como borrador», `app/api/dropi/import`): crea un BORRADOR, sube las fotos de CloudFront a Sanity (no hay que autorizar otro dominio de imágenes), genera el copy con Gemini mirando las fotos, categoría con JEV y etiquetas. No publica, no revalida ni escribe artículo. Si Dropi lo marca «Sex Shop», solo entra si es lencería (`lib/adult-policy.ts`).
+- **Sincronización** `/api/cron/dropi-sync` cada hora (min 15): costo, stock y variantes en publicados y borradores; si Dropi ya no lo lista, `dropiStock: 0`. Exige `CRON_SECRET` definido.
+- **NO se pueden vender todavía**: `resolveOrderProduct` rechaza cualquier producto con `dropiId`. Ni Nitro ni Confío saben despacharlos; venderlos requiere decidir cómo se crea el pedido en Dropi (a mano o con `create_order`).
+- Consola: `node scripts/dropi-mcp.ts tools | schema <herramienta> | call <herramienta> '<json>'` (solo herramientas de lectura).
 
 ### Nitro Profit — costo de la IA (`/admin/profit`)
 Mismo patrón que `nitro_bot/app/admin/profit`, adaptado:

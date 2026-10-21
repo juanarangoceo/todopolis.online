@@ -6,6 +6,7 @@
 //
 // El token llega por `getToken`; ante un 401 se pide uno renovado UNA vez.
 import { DROPI_MCP_URL } from './discovery.ts'
+import { decodeToon } from './toon.ts'
 
 const PROTOCOL_VERSION = '2025-06-18'
 
@@ -53,12 +54,13 @@ export async function readRpcResponse(res: Response, id: number): Promise<Record
   return msg as Record<string, unknown>
 }
 
-/** El texto de una herramienta casi siempre es JSON; si no, se devuelve tal cual. */
+/** El texto de una herramienta: JSON, TOON (lo que usa Dropi) o, si no es ninguno, tal cual. */
 export function toolPayload(result: McpToolResult): unknown {
   if (result.structuredContent !== undefined) return result.structuredContent
   const texts = (result.content ?? []).filter((c) => c.type === 'text' && typeof c.text === 'string').map((c) => c.text as string)
   if (texts.length !== 1) return texts
-  try { return JSON.parse(texts[0]) } catch { return texts[0] }
+  try { return JSON.parse(texts[0]) } catch { /* Dropi responde en TOON */ }
+  try { return decodeToon(texts[0]) } catch { return texts[0] }
 }
 
 export class DropiMcpClient {

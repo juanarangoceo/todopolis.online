@@ -17,10 +17,24 @@ Dropi ofrece registro dinámico (`/oauth/register`), cliente público
 revocación. El registro acepta callbacks `https://…` y `http://localhost…`;
 rechaza `http://100.107.182.42:3001` (400).
 
-Implementado: login OAuth completo, tokens cifrados en Supabase, renovación
-concurrente y desconexión con revocación, cliente MCP y listado de herramientas
-en `/admin/dropi`. Detalle en CLAUDE.md, «Dropi — conexión MCP». Lo de abajo es
-el estado del 20-oct y queda como historia.
+Implementado y probado el 21-oct-2026 con la cuenta real:
+
+- Login OAuth completo, tokens cifrados en Supabase, renovación concurrente y
+  desconexión con revocación. La cuenta quedó conectada a las 21:51 UTC.
+- Cliente MCP (11 herramientas) y decodificador TOON, el formato de Dropi.
+- Búsqueda en el catálogo e importación como borrador desde `/admin/dropi`.
+- Sincronización horaria de costo, stock y variantes.
+- Piloto: «Cobija Manta Luminosa» (2028704, simple: costo $45.000, sugerido
+  $76.900) y «Faja cinturilla Miss Belt» (289205, 8 variantes talla/color,
+  categoría Fajas). No se encontró un producto simple agotado: Dropi oculta los
+  agotados del catálogo; ese caso lo cubre la sincronización (stock 0).
+- El checkout rechaza productos de Dropi hasta definir cómo se crean sus
+  pedidos en Dropi.
+
+Detalle en CLAUDE.md, «Dropi — conexión MCP». El fallo de build del 20-oct
+era del entorno Preview de Vercel (faltaba `NEXT_PUBLIC_SANITY_PROJECT_ID`):
+cada consulta a Sanity reintentaba 8 veces y las páginas pasaban de 60 s. Lo de
+abajo es el estado del 20-oct y queda como historia.
 
 ## Estado para retomar (20-oct-2026)
 
