@@ -30,7 +30,7 @@ const COPY: Record<string, { icon: 'ok' | 'wait' | 'fail'; title: string; body: 
   funded: {
     icon: 'ok',
     title: '¡Pago recibido!',
-    body: 'Tu dinero está en custodia de Confío y ya estamos preparando tu pedido. Te escribimos por WhatsApp con el seguimiento.',
+    body: 'Tu pago con Confío quedó confirmado y ya estamos preparando tu pedido. Te escribimos por WhatsApp con el seguimiento.',
   },
   awaiting: {
     icon: 'wait',

@@ -42,7 +42,11 @@ test('sin proveedor: no se ofrece prepago y se cierra la puerta', async () => {
 test('con proveedor: se ofrece, y NO se dice que solo hay contraentrega', async () => {
   const { prompt, voice } = await policies(true)
   assert.match(prompt, /PSE, Nequi o Bancolombia/)
-  assert.match(prompt, /custodia/i, 'falta el ángulo de custodia, que es el que vende')
+  // Narrativa del 21-oct-2026: rapidez y medios de pago. La custodia NO se
+  // afirma (solo puede aparecer dentro de la prohibición).
+  assert.match(prompt, /segundos/i, 'falta la rapidez, que es el ángulo que vende')
+  assert.doesNotMatch(prompt.replace(/Nunca digas que Confío[^\n]*/g, ''), /custodia|retiene|pago protegido/i)
+  assert.doesNotMatch(voice.replace(/Nunca digas que Confío[^.]*\./g, ''), /custodia|retenid|pago protegido/i)
   assert.match(prompt, /nunca digas que solo hay contraentrega/i)
   // La frase que rompió Nitro no puede reaparecer.
   assert.doesNotMatch(prompt, /No manejamos transferencias/i)
@@ -66,4 +70,13 @@ test('el mínimo que se anuncia es el real de la pasarela', async () => {
   const { prompt } = await policies(true)
   const { CONFIO_MIN_COP } = await import('./confio/protocol.ts')
   assert.match(prompt, new RegExp(`\\$${CONFIO_MIN_COP.toLocaleString('es-CO')}`))
+})
+
+test('el copy de las landings no afirma custodia y sí habla de rapidez', async () => {
+  process.env.CONFIO_ACCESS_TOKEN = 'token-de-prueba'
+  process.env.CONFIO_STORE_NAME = 'stores/PRUEBA'
+  const mod = await import(`./narrative.ts?copy=${1}`)
+  const copy = mod.paymentFactsForCopy() as string
+  assert.match(copy, /segundos/i)
+  assert.doesNotMatch(copy.replace(/Nunca digas que Confío[^\n]*/g, ''), /custodia|retiene|protegido/i)
 })

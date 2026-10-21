@@ -30,7 +30,7 @@ interface CheckoutModalProps {
 
 export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }: CheckoutModalProps) {
   const [step, setStep] = useState(1);
-  // 'cod' = contraentrega (el de siempre). 'confio' = pago anticipado protegido.
+  // 'cod' = contraentrega (el de siempre). 'confio' = pagar ya con Confío.
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'confio'>('cod');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -370,11 +370,10 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
                     >
                       <span className="flex items-center gap-2 font-bold text-sm text-gray-900">
                         <ConfioLogo variant="icon" className="h-4 w-4 shrink-0" />
-                        Pago protegido
+                        Pagar ya con Confío
                       </span>
                       <span className="block mt-1 text-xs text-gray-500 leading-snug">
-                        PSE, Nequi o Bancolombia. Tu dinero queda en custodia
-                        hasta que recibas el pedido.
+                        PSE, Nequi o Bancolombia, en segundos desde tu celular.
                       </span>
                       <ConfioLogo className="mt-2 h-4" />
                     </button>
@@ -382,9 +381,9 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
 
                   {paymentMethod === 'confio' && (
                     <p className="mt-3 text-xs text-gray-600 leading-relaxed bg-white border border-gray-200 rounded-xl p-3">
-                      Te llevamos a <span className="font-semibold">Confío</span>,
-                      que retiene tu dinero y solo nos lo entrega cuando confirmas
-                      que recibiste el pedido. Si no llega, te devuelven.
+                      Te llevamos a <span className="font-semibold">Confío</span> para
+                      que pagues con PSE, Nequi o Bancolombia. El pago se confirma
+                      solo en minutos: no tienes que mandarnos comprobantes.
                     </p>
                   )}
                 </div>

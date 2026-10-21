@@ -12,7 +12,7 @@
 //     producto suena a rastrear un pedido que todavía no existe. El prompt de
 //     copy los prohíbe expresamente, pero se generaron con versiones viejas.
 //   ·  13 nombran la contraentrega ("Comprar ahora contraentrega"). Desde que
-//     hay pago protegido con Confío, el botón no puede casarse con UN medio de
+//     hay pago con Confío, el botón no puede casarse con UN medio de
 //     pago: el comprador elige después, en el checkout.
 //   ·  49 pasan de 22 caracteres y parten el botón en dos renglones, que en
 //     móvil empuja el precio fuera de la pantalla.

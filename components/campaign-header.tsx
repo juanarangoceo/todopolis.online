@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ShieldCheck, ShoppingBag, Truck } from 'lucide-react'
+import { ShoppingBag, Truck, WalletCards } from 'lucide-react'
 
 const LOGO_URL =
   'https://res.cloudinary.com/dohwyszdj/image/upload/f_auto,q_auto,w_320/v1779801383/logo_nuevo_todopolis_1_ljlqn6.png'
@@ -36,8 +36,8 @@ export function CampaignHeader({ soldOut = false }: { soldOut?: boolean }) {
             Envío gratis
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4" />
-            Pago protegido o contraentrega
+            <WalletCards className="h-4 w-4" />
+            Contraentrega o Confío
           </span>
         </div>
 

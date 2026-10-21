@@ -27,7 +27,7 @@ const supportContent: Record<string, { title: string; body: React.ReactNode }> =
         <div>
           <h4 className="font-bold text-gray-800 mb-1">¿Cómo pago?</h4>
           {advancePaymentVisible() ? (
-            <p className="text-gray-600 text-sm">Tú eliges. <strong>Contraentrega:</strong> pagas en efectivo cuando recibes el producto en casa. <strong>Pago protegido:</strong> pagas ahora con PSE, Nequi o Bancolombia y tu dinero queda en custodia de Confío hasta que confirmes que el pedido llegó. No manejamos tarjeta de crédito ni débito.</p>
+            <p className="text-gray-600 text-sm">Tú eliges. <strong>Contraentrega:</strong> pagas en efectivo cuando recibes el producto en casa. <strong>Con Confío:</strong> pagas ya con PSE, Nequi o Bancolombia, en segundos desde tu celular, y el pago se confirma solo, sin mandar comprobantes. No manejamos tarjeta de crédito ni débito.</p>
           ) : (
             <p className="text-gray-600 text-sm">Manejamos pago contra entrega (pagas cuando recibes tu producto en casa). No se requiere tarjeta de crédito.</p>
           )}
@@ -249,10 +249,11 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
               </div>
             </div>
             
-            {/* Pago protegido — la parte de tranquilidad. Solo se pinta si el
-                pago anticipado está encendido: si no, prometeríamos una
-                custodia que el checkout no puede ofrecer. Mismo criterio que
-                PaymentMethods y los prompts de Lucy. */}
+            {/* Pagar con Confío. Solo se pinta si el pago anticipado está
+                encendido: si no, ofreceríamos algo que el checkout no puede
+                cobrar. Mismo criterio que PaymentMethods y los prompts de Lucy.
+                Narrativa del 21-oct-2026: rapidez y medios de pago; NO se dice
+                que Confío guarda o retiene el dinero (lib/payments/narrative.ts). */}
             {/* Rehecho el 25-sep-2026. Era una caja con tres cajas dentro,
                 números en salmón (un color sin significado en la guía) y un
                 titular que empezaba por «Si pagas por adelantado»: el ángulo
@@ -274,24 +275,23 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
                     </h4>
                     <p className="mt-2 max-w-md text-sm leading-relaxed text-white/60">
                       Con <strong className="font-bold text-white/90">Confío</strong> pagas por PSE, Nequi o
-                      Bancolombia y tu plata queda en custodia: nos llega solo cuando confirmas que el
-                      pedido está en tus manos.
+                      Bancolombia en segundos, desde tu celular, y el pago se confirma solo.
                     </p>
                   </div>
 
                   <ol className="grid gap-5 sm:grid-cols-3 sm:gap-6">
                     {[
                       {
-                        t: 'Pagas en Confío',
-                        d: 'Tus datos bancarios nunca pasan por Todópolis.',
+                        t: 'Eliges Confío al pedir',
+                        d: 'Te llevamos a Confío. Tus datos bancarios nunca pasan por Todópolis.',
                       },
                       {
-                        t: 'Confío guarda el dinero',
-                        d: 'Mientras preparamos y enviamos tu pedido. Nosotros no podemos tocarlo.',
+                        t: 'Pagas desde tu celular',
+                        d: 'Con PSE, Nequi o Bancolombia. Toma segundos.',
                       },
                       {
-                        t: 'Confirmas que llegó',
-                        d: 'Ahí, y solo ahí, Confío nos entrega el pago. Si no llega, el dinero vuelve a ti.',
+                        t: 'Se confirma solo',
+                        d: 'En minutos, sin capturas ni comprobantes. Y empezamos a preparar tu pedido.',
                       },
                     ].map((step, i) => (
                       <li key={step.t} className="border-t border-white/15 pt-4">

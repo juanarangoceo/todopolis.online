@@ -95,8 +95,8 @@ export default function PrivacidadPage() {
             recibe tu nombre, teléfono y dirección de entrega.
           </li>
           <li>
-            <strong>Confío</strong> — procesa los pagos anticipados y retiene el dinero en
-            custodia hasta que confirmes que recibiste.
+            <strong>Confío</strong> — procesa los pagos anticipados (PSE, Nequi o
+            Bancolombia).
           </li>
           <li>
             <strong>Meta Platforms, Inc.</strong> — recibe eventos de navegación y compra para

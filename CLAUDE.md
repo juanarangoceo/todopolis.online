@@ -403,7 +403,7 @@ El botón del documento Producto reutiliza `/api/generate-article`, que ya exist
 
 Lo que había en el dataset (auditado el 17-sep-2026 sobre 558 productos):
 - **191 CTAs pasivos**, 151 de ellos "Ver mi pedido" — que en una ficha suena a rastrear un pedido que todavía no existe. El prompt los prohíbe, pero se generaron con versiones viejas.
-- **13 nombraban la contraentrega.** Con pago protegido encendido el botón no puede casarse con un solo medio: el comprador elige después.
+- **13 nombraban la contraentrega.** Con el pago con Confío encendido el botón no puede casarse con un solo medio: el comprador elige después.
 - **49 pasaban de 22 caracteres** y partían el botón en dos renglones.
 
 Se sanea **al renderizar y no en el dataset** a propósito: cubre también lo que genere la IA mañana, sin depender de que alguien vuelva a pasar un script. El prompt además ya pide máximo 22 caracteres y prohíbe nombrar el medio de pago.
@@ -538,7 +538,7 @@ Todopolis (Supabase `sfargytzulstppnbatjx`) y Nitro (`snbxdzytpwibctepuiwq`) son
 
 ## Pago anticipado con Confío — no romper
 
-Segundo método de pago en el checkout, junto a la contraentrega. El comprador paga por PSE, Nequi o Bancolombia, **Confío retiene el dinero en custodia** y solo lo libera cuando el comprador confirma que recibió. Portado de `nitro_bot`, donde este módulo ya está desplegado.
+Segundo método de pago en el checkout, junto a la contraentrega. El comprador paga por PSE, Nequi o Bancolombia. Por dentro, Confío retiene el dinero y lo libera tras la entrega (de ahí `FUNDED`/`APPROVED`), **pero eso NO se le dice al comprador**: ver «La narrativa» abajo. Portado de `nitro_bot`, donde este módulo ya está desplegado.
 
 ### La regla que lo sostiene todo: compartimos tienda con el bot de Nitro
 La tienda de Confío (`stores/01M28…`, «Nitro Ecom») es **la misma** que usa el bot de Nitro, y Confío admite **una sola URL de webhook por tienda**, que ya apunta a Nitro. De ahí salen dos reglas que no se tocan:
@@ -567,11 +567,11 @@ La tienda de Confío (`stores/01M28…`, «Nitro Ecom») es **la misma** que usa
 ### La narrativa NO se escribe a mano en los prompts
 `lib/payments/narrative.ts` es la única fuente, y decide según haya o no proveedor configurado. Existe por un fallo documentado en Nitro: estuvieron un día con Confío activo mientras el bot contestaba «solo manejamos contraentrega», porque el texto del negocio lo negaba y el asesor obedece esa frase antes que a cualquier compuerta. Lo consume `voice-session` (lo consumía también `lucy-chat`, retirado). **Si añades otro prompt que hable de pagos, pídeselo a ese módulo.**
 
-El ángulo es «tu dinero queda en custodia hasta que recibas», no «paga por adelantado»: es una garantía MÁS fuerte que la contraentrega, no más débil.
+**El ángulo es RAPIDEZ y MEDIOS DE PAGO (decisión de Juan, 21-oct-2026), el de Nitro Complete**: se paga en segundos desde el celular con PSE, Nequi o Bancolombia, y el pago se confirma solo en minutos, sin comprobantes. **NO se dice que Confío guarda, retiene, custodia o protege el dinero, ni que lo devuelve si el pedido no llega, ni se le llama «pago protegido»**: ni en la interfaz, ni en las páginas legales, ni en los prompts. Hasta esa fecha el ángulo era la custodia; se retiró de todo el sitio (checkout, pie, home, página del pedido, cabecera de campaña, términos y privacidad), de `narrative.ts` (su test lo exige) y de los 10 productos cuyo texto de la IA lo decía. La opción del checkout se llama «Pagar ya con Confío».
 
-**En la interfaz, además, se NOMBRA a Confío.** «Tu dinero está protegido» dejaba dos preguntas sin responder —¿protegido por quién? ¿y la contraentrega dónde quedó?—, y un comprador que no sabe quién retiene su plata no se siente más seguro, se siente confundido. El texto vivo (`payment-methods.tsx`, `store-policies.tsx`) dice «Paga al recibir, o paga con Confío» y explica las dos vías.
+**En la interfaz, además, se NOMBRA a Confío** y se muestran sus medios de pago con logo (`PaymentLogos`). El texto vivo (`payment-methods.tsx`, `store-policies.tsx`, `destacado-payment.tsx`) explica las dos vías.
 
-**Cuidado con lo que Confío hace y lo que NO**: retiene el PAGO, no garantiza la ENTREGA. Confío no despacha nada. Escribir «Confío garantiza que te llega» sería prometer una cobertura que el proveedor no da, y del despacho respondemos nosotros.
+**No prometas lo que Confío no hace**: Confío procesa el PAGO; no despacha ni garantiza la ENTREGA, de la que respondemos nosotros. Y la rapidez es del pago, no del envío: pagues como pagues, llega en 3 a 7 días hábiles.
 
 ### Encender y apagar
 Se enciende con dos variables; **sin ellas Todopolis solo cobra contraentrega** y el botón no se muestra. Borrar `CONFIO_ACCESS_TOKEN` es el freno de emergencia, sin desplegar.
@@ -649,7 +649,7 @@ Todas las secciones bajo el hero usan `DestacadoSection` (`components/product/de
 - **Banner bajo el hero**: campo `destacadoBanner` (escritorio + móvil opcional + alt), de borde a borde, `<picture>` con URLs del CDN de Sanity. Las dimensiones del asset viajan en la query para que la página no salte.
 - **Galería lifestyle**: `aiLifestyleImage` sigue siendo la principal (y la de los carriles del home); `aiLifestyleGallery` suma más fotos. El botón de IA del Studio ahora elige **escena** y puede **añadir a la galería** en vez de reemplazar. Se pintan juntas con `ProductLifestyleGallery` y `lifestyleImages()` (`lib/lifestyle.ts`), también en la ficha normal.
 - **«Cómo pagas»: las dos tarjetas son GEMELAS** (25-sep-2026): mismo ancho, mismo alto, misma estructura (cabecera, antetítulo, titular, tres pasos y, abajo, «Pagas con»). Eran 2/5 contra 3/5 y contraentrega quedaba chata, como un apéndice de Confío. Las dos vías valen igual.
-- **Narrativa de rapidez, la de Nitro Complete (21-oct-2026)**: una fila con filetes «Segundos (pagar) · Minutos (se confirma solo, sin comprobantes) · 3 a 7 días hábiles (llega, pagues como pagues)» y los logos de **PSE, Nequi y Bancolombia** (`components/payment-logos.tsx`, en gris, copiados de Nitro). La rapidez es del PAGO, no del envío: no escribas que pagar antes hace llegar antes. «Minutos» y no «al instante»: la reconciliación con Confío corre cada 5 min. **Sin Visa, Mastercard ni Daviplata**: Nitro los muestra porque allá cada comercio conecta su cuenta; esta tienda no los cobra. La misma frase de rapidez está en `lib/payments/narrative.ts` para los prompts.
+- **Narrativa de rapidez, la de Nitro Complete (21-oct-2026)**: tres fichas azules con ícono «Segundos (pagar) · Minutos (se confirma solo, sin comprobantes) · 3 a 7 días hábiles (llega, pagues como pagues)», la tarjeta de Confío primero, pasos unidos por una línea y los logos de **PSE, Nequi y Bancolombia** en fichas blancas (`components/payment-logos.tsx`, en gris, copiados de Nitro). Nada de custodia (ver «Pago anticipado con Confío»). La rapidez es del PAGO, no del envío: no escribas que pagar antes hace llegar antes. «Minutos» y no «al instante»: la reconciliación con Confío corre cada 5 min. **Sin Visa, Mastercard ni Daviplata**: Nitro los muestra porque allá cada comercio conecta su cuenta; esta tienda no los cobra. La misma frase de rapidez está en `lib/payments/narrative.ts` para los prompts.
 - **«Cómo pagas»** (`destacado-payment.tsx`) explica Confío en el cuerpo de la página, pegado al cierre (entre las preguntas y el botón): es la última duda antes de comprar. No va dentro del cierre, que lo recargaría. Por eso la ficha pasa `showPaymentExplainer={false}` al `Footer`: el recuadro del pie sigue en el resto del sitio.
 - **El cierre** (`destacado-cta.tsx`) lleva la foto del producto al lado y abre el checkout del hero con el evento `product:buy`, no con un modal propio. El copy sale de `closingCopy()`, que descarta al renderizar las promesas viejas de la IA («envío rápido», «24-48h», «garantía de satisfacción»).
 - El cierre dice «Envío gratis» o «Envío $12.000» según `isDestacado`, el mismo flag que lo cobra en `checkout-modal.tsx`.
@@ -687,7 +687,7 @@ Botón «🤖 Completar Destacado con IA» (pestaña Destacados, `sanity/compone
 - **Historia**: `vipStory.problemImage`, `turningPointImage`, `outcomeImage`. Los botones de IA MEZCLAN la historia con lo existente (`{ ...actual, ...generado }`) para no borrar esas fotos; si añades otra vía que escriba `vipStory`, haz lo mismo.
 - **Caja**: `vipBoxContents.pieces` (foto + nombre por pieza), que SUMA a la lista `items`, no la reemplaza.
 - **Pasos**: la imagen por paso ya existía (`vipSteps[].image`).
-- **Logo de Confío**: `components/confio-logo.tsx` con el logo oficial en `public/brands/`. Úsalo donde se explique el pago protegido, no un escudo genérico. Los de los medios de pago: `PaymentLogos` (`public/brands/pagos/`).
+- **Logo de Confío**: `components/confio-logo.tsx` con el logo oficial en `public/brands/`. Úsalo donde se explique el pago con Confío, no un escudo genérico. Los de los medios de pago: `PaymentLogos` (`public/brands/pagos/`).
 
 ### Bloques retirados de Destacados
 - **Citas destacadas** (`vipQuotes`): fuera del schema y de la landing. Se leían como relleno.

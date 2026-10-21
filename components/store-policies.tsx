@@ -31,7 +31,7 @@ function defaultPolicies(): StorePolicy[] {
     // página. Un comprador que lea las dos cosas no sabe cuál creer.
     title: advancePaymentEnabled() ? 'Paga al recibir, o con Confío' : 'Pagas cuando lo recibes',
     description: advancePaymentEnabled()
-      ? 'Contraentrega: pagas en efectivo cuando te lo entregan. Con Confío: pagas por PSE, Nequi o Bancolombia y la app retiene tu plata hasta que confirmes que llegó.'
+      ? 'Contraentrega: pagas en efectivo cuando te lo entregan. Con Confío: pagas en segundos por PSE, Nequi o Bancolombia, y el pago se confirma solo.'
       : 'Compra con total confianza. Paga en efectivo únicamente cuando recibas el producto en casa.',
   },
   {

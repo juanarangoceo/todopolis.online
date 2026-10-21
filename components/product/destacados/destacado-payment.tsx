@@ -1,49 +1,46 @@
-import { Banknote } from 'lucide-react'
+import Image from 'next/image'
+import { Banknote, Timer, Truck, Zap } from 'lucide-react'
 import { ConfioLogo } from '@/components/confio-logo'
-import { PaymentLogos } from '@/components/payment-logos'
+import { CONFIO_PAYMENT_LOGOS } from '@/components/payment-logos'
 import { DestacadoSection, DestacadoSectionHeader, DestacadoSplit } from './destacado-section-header'
 
 // «Cómo pagas», en la parte blanca de la landing, pegado al cierre: la última
 // objeción se resuelve justo antes del botón. Antes esta explicación vivía en
-// el pie de página, sobre fondo oscuro, DESPUÉS del botón de compra: quien
-// tenía la duda «¿y si pago y no llega?» la resolvía cuando ya se había ido.
+// el pie de página, sobre fondo oscuro, DESPUÉS del botón de compra.
 //
-// Narrativa de oct 2026, la de Nitro Complete: RAPIDEZ del pago y los logos de
-// los medios con que se paga. La rapidez es del PAGO —segundos para pagar,
-// minutos para que se confirme solo (la reconciliación con Confío corre cada
-// 5 min)—, no del envío: pagues como pagues, llega en 3 a 7 días hábiles, y
-// eso se dice en la misma fila para que nadie lea «pago rápido» como «llega
-// antes».
+// NARRATIVA (21-oct-2026, decisión de Juan): RAPIDEZ y MEDIOS DE PAGO, la de
+// Nitro Complete. NO se dice que Confío guarda, retiene o custodia el dinero,
+// ni que lo devuelve, ni se le llama «pago protegido» (ver
+// lib/payments/narrative.ts, que lo prohíbe también a la IA).
+//
+// La rapidez es del PAGO —segundos para pagar, minutos para que se confirme
+// solo (la reconciliación con Confío corre cada 5 min)—, no del envío: pagues
+// como pagues, llega en 3 a 7 días hábiles, y eso va en la misma fila para que
+// nadie lea «pago rápido» como «llega antes».
 //
 // Mismo criterio de encendido que PaymentMethods y el botón del checkout
-// (`NEXT_PUBLIC_CONFIO_ENABLED`): si el prepago está apagado no se pinta nada,
-// porque el hero y el cierre ya dicen «paga al recibir» y no hay nada más que
-// explicar. Se lee la variable directamente porque este es un componente de
-// servidor.
-//
-// CUIDADO CON LA PROMESA (ver CLAUDE.md → Confío): Confío retiene el PAGO, no
-// garantiza la ENTREGA. Aquí se dice quién guarda el dinero y cuándo lo
-// suelta; del despacho respondemos nosotros y eso no se le atribuye a Confío.
+// (`NEXT_PUBLIC_CONFIO_ENABLED`): si el prepago está apagado no se pinta nada.
+// Se lee la variable directamente porque este es un componente de servidor.
 
 // Plazo de entrega: el de `store-policies.tsx`.
 const SPEED = [
-  { big: 'Segundos', text: 'Lo que tardas en pagar con Confío desde tu celular.' },
-  { big: 'Minutos', text: 'Lo que tarda en confirmarse tu pago, solo. Sin mandar capturas ni comprobantes.' },
-  { big: '3 a 7 días hábiles', text: 'Lo que tarda en llegarte el pedido, pagues como pagues.' },
+  { icon: Zap, big: 'Segundos', text: 'Para pagar con Confío desde tu celular.' },
+  { icon: Timer, big: 'Minutos', text: 'Para que se confirme solo, sin comprobantes.' },
+  { icon: Truck, big: '3 a 7 días', text: 'Hábiles en llegarte, pagues como pagues.' },
 ]
 
 const CONFIO_STEPS = [
   {
+    title: 'Eliges Confío al pedir',
+    text: 'Te llevamos a Confío. Tus datos bancarios nunca pasan por Todópolis.',
+  },
+  {
     title: 'Pagas desde tu celular',
-    text: 'Con PSE, Nequi o Bancolombia, en segundos. Tus datos bancarios nunca pasan por Todópolis.',
+    text: 'Con PSE, Nequi o Bancolombia, lo que ya usas. Toma segundos.',
   },
   {
-    title: 'Confío guarda el dinero',
-    text: 'El pago se confirma solo y queda en custodia mientras preparamos y enviamos tu pedido. Nosotros no podemos tocarlo.',
-  },
-  {
-    title: 'Confirmas que llegó',
-    text: 'Ahí, y solo ahí, Confío nos entrega el pago. Si no llega, el dinero vuelve a ti.',
+    title: 'Se confirma solo',
+    text: 'En minutos, sin mandar capturas ni comprobantes. Y empezamos a preparar tu pedido.',
   },
 ]
 
@@ -62,15 +59,20 @@ const COD_STEPS = [
   },
 ]
 
+// Pasos numerados unidos por una línea: se leen como un recorrido, no como
+// tres datos sueltos.
 function Steps({ steps }: { steps: { title: string; text: string }[] }) {
   return (
-    <ol className="mt-6 space-y-5">
+    <ol className="mt-6">
       {steps.map((step, i) => (
-        <li key={step.title} className="flex gap-4">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface font-serif text-sm font-extrabold text-trust-fg ring-1 ring-trust-border">
+        <li key={step.title} className="relative flex gap-4 pb-6 last:pb-0">
+          {i < steps.length - 1 && (
+            <span aria-hidden className="absolute bottom-1 left-[15px] top-9 w-px bg-trust-border" />
+          )}
+          <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-trust-fg font-serif text-sm font-extrabold text-white">
             {i + 1}
           </span>
-          <div>
+          <div className="pt-1">
             <p className="font-bold leading-snug text-ink-title">{step.title}</p>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
           </div>
@@ -80,14 +82,15 @@ function Steps({ steps }: { steps: { title: string; text: string }[] }) {
   )
 }
 
+// Una ficha blanca por medio de pago, del mismo alto en las dos tarjetas.
+const tile = 'flex h-12 items-center justify-center rounded-xl border border-nav-inactive-border bg-surface px-2'
+
 // Las dos tarjetas son GEMELAS: mismo ancho, mismo alto y la misma estructura
-// (cabecera, antetítulo, titular, tres pasos y, abajo, con qué pagas). Eran
-// 2/5 contra 3/5 y la de contraentrega quedaba chata al lado de la de Confío:
-// se veía descuadrado y, peor, sugería que una vía era la de verdad y la otra
-// un apéndice. Las dos valen igual; el comprador elige en el último paso.
-const card = 'flex flex-col rounded-3xl border p-6 md:p-7'
-// El pie de las dos se alinea abajo aunque los pasos ocupen distinto alto.
-const cardFoot = 'mt-auto pt-6'
+// (cabecera, antetítulo, titular, tres pasos y, abajo, con qué pagas). Las dos
+// vías valen igual; el comprador elige en el último paso.
+const card = 'flex flex-col rounded-3xl border bg-surface p-6 shadow-sm md:p-7'
+const eyebrow = 'text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground'
+const cardTitle = 'mt-1 font-serif text-xl font-extrabold leading-tight tracking-[-0.01em] text-ink-title md:text-2xl'
 
 export function DestacadoPayment() {
   if (process.env.NEXT_PUBLIC_CONFIO_ENABLED !== 'true') return null
@@ -98,61 +101,61 @@ export function DestacadoPayment() {
         header={
           <DestacadoSectionHeader
             eyebrow="Cómo pagas"
-            title="Paga al recibir, o paga con Confío en segundos"
-            subtitle="Tú eliges en el último paso. En las dos vías el dinero no nos llega hasta que el pedido está en tus manos."
+            title="Paga en segundos con Confío, o al recibir"
+            subtitle="Tú eliges en el último paso: ya mismo con lo que tienes en el celular, o en efectivo cuando te llega. Sin tarjeta."
             className="lg:mb-0"
           />
         }
       >
-        {/* Filetes, no tarjetas: las tarjetas vienen justo debajo. */}
-        <dl className="grid gap-x-6 border-y border-nav-inactive-border py-5 sm:grid-cols-3">
-          {SPEED.map((item, i) => (
-            <div
-              key={item.big}
-              className={i > 0 ? 'mt-4 border-t border-nav-inactive-border pt-4 sm:mt-0 sm:border-t-0 sm:pt-0' : undefined}
-            >
-              <dt className="font-serif text-xl font-extrabold tracking-[-0.02em] text-ink-title md:text-2xl">{item.big}</dt>
-              <dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.text}</dd>
+        <dl className="grid grid-cols-3 gap-2 sm:gap-4">
+          {SPEED.map(({ icon: Icon, big, text }) => (
+            <div key={big} className="rounded-2xl bg-trust-bg p-3 sm:rounded-3xl sm:p-5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-trust-fg sm:h-10 sm:w-10">
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </span>
+              <dt className="mt-3 font-serif text-base font-extrabold leading-tight tracking-[-0.02em] text-ink-title sm:text-2xl">
+                {big}
+              </dt>
+              <dd className="mt-1 text-xs leading-snug text-foreground/70 sm:text-sm sm:leading-relaxed">{text}</dd>
             </div>
           ))}
         </dl>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className={`${card} border-nav-inactive-border bg-surface`}>
-            <div className="mb-5 flex h-9 items-center">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-trust-bg text-trust-fg">
-                <Banknote className="h-5 w-5" />
-              </span>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className={`${card} border-trust-border`}>
+            <div className="mb-5 flex h-10 items-center">
+              <ConfioLogo className="h-9 md:h-10" />
             </div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Contraentrega</p>
-            <h3 className="mt-1 font-serif text-xl font-bold leading-tight text-ink-title">
-              No adelantas nada: pagas cuando te lo entregan
-            </h3>
-            <Steps steps={COD_STEPS} />
-            <div className={cardFoot}>
-              <div className="border-t border-nav-inactive-border pt-5">
-                <p className="text-xs font-bold text-muted-foreground">Pagas con</p>
-                <p className="mt-2 flex h-7 items-center gap-1.5 text-sm font-bold text-trust-fg">
-                  <Banknote className="h-4 w-4" />
-                  Efectivo, al mensajero
-                </p>
-              </div>
+            <p className={eyebrow}>Pagas ya</p>
+            <h3 className={cardTitle}>Pagas en segundos</h3>
+            <Steps steps={CONFIO_STEPS} />
+            <div className="mt-auto pt-7">
+              <p className="text-xs font-bold text-muted-foreground">Pagas con lo que ya tienes en el celular</p>
+              <ul className="mt-3 grid grid-cols-3 gap-2" aria-label="Medios de pago con Confío">
+                {CONFIO_PAYMENT_LOGOS.map((logo) => (
+                  <li key={logo.src} className={tile}>
+                    <Image src={logo.src} alt={logo.alt} width={200} height={60} className="h-auto max-h-8 w-full object-contain" />
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          <div className={`${card} border-trust-border bg-trust-bg/60`}>
-            <div className="mb-5 flex h-9 items-center">
-              <ConfioLogo className="h-8 md:h-9" />
+          <div className={`${card} border-nav-inactive-border`}>
+            <div className="mb-5 flex h-10 items-center gap-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-trust-bg text-trust-fg">
+                <Banknote className="h-5 w-5" />
+              </span>
+              <span className="font-serif text-lg font-extrabold text-ink-title">Contraentrega</span>
             </div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Pago protegido</p>
-            <h3 className="mt-1 font-serif text-xl font-bold leading-tight text-ink-title">
-              Pagas en segundos, y la plata la guarda Confío
-            </h3>
-            <Steps steps={CONFIO_STEPS} />
-            <div className={cardFoot}>
-              <div className="border-t border-trust-border pt-5">
-                <p className="text-xs font-bold text-muted-foreground">Pagas con lo que ya tienes en el celular</p>
-                <PaymentLogos className="mt-2 gap-x-2 md:gap-x-4" logoClassName="h-6 md:h-7" />
+            <p className={eyebrow}>Pagas al recibir</p>
+            <h3 className={cardTitle}>No adelantas nada</h3>
+            <Steps steps={COD_STEPS} />
+            <div className="mt-auto pt-7">
+              <p className="text-xs font-bold text-muted-foreground">Pagas con</p>
+              <div className={`${tile} mt-3 gap-2 text-sm font-bold text-ink-title`}>
+                <Banknote className="h-4 w-4 text-trust-fg" />
+                Efectivo, al mensajero
               </div>
             </div>
           </div>

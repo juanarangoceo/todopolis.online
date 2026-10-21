@@ -94,12 +94,12 @@ export default async function Home() {
         // y las cifras son las de `store-policies.tsx`.
         {
           iconName: 'WalletCards',
-          // "No pagas hasta recibir" era media verdad desde que hay prepago:
-          // con Confío sí pagas antes, solo que la plata la retiene la app y no
-          // nosotros. El título nombra las dos vías y a quién la custodia.
+          // "No pagas hasta recibir" era media verdad desde que hay prepago. El
+          // título nombra las dos vías; Confío se cuenta por rapidez y medios de
+          // pago, sin decir que guarda el dinero (lib/payments/narrative.ts).
           title: advancePaymentEnabled() ? 'Pagas al recibir, o con Confío' : 'Pagas cuando lo recibes',
           description: advancePaymentEnabled()
-            ? 'En efectivo cuando te lo entregan, o por PSE, Nequi o Bancolombia: Confío retiene tu plata hasta que confirmes que llegó.'
+            ? 'En efectivo cuando te lo entregan, o en segundos desde tu celular con Confío: PSE, Nequi o Bancolombia.'
             : 'En efectivo, en la puerta de tu casa. Sin tarjetas ni adelantos.',
         },
         { iconName: 'Truck', title: 'Llega en 3 a 7 días hábiles', description: 'Envío $12.000 a todo el país. Gratis en Destacados.' },

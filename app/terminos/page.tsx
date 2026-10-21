@@ -90,10 +90,8 @@ export default function TerminosPage() {
             el producto.
           </li>
           <li>
-            <strong>Pago anticipado con Confío:</strong> pagas por PSE, Nequi o Bancolombia y{' '}
-            <strong>Confío retiene el dinero en custodia</strong>, liberándolo al vendedor solo
-            cuando confirmas que recibiste. Confío retiene el pago; no garantiza la entrega, de
-            la cual respondemos nosotros.
+            <strong>Pago anticipado con Confío:</strong> pagas por PSE, Nequi o Bancolombia a
+            través de Confío, que procesa el pago. De la entrega respondemos nosotros.
           </li>
         </ul>
         <p>

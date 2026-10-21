@@ -29,7 +29,7 @@ comprar por internet. Todo lo demás sale de ahí: la página tiene que verse
 a llegar?» antes que cualquier otra.
 
 **Promesa.** Productos útiles, a buen precio, con condiciones claras:
-- Pagas al recibir, o con Confío (tu plata queda en custodia hasta que confirmes que llegó).
+- Pagas al recibir, o en segundos con Confío (PSE, Nequi o Bancolombia; se confirma solo, sin comprobantes).
 - Llega en 3 a 7 días hábiles. Envío $12.000, gratis en Destacados.
 - 30 días por defecto de fábrica. Derecho de retracto de 5 días hábiles.
 - Te atendemos por WhatsApp.
@@ -66,7 +66,7 @@ cortas, datos concretos. Cálido, no empalagoso; directo, no agresivo.
 |---|---|
 | «Llega en 3 a 7 días hábiles» | «Envío rapidísimo» |
 | «Busca entre 578 productos» | «Busca tu producto mágico…» |
-| «Pagas al recibir, o con Confío» | «Tu dinero está protegido» (¿por quién?) |
+| «Pagas al recibir, o en segundos con Confío» | «Tu dinero está protegido», «pago protegido», «Confío guarda tu plata» |
 | «30 días si llega con defecto» | «Garantía total de satisfacción» |
 | «Te puede interesar» | «¡No te lo pierdas!» |
 | «Pregúntanos por WhatsApp» | «¡Nuestro equipo está 24/7 para ti! ✨» |
@@ -75,8 +75,11 @@ cortas, datos concretos. Cálido, no empalagoso; directo, no agresivo.
 - **Sin emojis** en la interfaz ni en el contenido de producto.
 - **Cifras antes que adjetivos.** Un número responde una duda; un adjetivo no.
 - **Sin urgencia falsa.** Solo hay cuenta regresiva si hay `offerEndsAt`.
-- **Nombrar a Confío** cuando se hable de pago anticipado, y no prometer lo que
-  Confío no hace: retiene el pago, no garantiza la entrega.
+- **Nombrar a Confío** cuando se hable de pago anticipado, y contarlo por
+  **rapidez y medios de pago** (segundos para pagar, se confirma solo; PSE,
+  Nequi, Bancolombia). **Nunca** decir que Confío guarda, retiene o protege el
+  dinero, ni «pago protegido» (decisión del 21-oct-2026). Confío procesa el
+  pago; no garantiza la entrega.
 - **Títulos que dicen qué hay, sin subtítulo que lo repita.** «Lo último que
   llegó a Todópolis» no necesita «Doce novedades del catálogo» debajo.
 - **Botones con verbo del cliente:** «Lo quiero, pedir ahora», «Suscribirme»,
