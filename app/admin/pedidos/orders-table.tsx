@@ -25,6 +25,7 @@ export interface OrderRow {
   customer_address_details: string | null
   customer_city_code: string | null
   variant_name: string | null
+  variant_id: number | null
   status: string
   payment_method: string | null
   payment_status: string | null
@@ -60,7 +61,7 @@ function fecha(iso: string) {
   return `${d.getUTCDate()} de ${MONTHS[d.getUTCMonth()]}, ${String(h12).padStart(2, '0')}:${mm} ${h24 < 12 ? 'a. m.' : 'p. m.'}`
 }
 
-export function OrdersTable({ orders }: { orders: OrderRow[] }) {
+export function OrdersTable({ orders, dropi = {} }: { orders: OrderRow[]; dropi?: Record<string, number> }) {
   const [filter, setFilter] = useState<'todos' | OrderStatus>('todos')
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ id: string; text: string; ok: boolean } | null>(null)
@@ -154,6 +155,13 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
                     )}
                     {o.quantity && o.quantity > 1 && (
                       <p className="text-xs text-muted-foreground">×{o.quantity}</p>
+                    )}
+                    {o.product_id && dropi[o.product_id] && (
+                      // Se despacha creando el pedido a mano en Dropi, con estos IDs.
+                      <p className="mt-1 text-xs font-semibold text-foreground">
+                        Dropi · crear a mano · producto #{dropi[o.product_id]}
+                        {o.variant_id ? ` · variación #${o.variant_id}` : ''}
+                      </p>
                     )}
                   </td>
                   <td className="px-4 py-3 max-w-[240px]">

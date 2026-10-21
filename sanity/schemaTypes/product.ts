@@ -220,7 +220,7 @@ export const productType = defineType({
       title: 'ID en Dropi',
       type: 'number',
       group: 'basics',
-      description: 'Producto importado de Dropi. Todavía NO se puede vender: el checkout lo rechaza hasta conectar los pedidos con Dropi.',
+      description: 'Producto importado de Dropi. Sus pedidos se crean A MANO en Dropi: /admin/pedidos muestra este ID y el de la variación.',
       readOnly: true,
       hidden: ({ document }) => !document?.dropiId,
     }),

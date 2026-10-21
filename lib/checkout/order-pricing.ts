@@ -15,10 +15,6 @@ import { priceForQuantity } from '@/lib/quantity-offers'
 export async function resolveOrderProduct(slug: string, variantId: number | null) {
   const product = await getSanityProductBySlug(slug)
   if (!product) return null
-  // Los pedidos de Dropi todavía no llegan a Dropi (TOD-16): ni Nitro ni
-  // Confío saben despacharlos. Un producto de Dropi publicado por error no
-  // debe generar pedidos que nadie puede cumplir.
-  if (typeof product.dropiId === 'number') return null
 
   // La variante sale de Sanity, no del navegador: su NOMBRE es lo que ve quien
   // despacha (aquí y en Nitro), y el del formulario podía no corresponder al

@@ -28,8 +28,8 @@ Implementado y probado el 21-oct-2026 con la cuenta real:
   $76.900) y «Faja cinturilla Miss Belt» (289205, 8 variantes talla/color,
   categoría Fajas). No se encontró un producto simple agotado: Dropi oculta los
   agotados del catálogo; ese caso lo cubre la sincronización (stock 0).
-- El checkout rechaza productos de Dropi hasta definir cómo se crean sus
-  pedidos en Dropi.
+- Pedidos: se crean a mano en Dropi (decisión del propietario).
+  `/admin/pedidos` marca los de Dropi con el ID de producto y de variación.
 
 Detalle en CLAUDE.md, «Dropi — conexión MCP». El fallo de build del 20-oct
 era del entorno Preview de Vercel (faltaba `NEXT_PUBLIC_SANITY_PROJECT_ID`):

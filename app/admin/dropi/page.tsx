@@ -170,7 +170,7 @@ function CatalogSearch() {
   return (
     <section className="rounded-3xl border border-nav-inactive-border bg-surface p-5 shadow-sm" aria-labelledby="catalog-title">
       <h2 id="catalog-title" className="font-serif text-lg font-bold text-ink-title">Importar del catálogo de Dropi</h2>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Cada producto entra como borrador, con sus fotos, textos e etiquetas hechos con IA y un precio sugerido desde el costo. Costo, stock y variantes se actualizan solos cada hora. Todavía no se pueden vender: el checkout los rechaza hasta conectar los pedidos con Dropi.</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Cada producto entra como borrador, con sus fotos, textos e etiquetas hechos con IA y un precio sugerido desde el costo. Costo, stock y variantes se actualizan solos cada hora. Al publicarlo se vende como cualquier otro; el pedido se crea a mano en Dropi con los IDs que muestra Pedidos.</p>
       <form className="mt-4 flex flex-wrap gap-3" onSubmit={(e) => { e.preventDefault(); search() }}>
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Busca por nombre: cobija, faja, audífonos…" aria-label="Buscar en Dropi" className="min-w-0 flex-1 rounded-xl border border-nav-inactive-border px-4 py-2.5 text-sm" />
         <button type="submit" disabled={busy} className="rounded-xl bg-ink-title px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">{busy ? 'Buscando…' : 'Buscar'}</button>

@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getSanityClient } from '@/lib/sanity/client'
 import { AdminPage, StatCard } from '../_components/ui'
 import { ORDER_STATUS_LABEL, type OrderStatus } from '@/lib/orders'
 import { OrdersTable, type OrderRow } from './orders-table'
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic'
 const COLUMNS =
   'id, created_at, product_name, product_id, price, quantity, customer_name, customer_phone, ' +
   'customer_city, customer_address, customer_department, customer_neighborhood, ' +
-  'customer_address_details, customer_city_code, variant_name, status, payment_method, payment_status, ' +
+  'customer_address_details, customer_city_code, variant_name, variant_id, status, payment_method, payment_status, ' +
   'utm_source, utm_campaign, utm_content, fbclid, meta_purchase_sent_at'
 
 function formatCop(n: number) {
@@ -42,6 +43,18 @@ export default async function PedidosPage() {
   }
 
   const orders = (data ?? []) as unknown as OrderRow[]
+
+  // Los pedidos de productos de Dropi se crean A MANO en Dropi: el panel
+  // muestra los IDs que hay que usar allá. `product_id` es el slug.
+  const slugs = [...new Set(orders.map((o) => o.product_id).filter((s): s is string => !!s))]
+  const dropiRows: Array<{ slug: string; dropiId: number }> = slugs.length
+    ? await getSanityClient().fetch(
+        '*[_type == "product" && slug.current in $slugs && defined(dropiId) && !(_id in path("drafts.**"))]{ "slug": slug.current, dropiId }',
+        { slugs },
+        { cache: 'no-store' },
+      ).catch(() => [])
+    : []
+  const dropi = Object.fromEntries(dropiRows.map((r) => [r.slug, r.dropiId]))
 
   // ── Resumen ───────────────────────────────────────────────────────────────
   // Lo que Meta NO puede decirte: de los pedidos que entraron, cuántos se
@@ -135,7 +148,7 @@ export default async function PedidosPage() {
             .join(' · ')})
         </span>
       </h2>
-      <OrdersTable orders={orders} />
+      <OrdersTable orders={orders} dropi={dropi} />
     </AdminPage>
   )
 }
