@@ -1,3 +1,7 @@
+import { createEditorialModel, EDITORIAL_MODEL } from './ai/gemini.ts'
+import type { InlineImage } from './ai/gemini.ts'
+export { fetchInlineImages } from './ai/reference-images.ts'
+export type { InlineImage } from './ai/gemini.ts'
 // Contenido de texto para completar un Destacado con IA: titular de campaña,
 // historia, pasos de uso y «qué viene en la caja».
 //
@@ -12,7 +16,7 @@
 import { CAMPAIGN_STORY_RULES } from './product-content-prompt.ts'
 import type { UsageSink } from './ai/pricing.ts'
 
-export const DESTACADO_MODEL = 'gemini-3.8-flash'
+export const DESTACADO_MODEL = EDITORIAL_MODEL
 
 export interface DestacadoNeeds {
   headline?: boolean
@@ -46,10 +50,6 @@ export interface DestacadoContent {
   box?: { title: string; intro?: string; items: string[] }
 }
 
-export interface InlineImage {
-  mimeType: string
-  data: string
-}
 
 export function buildDestacadoPrompt(input: DestacadoInput, needs: DestacadoNeeds, imageCount: number): string {
   const specs = (input.specifications ?? [])
@@ -142,24 +142,6 @@ export function sanitizeDestacadoContent(raw: unknown, needs: DestacadoNeeds): D
   return out
 }
 
-/** Baja fotos y las deja como `inlineData` para Gemini. Best-effort. */
-export async function fetchInlineImages(urls: string[], timeoutMs = 8_000): Promise<InlineImage[]> {
-  const settled = await Promise.all(
-    urls.slice(0, 3).map(async (url): Promise<InlineImage | null> => {
-      try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
-        if (!res.ok) return null
-        const header = res.headers.get('content-type')?.split(';')[0].trim() ?? ''
-        const mimeType = header.startsWith('image/') ? header : 'image/jpeg'
-        return { mimeType, data: Buffer.from(await res.arrayBuffer()).toString('base64') }
-      } catch {
-        return null
-      }
-    }),
-  )
-  return settled.filter((i): i is InlineImage => i !== null)
-}
-
 /** Llama a Gemini y devuelve solo lo que pasó la validación. */
 export async function generateDestacadoContent(opts: {
   apiKey: string
@@ -171,36 +153,13 @@ export async function generateDestacadoContent(opts: {
   const { apiKey, input, needs, images = [] } = opts
   if (!needs.headline && !needs.story && !needs.steps && !needs.box) return {}
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${DESTACADO_MODEL}:generateContent?key=${apiKey}`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        role: 'user',
-        parts: [
-          ...images.map((image) => ({ inlineData: image })),
-          { text: buildDestacadoPrompt(input, needs, images.length) },
-        ],
-      }],
-      generationConfig: { temperature: 0.7, responseMimeType: 'application/json' },
-    }),
+  const model = createEditorialModel({ apiKey, source: 'destacado', onUsage: opts.onUsage })
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [
+      ...images.map((image) => ({ inlineData: image })),
+      { text: buildDestacadoPrompt(input, needs, images.length) },
+    ] }],
+    generationConfig: { temperature: 0.7 },
   })
-  if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 200)}`)
-  const data = await res.json()
-  const um = data?.usageMetadata ?? {}
-  opts.onUsage?.('destacado', {
-    inputTokens: um.promptTokenCount,
-    outputTokens: um.candidatesTokenCount,
-    thoughtsTokens: um.thoughtsTokenCount,
-    cachedTokens: um.cachedContentTokenCount,
-  })
-  const text = (data?.candidates?.[0]?.content?.parts ?? [])
-    .filter((p: any) => !p.thought && typeof p.text === 'string')
-    .map((p: any) => p.text)
-    .join('')
-    .replace(/```json\n?|```\n?/g, '')
-    .trim()
-  if (!text) throw new Error('El modelo no devolvió texto.')
-  return sanitizeDestacadoContent(JSON.parse(text), needs)
+  return sanitizeDestacadoContent(JSON.parse(result.response.text()), needs)
 }

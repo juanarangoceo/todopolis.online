@@ -1,9 +1,10 @@
+import { authorizeEditorialRequest } from '@/lib/ai/authorize'
 import { NextRequest, NextResponse } from 'next/server'
-import { geminiUsage, recordAiUsage } from '@/lib/ai/usage'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createUsageCollector } from '@/lib/ai/usage'
+import { createEditorialModel } from '@/lib/ai/gemini'
 import { SYSTEM_PROMPT, COLLECTION_COPY_TEMPERATURE } from '@/lib/collection-content-prompt'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+export const maxDuration = 120
 
 interface CollectionProductInput {
   name: string
@@ -29,6 +30,8 @@ function formatProductsForPrompt(products: CollectionProductInput[]): string {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeEditorialRequest(request)
+  if (denied) return denied
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
       { error: 'GEMINI_API_KEY no está configurada.' },
@@ -36,19 +39,20 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { segmentHint, products } = await request.json()
+  const body = await request.json().catch(() => null)
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return NextResponse.json({ error: 'Solicitud inválida.' }, { status: 400 })
+  const { segmentHint, products } = body
 
-  if (!Array.isArray(products) || products.length < 3) {
+  if (!Array.isArray(products) || products.length < 3 || products.length > 6 || !products.every((p) => p && typeof p.name === 'string' && p.name.trim() && (p.shortDescription == null || typeof p.shortDescription === 'string') && (p.specifications == null || (Array.isArray(p.specifications) && p.specifications.every((s: { label?: unknown; value?: unknown } | null) => s && typeof s.label === 'string' && typeof s.value === 'string'))))) {
     return NextResponse.json(
-      { error: 'Se requieren al menos 3 productos.' },
+      { error: 'Se requieren entre 3 y 6 productos con datos válidos.' },
       { status: 400 }
     )
   }
 
+  const usage = createUsageCollector(`collection:${crypto.randomUUID()}`)
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-3.8-flash',
-    })
+    const model = createEditorialModel({ source: 'collection', onUsage: usage.sink })
 
     const segmentLine = segmentHint
       ? `Segmento: ${segmentHint}\n\n`
@@ -59,34 +63,9 @@ export async function POST(request: NextRequest) {
       contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\n' + userPrompt }] }],
       generationConfig: {
         temperature: COLLECTION_COPY_TEMPERATURE,
-      } as any,
+      },
     })
-    // Consumo para /admin/profit. Una colección no es un producto: flow propio.
-    await recordAiUsage({ source: 'collection', flow: `collection:${crypto.randomUUID()}`, ...geminiUsage(result.response.usageMetadata) })
-
-    // Gemini thinking mode devuelve "thought" parts además del texto real.
-    // response.text() lanza si NO hay partes no-thought; extraemos manualmente.
-    const candidate = result.response.candidates?.[0]
-    const parts = candidate?.content?.parts ?? []
-
-    const rawText = parts
-      .filter((p: any) => !p.thought && typeof p.text === 'string' && p.text.trim())
-      .map((p: any) => p.text)
-      .join('')
-
-    if (!rawText) {
-      const fallbackText = result.response.text?.()
-      if (!fallbackText) {
-        throw new Error('El modelo no devolvió texto. Intenta de nuevo.')
-      }
-      const cleanFallback = fallbackText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-      return NextResponse.json(JSON.parse(cleanFallback))
-    }
-
-    const cleanText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    const content = JSON.parse(cleanText)
-
-    return NextResponse.json(content)
+    return NextResponse.json(JSON.parse(result.response.text()))
   } catch (error: any) {
     const message = error?.message || error?.toString() || 'Error desconocido'
     console.error('Error generando contenido de colección con Gemini:', message)
@@ -94,5 +73,7 @@ export async function POST(request: NextRequest) {
       { error: `Error al generar contenido: ${message}` },
       { status: 500 }
     )
+  } finally {
+    await usage.flush()
   }
 }

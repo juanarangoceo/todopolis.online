@@ -364,7 +364,7 @@ Antes el botón mandaba `imageAssetId` y la ruta lo descartaba: el copy se escri
 
 - Las fotos se piden a **1024 px y JPG** (`urlForImage(...).width(1024)`), no el original: el PNG de 4 MB que sube el editor se come el presupuesto del `maxDuration = 60`.
 - Bajarlas es **best-effort**: si una falla, se genera con las que haya. Si no baja ninguna, el bloque de fotos **no se añade** — instruirle al modelo que "mire las fotos" cuando no hay ninguna lo empuja a describir lo que cree ver.
-- El import de Mastershop **no** lleva estos bloques: manda solo texto, como siempre.
+- Desde TOD-16, el import manual y el cron de Mastershop también adjuntan la foto real mediante el lector compartido `lib/ai/reference-images.ts`.
 
 ### Categorías — fuente única en `lib/categories.ts`, clasificadas por JEV
 `PRODUCT_CATEGORIES` alimenta el dropdown del schema, las pestañas del home (solo las que tienen productos), `/ofertas`, los títulos del blog (`categoryTitle`), el clasificador y el script de limpieza. **Cualquier vía que escriba `category` valida contra esa lista.** Cada categoría lleva `description`: es el criterio que recibe el clasificador, escrito para los casos de frontera.
@@ -425,13 +425,12 @@ También se quitó de la ficha "Lecturas que aclaran dudas" (`suggested-blogs.ts
 `useFormValue(['_id'])` devuelve el id **publicado** cuando estás viendo un producto publicado. Parchear ese id tiene dos efectos: el cambio sale a producción sin pasar por Publish, y si había un borrador abierto, publicarlo después lo pisa con la versión vieja — era lo que hacía desaparecer fotos recién subidas. Si agregas otro botón que escriba en el documento, pásalo por ese helper.
 
 ### Creación de productos — pendientes conocidos
-Detectados el 16-sep-2026 al revisar el flujo manual. Ninguno está resuelto:
+Detectados el 16-sep-2026; actualización de TOD-16 el 20-oct-2026:
 
-- **Las rutas de IA no tienen autenticación.** `/api/generate-product-content` y
-  `/api/generate-ai-image` son públicas: quien sepa la URL puede quemar cuota de
-  Gemini/OpenAI y, la segunda, subir assets a Sanity. Se llaman desde el
-  navegador del Studio, así que protegerlas exige algo que viaje con esa sesión
-  — la cookie de `/api/admin/auth` NO sirve, el Studio no la tiene.
+- **Autenticación de IA resuelta:** las seis rutas `generate-*` exigen la sesión
+  firmada del panel mediante `lib/ai/authorize.ts`. Para generar en el Studio,
+  iniciar sesión primero en `/admin/login` en el mismo dominio. La cookie ya
+  vive en `path=/` y viaja también a las rutas de generación.
 - **No hay validación de publicación.** Solo `name` y `slug` son `required`. Se
   puede publicar un producto sin precio, sin foto y sin landing, y sale al home.
 - **184 productos manuales sin FAQs.** Los creados antes de que el botón las
@@ -460,7 +459,7 @@ Layout propio con barra lateral (`app/admin/layout.tsx`, `_components/admin-nav.
 ### Sesión del panel: token firmado (`lib/admin-session.ts`, con test)
 La cookie `admin_session` valía el texto fijo `authenticated` y el proxy solo comprobaba eso: **cualquiera que la escribiera a mano entraba**. Además vivía en `path=/admin`, así que `/api/mastershop/import`, `/products` y `/sanity-ids` no la recibían y **estaban abiertas** (importar productos gastando IA, leer costos del proveedor). Ahora: `v1.<expira>.<HMAC-SHA256>`, 8 h, `path=/`, clave de `ADMIN_SESSION_SECRET` o, si no está, de `ADMIN_DASHBOARD_PASSWORD` (cambiarla cierra todas las sesiones). El proxy protege `/admin/*` y esas tres rutas de API; `updateOrderStatus` verifica igual. El login ya no guarda la contraseña en `localStorage`. **Ojo al tocar el login:** `response.cookies.set` con dos cookies del mismo nombre deja solo la última; el borrado de la cookie vieja (`path=/admin`) va con `headers.append`, o se come la sesión nueva (pasó el 23-sep-2026: nadie podía entrar). Pruébalo llenando el formulario, no inyectando la cookie. **Cualquier ruta nueva que solo use el panel va en `ADMIN_API_PREFIXES` de `proxy.ts`.**
 
-Siguen públicas, a propósito por ahora, las rutas que llama el **Studio** (`generate-product-content`, `generate-ai-image`, `generate-article`, `generate-destacado-content`, `generate-collection-content`): el Studio no tiene la cookie del panel (ver «pendientes conocidos»).
+Las seis rutas de generación del Studio exigen ahora sesión administrativa y validan el origen en el handler. `/admin/dropi` muestra el diagnóstico público de OAuth detrás de la misma sesión. El piloto sigue bloqueado por el issuer inconsistente de Dropi; ver `docs/tod-16-dropi-mcp.md`.
 
 ### Nitro Profit — costo de la IA (`/admin/profit`)
 Mismo patrón que `nitro_bot/app/admin/profit`, adaptado:

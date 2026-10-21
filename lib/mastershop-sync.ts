@@ -1,10 +1,12 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { fetchInlineImages } from './ai/reference-images'
+import { PRODUCT_CONTENT_SCHEMA, validateProductContent } from './ai/product-contract'
+import { createEditorialModel } from './ai/gemini'
 import { generateAndSaveArticle } from './generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from './auto-tag'
-import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from './product-content-prompt'
+import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE, buildImageAnalysisBlock } from './product-content-prompt'
 import { classifyFromSource } from './category-classifier'
 import { ADULT_CATEGORY, isAllowedAdultProduct } from './adult-policy'
-import { createUsageCollector, geminiUsage } from './ai/usage'
+import { createUsageCollector } from './ai/usage'
 import type { UsageSink } from './ai/pricing'
 import { audienceFitFromAi } from './audience-fit'
 
@@ -190,14 +192,14 @@ async function importProductInner(
     return null
   }
 
-  const genAI = new GoogleGenerativeAI(geminiKey)
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' })
+  const model = createEditorialModel({ apiKey: geminiKey, source: 'product_copy', responseJsonSchema: PRODUCT_CONTENT_SCHEMA, validate: validateProductContent, onUsage })
 
   // Copy + auto-tagging en paralelo (mismo patrón que el import manual). El
   // tagging es best-effort: si falla, el producto se crea igual sin tags.
+  const referenceImages = await fetchInlineImages(imageUrl ? [imageUrl] : [])
   const copyPromise = model.generateContent({
-    contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\nProducto: ' + name + '\n\nDescripción: ' + (description || name) }] }],
-    generationConfig: { temperature: PRODUCT_COPY_TEMPERATURE } as any,
+    contents: [{ role: 'user', parts: [...referenceImages.map((image) => ({ inlineData: image })), { text: SYSTEM_PROMPT + buildImageAnalysisBlock(referenceImages.length) + '\n\nProducto: ' + name + '\n\nDescripción: ' + (description || name) }] }],
+    generationConfig: { temperature: PRODUCT_COPY_TEMPERATURE },
   })
 
   const tagsPromise = (async () => {
@@ -210,16 +212,11 @@ async function importProductInner(
     }
   })()
 
+  // Espera también el tagging antes de cerrar la contabilidad, incluso si falla el copy.
+  await Promise.allSettled([copyPromise, tagsPromise])
   const aiResult = await copyPromise
-  onUsage('product_copy', geminiUsage(aiResult.response.usageMetadata))
 
-  const candidate = aiResult.response.candidates?.[0]
-  const parts = candidate?.content?.parts ?? []
-  const rawText =
-    parts
-      .filter((part: any) => !part.thought && typeof part.text === 'string' && part.text.trim())
-      .map((part: any) => part.text)
-      .join('') || aiResult.response.text?.()
+  const rawText = aiResult.response.text()
 
   if (!rawText) throw new Error('Gemini no devolvió contenido')
 

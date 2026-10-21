@@ -1,17 +1,19 @@
+import { fetchInlineImages } from '@/lib/ai/reference-images'
+import { PRODUCT_CONTENT_SCHEMA, validateProductContent } from '@/lib/ai/product-contract'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createEditorialModel } from '@/lib/ai/gemini'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
-import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE } from '@/lib/product-content-prompt'
+import { SYSTEM_PROMPT, PRODUCT_COPY_TEMPERATURE, buildImageAnalysisBlock } from '@/lib/product-content-prompt'
 import { classifyFromSource } from '@/lib/category-classifier'
 import { ADULT_CATEGORY, isAllowedAdultProduct } from '@/lib/adult-policy'
-import { createUsageCollector, geminiUsage } from '@/lib/ai/usage'
+import { createUsageCollector } from '@/lib/ai/usage'
 import { audienceFitFromAi } from '@/lib/audience-fit'
 import { slugifyProductName } from '@/lib/slugify'
 
-// Allow up to 60s — import includes AI generation + Sanity write
-export const maxDuration = 60
+// Copy y artículo son dos generaciones secuenciales, más las escrituras.
+export const maxDuration = 240
 
 const MS_BASE = 'https://prod.api.mastershop.com/api'
 
@@ -135,16 +137,16 @@ export async function POST(request: NextRequest) {
     }
 
     // ── STEP 2: Generate AI content with Gemini (en paralelo con auto-tagging) ──
-    const genAI = new GoogleGenerativeAI(geminiKey)
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' })
+    const model = createEditorialModel({ apiKey: geminiKey, source: 'product_copy', responseJsonSchema: PRODUCT_CONTENT_SCHEMA, validate: validateProductContent, onUsage: usage.sink })
 
     const userPrompt = `Producto: ${name}\n\nDescripción: ${description || name}`
 
     // Arrancamos copy generation y auto-tagging en paralelo: ambos llaman a Gemini
     // y son independientes. Las tags son best-effort (no bloquean si fallan).
+    const referenceImages = await fetchInlineImages(imageUrl ? [imageUrl] : [])
     const copyPromise = model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\n' + userPrompt }] }],
-      generationConfig: { temperature: PRODUCT_COPY_TEMPERATURE } as any,
+      contents: [{ role: 'user', parts: [...referenceImages.map((image) => ({ inlineData: image })), { text: SYSTEM_PROMPT + buildImageAnalysisBlock(referenceImages.length) + '\n\n' + userPrompt }] }],
+      generationConfig: { temperature: PRODUCT_COPY_TEMPERATURE },
     })
 
     const tagsPromise = (async () => {
@@ -157,17 +159,12 @@ export async function POST(request: NextRequest) {
       }
     })()
 
+    // Espera también el tagging antes de cerrar la contabilidad, incluso si falla el copy.
+    await Promise.allSettled([copyPromise, tagsPromise])
     const aiResult = await copyPromise
-    usage.sink('product_copy', geminiUsage(aiResult.response.usageMetadata))
 
     // Extract text safely (handles thinking models)
-    const candidate = aiResult.response.candidates?.[0]
-    const parts = candidate?.content?.parts ?? []
-    const rawText =
-      parts
-        .filter((part: any) => !part.thought && typeof part.text === 'string' && part.text.trim())
-        .map((part: any) => part.text)
-        .join('') || aiResult.response.text?.()
+    const rawText = aiResult.response.text()
 
     if (!rawText) throw new Error('Gemini no devolvió contenido')
 

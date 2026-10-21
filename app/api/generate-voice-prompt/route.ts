@@ -1,9 +1,8 @@
+import { authorizeEditorialRequest } from '@/lib/ai/authorize'
 import { NextRequest, NextResponse } from 'next/server'
-import { geminiUsage, recordAiUsage } from '@/lib/ai/usage'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createUsageCollector } from '@/lib/ai/usage'
+import { createEditorialModel } from '@/lib/ai/gemini'
 import { getSanityClient } from '@/lib/sanity/client'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 const SYSTEM_PROMPT = `Eres un director creativo de un call center premium con 20 años de experiencia entrenando a las mejores closers de venta telefónica de Latinoamérica. Tu trabajo es escribir el guion maestro (system prompt) para una asistente de voz IA en tiempo real llamada "Lucy", anclada a UN solo producto en una tienda colombiana llamada Todópolis.
 
@@ -70,7 +69,11 @@ FORMATO DE SALIDA:
 
 Responde ÚNICAMENTE con el texto del prompt, listo para pegar como system instructions del modelo de voz. NO uses markdown, NO uses encabezados con almohadilla, NO añadas explicaciones tuyas. Debe leerse como un brief operativo a Lucy, en segunda persona, con párrafos cortos numerados o separados por líneas en blanco. Incluye un banco de objeciones explícito con la respuesta literal sugerida. Apunta a 900-1600 palabras de prompt limpio.`
 
+export const maxDuration = 120
+
 export async function POST(request: NextRequest) {
+  const denied = await authorizeEditorialRequest(request)
+  if (denied) return denied
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
       { error: 'GEMINI_API_KEY no está configurada.' },
@@ -83,6 +86,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Falta productId.' }, { status: 400 })
   }
 
+  const usage = createUsageCollector(`voice_prompt:${crypto.randomUUID()}`)
   try {
     const client = getSanityClient()
     const product = await client.fetch(
@@ -137,25 +141,14 @@ Hero título: ${product.heroTitle ?? '—'}
 Hero subtítulo: ${product.heroSubtitle ?? '—'}
 Descripción breve: ${product.shortDescription ?? '—'}${offerBlock}${benefitsBlock}${specsBlock}${faqsBlock}`
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
+    const model = createEditorialModel({ source: 'voice_prompt', format: 'text', onUsage: usage.sink })
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\n' + productBrief }] }],
-      generationConfig: { temperature: 0.9 } as any,
+      generationConfig: { temperature: 0.9 },
     })
-    await recordAiUsage({ source: 'voice_prompt', ...geminiUsage(result.response.usageMetadata) })
 
-    const candidate = result.response.candidates?.[0]
-    const parts = candidate?.content?.parts ?? []
-
-    let raw = parts
-      .filter((p: any) => !p.thought && typeof p.text === 'string' && p.text.trim())
-      .map((p: any) => p.text)
-      .join('')
-
-    if (!raw) {
-      raw = result.response.text?.() ?? ''
-    }
+    const raw = result.response.text()
 
     const prompt = raw.replace(/```[a-z]*\n?/gi, '').trim()
 
@@ -168,5 +161,7 @@ Descripción breve: ${product.shortDescription ?? '—'}${offerBlock}${benefitsB
     const message = error?.message || error?.toString() || 'Error desconocido'
     console.error('[generate-voice-prompt]', message)
     return NextResponse.json({ error: `Error al generar prompt: ${message}` }, { status: 500 })
+  } finally {
+    await usage.flush()
   }
 }

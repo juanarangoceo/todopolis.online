@@ -1,3 +1,5 @@
+import { fetchInlineImages } from '@/lib/ai/reference-images'
+import { authorizeEditorialRequest } from '@/lib/ai/authorize'
 import { NextRequest, NextResponse } from 'next/server'
 import { openaiImageUsage, recordAiUsage } from '@/lib/ai/usage'
 import { createClient } from 'next-sanity'
@@ -69,35 +71,11 @@ function buildImagePrompt(name: string, heroTitle: string, description: string, 
 // Tiene que existir en AI_MODELS (lib/ai/pricing.ts) o Nitro Profit lo cuenta en cero.
 const IMAGE_MODEL = 'gpt-image-2.5-sunburst'
 
-const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-
-function resolveContentType(url: string, header: string | null): string {
-  // Use header if it's a valid image type (strip quality params like "; charset=...")
-  const headerBase = header?.split(';')[0].trim() ?? ''
-  if (SUPPORTED_TYPES.includes(headerBase)) return headerBase
-
-  // Infer from URL extension when header is missing or octet-stream
-  const ext = url.split('?')[0].split('.').pop()?.toLowerCase()
-  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg'
-  if (ext === 'png') return 'image/png'
-  if (ext === 'webp') return 'image/webp'
-
-  return 'image/jpeg'
-}
-
-async function fetchImageBuffer(url: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
-  try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) })
-    if (!res.ok) return null
-    const contentType = resolveContentType(url, res.headers.get('content-type'))
-    const buffer = await res.arrayBuffer()
-    return { buffer, contentType }
-  } catch {
-    return null
-  }
-}
+export const maxDuration = 180
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeEditorialRequest(request)
+  if (denied) return denied
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ error: 'OPENAI_API_KEY no está configurada.' }, { status: 500 })
   }
@@ -105,9 +83,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'SANITY_API_TOKEN no está configurada.' }, { status: 500 })
   }
 
-  const { name, heroTitle, shortDescription, imageRef, imageRefs, mastershopImageUrl, docId, scene } = await request.json()
+  const body = await request.json().catch(() => null)
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return NextResponse.json({ error: 'Solicitud inválida.' }, { status: 400 })
+  const { name, heroTitle, shortDescription, imageRef, imageRefs, mastershopImageUrl, docId, scene } = body
 
-  if (!name || !docId) {
+  if (typeof name !== 'string' || !name.trim() || name.length > 500 || typeof docId !== 'string' || !/^[\w.-]{1,120}$/.test(docId) || (heroTitle != null && typeof heroTitle !== 'string') || (shortDescription != null && typeof shortDescription !== 'string') || (scene != null && (typeof scene !== 'string' || !SCENES[scene]))) {
     return NextResponse.json({ error: 'Se requieren name y docId.' }, { status: 400 })
   }
 
@@ -122,19 +102,17 @@ export async function POST(request: NextRequest) {
       ...(imageRef ? [imageRef] : []),
     ].filter((r, idx, arr): r is string => typeof r === 'string' && !!r && arr.indexOf(r) === idx).slice(0, 3)
 
-    const referenceImages = (
-      await Promise.all(refs.map((ref) => fetchImageBuffer(`${sanityRefToUrl(ref)}?w=1024&fm=jpg`)))
-    ).filter((img): img is { buffer: ArrayBuffer; contentType: string } => img !== null)
-    if (referenceImages.length === 0 && mastershopImageUrl) {
-      const img = await fetchImageBuffer(mastershopImageUrl)
-      if (img) referenceImages.push(img)
+    const urls = refs.filter((ref) => /^image-[a-zA-Z0-9]+-\d+x\d+-[a-zA-Z0-9]+$/.test(ref)).map((ref) => `${sanityRefToUrl(ref)}?w=1024&fm=jpg`)
+    let referenceImages = await fetchInlineImages(urls)
+    if (!referenceImages.length && typeof mastershopImageUrl === 'string') referenceImages = await fetchInlineImages([mastershopImageUrl])
+    if (!referenceImages.length) {
+      return NextResponse.json({ error: 'No pudimos leer una foto real del producto. Agrega una foto en Sanity antes de generar la imagen.' }, { status: 422 })
     }
-    const referenceImage = referenceImages[0] ?? null
 
     let b64: string | undefined
     let imageUsage: unknown = null
 
-    if (referenceImage) {
+    {
       // Use /edits endpoint — model sees the real product and replicates it faithfully
 
       const formData = new FormData()
@@ -144,49 +122,25 @@ export async function POST(request: NextRequest) {
       formData.append('size', '1024x1536')
       formData.append('quality', 'high')
       referenceImages.forEach((img, idx) => {
-        const imgExt = img.contentType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg'
-        formData.append('image[]', new File([img.buffer], `product-${idx + 1}.${imgExt}`, { type: img.contentType }))
+        const imgExt = img.mimeType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg'
+        formData.append('image[]', new File([Buffer.from(img.data, 'base64')], `product-${idx + 1}.${imgExt}`, { type: img.mimeType }))
       })
 
       const editsRes = await fetch('https://api.openai.com/v1/images/edits', {
         method: 'POST',
         headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
         body: formData,
+        signal: AbortSignal.timeout(150_000),
       })
 
       if (!editsRes.ok) {
-        const errBody = await editsRes.json().catch(() => ({}))
-        throw new Error(errBody?.error?.message ?? `${IMAGE_MODEL} edits error ${editsRes.status}`)
+        await editsRes.body?.cancel()
+        throw new Error(`OpenAI rechazó la generación (HTTP ${editsRes.status}).`)
       }
 
       const editsData = await editsRes.json()
       b64 = editsData?.data?.[0]?.b64_json
       imageUsage = editsData?.usage
-    } else {
-      // Fallback: no reference image available → use generations endpoint
-      const genRes = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: IMAGE_MODEL,
-          prompt,
-          n: 1,
-          size: '1024x1536',
-          quality: 'high',
-        }),
-      })
-
-      if (!genRes.ok) {
-        const errBody = await genRes.json().catch(() => ({}))
-        throw new Error(errBody?.error?.message ?? `${IMAGE_MODEL} generations error ${genRes.status}`)
-      }
-
-      const genData = await genRes.json()
-      b64 = genData?.data?.[0]?.b64_json
-      imageUsage = genData?.usage
     }
 
     // Costo para /admin/profit, con los tokens reales que devuelve OpenAI.
@@ -215,8 +169,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ assetId: asset._id, assetUrl: asset.url })
   } catch (error: any) {
-    const message = error?.message ?? 'Error desconocido'
-    console.error(`Error generando imagen con ${IMAGE_MODEL}:`, message)
+    const message = error?.name === 'TimeoutError' ? 'La generación excedió el tiempo de espera; revisa el consumo antes de reintentar.' : error?.message ?? 'Error desconocido'
+    console.error(`Error generando imagen con ${IMAGE_MODEL}:`, error instanceof Error ? error.name : 'Error')
     return NextResponse.json({ error: `Error al generar imagen: ${message}` }, { status: 500 })
   }
 }

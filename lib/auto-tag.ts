@@ -1,3 +1,4 @@
+import { createEditorialModel } from './ai/gemini.ts'
 // Clasifica un producto con la taxonomía de tags.
 //
 // Desde el 23-sep-2026 lo hace JEV (lib/jev.ts): una pregunta de sí/no por
@@ -16,10 +17,8 @@ import { experimental_evaluate as evaluate } from 'ai'
 import { JEV_MODEL, jevConfigured, questionKey } from './jev.ts'
 import type { UsageSink } from './ai/pricing.ts'
 
-const GEMINI_MODEL = 'gemini-3.8-flash'
 const MIN_TAGS = 3
 const MAX_TAGS = 6
-const TAG_RETRIES = 2
 
 export interface TagDef {
   slug: string
@@ -198,53 +197,19 @@ export async function classifyProductTagsGemini(
   if (tags.length === 0) return []
 
   const validSlugs = new Set(tags.map((t) => t.slug))
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`
-
-  for (let attempt = 1; attempt <= TAG_RETRIES; attempt++) {
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: buildPrompt(tags, product) }] }],
-          generationConfig: { temperature: 0.3 },
-        }),
-      })
-
-      if (!res.ok) throw new Error(`Gemini ${res.status}`)
-      const data = await res.json()
-      const um = data?.usageMetadata ?? {}
-      onUsage?.('product_tags_fallback', {
-        inputTokens: um.promptTokenCount,
-        outputTokens: um.candidatesTokenCount,
-        thoughtsTokens: um.thoughtsTokenCount,
-        cachedTokens: um.cachedContentTokenCount,
-      })
-
-      const parts = data?.candidates?.[0]?.content?.parts ?? []
-      const rawText = parts
-        .filter((p: any) => !p.thought && typeof p.text === 'string' && p.text.trim())
-        .map((p: any) => p.text)
-        .join('')
-
-      if (!rawText) throw new Error('Respuesta vacía')
-
-      const clean = rawText.replace(/```json/gi, '').replace(/```/g, '').trim()
-      const parsed = JSON.parse(clean)
-      const slugs: string[] = Array.isArray(parsed.tags) ? parsed.tags : []
-      const filtered = slugs.filter((s) => validSlugs.has(s)).slice(0, MAX_TAGS)
-      if (filtered.length === 0) throw new Error('Ningún slug válido')
-
-      return filtered
-    } catch (err) {
-      if (attempt === TAG_RETRIES) {
-        console.error('[auto-tag] falló para producto:', product.name, err)
-        return []
-      }
-      await new Promise((r) => setTimeout(r, 500 * attempt))
-    }
+  try {
+    const model = createEditorialModel({ apiKey: geminiKey, source: 'product_tags_fallback', timeoutMs: 20_000, onUsage })
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: buildPrompt(tags, product) }] }],
+      generationConfig: { temperature: 0.3 },
+    })
+    const parsed = JSON.parse(result.response.text())
+    const slugs: unknown[] = Array.isArray(parsed.tags) ? parsed.tags : []
+    return [...new Set(slugs.filter((s): s is string => typeof s === 'string' && validSlugs.has(s)))].slice(0, MAX_TAGS)
+  } catch {
+    console.warn('[auto-tag] no se pudieron generar etiquetas; se conservan vacías para revisión.')
+    return []
   }
-  return []
 }
 
 // Helper: convierte slugs a referencias Sanity con _key estable.

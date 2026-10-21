@@ -1,5 +1,8 @@
+import { PRODUCT_CONTENT_SCHEMA, validateProductContent } from '@/lib/ai/product-contract'
+import { fetchInlineImages } from '@/lib/ai/reference-images'
+import { authorizeEditorialRequest } from '@/lib/ai/authorize'
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createEditorialModel } from '@/lib/ai/gemini'
 import {
   SYSTEM_PROMPT,
   PRODUCT_COPY_TEMPERATURE,
@@ -9,17 +12,14 @@ import {
 import { fetchTagTaxonomy, classifyProductTags, tagSlugsToReferences } from '@/lib/auto-tag'
 import { PRODUCT_CATEGORIES, isProductCategory } from '@/lib/categories'
 import { askJev, decideCategory } from '@/lib/category-classifier'
-import { createUsageCollector, geminiUsage } from '@/lib/ai/usage'
+import { createUsageCollector } from '@/lib/ai/usage'
 import { urlForImage } from '@/lib/sanity/image'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-
 // Bajar las fotos + el copy + el auto-tagging. Los dos últimos van en paralelo.
-export const maxDuration = 60
+export const maxDuration = 120
 
-// Más de 3 fotos no mejoran el copy y sí acercan el request al límite de 60 s.
+// Más de 3 fotos no mejoran el copy y sí acercan el request al tiempo de la generación.
 const MAX_REFERENCE_IMAGES = 3
-const IMAGE_FETCH_TIMEOUT_MS = 8_000
 
 interface InlineImage {
   mimeType: string
@@ -49,26 +49,12 @@ async function fetchReferenceImages(
   // vive en cdn.bemaster.com y es la única referencia disponible.
   if (urls.length === 0 && fallbackUrl) urls.push(fallbackUrl)
 
-  const settled = await Promise.all(
-    urls.map(async (url): Promise<InlineImage | null> => {
-      try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(IMAGE_FETCH_TIMEOUT_MS) })
-        if (!res.ok) return null
-        const buffer = await res.arrayBuffer()
-        const header = res.headers.get('content-type')?.split(';')[0].trim() ?? ''
-        const mimeType = header.startsWith('image/') ? header : 'image/jpeg'
-        return { mimeType, data: Buffer.from(buffer).toString('base64') }
-      } catch (err) {
-        console.error('[generate-product-content] no se pudo bajar una foto de referencia:', url, err)
-        return null
-      }
-    }),
-  )
-
-  return settled.filter((img): img is InlineImage => img !== null)
+  return fetchInlineImages(urls)
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeEditorialRequest(request)
+  if (denied) return denied
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
       { error: 'GEMINI_API_KEY no está configurada.' },
@@ -76,9 +62,11 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { name, shortDescription, category, imageRefs, mastershopImageUrl, productId } = await request.json()
+  const body = await request.json().catch(() => null)
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return NextResponse.json({ error: 'Solicitud inválida.' }, { status: 400 })
+  const { name, shortDescription, category, imageRefs, mastershopImageUrl, productId } = body
 
-  if (!name || !shortDescription) {
+  if (typeof name !== 'string' || !name.trim() || name.length > 500 || typeof shortDescription !== 'string' || !shortDescription.trim() || shortDescription.length > 20_000 || (category != null && typeof category !== 'string')) {
     return NextResponse.json(
       { error: 'Se requieren name y shortDescription.' },
       { status: 400 }
@@ -90,9 +78,7 @@ export async function POST(request: NextRequest) {
   const usage = createUsageCollector(`manual:${ref ?? crypto.randomUUID()}`, ref)
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-3.8-flash',
-    })
+    const model = createEditorialModel({ source: 'product_copy', responseJsonSchema: PRODUCT_CONTENT_SCHEMA, validate: validateProductContent, onUsage: usage.sink })
 
     const referenceImages = await fetchReferenceImages(
       Array.isArray(imageRefs) ? imageRefs : [],
@@ -126,7 +112,7 @@ export async function POST(request: NextRequest) {
       contents: [{ role: 'user', parts: promptParts }],
       generationConfig: {
         temperature: PRODUCT_COPY_TEMPERATURE,
-      } as any,
+      },
     })
 
     const tagsPromise = (async (): Promise<string[]> => {
@@ -149,34 +135,15 @@ export async function POST(request: NextRequest) {
       }
     })()
 
+    // Espera también el tagging antes de cerrar la contabilidad, incluso si falla el copy.
+    await Promise.allSettled([copyPromise, tagsPromise, jevPromise])
     const result = await copyPromise
-    usage.sink('product_copy', geminiUsage(result.response.usageMetadata))
-
-    // Gemini 3 Flash thinking mode returns both "thought" parts and regular text parts.
-    // response.text() throws if there are NO non-thought parts.
-    // We manually extract the text from parts to be safe.
-    const candidate = result.response.candidates?.[0]
-    const parts = candidate?.content?.parts ?? []
-
-    // Filter to get only the actual response text (not thinking tokens)
-    const rawText =
-      parts
-        .filter((p: any) => !p.thought && typeof p.text === 'string' && p.text.trim())
-        .map((p: any) => p.text)
-        .join('') || result.response.text?.()
-
-    if (!rawText) {
-      throw new Error('El modelo no devolvió texto. Intenta de nuevo.')
-    }
 
     // Resolvemos las tags ahora (ya corrieron en paralelo con el copy).
     const tagSlugs = await tagsPromise
     const tags = tagSlugsToReferences(tagSlugs)
 
-    // Strip potential markdown code fences
-    const cleanText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-
-    const content = JSON.parse(cleanText)
+    const content = JSON.parse(result.response.text())
 
     // La categoría del modelo se valida contra el catálogo antes de salir: un
     // valor inventado ensucia el dataset igual que los que estamos limpiando.

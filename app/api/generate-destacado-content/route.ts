@@ -1,3 +1,4 @@
+import { authorizeEditorialRequest } from '@/lib/ai/authorize'
 import { NextRequest, NextResponse } from 'next/server'
 import { createUsageCollector } from '@/lib/ai/usage'
 import { fetchInlineImages, generateDestacadoContent, type DestacadoNeeds } from '@/lib/destacado-content'
@@ -7,11 +8,12 @@ import { urlForImage } from '@/lib/sanity/image'
 // genera: el botón del Studio decide qué guardar y lo escribe en el borrador.
 // Las fotos del galería van por /api/generate-ai-image, una por llamada.
 //
-// Pendiente conocido (CLAUDE.md → Creación de productos): como las demás rutas
-// de IA, no tiene autenticación.
-export const maxDuration = 60
+// Requiere la sesión administrativa antes de consumir IA.
+export const maxDuration = 120
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeEditorialRequest(request)
+  if (denied) return denied
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'GEMINI_API_KEY no está configurada.' }, { status: 500 })
 
@@ -50,10 +52,11 @@ export async function POST(request: NextRequest) {
         benefits: body.benefits,
       },
     })
-    await usage.flush()
     return NextResponse.json({ ...content, imagesAnalyzed: images.length })
   } catch (error: any) {
     console.error('[generate-destacado-content]', error?.message ?? error)
     return NextResponse.json({ error: `Error al generar: ${error?.message ?? 'desconocido'}` }, { status: 500 })
+  } finally {
+    await usage.flush()
   }
 }

@@ -48,21 +48,7 @@ export async function recordAiUsage(r: UsageRecord): Promise<void> {
   }
 }
 
-/** Tokens de una respuesta de Gemini (SDK o REST: los dos traen `usageMetadata`). */
-export function geminiUsage(meta: unknown): Usage {
-  const m = (meta ?? {}) as {
-    promptTokenCount?: number
-    candidatesTokenCount?: number
-    thoughtsTokenCount?: number
-    cachedContentTokenCount?: number
-  }
-  return {
-    inputTokens: m.promptTokenCount,
-    outputTokens: m.candidatesTokenCount,
-    thoughtsTokens: m.thoughtsTokenCount,
-    cachedTokens: m.cachedContentTokenCount,
-  }
-}
+export { geminiUsage } from './gemini'
 
 /** Tokens de una evaluación de JEV (`experimental_evaluate`). */
 export function evaluateUsage(usage: unknown): Usage {

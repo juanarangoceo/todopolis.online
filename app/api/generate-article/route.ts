@@ -1,12 +1,15 @@
+import { authorizeEditorialRequest } from '@/lib/ai/authorize'
 import { NextRequest, NextResponse } from 'next/server'
 import { createUsageCollector } from '@/lib/ai/usage'
 import { revalidatePath } from 'next/cache'
 import { generateAndSaveArticle } from '@/lib/generate-article'
 
-// Allow up to 60s — Gemini generation can take 20-30s
-export const maxDuration = 60
+// Incluye generación con plazo de 90 s y persistencia en Sanity.
+export const maxDuration = 120
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeEditorialRequest(request)
+  if (denied) return denied
   const geminiKey = process.env.GEMINI_API_KEY
   const sanityToken = process.env.SANITY_API_TOKEN
   const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
@@ -23,6 +26,8 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Body inválido' }, { status: 400 })
   }
+
+  if (!body || (body.sanityId != null && (typeof body.sanityId !== 'string' || !/^[\w.-]{1,120}$/.test(body.sanityId))) || (body.mastershopId != null && (!Number.isSafeInteger(body.mastershopId) || body.mastershopId <= 0))) return NextResponse.json({ error: 'Identificador inválido.' }, { status: 400 })
 
   let resolvedSanityId = body.sanityId
 
@@ -78,7 +83,6 @@ export async function POST(request: NextRequest) {
       apiVersion,
       onUsage: usage.sink,
     })
-    await usage.flush()
 
     revalidatePath('/blog')
     revalidatePath(`/blog/${result.articleSlug}`)
@@ -87,5 +91,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error('Error generating article:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
+  } finally {
+    await usage.flush()
   }
 }

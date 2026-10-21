@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createEditorialModel } from './ai/gemini'
 import type { UsageSink } from './ai/pricing'
 
 const ARTICLE_PROMPT = `Eres un especialista en SEO y GEO (Generative Engine Optimization) para e-commerce latinoamericano. Tu misión: crear artículos informativos que posicionan en Google Y aparecen citados por LLMs como ChatGPT, Perplexity y Claude.
@@ -112,8 +112,7 @@ export async function generateAndSaveArticle({
   }
 
   // Generate article content with Gemini 3.8 Flash
-  const genAI = new GoogleGenerativeAI(geminiKey)
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' })
+  const model = createEditorialModel({ apiKey: geminiKey, source: 'article', onUsage })
 
   const benefitsText = productBenefits.length > 0
     ? `\nBeneficios del producto: ${productBenefits.join(', ')}`
@@ -122,24 +121,10 @@ export async function generateAndSaveArticle({
 
   const aiResult = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: ARTICLE_PROMPT + '\n\n' + userPrompt }] }],
-    generationConfig: { temperature: 1.0, thinkingConfig: { thinkingLevel: 'low' } } as any,
+    generationConfig: { temperature: 1.0, thinkingConfig: { thinkingLevel: 'low' } },
   })
 
-  const um = aiResult.response.usageMetadata
-  onUsage?.('article', {
-    inputTokens: um?.promptTokenCount,
-    outputTokens: um?.candidatesTokenCount,
-    thoughtsTokens: (um as { thoughtsTokenCount?: number } | undefined)?.thoughtsTokenCount,
-    cachedTokens: um?.cachedContentTokenCount,
-  })
-
-  const candidate = aiResult.response.candidates?.[0]
-  const parts = candidate?.content?.parts ?? []
-  const rawText =
-    parts
-      .filter((p: any) => !p.thought && typeof p.text === 'string' && p.text.trim())
-      .map((p: any) => p.text)
-      .join('') || aiResult.response.text?.()
+  const rawText = aiResult.response.text()
 
   if (!rawText) throw new Error('Gemini no devolvió contenido para el artículo')
 
