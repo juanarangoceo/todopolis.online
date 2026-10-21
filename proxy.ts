@@ -5,7 +5,7 @@ import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/admin-session'
 // Rutas de API que solo usa el panel. Antes quedaban abiertas: el proxy solo
 // miraba /admin y la cookie no viajaba a /api. `/api/mastershop/sync` NO va
 // aquí: es el cron y se autentica con CRON_SECRET.
-const ADMIN_API_PREFIXES = ['/api/mastershop/import', '/api/mastershop/products', '/api/mastershop/sanity-ids']
+const ADMIN_API_PREFIXES = ['/api/dropi/', '/api/mastershop/import', '/api/mastershop/products', '/api/mastershop/sanity-ids']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl

@@ -11,7 +11,8 @@ const LOGO_URL = 'https://res.cloudinary.com/dohwyszdj/image/upload/f_auto,q_aut
 const LINKS = [
   { href: '/admin', label: 'Resumen', icon: LayoutDashboard, exact: true },
   { href: '/admin/pedidos', label: 'Pedidos', icon: ShoppingBag },
-  { href: '/admin/mastershop', label: 'Importar productos', icon: Package },
+  { href: '/admin/mastershop', label: 'Mastershop', icon: Package },
+  { href: '/admin/dropi', label: 'Conectar Dropi', icon: Package },
   { href: '/admin/profit', label: 'Nitro Profit', icon: Gauge },
 ] as const
 
