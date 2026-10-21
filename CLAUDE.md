@@ -29,6 +29,13 @@ El túnel expone ese puerto en `100.107.182.42:3001`.
 
 La app se ve en: **http://100.107.182.42:3001**
 
+O con HTTPS, solo dentro de la tailnet: **https://openclawagent.tail8ed093.ts.net**
+(Tailscale Serve → `127.0.0.1:3001`, activado el 21-oct-2026, sobrevive a
+reinicios; `tailscale serve status` para verlo). Úsala para lo que exige un
+origen seguro: callbacks OAuth (Dropi rechaza la IP con `http`), micrófono de
+Lucy de voz, instalar la app del panel y las cookies `secure` del modo producción.
+Va en `allowedDevOrigins` junto a la IP.
+
 ## Notas
 
 - Trabajamos con SSH a `100.107.182.42` (Tailscale) usuario `juan`.
@@ -467,7 +474,7 @@ Todópolis entra al MCP de Dropi (`https://mcp.dropi.co/mcp`) con OAuth y la cue
 - **Piezas** (`lib/dropi/`, todas con test): `discovery.ts` valida los metadatos públicos y es la única fuente de los endpoints; `oauth.ts` (PKCE S256, registro dinámico, cliente público sin secreto); `secret-box.ts` (AES-GCM); `connection.ts` (guardar, renovar, revocar); `mcp.ts` (cliente JSON-RPC mínimo, sin el SDK). Rutas en `app/api/dropi/` (`connect`, `callback`, `status`, `disconnect`, `tools`), todas detrás de la sesión del panel por `ADMIN_API_PREFIXES`.
 - **Tokens cifrados en Supabase** (`dropi_connection`, UNA fila; `dropi_oauth_clients`, un cliente por callback). Migración `20261021120000_dropi_connection.sql`. Con el refresh token se pueden **crear órdenes** en Dropi: por eso van cifrados con **`DROPI_TOKEN_KEY`, que tiene que ser IGUAL en `.env.local` y en Vercel**. Local y producción comparten la base: conectar en uno deja conectados a los dos. Cambiar la clave obliga a reconectar.
 - **Renovación con CAS sobre `version`**: dos procesos que renuevan a la vez no se pisan; el que pierde usa el token del ganador. `invalid_grant` marca `needs_reauth` y el panel pide volver a conectar.
-- **Callback: Dropi solo acepta `https://…` o `http://localhost…`** (la IP de Tailscale da 400 en el registro). En local, conectar abriendo **`http://localhost:3001/admin/dropi`** en la máquina del túnel, con sesión del panel en ese mismo origen.
+- **Callback: Dropi solo acepta `https://…` o `http://localhost…`** (la IP de Tailscale da 400 en el registro). En local, conectar desde **`https://openclawagent.tail8ed093.ts.net/admin/dropi`** (Tailscale Serve), con sesión del panel en ese mismo origen.
 - **Una sola sesión abierta por cuenta de Dropi**: conectar la misma cuenta en otra herramienta (p. ej. el conector de Claude) puede invalidar la de la tienda.
 - Herramientas: «Buscar productos», «Listar categorías», órdenes, envíos y «huella» del comprador. **Ninguna ruta de Todópolis llama herramientas de órdenes**; si se añade una, que sea una lista explícita de herramientas de lectura.
 

@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   // En localhost todo funcionaba, que es lo que despista.
   //
   // Solo aplica a `next dev`; en producción esta opción se ignora.
-  allowedDevOrigins: ['100.107.182.42'],
+  allowedDevOrigins: ['100.107.182.42', 'openclawagent.tail8ed093.ts.net'],
 
   async redirects() {
     return [
