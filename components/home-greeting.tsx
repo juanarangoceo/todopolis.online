@@ -67,12 +67,12 @@ const subscribe = () => () => {}
 const getSnapshot = () => (chosen ??= choose())
 const getServerSnapshot = () => null
 
-export function HomeGreeting() {
+export function HomeGreeting({ embedded = false }: { embedded?: boolean }) {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
 
   return (
-    <div className="container mx-auto px-4 pt-4 md:pt-6">
+    <div className={embedded ? 'min-w-0' : 'container mx-auto px-4 pt-4 md:pt-6'}>
       <div
         className={`min-h-[2.75rem] transition-opacity duration-300 motion-reduce:transition-none md:min-h-[3.5rem] ${
           state ? 'opacity-100' : 'opacity-0'

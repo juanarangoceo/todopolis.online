@@ -245,6 +245,8 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - Para editar las frases, cambia la lista: el test exige máximo 36 caracteres (una línea a 390 px), sin emojis, con punto final y sin palabras con género.
 
 ### «Eleva tu estilo» — moda y accesorios, y el H1 del home (sep 2026)
+
+**Lecturas al inicio (22-oct-2026):** `HomeBlogSuggestions` va junto a `HomeGreeting` en escritorio y debajo en móvil, antes del buscador y las categorías. `homeArticlePicks()` selecciona seis artículos publicados, recientes y variados por categoría, sin repetir tema ni enlaces. Se abre el artículo en `/blog/[slug]`; solo pasan título, slug y minutos al navegador. La rotación de 10 s es una excepción explícita de la guía de marca: pausa al interactuar, fuera de pantalla o con pestaña oculta; modo manual inicial con movimiento reducido. Publicar artículos invalida `articles`, home, índice y detalle del blog en `/api/revalidate`.
 `components/style-spotlight.tsx`, con la selección en `lib/style-picks.ts` y su test. Muestra los 12 productos de Moda y Accesorios más recientes que NO salen ya en Novedades. Lleva el slogan como **H1** (el home no tenía ninguno). Con menos de 4 productos no se pinta.
 
 **Orden del home elegido el 22-oct-2026:** Novedades → «Así compras» → Belleza → Moda → catálogo con Inspiración → pie. Mantener este orden; reemplaza la decisión anterior de poner Moda primero.

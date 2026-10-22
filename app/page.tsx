@@ -8,13 +8,15 @@ import { CategorySpotlight } from '@/components/category-spotlight';
 import { inspirationImages } from '@/lib/inspiration';
 import { categoryTitle } from '@/lib/categories';
 import { HomeGreeting } from '@/components/home-greeting';
+import { HomeBlogSuggestions } from '@/components/home-blog-suggestions';
+import { homeArticlePicks } from '@/lib/home-articles';
 import { stylePickIds } from '@/lib/style-picks';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
 import { advancePaymentEnabled } from '@/lib/payments/config';
 import { resolveWhatsAppPhone } from '@/lib/whatsapp';
-import { getSanityProducts, getSanityStoreSettings, getSanityTags } from '@/lib/sanity/queries';
+import { getArticles, getSanityProducts, getSanityStoreSettings, getSanityTags } from '@/lib/sanity/queries';
 
 // El título del home lleva el slogan y el sector al que se enfoca la tienda
 // (moda y accesorios, sep 2026), sin dejar de decir que hay más.
@@ -42,8 +44,14 @@ export const metadata: Metadata = {
 }
 
 export default async function Home() {
-  // Fetch products from Sanity
-  const sanityProducts: HomeCatalogProduct[] = await getSanityProducts().catch(() => []);
+  const catalogPromise: Promise<HomeCatalogProduct[]> = getSanityProducts().catch(() => []);
+  const [sanityProducts, articles, storeSettings, tagTaxonomy] = await Promise.all([
+    catalogPromise,
+    getArticles(),
+    getSanityStoreSettings(),
+    getSanityTags(),
+  ]);
+  const suggestedArticles = homeArticlePicks(articles);
   const initialProducts = sanityProducts.map((p) => ({
     id: p._id,
     name: p.name,
@@ -80,11 +88,6 @@ export default async function Home() {
     .filter((p): p is (typeof initialProducts)[number] => Boolean(p));
 
   const aiImages = inspirationImages(sanityProducts);
-
-  const [storeSettings, tagTaxonomy] = await Promise.all([
-    getSanityStoreSettings(),
-    getSanityTags(),
-  ]);
 
   const whatsappPhone = resolveWhatsAppPhone(storeSettings?.whatsappPhone, process.env.NEXT_PUBLIC_WHATSAPP_PHONE)
   const whatsappHref = whatsappPhone
@@ -126,7 +129,14 @@ export default async function Home() {
           // Lo que ya sale en Moda, Belleza y Novedades no se repite en
           // la cuadrícula limpia. Con búsqueda o filtros vuelve a aparecer.
           featuredIds={[...newArrivals, ...stylePicks, ...beautyPicks].map((p: { id: string }) => p.id)}
-          intro={<HomeGreeting />}
+          intro={
+            <div key="intro" className="container mx-auto px-4 pt-4 md:pt-6">
+              <div className={`grid gap-2 ${suggestedArticles.length ? 'md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] md:items-center md:gap-10' : ''}`}>
+                <HomeGreeting key="saludo" embedded />
+                <HomeBlogSuggestions key="lecturas" articles={suggestedArticles} />
+              </div>
+            </div>
+          }
           // Sin banner de temporada en el home (22-oct-2026): la pieza traía
           // degradado, texto pintado y dos botones, y chocaba con la marca.
           // La campaña sigue viva en /temporada.

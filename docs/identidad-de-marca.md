@@ -48,7 +48,7 @@ escriben de memoria en ningún otro lugar.**
 2. **Cada cosa nueva que entra en pantalla saca otra.** La tienda se afeó
    sumando capas razonables una por una: insignias, carruseles, burbujas,
    colores, animaciones. Antes de añadir algo, decide qué se va.
-3. **Quieto por defecto.** Nada se mueve solo. Se mueve lo que el cliente toca.
+3. **Quieto por defecto.** Se mueve lo que el cliente toca. La sugerencia de blog del inicio tiene la excepción solicitada por el usuario que se describe en §8.
 4. **Un solo lenguaje.** Mismas tarjetas, mismos encabezados, mismos anchos en
    todas las páginas. Si una página parece de otra tienda, está mal aunque se
    vea bonita.
@@ -171,6 +171,7 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 | Nombrar una categoría | `categoryTitle(value)` de `lib/categories.ts`. |
 | Elegir talla, color u opción | `VariantSelector`: chips compactos; si las variantes son «talla/color», dos filas (`lib/variant-options.ts`). Más de 8 opciones: lista desplegable. La elegida en lavanda. Debajo, la guía de tallas si la ficha técnica la trae. |
 | Saludar al abrir el home | `HomeGreeting`: saludo por hora + frase de `lib/home-phrases.ts`. Una por visita, quieta. |
+| Sugerir lecturas al inicio | `HomeBlogSuggestions`, junto al saludo en escritorio y debajo en móvil. Nota editorial compacta, sin fotos; una lectura por vez, controles discretos y altura reservada. |
 | Una fila deslizable en móvil | Siempre debe asomar la tarjeta siguiente (≥ 30 px). En el home, `COMPACT_ROW_ITEM`. |
 | Una selección temática en el home | `CategorySpotlight`, compartido por Moda y Belleza, con `SuggestedProductsCarousel` y las tarjetas del catálogo. Solo Moda lleva el H1; el enlace abre la categoría y la selección no repite Novedades. |
 
@@ -182,10 +183,12 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 gana sombra; entrada suave de las primeras tarjetas (`fadeInUp`); desplazamiento
 con `snap` en carruseles.
 
-**No:** textos que rotan con temporizador (la frase del home cambia por visita, no mientras miras), carruseles o marquesinas que avanzan solos, anillos girando, pulsos de
+**No, salvo la excepción de blog indicada abajo:** textos que rotan con temporizador (la frase del home cambia por visita, no mientras miras), carruseles o marquesinas que avanzan solos, anillos girando, pulsos de
 radar, partículas, brillos que barren, globos que aparecen solos a los N
 segundos, zoom fuerte de la foto al pasar el ratón (máximo `scale-105`).
 Respeta `prefers-reduced-motion`.
+
+**Excepción solicitada el 22-oct-2026:** la sugerencia editorial del blog cambia cada 10 segundos, sin desplazamiento animado y solo mientras está visible y la pestaña está activa. Se pausa al pasar el cursor; foco, toque o cambio manual detienen la rotación hasta que el usuario la reanude. Incluye pausa/reanudación y anterior/siguiente. Con movimiento reducido empieza en modo manual. Esta excepción no se aplica al saludo ni a los carruseles de productos.
 
 ---
 

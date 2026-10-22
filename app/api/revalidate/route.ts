@@ -48,6 +48,19 @@ export async function POST(request: NextRequest) {
     const payload = JSON.parse(body)
     console.log('Revalidating due to Sanity publish:', payload._type, payload._id)
 
+    // Publicar una lectura también actualiza la sugerencia del inicio.
+    if (payload._type === 'article') {
+      const articleSlug: string | undefined = payload.slug?.current
+      revalidateTag('articles', 'max')
+      revalidatePath('/')
+      revalidatePath('/blog')
+      if (articleSlug) {
+        revalidateTag(`article-${articleSlug}`, 'max')
+        revalidatePath(`/blog/${articleSlug}`)
+      }
+      return NextResponse.json({ revalidated: true, type: 'article', timestamp: new Date().toISOString() })
+    }
+
     // Banner de campaña: al publicar/despublicar, refrescamos el home (que muestra
     // el banner tras la 2ª fila) y la página /temporada que renderiza la campaña.
     if (payload._type === 'promoCampaign') {
