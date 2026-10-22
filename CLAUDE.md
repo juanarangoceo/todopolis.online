@@ -32,8 +32,7 @@ La app se ve en: **http://100.107.182.42:3001**
 O con HTTPS, solo dentro de la tailnet: **https://openclawagent.tail8ed093.ts.net**
 (Tailscale Serve → `127.0.0.1:3001`, activado el 21-oct-2026, sobrevive a
 reinicios; `tailscale serve status` para verlo). Úsala para lo que exige un
-origen seguro: callbacks OAuth (Dropi rechaza la IP con `http`), micrófono de
-Lucy de voz, instalar la app del panel y las cookies `secure` del modo producción.
+origen seguro: callbacks OAuth (Dropi rechaza la IP con `http`), instalar la app del panel y las cookies `secure` del modo producción.
 Va en `allowedDevOrigins` junto a la IP.
 
 ## Notas
@@ -281,12 +280,12 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - **Escritorio**: las secciones son texto (Ofertas, Colecciones, Blog), no píldoras de colores en mayúsculas; solo Destacados conserva el dorado. «Ofertas» iba en rojo, el color del botón de compra. Íconos sin caja. Se quitó el contador de productos junto al logo (sigue en el menú móvil) para darle el espacio al buscador.
 - **Móvil**: la lupa ya no flota. `MobileSearchFab` se pinta por portal en `#header-mobile-search-slot` al pasar 200 px de scroll, solo en páginas con buscador. Flotando en `top-24 right-4` tapaba el corazón de favoritos de la columna derecha del catálogo.
 - Fondo al 95 %: al 80 % el texto de las fotos se leía a través del logo.
-- **Sin burbuja de chat en el header**: se confundía con un buzón de mensajes junto al corazón y el carrito.
+- **Sin burbuja de chat en el header**: se confundía con un buzón de mensajes junto al corazón de favoritos.
 - **Buscador** (`magic-search-bar.tsx`): lupa a la izquierda, sin botón «Buscar» (la búsqueda es en vivo; el botón no hacía nada y al pasar el ratón quedaba azul oscuro sobre azul oscuro), sin halo ni partículas. Enter busca ya y baja el teclado. El texto dice «Busca entre N productos».
 - **Móvil, filtros**: «Filtros» va al principio de la fila de categorías. No hay fila de etiquetas destacadas (tampoco en escritorio). Eran tres franjas y ~170 px antes del primer producto.
 
 ### Atención: SOLO WhatsApp (sep 2026)
-El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del menú móvil y las rutas `/api/lucy-chat` y `/api/lucy-recommend` (eran públicas y sin autenticación: cualquiera podía gastar cuota de Gemini). **No reponerlo.** Queda `VoiceLucy` (asistente de voz en la ficha), que solo sale en los productos donde se enciende desde el panel.
+El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del menú móvil y las rutas `/api/lucy-chat` y `/api/lucy-recommend` (eran públicas y sin autenticación: cualquiera podía gastar cuota de Gemini). **No reponerlo.** La voz de Lucy (`VoiceLucy`, rutas `voice-session`, `voice-assistant-status` y `generate-voice-prompt`, y el tipo `voiceAssistant` de Sanity) se retiró también el 22-oct-2026: flotaba sobre la ficha, y la guía no deja flotar nada salvo WhatsApp. Los documentos `voiceAssistant` que queden en Sanity ya no se leen.
 
 `components/whatsapp-button.tsx`: abajo a la DERECHA, verde de WhatsApp, sombra neutra, sin punto de «en línea»; en escritorio es píldora con «Escríbenos». En la ficha, en móvil, no se pinta: la ficha normal lo lleva dentro de la barra de compra y Destacados pinta su propia burbuja, también a la derecha (`product-hero.tsx`). El logo está en `components/whatsapp-icon.tsx`: úsalo, no pegues el SVG.
 
@@ -343,7 +342,7 @@ Todo el contenido generado por IA usa `gemini-3.8-flash`: copy de producto (`gen
 
 Se migró desde `gemini-3.5-flash` (sep 2026): mitad de tarifa ($0.75/$3.75 por 1M vs $1.50/$9.00) y menos thinking tokens → ~3.4× más barato por producto (~$88 COP vs ~$300 COP) y el import baja de ~38 s a ~26 s, lo que da margen frente al `maxDuration = 60`. Ojo: la tarifa de 3.8 sube a $1.50/$7.50 el 1-ene-2027 (sigue siendo más barata que 3.5).
 
-Lucy de voz (`generate-voice-prompt`) va aparte con `gemini-3-flash-preview` — no es contenido de catálogo. El chat web (`lucy-chat`, `lucy-recommend`) se retiró.
+Lucy (chat web y voz) se retiró: ya no hay ningún otro modelo de texto en la tienda.
 
 ### Etiquetas (tags) — las pone JEV
 `classifyProductTags` (`lib/auto-tag.ts`, con test) pregunta a JEV un sí/no por etiqueta, en una sola llamada (~1 s, ~4.000 tokens), y elige con `pickTags`: las de probabilidad ≥ 0,6, máximo 6; si quedan menos de 2, completa con las de 0,5–0,6. Ocasión y promo no se asignan solas. Si JEV no responde, Gemini (`classifyProductTagsGemini`, el prompt de siempre). La firma no cambió: import, sync y el botón del Studio la usan igual.
@@ -389,6 +388,8 @@ Antes el botón mandaba `imageAssetId` y la ruta lo descartaba: el copy se escri
 Reglas del clasificador: confianza ≥ `MIN_CONFIDENCE` (0,6) → JEV; si duda → respaldo concreto; «otros» nunca gana a una respuesta. **Bienestar Íntimo no pasa por JEV**: si el proveedor lo marca adulto, es adulto (de eso dependen aviso de edad, Píxel, feed y sitemap), y el script no toca los que ya lo son. Sin credenciales (`AI_GATEWAY_API_KEY`, `VERCEL_ENV` u OIDC vigente) JEV se salta y se usa el respaldo: la categoría nunca bloquea un import. En Vercel autentica por OIDC.
 
 Limpieza: `node scripts/fix-product-categories.ts` (vacías, inválidas u «otros») o `--all` (catálogo entero; solo cambia lo que JEV da por seguro), dry-run por defecto y `--apply` para escribir. `--env=archivo` pasa un `VERCEL_OIDC_TOKEN` fresco sin tocar `.env.local` (`vercel env pull <archivo> --environment=development`; el token dura 12 h). Historia: el 16-sep se limpiaron 66 valores sucios con Gemini; el 23-sep el dry-run de `--all` propuso 246 cambios (Otros 170 → ~5). **Aplicar SOLO después de desplegar el código**: con el código viejo en producción, los productos en categorías nuevas desaparecen de las pestañas.
+
+**22-oct-2026: JEV responde «Free tier users do not have access to this model»** a todas las llamadas (AI Gateway sin créditos pagos). Todo lo que usa JEV cae a su respaldo (categoría → Gemini o la tabla de Mastershop; etiquetas → Gemini; sugerencias del buscador → nada) y el `--all` del script no cambia nada. Ese día la revisión del catálogo se hizo con Gemini 3.8 Flash, con la misma lista y las mismas descripciones: 25 propuestas, 23 aplicadas (las fajas y medias de compresión que estaban en Belleza, cocina que estaba en Hogar, juguetes en Tecnología).
 
 ### Artículo de blog: botón `GenerateArticleButton`
 El blog era la última diferencia real entre crear un producto a mano e importarlo: `generateAndSaveArticle` solo lo llamaba `mastershop/import`, así que **185 de 577 productos se quedaron sin artículo** — y sin artículo la ficha no pinta el enlace "Leer artículo →" que abre la ventana emergente; el bloque entero desaparece.
@@ -508,7 +509,7 @@ Mismo patrón que `nitro_bot/app/admin/profit`, adaptado:
 - Las funciones de `lib/` (categoría, etiquetas, artículo, Destacado) reciben `onUsage` (un `UsageSink`) en vez de escribir en la base: así siguen siendo probables sin Supabase.
 - **`lib/ai/profit.ts`** (con test): resumen por fuente, modelo y operación; «costo por operación» medido (≥ 3 llamadas reales, re-valoradas a la tarifa de hoy) o estimado (`ESTIMATED_PROFILES`); recetas de «crear un producto» (`PRODUCT_RECIPES`).
 - Pesos con la **TRM oficial** de datos.gov.co (`lib/ai/trm.ts`, cache 1 día; respaldo $3.208,66, la TRM del 23-sep-2026).
-- **No se mide**: la voz de Lucy (`gpt-realtime`) va del navegador a OpenAI y el servidor no ve sus tokens; se cuentan sesiones. Tampoco los scripts locales.
+- **No se miden** los scripts locales. `voice_prompt` y `voice_session` siguen en `COST_SOURCES`, marcadas «(retirada)», solo para leer las filas viejas.
 
 **Regla: toda llamada nueva a un modelo registra su consumo** con `createUsageCollector`/`recordAiUsage`, y su fuente va en `COST_SOURCES` con modelo y perfil estimado (el test lo exige). Si no, Nitro Profit se queda corto sin que nadie lo note.
 
@@ -567,7 +568,7 @@ La tienda de Confío (`stores/01M28…`, «Nitro Ecom») es **la misma** que usa
 - **No se dispara `Purchase` de Meta al enviar el formulario** en un pago Confío: todavía no ha pagado nadie. (Pendiente: dispararlo vía CAPI al confirmar.)
 
 ### La narrativa NO se escribe a mano en los prompts
-`lib/payments/narrative.ts` es la única fuente, y decide según haya o no proveedor configurado. Existe por un fallo documentado en Nitro: estuvieron un día con Confío activo mientras el bot contestaba «solo manejamos contraentrega», porque el texto del negocio lo negaba y el asesor obedece esa frase antes que a cualquier compuerta. Lo consume `voice-session` (lo consumía también `lucy-chat`, retirado). **Si añades otro prompt que hable de pagos, pídeselo a ese módulo.**
+`lib/payments/narrative.ts` es la única fuente, y decide según haya o no proveedor configurado. Existe por un fallo documentado en Nitro: estuvieron un día con Confío activo mientras el bot contestaba «solo manejamos contraentrega», porque el texto del negocio lo negaba y el asesor obedece esa frase antes que a cualquier compuerta. Lo consumen los prompts de contenido (`paymentFactsForCopy`: producto, colección y artículo de blog); `voice-session` y `lucy-chat` se retiraron. **Si añades otro prompt que hable de pagos, pídeselo a ese módulo.**
 
 **El ángulo es RAPIDEZ y MEDIOS DE PAGO (decisión de Juan, 21-oct-2026), el de Nitro Complete**: se paga en segundos desde el celular con PSE, Nequi o Bancolombia, y el pago se confirma solo en minutos, sin comprobantes. **NO se dice que Confío guarda, retiene, custodia o protege el dinero, ni que lo devuelve si el pedido no llega, ni se le llama «pago protegido»**: ni en la interfaz, ni en las páginas legales, ni en los prompts. Hasta esa fecha el ángulo era la custodia; se retiró de todo el sitio (checkout, pie, home, página del pedido, cabecera de campaña, términos y privacidad), de `narrative.ts` (su test lo exige) y de los 10 productos cuyo texto de la IA lo decía. La opción del checkout se llama «Pagar ya con Confío».
 
@@ -683,7 +684,11 @@ Botón «🤖 Completar Destacado con IA» (pestaña Destacados, `sanity/compone
 - **Envío, pago y garantía salen de `paymentFactsForCopy()`** (`lib/payments/narrative.ts`), no escritos a mano en `lib/product-content-prompt.ts`. El prompt afirmaba «entrega rápida» y «despacho en 24-48h»; la política es 3 a 7 días hábiles.
 - **Sin emojis en ningún campo.** Las descripciones viejas traen «✅🔥⭐»: `lib/description.ts` las parte en viñetas y quita el emoji al renderizar.
 - Nueva salida **`audienceFit`** («¿Es para ti?»: para quién sí / no), guardada por los tres consumidores con `audienceFitFromAi` (`lib/audience-fit.ts`).
-- **Imagen IA** (`app/api/generate-ai-image`): foto realista de la persona que de verdad usa el producto, con su tamaño real, y no una foto de estudio con «persona atractiva». Usa hasta 3 fotos de referencia.
+- **Reglas de Meta compartidas (22-oct-2026): `META_AD_RULES`** (`lib/product-content-prompt.ts`), en los prompts de producto, Destacado y colección (`lib/content-prompts.test.ts` lo exige): no hablarle al cuerpo, el peso, la edad o la salud del lector, fajas y lencería descritas por lo que hace la prenda, sin «antes y después», y nada de usarlo «hoy» o «esta noche» (llega en 3 a 7 días hábiles). El cierre ya no pide urgencia: sin fecha ni stock reales no hay cómo sostenerla.
+- **Nombre estratégico**: tipo de producto + rasgo concreto, máximo 60 caracteres, sin «Premium», «Ultra» ni «Máxima», y con la referencia real al final si la hay.
+- **Colecciones y artículo de blog** usan también `paymentFactsForCopy()`. El de colecciones decía «entrega rápida», «despacho 24-48h» y pedía INVENTAR especificaciones; el del artículo prometía «envío gratis».
+- **Imagen IA** (`app/api/generate-ai-image`): reglas de anuncio (sin «antes y después», cinta métrica ni cuerpo como defecto; ropa y fajas puestas con naturalidad) y lo importante dentro del 4:5 central, que es lo que el feed recorta de la foto 2:3.
+- **Imagen IA**, desde antes: foto realista de la persona que de verdad usa el producto, con su tamaño real, y no una foto de estudio con «persona atractiva». Usa hasta 3 fotos de referencia.
 
 ### Imágenes opcionales en los bloques de Destacados
 - **Historia**: `vipStory.problemImage`, `turningPointImage`, `outcomeImage`. Los botones de IA MEZCLAN la historia con lo existente (`{ ...actual, ...generado }`) para no borrar esas fotos; si añades otra vía que escriba `vipStory`, haz lo mismo.
@@ -805,13 +810,10 @@ propio y sin sello de verificado: los escribe la IA. La prueba social auténtica
 es `customerPhotos` («Así les llegó»). **No volver a rotular eso como reseñas**
 hasta que existan las reales atadas a un pedido.
 
-## Carrito — ROTO para más de un producto (detectado 25-sep-2026, sin resolver)
-`components/cart-sidebar.tsx` → «Pagar ahora» abre `CheckoutModal` con el PRIMER producto del carrito y `price` = subtotal de todos. Pero el servidor resuelve precio y producto desde Sanity por slug (`resolveOrderProduct`), así que:
+## Carrito: retirado (22-oct-2026)
+No hay carrito: ni bolsa en la tarjeta, ni ícono en la cabecera, ni `CartProvider`. **Se compra desde la ficha**, y toda la tarjeta lleva a ella.
 
-1. **Carrito con varios productos → el pedido se guarda SOLO con el primero, a su propio precio**, mientras el comprador vio el total de todos. Los demás productos se pierden.
-2. **Cualquier producto con variantes falla siempre desde el carrito**: el modal del carrito no está dentro de `ProductVariantProvider`, no hay dónde elegir talla y `create-order` lo rechaza.
-
-La tabla `orders` es de UN producto por fila. Al 25-sep-2026 ningún pedido real salió del carrito con varios productos. Recomendación pendiente de decisión: quitar la bolsa de la tarjeta (`product-card.tsx`) y el carrito, y que la tarjeta lleve a la ficha, que es donde se compra bien. La alternativa (pedidos de varios productos) toca `orders`, Nitro (`order.v1`) y Confío.
+Estaba roto desde el principio: «Pagar ahora» abría el checkout con el PRIMER producto y el subtotal de todos, pero el servidor resuelve producto y precio desde Sanity por slug, así que **un carrito de varios productos guardaba solo el primero**, y cualquier producto con tallas fallaba siempre (el modal del carrito no estaba dentro de `ProductVariantProvider`). La tabla `orders` es de UN producto por fila. Si algún día vuelve, primero pedidos de varios productos: toca `orders`, Nitro (`order.v1`) y Confío. Para llevar varias unidades del mismo producto están los combos (`quantityOffers`).
 
 ## Color: dónde NO va el rojo (25-sep-2026)
-Además de la regla de §Color, se quitaron rojos que no eran «comprar»: la variante elegida (ahora lavanda), los puntos de «Para qué lo usan», el foco del selector de ciudad, la etiqueta «Después» del antes/después (tinta) y los botones de navegación «Ir al catálogo» / «Ir a explorar productos» (tinta). El rojo que queda: botón de compra, bolsa de la tarjeta y contador del carrito, y «Ver producto» del artículo del blog (lleva a comprar).
+Además de la regla de §Color, se quitaron rojos que no eran «comprar»: la variante elegida (ahora lavanda), los puntos de «Para qué lo usan», el foco del selector de ciudad, la etiqueta «Después» del antes/después (tinta) y los botones de navegación «Ir al catálogo» / «Ir a explorar productos» (tinta). El rojo que queda: botón de compra y «Ver producto» del artículo del blog (lleva a comprar). La bolsa de la tarjeta y el contador del carrito se fueron con el carrito.

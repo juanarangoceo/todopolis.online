@@ -13,7 +13,7 @@ export type { InlineImage } from './ai/gemini.ts'
 // Solo se pide lo que falta (`needs`): lo que el editor ya escribió no se
 // regenera ni se sobreescribe.
 
-import { CAMPAIGN_STORY_RULES } from './product-content-prompt.ts'
+import { CAMPAIGN_STORY_RULES, META_AD_RULES } from './product-content-prompt.ts'
 import type { UsageSink } from './ai/pricing.ts'
 
 export const DESTACADO_MODEL = EDITORIAL_MODEL
@@ -69,6 +69,7 @@ export function buildDestacadoPrompt(input: DestacadoInput, needs: DestacadoNeed
 - La frase que iría en el anuncio de Meta y se repite en la landing bajo el nombre del producto.
 - Máximo 60 caracteres. Promesa concreta y verificable del producto, en segunda persona o impersonal.
 - Sin emojis, sin signos de exclamación, sin superlativos ("el mejor"), sin urgencia inventada, sin promesas de salud.
+- No le hables al cuerpo del lector ("adiós a tus rollitos", "¿cansada de tu barriga?"): Meta rechaza el anuncio. Habla de lo que hace el producto.
 - Bien: "Aprende a rodar sin caídas laterales". Mal: "¡El regalo perfecto que todos aman!"`)
     shape.push(`"headline": "..."`)
   }
@@ -98,6 +99,8 @@ export function buildDestacadoPrompt(input: DestacadoInput, needs: DestacadoNeed
     : ''
 
   return `Eres copywriter senior de e-commerce en Colombia para Todópolis. Voz: una amiga que sabe del tema, cálida y directa, que tutea. Español de Colombia. Sin emojis. Nunca inventes datos: si no está en el texto ni en las fotos, no lo escribas. Nada de promesas de salud, curación o cambios corporales.${photos}
+
+${META_AD_RULES}
 
 PRODUCTO: ${input.name}
 ${input.heroTitle ? `Gancho actual: ${input.heroTitle}\n` : ''}${input.shortDescription ? `Descripción: ${input.shortDescription}\n` : ''}${specs ? `Especificaciones:\n${specs}\n` : ''}${benefits ? `Beneficios ya escritos (no los repitas):\n${benefits}\n` : ''}

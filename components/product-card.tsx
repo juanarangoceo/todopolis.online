@@ -2,12 +2,11 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Star, ShoppingBag, Truck } from 'lucide-react';
+import { Heart, Star, Truck } from 'lucide-react';
 import { categoryTitle } from '@/lib/categories';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useFavorites } from '@/app/providers/favorites-provider';
-import { useCart } from '@/app/providers/cart-provider';
 import { DestacadoBadge } from '@/components/destacado-badge';
 
 interface ProductCardProps {
@@ -17,7 +16,6 @@ interface ProductCardProps {
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { favoriteSlugs, toggleFavorite } = useFavorites();
-  const { addToCart } = useCart();
   const slug = (product as any).slug || (product as any)._id || '';
   const isFavorited = favoriteSlugs.includes(slug);
   
@@ -104,23 +102,10 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               <Heart className={cn("w-4 h-4 text-todopolis-pink-deep", isFavorited && "fill-current")} />
             </button>
 
-            {/* Quick add button — CTA único en salmón */}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                addToCart(product);
-              }}
-              className={cn(
-                "absolute bottom-3 right-3 sm:bottom-4 sm:right-4 p-2.5 sm:p-3 rounded-2xl transition-all duration-300",
-                "bg-cta text-cta-fg hover:bg-cta-hover",
-                "opacity-100 translate-y-0",
-                "shadow-xl shadow-cta-ring"
-              )}
-              aria-label="Agregar al carrito"
-            >
-              <ShoppingBag className="w-5 h-5" />
-            </button>
+            {/* Sin bolsa de «agregar al carrito» (22-oct-2026): el carrito
+                guardaba solo el primer producto y fallaba con tallas (ver
+                CLAUDE.md → «Carrito: retirado»). Toda la tarjeta lleva a la
+                ficha, que es donde se elige talla y se compra. */}
           </div>
 
           {/* Content */}

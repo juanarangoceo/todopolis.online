@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Heart, Zap, BookOpen, Menu, X, Home, Star, LayoutGrid } from 'lucide-react'
-import { useCart } from '@/app/providers/cart-provider'
-import { CartSidebar } from '@/components/cart-sidebar'
+import { Heart, Zap, BookOpen, Menu, X, Home, Star, LayoutGrid } from 'lucide-react'
 import { useFavorites } from '@/app/providers/favorites-provider'
 import { ProductsCounter } from '@/components/products-counter'
 
@@ -54,7 +52,6 @@ const NAV_LINKS = [
 ] as const
 
 export function Header() {
-  const { totalItems, openCart } = useCart()
   const { favoriteSlugs } = useFavorites()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -128,18 +125,6 @@ export function Header() {
               )}
             </Link>
 
-            {/* Cart — ícono salmón (semántica de compra) */}
-            <button
-              onClick={openCart}
-              className={MOBILE_ICON}
-              aria-label="Carrito"
-              style={{ touchAction: 'manipulation' }}
-            >
-              <ShoppingBag className="w-5 h-5 text-cta" />
-              <span className={`absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-cta text-cta-fg text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
-                {totalItems}
-              </span>
-            </button>
           </div>
 
           {/* ── Desktop layout ──
@@ -189,12 +174,6 @@ export function Header() {
                 )}
               </Link>
 
-              <button onClick={openCart} className={DESKTOP_ICON} aria-label="Carrito" title="Carrito">
-                <ShoppingBag className="w-5 h-5 text-cta" />
-                <span className={`absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-cta text-cta-fg text-[10px] font-bold rounded-full flex items-center justify-center transition-all ${totalItems > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
-                  {totalItems}
-                </span>
-              </button>
             </div>
           </div>
         </div>
@@ -299,7 +278,6 @@ export function Header() {
         </aside>
       </div>
 
-      <CartSidebar />
     </>
   )
 }

@@ -127,8 +127,8 @@ export const COST_SOURCES: Record<string, CostSource> = {
   destacado: { label: 'Completar Destacado', group: 'Contenido', model: 'gemini-3.8-flash' },
   ai_image: { label: 'Foto de estilo de vida (IA)', group: 'Imágenes', model: 'gpt-image-2.5-sunburst' },
   search_suggest: { label: 'Sugerencias del buscador', group: 'Tienda', model: 'typesafe-ai/jev' },
-  voice_prompt: { label: 'Guion de voz de Lucy', group: 'Voz', model: 'gemini-3.8-flash' },
-  voice_session: { label: 'Sesiones de voz de Lucy', group: 'Voz', model: 'gpt-realtime', unmeasured: true },
+  voice_prompt: { label: 'Guion de voz de Lucy (retirada)', group: 'Voz', model: 'gemini-3.8-flash' },
+  voice_session: { label: 'Sesiones de voz de Lucy (retirada)', group: 'Voz', model: 'gpt-realtime', unmeasured: true },
 }
 
 export interface Usage {

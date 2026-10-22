@@ -30,7 +30,6 @@ import { TrackViewContent } from '@/components/analytics/track-view-content'
 import { getAllProductSlugs, getSanityProductBySlug, getSanityProducts, getSanityStoreSettings } from '@/lib/sanity/queries'
 import { SanityProduct } from '@/lib/types'
 import { AgeGate } from '@/components/age-gate'
-import { VoiceLucyMount } from '@/components/lucy/VoiceLucyMount'
 import { ProductVariantProvider } from '@/components/product/product-variant-context'
 import { ArticleModalProvider } from '@/components/product/article-modal'
 import { DestacadoSection, DestacadoSectionHeader } from '@/components/product/destacados/destacado-section-header'
@@ -413,16 +412,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         )}
         </ArticleModalProvider>
       </main>
-
-      <VoiceLucyMount
-        product={{
-          slug: adaptedProduct.slug,
-          name: adaptedProduct.name,
-          price: adaptedProduct.price,
-          image: adaptedProduct.image || null,
-          shortDescription: adaptedProduct.shortDescription || null,
-        }}
-      />
 
       <Footer showPaymentExplainer={false} flush productSlug={adaptedProduct.slug} />
     </div>

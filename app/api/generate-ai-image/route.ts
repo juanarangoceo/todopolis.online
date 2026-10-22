@@ -49,6 +49,11 @@ const SCENES: Record<string, string> = {
 //  - El producto conserva su TAMAÑO real: agrandarlo para que «domine el
 //    encuadre» fabricaba una expectativa que el paquete no cumple.
 //  - Nada de texto, logos inventados ni piezas que el producto no trae.
+//
+// Y tres para pautar en Meta (22-oct-2026): ningún «antes y después» ni un
+// cuerpo presentado como defecto (Meta rechaza el anuncio), ropa y fajas
+// puestas con naturalidad y sin poses sugerentes, y lo importante dentro del
+// 4:5 central, que es lo que el feed recorta de una foto vertical 2:3.
 function buildImagePrompt(name: string, heroTitle: string, description: string, scene?: string): string {
   const parts = [
     `Product name: "${name}".`,
@@ -62,7 +67,8 @@ function buildImagePrompt(name: string, heroTitle: string, description: string, 
     'PRODUCT FIDELITY (most important): the reference image(s) show the real product. Reproduce its exact shape, colors, materials, proportions, parts and any printed branding. Keep its true real-world size relative to hands, people and furniture — never enlarge it. Do not add accessories, parts, colors or features the reference does not show. You may change the angle and position.',
     'PEOPLE: show the person who would really use this product, matching the age, gender and situation implied by the name and description (for example a toddler with a parent nearby for a toddler toy, an adult at a desk for a gaming accessory). Ordinary, natural-looking Colombian people with real skin texture — not models, no heavy retouching. Natural, candid expressions mid-action rather than posing for the camera.',
     'SETTING AND LIGHT: a believable Colombian home, apartment, balcony, park or street that fits the product. Natural window light or daylight. It should look like a well-composed photo taken by a good photographer with a real camera, not a studio catalog shot and not a 3D render.',
-    'COMPOSITION: vertical portrait framing for a mobile feed. The product is clearly visible, in focus and easy to identify within the first second, with some breathing room around it.',
+    'COMPOSITION: vertical portrait framing for a mobile feed. The product is clearly visible, in focus and easy to identify within the first second, with some breathing room around it. Keep the product and any face inside the central 4:5 area: feeds crop the top and bottom of a 2:3 photo.',
+    'AD POLICY (the photo will run in Facebook and Instagram ads): no before-and-after, no split images, no measuring tapes, scales or pinched skin, no close-ups of body parts presented as a problem. Clothing, shapewear and lingerie are shown worn naturally in an everyday, non-suggestive pose, by a person of ordinary build, with the garment\'s real fit, fabric and color. The product must not look better, bigger or shinier than the reference.',
     'NEVER include: text, captions, prices, watermarks, invented logos, UI elements, extra fingers or distorted hands, duplicated products.',
     scene && SCENES[scene] ? SCENES[scene] : '',
   ].filter(Boolean).join('\n\n')

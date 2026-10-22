@@ -6,8 +6,7 @@
 //
 // DÓNDE SE PINTA: abajo a la derecha, en todas las rutas. En la ficha de
 // producto, en móvil, no: ahí la barra fija de compra ya lleva WhatsApp
-// (`product-hero.tsx`). Ojo con `VoiceLucy` (bottom-24, derecha), que solo
-// sale en los productos que lo tengan encendido y queda por encima.
+// (`product-hero.tsx`).
 
 import { useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'

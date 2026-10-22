@@ -3,7 +3,6 @@ import { Nunito, Montserrat } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { FavoritesProvider } from '@/app/providers/favorites-provider'
-import { CartProvider } from '@/app/providers/cart-provider'
 import { WhatsAppButton } from '@/components/whatsapp-button'
 import { MetaPixel } from '@/components/analytics/meta-pixel'
 import { AttributionTracker } from '@/components/analytics/attribution-tracker'
@@ -144,10 +143,8 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
         <FavoritesProvider>
-          <CartProvider>
-            {children}
-            <WhatsAppButton phone={storeSettings?.whatsappPhone ?? null} />
-          </CartProvider>
+          {children}
+          <WhatsAppButton phone={storeSettings?.whatsappPhone ?? null} />
         </FavoritesProvider>
       </body>
     </html>

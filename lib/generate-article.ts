@@ -1,5 +1,6 @@
 import { createEditorialModel } from './ai/gemini'
 import type { UsageSink } from './ai/pricing'
+import { paymentFactsForCopy } from './payments/narrative'
 
 const ARTICLE_PROMPT = `Eres un especialista en SEO y GEO (Generative Engine Optimization) para e-commerce latinoamericano. Tu misión: crear artículos informativos que posicionan en Google Y aparecen citados por LLMs como ChatGPT, Perplexity y Claude.
 
@@ -10,6 +11,12 @@ REGLAS OBLIGATORIAS:
 - El producto aparece naturalmente al final como solución recomendada
 - Firmado por "Equipo Todópolis"
 - FAQ: 4 preguntas con respuestas directas de 30-50 palabras (clave para GEO y featured snippets)
+- Sin emojis en ningún campo
+- NUNCA inventes datos del producto (medidas, potencias, materiales, certificaciones, estudios, porcentajes). Lo que no esté en el input no se escribe
+- Nada de promesas de salud, curación, adelgazamiento ni cambios corporales: describe lo que el producto hace, no un efecto médico
+- No le hables al cuerpo, el peso o la salud del lector ("tus rollitos", "tu flacidez"): el artículo se enlaza desde anuncios de Meta
+- Envío, pago y garantía: solo estos hechos, redactados tal cual (sin acelerar plazos ni ampliar garantías):
+${paymentFactsForCopy()}
 
 ESTRUCTURA (~700 palabras distribuidas):
 1. intro (70-80 palabras): apertura que conecta con el problema que resuelve el producto
@@ -42,7 +49,7 @@ OUTPUT: SOLO JSON válido, sin markdown, sin texto adicional:
       { "question": "¿Tercera pregunta?", "answer": "Respuesta directa." },
       { "question": "¿Cuarta pregunta?", "answer": "Respuesta directa." }
     ]},
-    { "type": "cta", "heading": "Afirmación que conecta el artículo con el deseo del lector (ej: 'La solución que buscabas ya está en Todópolis')", "content": "Oración 1: refuerza el beneficio principal del artículo y lo conecta con el producto. Oración 2: micro-compromiso — el primer paso es solo 'ver el producto', sin presión. Oración 3 (opcional): garantía implícita o facilidad de compra (contraentrega, envío gratis).", "buttonText": "Texto de acción específico — NO 'Ver producto'. Opciones: 'Quiero este producto →' | 'Ver precio y envío →' | 'Lo quiero ahora →' | 'Llevarlo a mi casa →' | 'Sí, lo quiero →'. Elige el más natural para el producto." }
+    { "type": "cta", "heading": "Afirmación que conecta el artículo con el deseo del lector (ej: 'La solución que buscabas ya está en Todópolis')", "content": "Oración 1: refuerza el beneficio principal del artículo y lo conecta con el producto. Oración 2: micro-compromiso — el primer paso es solo 'ver el producto', sin presión. Oración 3 (opcional): UN hecho de envío, pago o garantía de la lista de arriba, tal cual.", "buttonText": "Texto de acción específico — NO 'Ver producto'. Opciones: 'Quiero este producto →' | 'Ver precio y envío →' | 'Lo quiero ahora →' | 'Llevarlo a mi casa →' | 'Sí, lo quiero →'. Elige el más natural para el producto." }
   ]
 }
 

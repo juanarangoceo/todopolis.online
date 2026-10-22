@@ -5,7 +5,7 @@ decisiones concretas y su historia están en `CLAUDE.md`; esto es el criterio
 que las une. **Si un cambio nuevo contradice esta guía, gana la guía, salvo que
 la actualices a propósito y digas por qué.**
 
-Última revisión: 22-oct-2026 (auditoría de diseño: sin degradados, pulsos ni carruseles automáticos que quedaban; checkout, pie y promesas viejas de la IA. Antes, 21-oct-2026: «Cómo pagas»).
+Última revisión: 22-oct-2026 (sin carrito ni voz de Lucy: se compra desde la ficha; antes, ese mismo día, auditoría de diseño: sin degradados, pulsos ni carruseles automáticos que quedaban; checkout, pie y promesas viejas de la IA. Antes, 21-oct-2026: «Cómo pagas»).
 
 ---
 
@@ -98,7 +98,7 @@ significa nada, va en gris.**
 
 | Color | Token | Significa | Dónde |
 |---|---|---|---|
-| Rojo coral `#D93B2B` | `--cta` | **Actuar: comprar** | Botón de compra y carrito. Nada más es rojo. |
+| Rojo coral `#D93B2B` | `--cta` | **Actuar: comprar** | Botón de compra. Nada más es rojo. |
 | Rosa coral `#E55A6B` | `--sale` | Precio rebajado | Solo la insignia −X %. |
 | Azul `#1E5A9C` sobre `#EFF7FF` | `--trust-*` | Hechos verificables | Pago, envío, garantía, stock. |
 | Lavanda `#6B3F8A` | `--todopolis-lavender-deep` | Interfaz | Pestaña activa, filete del antetítulo, enlaces de sección, foco. |
@@ -194,7 +194,7 @@ En móvil solo puede flotar:
 - La **lupa** del header, que aparece al bajar.
 
 Nada más. Cada flotante tapa producto. El chat web de Lucy se retiró en
-sep 2026: la atención es por WhatsApp.
+sep 2026 y la voz de Lucy el 22-oct-2026: la atención es por WhatsApp.
 
 ---
 
