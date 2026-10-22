@@ -293,6 +293,7 @@ El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del men
 - **Sin banner de temporada en el home** (la pieza traía degradado, texto pintado y dos botones). La campaña sigue en `/temporada`.
 - **Novedades va DESPUÉS de «Así compras»**: pegada a «Eleva tu estilo» eran dos carruseles casi iguales.
 - El buscador cuenta lo mismo que «Todos» (sin Lencería).
+- **«Elige cómo pagar» en «Así compras»** (`PolicyBadges showPayments`, solo con Confío encendido): dos tarjetas gemelas, Confío (logo, «segundos / minutos, sin comprobantes», PSE · Nequi · Bancolombia) y Contraentrega. Llevan al catálogo (`#productos`): en el home no hay producto que comprar todavía.
 - **Feed de Meta sin vigilancia oculta** (`/espía/` en el nombre): Meta prohíbe anunciar cámaras espía.
 - **«Pídelo por WhatsApp»** (`components/product/whatsapp-order-block.tsx`), justo después del cierre: el chat se abre con «Hola, quiero pedir <producto> ($precio)» y el enlace (`buildWhatsAppUrl` con `message`). No promete «te atiende una persona»: puede contestar el asesor de Nitro.
 - **«Cómo pagas» en móvil**: un resumen de una línea por tarjeta; los pasos solo en escritorio.

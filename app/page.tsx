@@ -130,7 +130,7 @@ export default async function Home() {
 
             {/* Novedades DESPUÉS de «Así compras» (22-oct-2026): pegada a
                 «Eleva tu estilo» eran dos carruseles casi iguales seguidos. */}
-            <PolicyBadges policies={policies} whatsappHref={whatsappHref} />
+            <PolicyBadges policies={policies} whatsappHref={whatsappHref} showPayments={advancePaymentEnabled()} />
 
             <NewArrivalsBanner products={newArrivals} />
           </>
