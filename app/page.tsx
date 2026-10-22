@@ -8,10 +8,9 @@ import { stylePickIds } from '@/lib/style-picks';
 import { ProductBrowser } from '@/components/product-browser';
 import { PolicyBadges } from '@/components/policy-badges';
 import { Footer } from '@/components/footer';
-import { PromoBanner } from '@/components/promo-banner';
 import { advancePaymentEnabled } from '@/lib/payments/config';
 import { resolveWhatsAppPhone } from '@/lib/whatsapp';
-import { getSanityProducts, getSanityStoreSettings, getSanityTags, getActivePromoCampaign } from '@/lib/sanity/queries';
+import { getSanityProducts, getSanityStoreSettings, getSanityTags } from '@/lib/sanity/queries';
 
 // El título del home lleva el slogan y el sector al que se enfoca la tienda
 // (moda y accesorios, sep 2026), sin dejar de decir que hay más.
@@ -74,10 +73,9 @@ export default async function Home() {
       price: (p.price ?? 0) as number,
     }));
 
-  const [storeSettings, tagTaxonomy, promoCampaign] = await Promise.all([
+  const [storeSettings, tagTaxonomy] = await Promise.all([
     getSanityStoreSettings(),
     getSanityTags(),
-    getActivePromoCampaign(),
   ]);
 
   const whatsappPhone = resolveWhatsAppPhone(storeSettings?.whatsappPhone, process.env.NEXT_PUBLIC_WHATSAPP_PHONE)
@@ -121,27 +119,20 @@ export default async function Home() {
           // la cuadrícula limpia. Con búsqueda o filtros vuelve a aparecer.
           featuredIds={[...newArrivals, ...stylePicks].map((p: { id: string }) => p.id)}
           intro={<HomeGreeting />}
-          rowTwoSlot={
-            promoCampaign ? (
-              <>
-                <div className="md:hidden">
-                  <PromoBanner campaign={promoCampaign} variant="mobile" />
-                </div>
-                <div className="hidden md:block">
-                  <PromoBanner campaign={promoCampaign} variant="desktop" />
-                </div>
-              </>
-            ) : undefined
-          }
+          // Sin banner de temporada en el home (22-oct-2026): la pieza traía
+          // degradado, texto pintado y dos botones, y chocaba con la marca.
+          // La campaña sigue viva en /temporada.
         >
           {/* Un solo hijo: tres sueltos cruzando a un componente de cliente
               daban el aviso de React de «each child should have a key». */}
           <>
             <StyleSpotlight products={stylePicks} />
 
-            <NewArrivalsBanner products={newArrivals} />
-
+            {/* Novedades DESPUÉS de «Así compras» (22-oct-2026): pegada a
+                «Eleva tu estilo» eran dos carruseles casi iguales seguidos. */}
             <PolicyBadges policies={policies} whatsappHref={whatsappHref} />
+
+            <NewArrivalsBanner products={newArrivals} />
           </>
         </ProductBrowser>
         

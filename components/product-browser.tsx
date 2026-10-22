@@ -254,7 +254,9 @@ export function ProductBrowser({ initialProducts, children, aiImages = [], tagTa
 
   // El número dice cuánto hay detrás de la barra. «Busca tu producto mágico»
   // no decía nada.
-  const searchPlaceholder = `Busca entre ${initialProducts.length} productos`;
+  // El mismo número que «Todos»: sin Lencería, que pasa por el aviso de edad.
+  // Decía 492 junto a un «Todos 478».
+  const searchPlaceholder = `Busca entre ${initialProducts.filter((p) => p.category !== ADULT_TITLE && p.category !== 'bienestar-intimo').length} productos`;
 
   const clearPanel = useCallback(() => {
     setSelectedTags(new Set());

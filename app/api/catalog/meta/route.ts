@@ -67,6 +67,10 @@ export async function GET() {
       if (!p.slug || !p.name) return false
       // Adultos fuera, por política de Meta.
       if (p.category?.toLowerCase() === 'bienestar-intimo') return false
+      // Vigilancia oculta fuera (22-oct-2026): Meta prohíbe anunciar cámaras
+      // espía y equipos afines, y un artículo prohibido en el catálogo puede
+      // marcar la cuenta publicitaria. En la tienda se siguen vendiendo.
+      if (/esp[ií]a/i.test(p.name)) return false
       // Meta rechaza artículos sin precio o sin imagen, y un artículo rechazado
       // cuenta en la tasa de errores del catálogo. Mejor no mandarlo.
       if (!p.price || p.price <= 0) return false

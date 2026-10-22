@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { WhatsAppIcon } from '@/components/whatsapp-icon';
 import Image from 'next/image';
-import { Star, Heart, ShoppingBag, Truck, ShieldCheck, RotateCcw, Zap, Check } from 'lucide-react';
+import { Star, Heart, Truck, ShieldCheck, RotateCcw, Zap, Check } from 'lucide-react';
 import { PaymentMethods } from '@/components/payment-methods';
-import { sanitizeHeroCta } from '@/lib/cta';
 import { isSoldOut } from '@/lib/supplier-stock';
 import { descriptionBullets } from '@/lib/description';
 import { priceForQuantity, savingsForQuantity, validOffers } from '@/lib/quantity-offers';
@@ -30,6 +29,24 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
   const isWishlisted = favoriteSlugs.includes(slug);
   
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  // La barra fija se esconde mientras otro botón de compra (el del hero o el
+  // del cierre, `data-buy-button`) está a la vista: eran dos botones rojos
+  // uno encima del otro.
+  const [buyButtonInView, setBuyButtonInView] = useState(false);
+  useEffect(() => {
+    const targets = document.querySelectorAll('[data-buy-button]');
+    if (!targets.length) return;
+    const visible = new Set<Element>();
+    const observer = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) visible.add(e.target);
+        else visible.delete(e.target);
+      }
+      setBuyButtonInView(visible.size > 0);
+    });
+    targets.forEach((t) => observer.observe(t));
+    return () => observer.disconnect();
+  }, []);
   const [selectedImage, setSelectedImage] = useState(0);
   // Cantidad elegida en el selector de combos. El checkout abre con ella.
   const [selectedQty, setSelectedQty] = useState(1);
@@ -58,10 +75,10 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
   // cuando el producto no tiene copy de IA, y en ese caso repetir el nombre
   // debajo del titular parece un fallo de plantilla.
   const hasHook = !!heroTitle && heroTitle !== product.name;
-  // El CTA del producto pasa por `sanitizeHeroCta` (lib/cta.ts): descarta los
-  // verbos de exploración, le arranca la mención a la contraentrega —que dejó
-  // de ser el único medio de pago— y sustituye los que no caben en una línea.
-  const heroCta = sanitizeHeroCta((product as any).heroCta);
+  // Un solo texto en toda la ficha (22-oct-2026): el de la IA variaba por
+  // producto y el cierre y la barra decían otra cosa. Tres botones con tres
+  // verbos distintos para la misma acción.
+  const heroCta = 'Comprar ahora';
   
   const discount = (product as any).originalPrice
     ? Math.round((1 - product.price / (product as any).originalPrice) * 100)
@@ -248,11 +265,8 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
               renglón. */}
           {/* Oculto en móvil: ahí el precio queda demasiado lejos, y la historia
               y los beneficios de más abajo dicen lo mismo con más espacio. */}
-          {(product as any).heroSubtitle && (
-            <p className="hidden sm:block text-xl text-muted-foreground leading-relaxed">
-              {(product as any).heroSubtitle}
-            </p>
-          )}
+          {/* 22-oct-2026: tampoco en escritorio. En 1280×900 dejaba el botón
+              de compra debajo del borde, y las viñetas dicen lo mismo. */}
 
           {/* Descripción como viñetas, sin los emojis que trae de la IA
               (`lib/description.ts`). Antes era un párrafo con ✅🔥⭐ incrustados
@@ -260,7 +274,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
           {bullets.length > 1 ? (
             <ul className="space-y-2.5">
               {bullets.map((b, i) => (
-                <li key={i} className="flex gap-3 text-base md:text-lg text-foreground/80 leading-snug">
+                <li key={i} className="flex gap-3 text-base text-foreground/80 leading-snug">
                   <Check className="mt-1 h-4 w-4 shrink-0 text-todopolis-lavender-deep" strokeWidth={3} />
                   <span>{b}</span>
                 </li>
@@ -388,15 +402,15 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
                 </span>
               ) : (
               <button
+                data-buy-button
                 onClick={() => setIsCheckoutOpen(true)}
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2.5 px-5 py-4 rounded-2xl font-bold transition-all duration-300",
                   "text-base md:text-lg whitespace-nowrap",
-                  "bg-cta text-cta-fg hover:bg-cta-hover shadow-xl shadow-cta-ring hover:shadow-2xl",
+                  "bg-cta text-cta-fg hover:bg-cta-hover shadow-sm",
                   "hover:scale-[1.02] active:scale-[0.98]"
                 )}
               >
-                <ShoppingBag className="w-5 h-5 shrink-0" />
                 {heroCta}
               </button>
               )}
@@ -484,7 +498,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
         comprador perdería el botón al bajar. WhatsApp va DENTRO, a la
         izquierda: flotando encima de la barra tapaba el nombre del producto
         (ver whatsapp-button.tsx, que en la ficha no se pinta en móvil). */}
-    {!product.isDestacado && !isCheckoutOpen && !soldOut && (
+    {!product.isDestacado && !isCheckoutOpen && !soldOut && !buyButtonInView && (
     <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 flex gap-2 animate-in slide-in-from-bottom-5">
       {whatsappHref && (
         <a
@@ -499,12 +513,9 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
       )}
       <button
         onClick={() => setIsCheckoutOpen(true)}
-        className="flex-1 min-w-0 flex items-center justify-between gap-3 px-5 py-4 rounded-2xl font-bold text-lg bg-cta text-cta-fg shadow-2xl shadow-cta-ring active:scale-[0.98] transition-all"
+        className="flex-1 min-w-0 flex items-center justify-between gap-3 px-5 py-4 rounded-2xl font-bold text-lg bg-cta text-cta-fg shadow-lg shadow-black/15 active:scale-[0.98] transition-all"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <ShoppingBag className="w-5 h-5 shrink-0" />
-          <span className="truncate">{heroCta}</span>
-        </div>
+        <span className="truncate">{heroCta}</span>
         <span className="text-cta-fg/80 font-medium whitespace-nowrap">
           {formatPrice(selectedTotal)}
         </span>

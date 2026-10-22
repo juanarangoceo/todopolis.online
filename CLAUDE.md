@@ -289,6 +289,13 @@ El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del men
 
 `components/whatsapp-button.tsx`: abajo a la DERECHA, verde de WhatsApp, sombra neutra, sin punto de «en línea»; en escritorio es píldora con «Escríbenos». En la ficha, en móvil, no se pinta: la ficha normal lo lleva dentro de la barra de compra y Destacados pinta su propia burbuja, también a la derecha (`product-hero.tsx`). El logo está en `components/whatsapp-icon.tsx`: úsalo, no pegues el SVG.
 
+### Home, 22-oct-2026
+- **Sin banner de temporada en el home** (la pieza traía degradado, texto pintado y dos botones). La campaña sigue en `/temporada`.
+- **Novedades va DESPUÉS de «Así compras»**: pegada a «Eleva tu estilo» eran dos carruseles casi iguales.
+- El buscador cuenta lo mismo que «Todos» (sin Lencería).
+- **Feed de Meta sin vigilancia oculta** (`/espía/` en el nombre): Meta prohíbe anunciar cámaras espía.
+- **Ficha: un solo texto de botón, «Comprar ahora»**, sin bolsa ni halo rojo; la barra fija de móvil se esconde mientras el botón del hero o del cierre (`data-buy-button`) está a la vista; el subtítulo del hero ya no sale en escritorio, para que el botón quede arriba del borde.
+
 ### Banner de temporada: el botón va DEBAJO de la imagen
 `components/promo-banner.tsx`. Las piezas traen texto (y a veces botón) pintado en la imagen; el botón superpuesto caía encima.
 

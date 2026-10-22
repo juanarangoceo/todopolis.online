@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { MessageCircle, RotateCcw, ShoppingBag, Truck } from 'lucide-react'
+import { MessageCircle, RotateCcw, Truck } from 'lucide-react'
 import { PaymentMethods } from '@/components/payment-methods'
 import { OfferCountdownInline } from '../offer-countdown-inline'
 import { Product } from '@/lib/types'
@@ -118,11 +118,11 @@ export function DestacadoCTA({ product, whatsappHref }: Props) {
 
           <button
             type="button"
+            data-buy-button
             onClick={() => window.dispatchEvent(new CustomEvent('product:buy'))}
-            className="mt-6 flex w-full max-w-md items-center justify-center gap-2.5 whitespace-nowrap rounded-2xl bg-cta px-6 py-4 text-base font-bold text-cta-fg shadow-xl shadow-cta-ring transition-all duration-300 hover:scale-[1.02] hover:bg-cta-hover active:scale-[0.98] md:py-5 md:text-lg"
+            className="mt-6 flex w-full max-w-md items-center justify-center gap-2.5 whitespace-nowrap rounded-2xl bg-cta px-6 py-4 text-base font-bold text-cta-fg shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-cta-hover active:scale-[0.98] md:py-5 md:text-lg"
           >
-            <ShoppingBag className="h-5 w-5 shrink-0" />
-            Lo quiero, pedir ahora
+            Comprar ahora
           </button>
           <p className="mt-3 text-sm text-muted-foreground">Eliges cómo pagar en el siguiente paso.</p>
           <PaymentMethods className="mt-3" />
