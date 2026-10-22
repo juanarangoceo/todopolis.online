@@ -5,7 +5,7 @@ decisiones concretas y su historia están en `CLAUDE.md`; esto es el criterio
 que las une. **Si un cambio nuevo contradice esta guía, gana la guía, salvo que
 la actualices a propósito y digas por qué.**
 
-Última revisión: 22-oct-2026 (sin carrito ni voz de Lucy: se compra desde la ficha; antes, ese mismo día, auditoría de diseño: sin degradados, pulsos ni carruseles automáticos que quedaban; checkout, pie y promesas viejas de la IA. Antes, 21-oct-2026: «Cómo pagas»).
+Última revisión: 22-oct-2026 (ficha lista para campañas: botón único, formas de pago como botones, «Pídelo por WhatsApp», guía de tallas; sin carrito ni voz de Lucy: se compra desde la ficha; antes, ese mismo día, auditoría de diseño: sin degradados, pulsos ni carruseles automáticos que quedaban; checkout, pie y promesas viejas de la IA. Antes, 21-oct-2026: «Cómo pagas»).
 
 ---
 
@@ -160,14 +160,15 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 | Encabezar una sección | Antetítulo gris con filete + titular (ver §5). En la ficha: `DestacadoSectionHeader`. |
 | Filtrar por categoría | Móvil: tarjetas con foto en una fila deslizable. Escritorio: `CategoryBar`, pestañas de texto con subrayado lavanda y «Más categorías». Tocar la activa la quita. |
 | Buscar | `MagicSearchBar` con `placeholder` «Busca entre N …». |
-| Hablar con el cliente | `WhatsAppButton` (burbuja global) o el botón dentro de la barra de compra. |
+| Hablar con el cliente | `WhatsAppButton` (burbuja global) o el botón dentro de la barra de compra. En la ficha, tras el cierre, `WhatsAppOrderBlock` («Pídelo por WhatsApp»): el chat abre con el producto y el precio escritos. |
 | Pedir el correo | `FooterSubscribe`, en el pie. Nunca en medio del recorrido de compra. |
+| Comprar en la ficha | Un solo texto, «Comprar ahora», en hero, barra y cierre. Rojo plano, sin ícono ni halo. «Contraentrega» y «Confío» son botones (`PaymentMethods selectable`) que abren el checkout con esa vía elegida. |
 | Explicar el pago | `payment-methods.tsx`, `destacado-payment.tsx`, `ConfioLogo`, `PaymentLogos` (PSE, Nequi y Bancolombia en gris; nunca tarjetas). La rapidez se dice del pago («segundos», «minutos»), nunca del envío. |
 | Contar cómo se compra (pago → entrega → defecto) | `PolicyBadges` («Así compras en Todópolis»): pasos numerados con filetes, sin cajas. |
 | Categorías en móvil / escritorio | `CategoryCards` (tarjetas con foto) / `CategoryBar` (pestañas de texto + «Más categorías»). Home y ofertas. |
 | Una sección de ficha o de colección | `DestacadoSection`, `DestacadoSectionHeader`, `DestacadoSplit`. |
 | Nombrar una categoría | `categoryTitle(value)` de `lib/categories.ts`. |
-| Elegir talla, color u opción | `VariantSelector`: chips compactos; si las variantes son «talla/color», dos filas (`lib/variant-options.ts`). La elegida en lavanda. |
+| Elegir talla, color u opción | `VariantSelector`: chips compactos; si las variantes son «talla/color», dos filas (`lib/variant-options.ts`). Más de 8 opciones: lista desplegable. La elegida en lavanda. Debajo, la guía de tallas si la ficha técnica la trae. |
 | Saludar al abrir el home | `HomeGreeting`: saludo por hora + frase de `lib/home-phrases.ts`. Una por visita, quieta. |
 | Una fila deslizable en móvil | Siempre debe asomar la tarjeta siguiente (≥ 30 px). En el home, `COMPACT_ROW_ITEM`. |
 

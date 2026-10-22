@@ -301,6 +301,12 @@ El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del men
 - **Guía de tallas bajo el selector**: sale de la fila de la ficha técnica cuyo nombre dice «talla» o «medida», solo si el producto tiene variantes.
 - **Ficha: un solo texto de botón, «Comprar ahora»**, sin bolsa ni halo rojo; la barra fija de móvil se esconde mientras el botón del hero o del cierre (`data-buy-button`) está a la vista; el subtítulo del hero ya no sale en escritorio, para que el botón quede arriba del borde.
 
+### Pendientes para las campañas en Meta (al cierre del 22-oct-2026)
+1. **`TYPESAFE_API_KEY`** en `.env.local` y en Vercel (todopolis-online, Production, Sensitive), y redesplegar. La de Nitro está marcada «sensible» y no se puede leer: hay que pegarla a mano. Sin ella JEV va por el Gateway, que responde «Free tier», y todo cae a Gemini. Con ella: `node scripts/fix-product-categories.ts --all --env=<archivo OIDC>` en seco para comparar.
+2. **Regenerar texto y fotos de los productos a pautar** («Generar Landing» y la foto IA del Studio). Los prompts ya cumplen `META_AD_RULES`, pero el texto guardado es viejo: los Leggins Moldeadores dicen «push-up», «autoestima» y «celulitis». 575 de 579 productos tienen una sola foto, 533 sin foto de uso, 565 sin historia, 568 sin «¿Es para ti?».
+3. Fotos de proveedor con letreros en la cuadrícula del home: subir los de mejor foto al principio de «Recomendados».
+4. Banner de la bicicleta Happy Baby: dice $129.000 y el precio es $99.800.
+
 ### Banner de temporada: el botón va DEBAJO de la imagen
 `components/promo-banner.tsx`. Las piezas traen texto (y a veces botón) pintado en la imagen; el botón superpuesto caía encima.
 
