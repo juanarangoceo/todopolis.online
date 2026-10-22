@@ -63,8 +63,8 @@ export function CategoryBar({
     } ${dim && !isActive ? 'opacity-40' : ''}`;
 
   return (
-    <div className="hidden items-center md:flex">
-      <div className="-ml-3 flex min-w-0 items-center">
+    <div className="hidden flex-wrap items-center gap-x-3 md:flex">
+      <div className="-ml-3 flex min-w-0 flex-wrap items-center">
         {primary.map((cat) => {
           const isActive = active === cat;
           const count = counts.get(cat) ?? 0;

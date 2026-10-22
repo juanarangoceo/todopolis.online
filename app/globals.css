@@ -23,8 +23,8 @@
   /* Surfaces */
   --app-bg: #FFFFFF;
   --surface: #FFFFFF;
-  --surface-soft: #FAFAFB;
-  --surface-muted: #F4F4F6;
+  --surface-soft: #FAF7F8;
+  --surface-muted: #F4EFF3;
 
   /* Acción / Conversión — coral saturado, ÚNICO para "comprar / pedir / agregar".
      El resto de la paleta son pasteles: este es el único color que compite con
@@ -41,7 +41,7 @@
   --cta-ring: rgba(217, 59, 43, 0.35);
 
   /* Oferta — rojo coral suave, separado del CTA para mantener jerarquía */
-  --sale: #E55A6B;
+  --sale: #B83A6E;
   --sale-soft: #FCE9EC;
   --sale-fg: #FFFFFF;
 
@@ -50,14 +50,14 @@
   --trust-fg: var(--todopolis-blue-deep);
   --trust-border: #DCEBFB;
 
-  /* Navegación (categorías = ancla universal → azul) */
-  --nav-active-bg: var(--todopolis-blue);
-  --nav-active-fg: var(--todopolis-blue-deep);
-  --nav-active-ring: rgba(162, 210, 255, 0.55);
+  /* Navegación: lavanda coherente con pestañas y filtros. */
+  --nav-active-bg: var(--todopolis-lavender);
+  --nav-active-fg: var(--todopolis-lavender-deep);
+  --nav-active-ring: rgba(237, 210, 243, 0.6);
   --nav-inactive-bg: var(--surface-muted);
   --nav-inactive-fg: #4A4A4A;
   --nav-inactive-border: #E5E5E8;
-  --nav-icon-active: var(--todopolis-blue-deep);
+  --nav-icon-active: var(--todopolis-lavender-deep);
   --nav-icon-inactive: #6B6B6B;
 
   /* Tags (filtro fino = decisión personal → coral suave / lila) */
@@ -366,4 +366,12 @@
   margin-top: 1rem;
   border-left: 3px solid var(--todopolis-lavender);
   padding-left: 1rem;
+}
+
+/* Las tarjetas siguen visibles sin animaciones si se reduce el movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  .product-card {
+    animation: none !important;
+    opacity: 1 !important;
+  }
 }

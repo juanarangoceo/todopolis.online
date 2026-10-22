@@ -16,7 +16,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { favoriteSlugs, toggleFavorite } = useFavorites();
-  const slug = (product as any).slug || (product as any)._id || '';
+  const slug = product.slug || product.id;
   const isFavorited = favoriteSlugs.includes(slug);
   
   const discount = product.originalPrice 
@@ -30,29 +30,21 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   return (
     <>
     <Link
-      href={`/producto/${(product as any).slug || product.id}`}
-      className="group block h-full"
+      href={`/producto/${slug}`}
+      className="product-card group block h-full"
       style={index < 8 ? {
         animation: `fadeInUp 0.45s ease-out ${index * 60}ms forwards`,
         opacity: 0
       } : undefined}
     >
       <article className="relative h-full">
-        {/* Card neutra. Tuvo un filete superior que rotaba azul, lavanda,
-            rosa y lima por posición: color sin significado, justo lo que se
-            quitó de la ficha (ver CLAUDE.md → «Color: tres significados»).
-            El hover también se calmó: escalar un 3 % y subir 8 px movía la
-            fila entera al pasar el ratón. */}
         <div
           className={cn(
-            // Columna: en una fila de tarjetas de alto distinto (una con
-            // precio tachado o «Envío gratis»), el precio baja al fondo y
-            // quedan todos alineados, sin un hueco blanco bajo el precio.
-            "relative flex h-full flex-col rounded-3xl overflow-hidden transition-all duration-500",
+            // El contenido sigue su altura natural; el precio queda junto al nombre.
+            "relative flex h-full flex-col rounded-3xl overflow-hidden transition-shadow duration-200 motion-reduce:transition-none",
             "bg-surface border border-nav-inactive-border",
-            "shadow-sm hover:shadow-xl",
-            "hover:-translate-y-1",
-            "group-focus-visible:ring-2 group-focus-visible:ring-cta group-focus-visible:ring-offset-2"
+            "shadow-sm hover:shadow-md",
+            "group-focus-visible:ring-2 group-focus-visible:ring-todopolis-lavender-deep group-focus-visible:ring-offset-2"
           )}
         >
           {/* Image container */}
@@ -62,7 +54,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               alt={product.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
               priority={index < 4}
               loading={index < 4 ? undefined : 'lazy'}
             />
@@ -86,13 +78,15 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
             {/* Favorite button */}
             <button
+              type="button"
+              aria-pressed={isFavorited}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleFavorite(slug);
               }}
               className={cn(
-                "absolute top-4 right-4 p-2.5 rounded-2xl transition-all duration-300",
+                "absolute top-2 right-2 sm:top-3 sm:right-3 min-h-11 min-w-11 flex items-center justify-center p-2.5 rounded-2xl transition-all duration-300",
                 "bg-white/95 md:backdrop-blur-sm hover:bg-accent-feminine/60",
                 "opacity-100 translate-y-0",
                 "shadow-md"
@@ -109,8 +103,8 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </div>
 
           {/* Content */}
-          <div className="flex flex-1 flex-col p-3 sm:p-5 bg-surface">
-            <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col p-3 sm:p-4 bg-surface">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               {/* Categoría en neutro: es metadato, no persuasión. El color se
                   reserva para lo que pide una acción o afirma un hecho. */}
               <span
@@ -128,7 +122,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
             
             {/* Name */}
-            <h3 className="mt-1.5 min-h-[2.5em] font-sans text-sm sm:text-base font-semibold text-ink-title line-clamp-2 transition-colors leading-snug group-hover:text-foreground/70">
+            <h3 className="mt-1.5 font-sans text-sm sm:text-base font-semibold text-ink-title line-clamp-2 transition-colors leading-snug group-hover:text-foreground/70">
               {product.name}
             </h3>
 
@@ -138,6 +132,19 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 recuadros de políticas del home y en la ficha. Aquí solo queda
                 lo que DISTINGUE a este producto: el envío gratis de los
                 Destacados, que sale del mismo flag que lo cobra en el checkout. */}
+
+
+            {/* Price */}
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="font-serif text-base sm:text-xl font-extrabold tabular-nums text-ink-title">
+                {formatPrice(product.price)}
+              </span>
+              {product.originalPrice && (
+                <span className="text-[10px] sm:text-sm text-muted-foreground line-through">
+                  {formatPrice(product.originalPrice)}
+                </span>
+              )}
+            </div>
             {product.isDestacado && (
               <div className="mt-2">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-300/70 text-amber-800 text-[10px] sm:text-[11px] font-bold">
@@ -146,18 +153,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 </span>
               </div>
             )}
-
-            {/* Price */}
-            <div className="mt-auto pt-2 sm:pt-3 flex flex-col sm:flex-row items-start sm:items-baseline sm:gap-2">
-              <span className="text-base sm:text-xl font-extrabold tabular-nums text-ink-title">
-                {formatPrice(product.price)}
-              </span>
-              {product.originalPrice && (
-                <span className="text-[10px] sm:text-sm text-foreground/40 line-through">
-                  {formatPrice(product.originalPrice)}
-                </span>
-              )}
-            </div>
           </div>
         </div>
       </article>

@@ -99,7 +99,7 @@ significa nada, va en gris.**
 | Color | Token | Significa | Dónde |
 |---|---|---|---|
 | Rojo coral `#D93B2B` | `--cta` | **Actuar: comprar** | Botón de compra. Nada más es rojo. |
-| Rosa coral `#E55A6B` | `--sale` | Precio rebajado | Solo la insignia −X %. |
+| Rosa profundo `#B83A6E` | `--sale` | Precio rebajado | Solo la insignia −X %. |
 | Azul `#1E5A9C` sobre `#EFF7FF` | `--trust-*` | Hechos verificables | Pago, envío, garantía, stock. |
 | Lavanda `#6B3F8A` | `--todopolis-lavender-deep` | Interfaz | Pestaña activa, filete del antetítulo, enlaces de sección, foco. |
 | Ámbar | `amber-*` | Distinción comercial | Destacados, Más vendido, Envío gratis de Destacados. |
@@ -109,8 +109,12 @@ significa nada, va en gris.**
 
 **Prohibido:** degradados de adorno, manchas difuminadas (*blobs*), brillos
 animados, colores rotando por posición, fondos de sección de colores pastel
-para «alegrar». El fondo es blanco (`--surface`) o gris muy suave
-(`--surface-soft`) para separar franjas.
+para «alegrar». El fondo es blanco (`--surface`) o neutro cálido muy suave
+(`--surface-soft`, `#FAF7F8`) para separar franjas. La base cálida y la
+selección lavanda refuerzan moda y belleza sin añadir fondos decorativos.
+Revisión móvil del 22-oct-2026: descuentos en rosa profundo para que el
+texto blanco tenga contraste; precio junto al nombre, antes de envío gratis;
+categorías con indicación de deslizamiento y controles, filtros fuera del carril.
 
 Pie de página: gris carbón `#2D2D2D`, texto blanco al 55–60 %.
 
