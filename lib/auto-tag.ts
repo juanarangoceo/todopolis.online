@@ -13,8 +13,7 @@ import { createEditorialModel } from './ai/gemini.ts'
 // Usa la REST API directa (no el SDK) porque el script batch corre fuera del
 // runtime de Next y mantener un solo camino simplifica la mantención.
 
-import { experimental_evaluate as evaluate } from 'ai'
-import { JEV_MODEL, jevConfigured, questionKey } from './jev.ts'
+import { evaluateJev, JEV_MODEL, jevConfigured, questionKey } from './jev.ts'
 import type { UsageSink } from './ai/pricing.ts'
 
 const MIN_TAGS = 3
@@ -137,13 +136,13 @@ export function buildTagQuestions(tags: TagDef[]) {
 export async function classifyProductTagsJev(
   tags: TagDef[],
   product: ProductInput,
-  options: { evaluateFn?: typeof evaluate; timeoutMs?: number; onUsage?: UsageSink } = {},
+  options: { evaluateFn?: typeof evaluateJev; timeoutMs?: number; onUsage?: UsageSink } = {},
 ): Promise<string[] | null> {
   if (!options.evaluateFn && !jevConfigured()) return null
   const { questions, keyToSlug } = buildTagQuestions(tags)
   if (keyToSlug.size === 0) return null
   try {
-    const result = await (options.evaluateFn ?? evaluate)({
+    const result = await (options.evaluateFn ?? evaluateJev)({
       model: JEV_MODEL,
       state: {
         producto: product.name.slice(0, 200),

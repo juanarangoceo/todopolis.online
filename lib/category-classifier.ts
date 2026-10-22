@@ -18,9 +18,8 @@
 // sugerencia de Gemini, la tabla de Mastershop). Nunca se escribe una
 // categoría fuera de `PRODUCT_CATEGORIES`.
 
-import { experimental_evaluate as evaluate } from 'ai'
 import { MASTERSHOP_CATEGORY_MAP, PRODUCT_CATEGORIES, isProductCategory } from './categories.ts'
-import { JEV_MODEL, jevConfigured } from './jev.ts'
+import { evaluateJev, JEV_MODEL, jevConfigured } from './jev.ts'
 import { ADULT_CATEGORY } from './adult-policy.ts'
 import type { UsageSink } from './ai/pricing.ts'
 
@@ -100,7 +99,7 @@ export function decideCategory(jev: JevCategoryAnswer | null, fallbacks: (string
 
 /** Una llamada a JEV. Devuelve null ante cualquier fallo: la categoría nunca bloquea un import. */
 export interface JevOptions {
-  evaluateFn?: typeof evaluate
+  evaluateFn?: typeof evaluateJev
   timeoutMs?: number
   /** Consumo de la llamada, para /admin/profit (lib/ai/usage.ts). */
   onUsage?: UsageSink
@@ -113,7 +112,7 @@ export async function askJev(
   if (!options.evaluateFn && !jevConfigured()) return null
   const request = buildCategoryRequest(product)
   try {
-    const result = await (options.evaluateFn ?? evaluate)({
+    const result = await (options.evaluateFn ?? evaluateJev)({
       model: CATEGORY_MODEL,
       state: request.state,
       questions: request.questions,

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { experimental_evaluate as evaluate } from 'ai'
 import { fetchTagTaxonomy } from '@/lib/auto-tag'
-import { JEV_MODEL, jevConfigured } from '@/lib/jev'
+import { evaluateJev, JEV_MODEL, jevConfigured } from '@/lib/jev'
 import { evaluateUsage, recordAiUsage } from '@/lib/ai/usage'
 import { buildSuggestRequest, normalizeSuggestQuery, parseSuggestAnswers, type SearchSuggestion } from '@/lib/search-suggest'
 
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
     })
 
     const { keyToSlug, state, questions } = buildSuggestRequest(q, tags)
-    const result = await evaluate({
+    const result = await evaluateJev({
       model: JEV_MODEL,
       state,
       questions,
