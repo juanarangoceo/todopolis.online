@@ -175,7 +175,7 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 | Nombrar una categoría | `categoryTitle(value)` de `lib/categories.ts`. |
 | Elegir talla, color u opción | `VariantSelector`: chips compactos; si las variantes son «talla/color», dos filas (`lib/variant-options.ts`). Más de 8 opciones: lista desplegable. La elegida en lavanda. Debajo, la guía de tallas si la ficha técnica la trae. |
 | Saludar al abrir el home | `HomeGreeting`: saludo por hora + frase de `lib/home-phrases.ts`. Una por visita, quieta. |
-| Sugerir lecturas al inicio | `HomeBlogSuggestions`, junto al saludo en escritorio y debajo en móvil. Nota editorial compacta, sin fotos; una lectura por vez, controles discretos y altura reservada. |
+| Sugerir lecturas al inicio | `HomeBlogSuggestions`, junto al saludo en escritorio y debajo en móvil. Tarjeta editorial compacta sobre superficie cálida, sin fotos; título de dos líneas a todo el ancho con flecha de lectura, controles de 44 px agrupados en la cabecera y altura reservada. Una lectura por vez. |
 | Una fila deslizable en móvil | Siempre debe asomar la tarjeta siguiente (≥ 30 px). En el home, `COMPACT_ROW_ITEM`. |
 | Una selección temática en el home | `CategorySpotlight`, compartido por Moda y Belleza, con `SuggestedProductsCarousel` y las tarjetas del catálogo. Solo Moda lleva el H1; el enlace abre la categoría y la selección no repite Novedades. |
 

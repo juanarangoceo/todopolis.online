@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
+import { ArrowUpRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import type { HomeArticle } from '@/lib/home-articles'
 
 const ROTATION_MS = 10_000
@@ -55,7 +55,7 @@ export function HomeBlogSuggestions({ articles }: { articles: HomeArticle[] }) {
     setRotationChoice(false)
     setIndex((value) => (value + direction + articles.length) % articles.length)
   }
-  const control = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-muted hover:text-todopolis-lavender-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-todopolis-lavender-deep motion-reduce:transition-none'
+  const control = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-muted hover:text-todopolis-lavender-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-todopolis-lavender-deep motion-reduce:transition-none'
 
   return (
     <div
@@ -67,12 +67,20 @@ export function HomeBlogSuggestions({ articles }: { articles: HomeArticle[] }) {
       onPointerLeave={(event) => { if (event.pointerType === 'mouse') setHovered(false) }}
       onFocusCapture={() => setRotationChoice(false)}
       onTouchStart={() => setRotationChoice(false)}
-      className="flex min-h-[4.25rem] min-w-0 items-center gap-2 border-l-2 border-todopolis-lavender pl-3"
+      className="min-w-0 rounded-2xl border border-nav-inactive-border bg-surface-soft px-3 pb-2 md:px-4"
     >
+      <div className="flex min-h-11 items-center justify-between gap-1">
+        <p className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-[11px] text-muted-foreground">
+          <span className="font-bold text-todopolis-lavender-deep">Del blog</span>
+          {Number.isFinite(current.readingTime) && (current.readingTime ?? 0) > 0 && (
+            <span>· {current.readingTime} min</span>
+          )}
+        </p>
+        <div className="-mr-2 flex shrink-0 items-center">
       {articles.length > 1 && (
         <button
           type="button"
-          className={`${control} order-2`}
+          className={control}
           aria-label={automatic ? 'Pausar sugerencias del blog' : 'Reanudar sugerencias del blog'}
           title={automatic ? 'Pausar sugerencias' : 'Reanudar sugerencias'}
           onPointerDown={() => { pointerRotation.current = automatic }}
@@ -88,26 +96,8 @@ export function HomeBlogSuggestions({ articles }: { articles: HomeArticle[] }) {
           {automatic ? <Pause aria-hidden="true" className="h-3.5 w-3.5" /> : <Play aria-hidden="true" className="h-3.5 w-3.5" />}
         </button>
       )}
-      <div className="order-1 min-w-0 flex-1" aria-live={automatic ? 'off' : 'polite'} aria-atomic="true">
-        <div role="group" aria-roledescription="lectura" aria-label={`${activeIndex + 1} de ${articles.length}`}>
-          <p className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-bold">Del blog</span>
-            {Number.isFinite(current.readingTime) && (current.readingTime ?? 0) > 0 && (
-              <><span aria-hidden="true">·</span><span>{current.readingTime} min de lectura</span></>
-            )}
-          </p>
-          <Link
-            href={`/blog/${current.slug}`}
-            prefetch={false}
-            title={current.title}
-            className="block min-h-10 rounded-sm text-sm font-semibold leading-5 text-ink-title underline-offset-4 hover:text-todopolis-lavender-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-todopolis-lavender-deep md:min-h-5"
-          >
-            <span className="line-clamp-2 md:line-clamp-1">{current.title}</span>
-          </Link>
-        </div>
-      </div>
       {articles.length > 1 && (
-        <div className="order-3 flex shrink-0">
+        <div className="flex shrink-0">
           <button type="button" className={control} onClick={() => change(-1)} aria-label="Lectura anterior" title="Lectura anterior">
             <ChevronLeft aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -116,6 +106,22 @@ export function HomeBlogSuggestions({ articles }: { articles: HomeArticle[] }) {
           </button>
         </div>
       )}
+        </div>
+      </div>
+      <div aria-live={automatic ? 'off' : 'polite'} aria-atomic="true">
+        <div role="group" aria-roledescription="lectura" aria-label={`${activeIndex + 1} de ${articles.length}`}>
+          <Link
+            href={`/blog/${current.slug}`}
+            prefetch={false}
+            title={current.title}
+            aria-label={`Leer guía: ${current.title}`}
+            className="group flex min-h-11 items-start gap-3 rounded-sm text-sm font-bold leading-5 text-ink-title underline-offset-4 hover:text-todopolis-lavender-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-todopolis-lavender-deep"
+          >
+            <span className="min-w-0 flex-1 line-clamp-2 group-hover:underline">{current.title}</span>
+            <ArrowUpRight aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-todopolis-lavender-deep" />
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
