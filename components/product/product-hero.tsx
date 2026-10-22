@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { WhatsAppIcon } from '@/components/whatsapp-icon';
 import Image from 'next/image';
-import { Star, Heart, Truck, ShieldCheck, RotateCcw, Zap, Check } from 'lucide-react';
+import { Star, Heart, Ruler, Truck, ShieldCheck, RotateCcw, Zap, Check } from 'lucide-react';
 import { PaymentMethods } from '@/components/payment-methods';
 import { isSoldOut } from '@/lib/supplier-stock';
 import { descriptionBullets } from '@/lib/description';
@@ -91,6 +91,9 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
   const selectedTotal = priceForQuantity(product.price ?? 0, qty, offers);
 
   const bullets = descriptionBullets(product.shortDescription);
+  const sizeGuide = ((product as any).variants?.length
+    ? ((product as any).specifications ?? []).find((s: { label?: string; value?: string }) => /talla|medida/i.test(s.label ?? '') && s.value)?.value
+    : null) as string | null;
 
   return (
     <>
@@ -296,6 +299,15 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
               Va ANTES del precio: elegir talla o color es una decisión previa a
               mirar cuánto cuesta. */}
           <VariantSelector />
+          {/* Guía de tallas junto a las tallas (22-oct-2026): el dato ya venía en
+              la ficha técnica («tallas de jean 6 a 10»), pero enterrado cinco
+              secciones abajo, justo donde no se mira al elegir. */}
+          {sizeGuide && (
+            <p className="-mt-3 flex items-start gap-2 text-sm text-muted-foreground">
+              <Ruler className="mt-0.5 h-4 w-4 shrink-0" />
+              <span><span className="font-semibold text-ink-title">Guía de tallas:</span> {sizeGuide}</span>
+            </p>
+          )}
 
           {/* PRECIO Y BOTÓN SON UN SOLO BLOQUE, a propósito.
               Antes el recuadro de medios de pago se metía entre los dos: las

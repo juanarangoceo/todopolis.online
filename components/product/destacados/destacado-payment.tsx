@@ -61,9 +61,12 @@ const COD_STEPS = [
 
 // Pasos numerados unidos por una línea: se leen como un recorrido, no como
 // tres datos sueltos.
+// En móvil los pasos se ocultan y queda un resumen de una línea (22-oct-2026):
+// las dos tarjetas con sus seis pasos ocupaban pantalla y media, más que los
+// beneficios del producto. En escritorio, donde van lado a lado, se quedan.
 function Steps({ steps }: { steps: { title: string; text: string }[] }) {
   return (
-    <ol className="mt-6">
+    <ol className="mt-6 hidden md:block">
       {steps.map((step, i) => (
         <li key={step.title} className="relative flex gap-4 pb-6 last:pb-0">
           {i < steps.length - 1 && (
@@ -88,7 +91,7 @@ const tile = 'flex h-12 items-center justify-center rounded-xl border border-nav
 // Las dos tarjetas son GEMELAS: mismo ancho, mismo alto y la misma estructura
 // (cabecera, antetítulo, titular, tres pasos y, abajo, con qué pagas). Las dos
 // vías valen igual; el comprador elige en el último paso.
-const card = 'flex flex-col rounded-3xl border bg-surface p-6 shadow-sm md:p-7'
+const card = 'flex flex-col rounded-3xl border bg-surface p-5 shadow-sm md:p-7'
 const eyebrow = 'text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground'
 const cardTitle = 'mt-1 font-serif text-xl font-extrabold leading-tight tracking-[-0.01em] text-ink-title md:text-2xl'
 
@@ -128,8 +131,11 @@ export function DestacadoPayment() {
             </div>
             <p className={eyebrow}>Pagas ya</p>
             <h3 className={cardTitle}>Pagas en segundos</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:hidden">
+              Eliges Confío al pedir y pagas desde tu celular. Se confirma solo, en minutos, sin comprobantes.
+            </p>
             <Steps steps={CONFIO_STEPS} />
-            <div className="mt-auto pt-7">
+            <div className="mt-auto pt-5 md:pt-7">
               <p className="text-xs font-bold text-muted-foreground">Pagas con lo que ya tienes en el celular</p>
               <ul className="mt-3 grid grid-cols-3 gap-2" aria-label="Medios de pago con Confío">
                 {CONFIO_PAYMENT_LOGOS.map((logo) => (
@@ -150,8 +156,11 @@ export function DestacadoPayment() {
             </div>
             <p className={eyebrow}>Pagas al recibir</p>
             <h3 className={cardTitle}>No adelantas nada</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:hidden">
+              Pides sin pagar nada y le pagas en efectivo al mensajero cuando te llega, en 3 a 7 días hábiles.
+            </p>
             <Steps steps={COD_STEPS} />
-            <div className="mt-auto pt-7">
+            <div className="mt-auto pt-5 md:pt-7">
               <p className="text-xs font-bold text-muted-foreground">Pagas con</p>
               <div className={`${tile} mt-3 gap-2 text-sm font-bold text-ink-title`}>
                 <Banknote className="h-4 w-4 text-trust-fg" />

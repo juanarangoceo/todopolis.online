@@ -14,6 +14,7 @@ import { DestacadoBanner } from '@/components/product/destacados/destacado-banne
 import { DestacadoBenefits } from '@/components/product/destacados/destacado-benefits'
 import { DestacadoCustomerPhotos } from '@/components/product/destacados/destacado-customer-photos'
 import { DestacadoPayment } from '@/components/product/destacados/destacado-payment'
+import { WhatsAppOrderBlock } from '@/components/product/whatsapp-order-block'
 import { DestacadoAudience } from '@/components/product/destacados/destacado-audience'
 import { DestacadoFaq } from '@/components/product/destacados/destacado-faq'
 import { DestacadoCTA } from '@/components/product/destacados/destacado-cta'
@@ -202,6 +203,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     pageUrl: productUrl,
     productName: adaptedProduct.name,
   })
+  // Mismo número, con el pedido ya escrito: lo usa «Pídelo por WhatsApp».
+  const whatsappOrderHref = buildWhatsAppUrl({
+    phone: resolveWhatsAppPhone(storeSettings?.whatsappPhone, process.env.NEXT_PUBLIC_WHATSAPP_PHONE),
+    pageUrl: productUrl,
+    message: `Hola, quiero pedir ${adaptedProduct.name} ($${(adaptedProduct.price ?? 0).toLocaleString('es-CO')}).`,
+  })
   const isDestacado = adaptedProduct.isDestacado
 
   // UN solo recorrido para todas las fichas (sep 2026). Antes la ficha normal
@@ -257,6 +264,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       {/* Agotado: sin explicación de pago ni botón de cierre que no lleva a nada. */}
       {!soldOut && <DestacadoPayment />}
       {!soldOut && <DestacadoCTA product={adaptedProduct} whatsappHref={whatsappHref} />}
+      {!soldOut && <WhatsAppOrderBlock href={whatsappOrderHref} />}
       {/* Las preguntas van DESPUÉS del cierre (sep 2026): son de consulta, y
           quien tiene una duda baja a buscarla; el que ya se decidió llega al
           botón una sección antes. «Cómo pagas» NO baja con ellas: «¿y si pago

@@ -294,6 +294,9 @@ El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del men
 - **Novedades va DESPUÉS de «Así compras»**: pegada a «Eleva tu estilo» eran dos carruseles casi iguales.
 - El buscador cuenta lo mismo que «Todos» (sin Lencería).
 - **Feed de Meta sin vigilancia oculta** (`/espía/` en el nombre): Meta prohíbe anunciar cámaras espía.
+- **«Pídelo por WhatsApp»** (`components/product/whatsapp-order-block.tsx`), justo después del cierre: el chat se abre con «Hola, quiero pedir <producto> ($precio)» y el enlace (`buildWhatsAppUrl` con `message`). No promete «te atiende una persona»: puede contestar el asesor de Nitro.
+- **«Cómo pagas» en móvil**: un resumen de una línea por tarjeta; los pasos solo en escritorio.
+- **Guía de tallas bajo el selector**: sale de la fila de la ficha técnica cuyo nombre dice «talla» o «medida», solo si el producto tiene variantes.
 - **Ficha: un solo texto de botón, «Comprar ahora»**, sin bolsa ni halo rojo; la barra fija de móvil se esconde mientras el botón del hero o del cierre (`data-buy-button`) está a la vista; el subtítulo del hero ya no sale en escritorio, para que el botón quede arriba del borde.
 
 ### Banner de temporada: el botón va DEBAJO de la imagen

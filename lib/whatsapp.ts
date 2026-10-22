@@ -57,10 +57,14 @@ export function buildWhatsAppUrl(params: {
   phone: string | null | undefined
   pageUrl: string
   productName?: string | null
+  /** Primera línea propia; el enlace de la página va siempre debajo. */
+  message?: string | null
 }): string | null {
   const phone = normalizeWhatsAppPhone(params.phone)
   if (!phone) return null
-  const text = buildWhatsAppPrefill(params.pageUrl, params.productName)
+  const text = params.message?.trim()
+    ? `${params.message.trim()}\n${params.pageUrl}`
+    : buildWhatsAppPrefill(params.pageUrl, params.productName)
   return `${WA_BASE}${phone}?text=${encodeURIComponent(text)}`
 }
 
