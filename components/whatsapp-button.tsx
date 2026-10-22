@@ -4,9 +4,9 @@
 // —el mismo asesor que atiende la tienda— con el producto que el comprador
 // está mirando ya escrito.
 //
-// DÓNDE SE PINTA: abajo a la derecha, en todas las rutas. En la ficha de
-// producto, en móvil, no: ahí la barra fija de compra ya lleva WhatsApp
-// (`product-hero.tsx`).
+// DÓNDE SE PINTA: abajo a la derecha, en las rutas públicas de la tienda.
+// No aparece en /admin ni /studio. En la ficha de producto, en móvil, la
+// barra fija de compra ya lleva WhatsApp (`product-hero.tsx`).
 
 import { useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
@@ -53,8 +53,8 @@ export function WhatsAppButton({ phone }: { phone?: string | null }) {
   // Sin número configurado no se pinta nada. Una burbuja que abre un chat con
   // un número roto es peor que ninguna burbuja.
   if (!href) return null
-  // El panel es una herramienta interna: la burbuja de la tienda no pinta nada ahí.
-  if (pathname.startsWith('/admin')) return null
+  // El panel y Studio son herramientas internas, también en sus rutas anidadas.
+  if (['/admin', '/studio'].some((base) => pathname === base || pathname.startsWith(`${base}/`))) return null
 
   const isProductPage = pathname.startsWith('/producto/')
 
