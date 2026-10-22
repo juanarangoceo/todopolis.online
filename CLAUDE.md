@@ -8,6 +8,10 @@
 
 # Entorno de desarrollo local
 
+## Último cierre — 22 de octubre de 2026
+
+El estado de los cambios publicados de Studio, fichas y home, las verificaciones y las prioridades pendientes están en [el cierre de sesión](docs/cierre-2026-10-22-studio-home.md). Último cambio funcional verificado en producción: `1fa9e31`. La valoración de diseño/UX fue cualitativa (8/10); la próxima prioridad es mejorar fotografías, contenido y confianza, y medir el recorrido de compra.
+
 ## Arranque obligatorio al iniciar sesión
 
 1. **Levantar Docker** antes de cualquier tarea. Hay DOS modos y elegir mal cuesta
