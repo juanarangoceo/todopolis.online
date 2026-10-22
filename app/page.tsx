@@ -133,10 +133,8 @@ export default async function Home() {
         >
           {/* Claves estables al pasar las secciones de servidor al navegador. */}
           <>
-            <StyleSpotlight key="moda" products={stylePicks} />
+            <NewArrivalsBanner key="novedades" products={newArrivals} />
 
-            {/* Novedades DESPUÉS de «Así compras» (22-oct-2026): pegada a
-                «Eleva tu estilo» eran dos carruseles casi iguales seguidos. */}
             <PolicyBadges key="politicas" policies={policies} whatsappHref={whatsappHref} showPayments={advancePaymentEnabled()} />
 
             <CategorySpotlight
@@ -149,7 +147,7 @@ export default async function Home() {
               linkLabel="Ver toda la belleza"
             />
 
-            <NewArrivalsBanner key="novedades" products={newArrivals} />
+            <StyleSpotlight key="moda" products={stylePicks} />
           </>
         </ProductBrowser>
         

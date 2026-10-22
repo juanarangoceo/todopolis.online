@@ -245,7 +245,9 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 - Para editar las frases, cambia la lista: el test exige máximo 36 caracteres (una línea a 390 px), sin emojis, con punto final y sin palabras con género.
 
 ### «Eleva tu estilo» — moda y accesorios, y el H1 del home (sep 2026)
-`components/style-spotlight.tsx`, con la selección en `lib/style-picks.ts` y su test. Es la primera sección del home, encima de Novedades: los 12 productos de Moda y Accesorios más recientes que NO salen ya en Novedades. Lleva el slogan como **H1** (el home no tenía ninguno). Con menos de 4 productos no se pinta.
+`components/style-spotlight.tsx`, con la selección en `lib/style-picks.ts` y su test. Muestra los 12 productos de Moda y Accesorios más recientes que NO salen ya en Novedades. Lleva el slogan como **H1** (el home no tenía ninguno). Con menos de 4 productos no se pinta.
+
+**Orden del home elegido el 22-oct-2026:** Novedades → «Así compras» → Belleza → Moda → catálogo con Inspiración → pie. Mantener este orden; reemplaza la decisión anterior de poner Moda primero.
 
 **Belleza (22-oct-2026):** «Tu rutina de belleza», después de «Así compras», usa el mismo `CategorySpotlight` que Moda. Son los 12 productos de `belleza` más recientes fuera de Novedades. «Ver toda la belleza» abre la categoría; sus productos vuelven al catálogo al filtrar y no se repiten en la cuadrícula limpia.
 
@@ -295,7 +297,7 @@ El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del men
 
 ### Home, 22-oct-2026
 - **Sin banner de temporada en el home** (la pieza traía degradado, texto pintado y dos botones). La campaña sigue en `/temporada`.
-- **Novedades va DESPUÉS de «Así compras»**: pegada a «Eleva tu estilo» eran dos carruseles casi iguales.
+- **Orden actualizado el 22-oct-2026:** Novedades → «Así compras» → Belleza → Moda → catálogo con Inspiración. Novedades abre el recorrido por decisión del usuario.
 - El buscador cuenta lo mismo que «Todos» (sin Lencería).
 - **«Elige cómo pagar» en «Así compras»** (`PolicyBadges showPayments`, solo con Confío encendido): dos tarjetas gemelas, Confío (logo, «segundos / minutos, sin comprobantes», PSE · Nequi · Bancolombia) y Contraentrega. Llevan al catálogo (`#productos`): en el home no hay producto que comprar todavía.
 - **Feed de Meta sin vigilancia oculta** (`/espía/` en el nombre): Meta prohíbe anunciar cámaras espía.
