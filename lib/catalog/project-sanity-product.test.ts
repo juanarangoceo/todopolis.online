@@ -63,8 +63,17 @@ test('un cambio solo de _updatedAt no genera una nueva versión de contenido', (
   assert.equal(first?.content_hash, second?.content_hash)
 })
 
-test('un producto de Dropi no se le entrega al bot: viaja archivado', () => {
-  assert.equal(projectSanityProduct({ _id: 'd', _updatedAt: '2026-10-21T00:00:00Z', name: 'Cobija', slug: 'cobija', price: 76900, dropiId: 2028704 }), null)
+test('un producto de Dropi viaja activo y marcado para crear el pedido a mano', () => {
+  const base = { _id: 'd', _updatedAt: '2026-10-21T00:00:00Z', name: 'Cobija', slug: 'cobija', price: 76900, dropiId: 2028704 }
+  const product = projectSanityProduct({ ...base, dropiStock: 12 })
+  assert.equal(product?.supplier, 'dropi')
+  assert.equal(product?.dropi_id, 2028704)
+  assert.equal(product?.price_min, 76900)
+  // Agotado en Dropi: archivado, como en Mastershop.
+  assert.equal(projectSanityProduct({ ...base, dropiStock: 0 }), null)
+  // Los demás no llevan las claves: su hash no cambia.
+  const other = projectSanityProduct({ _id: 'x', _updatedAt: '2026-10-21T00:00:00Z', name: 'Faja', slug: 'faja', price: 62900 })
+  assert.ok(other && !('supplier' in other) && !('dropi_id' in other))
 })
 
 test('lo agotado o retirado en Mastershop viaja archivado', () => {

@@ -44,9 +44,10 @@ export function projectSanityProduct(document: SanityCatalogDocument): Canonical
   const basePrice = finiteNumber(document.price)
   const sourceUpdatedAt = text(document._updatedAt)
   if (!sanityId || !title || !slug || !basePrice || !Number.isInteger(basePrice) || basePrice <= 0 || !sourceUpdatedAt) return null
-  // Los pedidos de Dropi se crean a mano en Dropi y Nitro no sabe
-  // despacharlos: el producto viaja archivado y el bot no lo ofrece.
-  if (finiteNumber(document.dropiId) !== null) return null
+  // Los productos de Dropi SÍ los ofrece el bot (decisión del 22-oct-2026):
+  // viajan con `supplier: 'dropi'` y su id, y Nitro marca el pedido «Dropi ·
+  // crear a mano», porque nadie lo crea en Dropi automáticamente.
+  const dropiId = finiteNumber(document.dropiId)
   // Agotado o retirado en Mastershop: archivado hasta que vuelva el stock (la
   // sincronización reescribe el documento y el webhook lo vuelve a mandar).
   if (isSoldOut(document as Parameters<typeof isSoldOut>[0])) return null
@@ -117,6 +118,9 @@ export function projectSanityProduct(document: SanityCatalogDocument): Canonical
     external_id: sanityId,
     sanity_id: sanityId,
     mastershop_id: finiteNumber(document.mastershopId),
+    // Solo en los de Dropi: así el hash de los demás no cambia y no se
+    // reenvía el catálogo entero.
+    ...(dropiId !== null ? { supplier: 'dropi' as const, dropi_id: dropiId } : {}),
     slug,
     title,
     description: text(document.shortDescription),
@@ -169,6 +173,7 @@ export const SANITY_CATALOG_PRODUCT_PROJECTION = `{
   mastershopStock,
   mastershopAvailable,
   dropiId,
+  dropiStock,
   name,
   "slug": slug.current,
   shortDescription,

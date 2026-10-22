@@ -18,6 +18,9 @@ export type CanonicalCatalogProduct = {
   external_id: string
   sanity_id: string
   mastershop_id: number | null
+  /** Solo en productos de Dropi: Nitro marca el pedido para crearlo a mano. */
+  supplier?: 'dropi'
+  dropi_id?: number
   slug: string
   title: string
   description: string | null
