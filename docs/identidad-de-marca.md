@@ -5,7 +5,7 @@ decisiones concretas y su historia están en `CLAUDE.md`; esto es el criterio
 que las une. **Si un cambio nuevo contradice esta guía, gana la guía, salvo que
 la actualices a propósito y digas por qué.**
 
-Última revisión: 21-oct-2026 («Cómo pagas» con rapidez y logos de medios de pago; antes, 25-sep-2026).
+Última revisión: 22-oct-2026 (auditoría de diseño: sin degradados, pulsos ni carruseles automáticos que quedaban; checkout, pie y promesas viejas de la IA. Antes, 21-oct-2026: «Cómo pagas»).
 
 ---
 

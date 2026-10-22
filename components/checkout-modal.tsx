@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ConfioLogo } from './confio-logo';
-import { ShoppingBag, X, CheckCircle2, Truck, Star } from 'lucide-react';
+import { ShoppingBag, X, CheckCircle2, Truck, Star, Banknote } from 'lucide-react';
 import { createOrder } from '@/app/actions/create-order';
 import { cn } from '@/lib/utils';
 import { sanityCdnImage } from '@/lib/sanity/cdn-image';
@@ -223,14 +223,14 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
       <div className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full sm:zoom-in-95 duration-500 ease-out z-10 flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-nav-inactive-border">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-primary" />
-              {step === 1 ? 'Compra Rápida' : '¡Pedido Confirmado!'}
+            <h2 className="font-serif text-xl font-extrabold tracking-[-0.01em] text-ink-title flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-ink-title" />
+              {step === 1 ? 'Tu pedido' : 'Pedido recibido'}
             </h2>
             {step === 1 && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {confioEnabled ? 'Paga al recibir o con Confío' : 'Pagas al recibir'}
               </p>
             )}
@@ -249,28 +249,19 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
             <div className="space-y-6">
               {/* Banner Destacado — envío gratis */}
               {isDestacado && (
-                <div
-                  className="flex items-center gap-3 p-3.5 rounded-2xl border shadow-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-                    borderColor: '#F59E0B66',
-                  }}
-                >
-                  <span
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-amber-300"
-                    style={{ background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)' }}
-                  >
-                    <Star className="w-4 h-4 text-amber-900" fill="currentColor" strokeWidth={1.5} />
+                <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-amber-200 bg-amber-50">
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-amber-100 text-amber-700">
+                    <Star className="w-4 h-4" fill="currentColor" strokeWidth={1.5} />
                   </span>
                   <div className="min-w-0">
-                    <p className="font-bold text-sm text-amber-900 leading-tight">Producto Destacado · Envío GRATIS</p>
+                    <p className="font-bold text-sm text-amber-900 leading-tight">Producto destacado · Envío gratis</p>
                     <p className="text-xs text-amber-800/80 leading-tight mt-0.5">El envío va por nuestra cuenta y con despacho prioritario.</p>
                   </div>
                 </div>
               )}
 
               {/* Product Summary */}
-              <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+              <div className="flex gap-4 p-4 rounded-2xl bg-surface-soft border border-nav-inactive-border">
                 <div className="w-20 h-20 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
                   {/* Miniatura de 80 px: se pide al CDN de Sanity a 200 px. El
                       original es un PNG de varios MB y dejaba el recuadro en
@@ -284,7 +275,7 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
                 <div className="flex flex-col justify-center w-full">
                   <h3 className="font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
                   {variantRequired && selectedVariant && (
-                    <p className="text-xs font-semibold text-primary mt-0.5">
+                    <p className="text-xs font-semibold text-todopolis-lavender-deep mt-0.5">
                       Opción: {selectedVariant.name}
                     </p>
                   )}
@@ -297,7 +288,7 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
                     {isDestacado ? (
                       <span className="flex items-center gap-1.5">
                         <span className="text-gray-400 text-xs line-through">{formatPrice(12000)}</span>
-                        <span className="font-bold text-amber-700">GRATIS</span>
+                        <span className="font-bold text-amber-700">Gratis</span>
                       </span>
                     ) : (
                       <span className="font-medium text-gray-900">{formatPrice(shippingCost)}</span>
@@ -318,8 +309,8 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
                     </div>
                   )}
                   <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
-                    <span className="font-bold text-gray-900 text-sm">Total a Pagar:</span>
-                    <span className="text-xl font-black text-primary">{formatPrice(totalPrice)}</span>
+                    <span className="font-bold text-ink-title text-sm">Total a pagar</span>
+                    <span className="font-serif text-xl font-extrabold tabular-nums text-ink-title">{formatPrice(totalPrice)}</span>
                   </div>
                 </div>
               </div>
@@ -335,7 +326,7 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
                   disponible; si no, el checkout es el de siempre. */}
               {canPayUpfront && (
                 <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground mb-3">
                     ¿Cómo prefieres pagar?
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -345,7 +336,7 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
                       className={cn(
                         'text-left p-3.5 rounded-xl border-2 transition-all',
                         paymentMethod === 'cod'
-                          ? 'border-primary bg-primary/5'
+                          ? 'border-todopolis-lavender-deep bg-todopolis-lavender-deep/5'
                           : 'border-gray-200 bg-white hover:border-gray-300',
                       )}
                     >
@@ -364,7 +355,7 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
                       className={cn(
                         'text-left p-3.5 rounded-xl border-2 transition-all',
                         paymentMethod === 'confio'
-                          ? 'border-primary bg-primary/5'
+                          ? 'border-todopolis-lavender-deep bg-todopolis-lavender-deep/5'
                           : 'border-gray-200 bg-white hover:border-gray-300',
                       )}
                     >
@@ -407,33 +398,33 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
               </form>
             </div>
           ) : (
-            <div className="py-8 flex flex-col items-center text-center animate-in zoom-in-95 duration-500">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-inner relative">
-                <CheckCircle2 className="w-10 h-10 text-green-500 absolute scale-0 animate-[bounce_0.5s_0.2s_both]" />
-                {/* CSS Confetti Effect (simplified) */}
-                <div className="absolute inset-0 animate-[spin_3s_linear_infinite] opacity-50">
-                  <div className="absolute top-0 w-2 h-2 bg-pink-400 rounded-full" />
-                  <div className="absolute bottom-0 w-2 h-2 bg-blue-400 rounded-full" />
-                  <div className="absolute left-0 w-2 h-2 bg-yellow-400 rounded-full" />
-                  <div className="absolute right-0 w-2 h-2 bg-primary rounded-full" />
-                </div>
+            <div className="py-6 flex flex-col items-center text-center">
+              {/* Quieta: sin confeti girando ni rebotes (guía de marca §8). */}
+              <div className="w-16 h-16 bg-trust-bg rounded-full flex items-center justify-center mb-5">
+                <CheckCircle2 className="w-8 h-8 text-trust-fg" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">¡Pedido Exitoso! 🎉</h3>
-              <p className="text-gray-600 mb-6 max-w-sm">
-                Hemos recibido tu pedido de <span className="font-semibold text-gray-900">{product.name}</span>. Pronto nos contactaremos por WhatsApp para confirmar el envío.
+              <h3 className="font-serif text-2xl font-extrabold tracking-[-0.02em] text-ink-title mb-2">Recibimos tu pedido</h3>
+              <p className="text-muted-foreground mb-6 max-w-sm leading-relaxed">
+                Pediste <span className="font-semibold text-ink-title">{product.name}</span>. Te escribimos por WhatsApp para confirmar el envío.
               </p>
               {/* A este paso SOLO se llega por contraentrega: el pago con
                   Confío redirige a la pasarela antes de mostrarlo. */}
-              <div className="p-4 bg-primary/5 rounded-2xl flex items-center gap-3 text-primary font-medium w-full justify-center">
-                <Truck className="w-5 h-5" />
-                ¡Pagas al recibir en casa! 🏡
-              </div>
-              {isDestacado && (
-                <div className="mt-3 p-3 rounded-2xl flex items-center justify-center gap-2 w-full text-sm font-bold text-amber-800 border border-amber-200" style={{ background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' }}>
-                  <Star className="w-4 h-4 text-amber-600" fill="currentColor" strokeWidth={1.5} />
-                  Tu envío va por nuestra cuenta 🎁
-                </div>
-              )}
+              <ul className="w-full space-y-2 text-left text-sm">
+                <li className="flex items-center gap-3 rounded-2xl bg-trust-bg p-3.5 font-semibold text-trust-fg">
+                  <Truck className="w-5 h-5 shrink-0" />
+                  Llega en 3 a 7 días hábiles
+                </li>
+                <li className="flex items-center gap-3 rounded-2xl bg-trust-bg p-3.5 font-semibold text-trust-fg">
+                  <Banknote className="w-5 h-5 shrink-0" />
+                  Pagas en efectivo al recibirlo
+                </li>
+                {isDestacado && (
+                  <li className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 font-semibold text-amber-800">
+                    <Star className="w-5 h-5 shrink-0 text-amber-600" fill="currentColor" strokeWidth={1.5} />
+                    El envío va por nuestra cuenta
+                  </li>
+                )}
+              </ul>
             </div>
           )}
         </div>
@@ -459,13 +450,13 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
               ) : paymentMethod === 'confio' ? (
                 <>Ir a pagar <span className="opacity-80 font-normal">({formatPrice(totalPrice)})</span></>
               ) : (
-                <>Completar Pedido <span className="opacity-80 font-normal">({formatPrice(totalPrice)})</span></>
+                <>Confirmar pedido <span className="opacity-80 font-normal">({formatPrice(totalPrice)})</span></>
               )}
             </button>
           ) : (
             <button
               onClick={onClose}
-              className="w-full py-4 rounded-2xl text-primary font-bold text-lg bg-primary/10 hover:bg-primary/20 transition-all active:scale-[0.98]"
+              className="w-full py-4 rounded-2xl text-ink-title font-bold text-lg border border-nav-inactive-border bg-surface hover:bg-surface-soft transition-all active:scale-[0.98]"
             >
               Seguir comprando
             </button>

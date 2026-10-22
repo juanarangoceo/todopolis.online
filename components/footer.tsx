@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { ConfioLogo } from './confio-logo';
 import Link from 'next/link';
-import { Instagram, Facebook, Sparkles, Heart, X } from 'lucide-react';
+import { Instagram, Facebook, X } from 'lucide-react';
+import Image from 'next/image';
+
+const LOGO_URL =
+  'https://res.cloudinary.com/dohwyszdj/image/upload/f_auto,q_auto,w_320/v1779801383/logo_nuevo_todopolis_1_ljlqn6.png';
 import { advancePaymentVisible } from '@/components/payment-methods';
 import { BUSINESS, SOCIAL } from '@/lib/legal';
 import { CookiePreferences } from '@/components/cookie-preferences';
@@ -12,8 +16,8 @@ import { FooterSubscribe } from '@/components/footer-subscribe';
 // ── Modal content ────────────────────────────────────────────────────────────
 
 const supportContent: Record<string, { title: string; body: React.ReactNode }> = {
-  'Preguntas Frecuentes': {
-    title: 'Preguntas Frecuentes',
+  'Preguntas frecuentes': {
+    title: 'Preguntas frecuentes',
     body: (
       <div className="space-y-5">
         <div>
@@ -39,8 +43,8 @@ const supportContent: Record<string, { title: string; body: React.ReactNode }> =
       </div>
     ),
   },
-  'Envios y Devoluciones': {
-    title: 'Envíos y Devoluciones',
+  'Envíos y devoluciones': {
+    title: 'Envíos y devoluciones',
     body: (
       <div className="space-y-5">
         <div>
@@ -76,8 +80,8 @@ const EXPLORE_LINKS = [
 ] as const;
 
 const LEGAL_LINKS = [
-  { href: '/privacidad', label: 'Política de Privacidad' },
-  { href: '/terminos', label: 'Términos y Condiciones' },
+  { href: '/privacidad', label: 'Política de privacidad' },
+  { href: '/terminos', label: 'Términos y condiciones' },
 ] as const;
 
 // ── Support Modal ─────────────────────────────────────────────────────────────
@@ -130,7 +134,7 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
 
   // Privacidad y Términos salieron de aquí: ahora son páginas con URL propia
   // (LEGAL_LINKS). En el modal solo queda lo operativo.
-  const supportItems = ['Preguntas Frecuentes', 'Envios y Devoluciones'];
+  const supportItems = ['Preguntas frecuentes', 'Envíos y devoluciones'];
 
   return (
     <>
@@ -149,11 +153,12 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               {/* Brand */}
               <div>
-                <h3 className="font-sans text-3xl font-black mb-2">
-                  Todó<span className="text-[#FFB4AC]">polis</span>
-                </h3>
-                <p className="text-white/60 text-sm leading-relaxed font-serif mb-6">
-                  Tu tienda online favorita con todo lo que necesitas. Moda, tecnologia, hogar, belleza y mucho mas en un solo lugar.
+                {/* El logotipo es una imagen, no una fuente (guía §10 bis): antes
+                    se reescribía «Todó» + «polis» en coral con Nunito. */}
+                <Image src={LOGO_URL} alt="Todópolis" width={160} height={50} className="mb-3 h-auto w-40 object-contain" />
+                <p className="font-serif text-lg font-extrabold text-white">Eleva tu estilo.</p>
+                <p className="mt-1 text-white/60 text-sm leading-relaxed mb-6">
+                  Moda, hogar, belleza, tecnología y más, con envío a toda Colombia.
                 </p>
                 {/* Enlaces reales, no `href="#"`. Un enlace que no lleva a
                     ninguna parte es peor que ninguno: en una revisión de negocio
@@ -165,19 +170,19 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
                     href={SOCIAL.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-[#FFB4AC]/20 hover:bg-[#FFB4AC] hover:text-white transition-all duration-300 group"
+                    className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors duration-300"
                     aria-label="Todópolis en Instagram"
                   >
-                    <Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <Instagram className="w-5 h-5" />
                   </a>
                   <a
                     href={SOCIAL.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-[#A2D2FF]/20 hover:bg-[#A2D2FF] hover:text-white transition-all duration-300 group"
+                    className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors duration-300"
                     aria-label="Todópolis en Facebook"
                   >
-                    <Facebook className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <Facebook className="w-5 h-5" />
                   </a>
                 </div>
               </div>
@@ -185,7 +190,7 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
               {/* Explore Links */}
               <div>
                 <h4 className="font-sans font-bold mb-6 flex items-center gap-2">
-                  <span className="w-8 h-0.5 bg-[#FFB4AC]" />
+                  <span className="w-6 h-px bg-white/40" />
                   Explorar
                 </h4>
                 <ul className="space-y-4">
@@ -195,9 +200,9 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
                     <li key={href}>
                       <Link
                         href={href}
-                        className="text-sm text-white/60 hover:text-[#FFB4AC] transition-colors font-serif flex items-center gap-2 group"
+                        className="text-sm text-white/60 hover:text-white transition-colors font-serif flex items-center gap-2 group"
                       >
-                        <span className="w-0 group-hover:w-2 h-0.5 bg-[#FFB4AC] transition-all duration-300" />
+                        <span className="w-0 group-hover:w-2 h-0.5 bg-white/40 transition-all duration-300" />
                         {label}
                       </Link>
                     </li>
@@ -208,7 +213,7 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
               {/* Support — modal buttons */}
               <div>
                 <h4 className="font-sans font-bold mb-6 flex items-center gap-2">
-                  <span className="w-8 h-0.5 bg-[#A2D2FF]" />
+                  <span className="w-6 h-px bg-white/40" />
                   Soporte
                 </h4>
                 <ul className="space-y-4">
@@ -216,9 +221,9 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
                     <li key={item}>
                       <button
                         onClick={() => setActiveModal(item)}
-                        className="text-sm text-white/60 hover:text-[#A2D2FF] transition-colors font-serif flex items-center gap-2 group text-left"
+                        className="text-sm text-white/60 hover:text-white transition-colors font-serif flex items-center gap-2 group text-left"
                       >
-                        <span className="w-0 group-hover:w-2 h-0.5 bg-[#A2D2FF] transition-all duration-300 shrink-0" />
+                        <span className="w-0 group-hover:w-2 h-0.5 bg-white/40 transition-all duration-300 shrink-0" />
                         {item}
                       </button>
                     </li>
@@ -231,9 +236,9 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
                     <li key={href}>
                       <Link
                         href={href}
-                        className="text-sm text-white/60 hover:text-[#A2D2FF] transition-colors font-serif flex items-center gap-2 group"
+                        className="text-sm text-white/60 hover:text-white transition-colors font-serif flex items-center gap-2 group"
                       >
-                        <span className="w-0 group-hover:w-2 h-0.5 bg-[#A2D2FF] transition-all duration-300 shrink-0" />
+                        <span className="w-0 group-hover:w-2 h-0.5 bg-white/40 transition-all duration-300 shrink-0" />
                         {label}
                       </Link>
                     </li>
@@ -339,8 +344,7 @@ export function Footer({ showPaymentExplainer = true, flush = false, productSlug
                 © {new Date().getFullYear()} {BUSINESS.brand}. Todos los derechos reservados.
               </p>
               <p className="text-sm text-white/40 font-serif flex items-center gap-2">
-                Hecho con <Heart className="w-4 h-4 text-[#FFB4AC] fill-[#FFB4AC]" /> en Colombia
-                <Sparkles className="w-4 h-4 text-[#EDD2F3]" />
+                Hecho en Colombia
               </p>
             </div>
           </div>

@@ -282,17 +282,15 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-24 right-4 sm:right-6 z-[60] flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg bg-gradient-to-r from-todopolis-blue to-todopolis-lavender text-gray-800 font-semibold hover:shadow-xl hover:scale-105 transition-all duration-200"
+          className="fixed bottom-24 right-4 sm:right-6 z-[60] flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg border border-nav-inactive-border bg-surface text-ink-title font-semibold hover:shadow-xl transition-shadow duration-200"
           aria-label={`Hablar con Lucy sobre ${product.name}`}
         >
-          <div className="relative shrink-0">
-            <Phone className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full" />
-          </div>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-todopolis-lavender-deep/10 text-todopolis-lavender-deep">
+            <Phone className="w-4 h-4" />
+          </span>
           <div className="flex flex-col items-start leading-tight">
             <span className="text-sm">Habla con Lucy</span>
-            <span className="text-xs font-normal text-gray-600">Asesoría sobre este producto ✨</span>
+            <span className="text-xs font-normal text-muted-foreground">Pregúntale por voz sobre este producto</span>
           </div>
         </button>
       )}
@@ -303,14 +301,12 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
 
           <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
-            <div className="bg-gradient-to-r from-todopolis-blue via-todopolis-lavender to-todopolis-blue p-5">
+            <div className="border-b border-nav-inactive-border bg-surface-soft p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className={`relative w-14 h-14 rounded-full bg-white/40 flex items-center justify-center text-2xl shadow-inner transition-transform duration-200 ${isLucySpeaking ? 'scale-110' : 'scale-100'}`}>
-                    💖
-                    {isLucySpeaking && (
-                      <span className="absolute inset-0 rounded-full border-2 border-white/70 animate-ping" />
-                    )}
+                  {/* Habla: el anillo se marca, sin latir (guía §8). */}
+                  <div className={`w-14 h-14 rounded-full bg-todopolis-lavender-deep/10 text-todopolis-lavender-deep flex items-center justify-center ring-2 transition-shadow duration-200 ${isLucySpeaking ? 'ring-todopolis-lavender-deep' : 'ring-transparent'}`}>
+                    <Phone className="w-6 h-6" />
                   </div>
                   <div>
                     <p className="font-bold text-lg leading-tight text-gray-800">Lucy</p>
@@ -319,7 +315,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
                 </div>
                 <button
                   onClick={handleClose}
-                  className="w-8 h-8 rounded-full bg-white/40 hover:bg-white/60 flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-full bg-surface hover:bg-surface-muted border border-nav-inactive-border flex items-center justify-center transition-colors"
                   aria-label="Cerrar"
                 >
                   <X className="w-4 h-4 text-gray-700" />
@@ -330,7 +326,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
                 <div className="space-y-1">
                   {transcript.slice(-3).map((line, i) => (
                     <p key={i} className="text-xs leading-relaxed text-gray-800 truncate">
-                      {line.role === 'lucy' ? '💬' : '🗣️'} {line.text}
+                      <span className="font-bold">{line.role === 'lucy' ? 'Lucy:' : 'Tú:'}</span> {line.text}
                     </p>
                   ))}
                 </div>
@@ -393,8 +389,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
 
               {orderSuccess && (
                 <div className="text-center py-6">
-                  <div className="text-5xl mb-3">🎉</div>
-                  <p className="font-bold text-gray-800 text-lg">¡Pedido confirmado!</p>
+                  <p className="font-serif font-extrabold text-ink-title text-lg">Recibimos tu pedido</p>
                   <p className="text-sm text-gray-500 mt-1">
                     Pagas al recibir. Te contactaremos pronto para coordinar la entrega.
                   </p>
@@ -406,7 +401,7 @@ export function VoiceLucy({ product }: VoiceLucyProps) {
               {(callStatus === 'idle' || callStatus === 'ended' || callStatus === 'error') && (
                 <button
                   onClick={startCall}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-todopolis-blue to-todopolis-lavender text-gray-800 font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl bg-todopolis-lavender-deep text-white font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
                   <Phone className="w-4 h-4" />
                   {callStatus === 'idle' ? 'Iniciar llamada de voz' : 'Llamar de nuevo'}
@@ -512,7 +507,7 @@ function OrderForm({ orderData, onSuccess }: { orderData: OrderData; onSuccess: 
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 rounded-2xl bg-gradient-to-r from-todopolis-blue to-todopolis-lavender text-gray-800 font-bold text-sm disabled:opacity-60 transition-opacity flex items-center justify-center gap-2"
+        className="w-full py-3 rounded-2xl bg-cta text-cta-fg font-bold text-sm disabled:opacity-60 transition-opacity flex items-center justify-center gap-2"
       >
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag className="w-4 h-4" />}
         {loading ? 'Procesando...' : 'Confirmar pedido'}

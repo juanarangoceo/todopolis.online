@@ -113,13 +113,11 @@ export function DestacadoHeroVideo({ video }: Props) {
                       unoptimized
                     />
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-todopolis-blue/20 to-todopolis-lavender/20" />
+                    <div className="absolute inset-0 bg-surface-soft" />
                   )}
                   <span className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
-                  <span className="relative z-10 flex items-center justify-center w-20 h-20 rounded-full shadow-2xl border-2 border-white/30 backdrop-blur-sm transition-transform group-hover:scale-110"
-                    style={{ background: 'linear-gradient(135deg, var(--todopolis-blue-deep) 0%, var(--todopolis-lavender-deep) 100%)' }}
-                  >
-                    <Play className="w-8 h-8 text-white ml-1" fill="currentColor" />
+                  <span className="relative z-10 flex items-center justify-center w-20 h-20 rounded-full bg-white/95 shadow-lg transition-transform group-hover:scale-105">
+                    <Play className="w-8 h-8 text-ink-title ml-1" fill="currentColor" />
                   </span>
                 </button>
               ) : (

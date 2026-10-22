@@ -51,7 +51,7 @@ export function ArticleSections({
                 <ul className="space-y-3">
                   {section.items?.map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="mt-2 w-2 h-2 rounded-full bg-gradient-to-r from-todopolis-blue to-todopolis-lavender shrink-0" />
+                      <span className="mt-2 w-2 h-2 rounded-full bg-todopolis-lavender-deep shrink-0" />
                       <span className="text-gray-700 leading-relaxed">{item}</span>
                     </li>
                   ))}

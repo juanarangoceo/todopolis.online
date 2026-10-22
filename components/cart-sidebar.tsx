@@ -47,7 +47,7 @@ export function CartSidebar() {
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold text-gray-900">Mi Carrito</h2>
+            <h2 className="text-lg font-bold text-gray-900">Tu carrito</h2>
             {totalItems > 0 && (
               <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{totalItems}</span>
             )}

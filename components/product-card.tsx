@@ -47,7 +47,10 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             fila entera al pasar el ratón. */}
         <div
           className={cn(
-            "relative h-full rounded-3xl overflow-hidden transition-all duration-500",
+            // Columna: en una fila de tarjetas de alto distinto (una con
+            // precio tachado o «Envío gratis»), el precio baja al fondo y
+            // quedan todos alineados, sin un hueco blanco bajo el precio.
+            "relative flex h-full flex-col rounded-3xl overflow-hidden transition-all duration-500",
             "bg-surface border border-nav-inactive-border",
             "shadow-sm hover:shadow-xl",
             "hover:-translate-y-1",
@@ -55,7 +58,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           )}
         >
           {/* Image container */}
-          <div className="relative w-full overflow-hidden bg-white/50 aspect-[4/5] min-h-[140px] sm:min-h-[200px]">
+          <div className="relative w-full shrink-0 overflow-hidden bg-white/50 aspect-[4/5] min-h-[140px] sm:min-h-[200px]">
             <Image
               src={product.image}
               alt={product.name}
@@ -65,9 +68,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               priority={index < 4}
               loading={index < 4 ? undefined : 'lazy'}
             />
-            
-            {/* Overlay gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
             {/* Discount badge — color de oferta, distinto del CTA */}
             {discount > 0 && (
@@ -124,7 +124,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </div>
 
           {/* Content */}
-          <div className="p-3 sm:p-5 bg-surface">
+          <div className="flex flex-1 flex-col p-3 sm:p-5 bg-surface">
             <div className="flex items-center justify-between gap-2">
               {/* Categoría en neutro: es metadato, no persuasión. El color se
                   reserva para lo que pide una acción o afirma un hecho. */}
@@ -137,7 +137,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               {product.isBestSeller && (
                 <span className="flex shrink-0 items-center gap-1 whitespace-nowrap px-1.5 sm:px-2 py-0.5 bg-amber-100/80 text-amber-700 text-[9px] sm:text-[10px] font-bold rounded-full uppercase tracking-wide">
                   <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                  Más Vendido
+                  Más vendido
                 </span>
               )}
             </div>
@@ -163,7 +163,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             )}
 
             {/* Price */}
-            <div className="mt-2 sm:mt-3 flex flex-col sm:flex-row items-start sm:items-baseline sm:gap-2">
+            <div className="mt-auto pt-2 sm:pt-3 flex flex-col sm:flex-row items-start sm:items-baseline sm:gap-2">
               <span className="text-base sm:text-xl font-extrabold tabular-nums text-ink-title">
                 {formatPrice(product.price)}
               </span>

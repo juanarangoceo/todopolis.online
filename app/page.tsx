@@ -134,11 +134,15 @@ export default async function Home() {
             ) : undefined
           }
         >
-          <StyleSpotlight products={stylePicks} />
+          {/* Un solo hijo: tres sueltos cruzando a un componente de cliente
+              daban el aviso de React de «each child should have a key». */}
+          <>
+            <StyleSpotlight products={stylePicks} />
 
-          <NewArrivalsBanner products={newArrivals} />
+            <NewArrivalsBanner products={newArrivals} />
 
-          <PolicyBadges policies={policies} whatsappHref={whatsappHref} />
+            <PolicyBadges policies={policies} whatsappHref={whatsappHref} />
+          </>
         </ProductBrowser>
         
       </main>

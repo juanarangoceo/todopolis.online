@@ -1,10 +1,5 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DestacadoSection, DestacadoSectionHeader } from './destacados/destacado-section-header';
 import { Product } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 interface ProductTestimonialsProps {
   product: Product;
@@ -45,7 +40,9 @@ interface ProductTestimonialsProps {
 // sin este contenido no pinta la sección, en vez de rellenarla con tres
 // personas que no existen.
 
-const DESKTOP_VISIBLE = 3;
+// Quieto (22-oct-2026): fue un carrusel que avanzaba solo cada 4,5 s, y la
+// guía de marca prohíbe lo que se mueve solo. Ahora se ven todos a la vez, en
+// rejilla, y cada uno conserva su número (al rotar, siempre decían 01 a 03).
 
 function UseCaseCard({ text, index }: { text: string; index: number }) {
   return (
@@ -70,41 +67,10 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
     .map((t) => ((t as { text?: string; comment?: string }).text ?? (t as { comment?: string }).comment ?? '').trim())
     .filter(Boolean);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [fading, setFading] = useState(false);
-
-  const goTo = (index: number) => {
-    setFading(true);
-    setTimeout(() => {
-      setCurrentIndex(index);
-      setFading(false);
-    }, 250);
-  };
-
-  const prev = () => goTo((currentIndex - 1 + cases.length) % cases.length);
-  const next = () => goTo((currentIndex + 1) % cases.length);
-
-  useEffect(() => {
-    if (cases.length <= DESKTOP_VISIBLE) return;
-    const interval = setInterval(() => {
-      setFading(true);
-      setTimeout(() => {
-        setCurrentIndex((index) => (index + 1) % cases.length);
-        setFading(false);
-      }, 250);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [cases.length]);
-
   // Sin contenido no se pinta la sección. Antes caía a tres testimonios de
   // respaldo escritos a mano —«Maria Garcia», «Carolina Martinez»— que salían
   // idénticos en cada producto sin copy.
   if (cases.length === 0) return null;
-
-  const isCarousel = cases.length > DESKTOP_VISIBLE;
-  const visibleDesktop = isCarousel
-    ? Array.from({ length: DESKTOP_VISIBLE }, (_, o) => cases[(currentIndex + o) % cases.length])
-    : cases;
 
   return (
     <DestacadoSection id="usos" className="scroll-mt-24">
@@ -114,48 +80,9 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
           title="Así te va a servir"
         />
 
-        {/* Escritorio: tres a la vez. El corte es `lg` y no `md` porque en
-            tablet tres columnas dejan 184 px de texto útil. */}
-        <div className="hidden lg:block">
-          <div
-            className={cn(
-              'grid gap-5 transition-opacity duration-250',
-              visibleDesktop.length >= 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2',
-              fading ? 'opacity-0' : 'opacity-100'
-            )}
-          >
-            {visibleDesktop.map((text, i) => (
-              <UseCaseCard key={`${currentIndex}-${i}`} text={text} index={i} />
-            ))}
-          </div>
-
-          {isCarousel && (
-            <div className="flex items-center justify-center gap-4 mt-6">
-              <button onClick={prev} aria-label="Anteriores" className="w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:border-todopolis-lavender-deep/40 transition-colors">
-                <ChevronLeft className="w-4 h-4 text-foreground/60" />
-              </button>
-              <div className="flex gap-2">
-                {cases.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => goTo(i)}
-                    aria-label={`Ir al uso ${i + 1}`}
-                    className={cn(
-                      'w-2 h-2 rounded-full transition-all duration-300',
-                      i === currentIndex ? 'bg-todopolis-lavender-deep w-5' : 'bg-border hover:bg-todopolis-lavender-deep/40'
-                    )}
-                  />
-                ))}
-              </div>
-              <button onClick={next} aria-label="Siguientes" className="w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:border-todopolis-lavender-deep/40 transition-colors">
-                <ChevronRight className="w-4 h-4 text-foreground/60" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Móvil y tablet: pila vertical. */}
-        <div className="lg:hidden flex flex-col gap-4">
+        {/* Tres columnas desde `lg` y no `md`: en tablet tres columnas dejan
+            184 px de texto útil. */}
+        <div className={`grid gap-5 sm:grid-cols-2 ${cases.length === 2 || cases.length === 4 ? '' : 'lg:grid-cols-3'}`}>
           {cases.map((text, i) => (
             <UseCaseCard key={i} text={text} index={i} />
           ))}

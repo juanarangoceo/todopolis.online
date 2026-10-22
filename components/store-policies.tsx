@@ -32,7 +32,7 @@ function defaultPolicies(): StorePolicy[] {
     title: advancePaymentEnabled() ? 'Paga al recibir, o con Confío' : 'Pagas cuando lo recibes',
     description: advancePaymentEnabled()
       ? 'Contraentrega: pagas en efectivo cuando te lo entregan. Con Confío: pagas en segundos por PSE, Nequi o Bancolombia, y el pago se confirma solo.'
-      : 'Compra con total confianza. Paga en efectivo únicamente cuando recibas el producto en casa.',
+      : 'Pagas en efectivo cuando recibes el producto en casa.',
   },
   {
     // "Garantía de Calidad / control estricto" no decía nada comprobable ni
@@ -43,8 +43,8 @@ function defaultPolicies(): StorePolicy[] {
   },
   {
     iconName: 'Headphones',
-    title: 'Atención Cercana',
-    description: 'Lucy, nuestra IA, te acompaña 24/7. Y si necesitas un humano, también estamos.',
+    title: 'Te atendemos por WhatsApp',
+    description: 'Pregúntanos antes de comprar o escríbenos después, con tu número de pedido.',
   },
   ]
 }

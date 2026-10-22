@@ -17,12 +17,9 @@ function renderCell(value: string | undefined, accent: 'positive' | 'neutral'): 
     return (
       <span className="inline-flex items-center gap-1.5">
         <span
-          className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-          style={accent === 'positive'
-            ? { background: 'linear-gradient(135deg, var(--todopolis-blue), var(--todopolis-lavender))' }
-            : { background: '#E5E7EB' }}
+          className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${accent === 'positive' ? 'bg-todopolis-lavender-deep' : 'bg-gray-200'}`}
         >
-          <Check className={`w-3 h-3 ${accent === 'positive' ? 'text-todopolis-blue-deep' : 'text-gray-600'}`} strokeWidth={3} />
+          <Check className={`w-3 h-3 ${accent === 'positive' ? 'text-white' : 'text-gray-600'}`} strokeWidth={3} />
         </span>
       </span>
     )
@@ -65,8 +62,7 @@ export function DestacadoComparison({ data }: Props) {
                   Característica
                 </th>
                 <th
-                  className="px-4 md:px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-todopolis-lavender-deep"
-                  style={{ background: 'linear-gradient(135deg, rgba(162,210,255,.28) 0%, rgba(237,210,243,.5) 100%)' }}
+                  className="px-4 md:px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-todopolis-lavender-deep bg-todopolis-lavender-deep/5"
                 >
                   {ourLabel}
                 </th>

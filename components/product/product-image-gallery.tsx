@@ -46,7 +46,7 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
   return (
     <div className="space-y-4">
       {/* Imagen principal — ancho completo de la columna */}
-      <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted/30 shadow-2xl shadow-primary/10">
+      <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted/30 border border-nav-inactive-border shadow-sm">
         <Image
           src={sanityCdnImage(images[selectedImage], 1200)}
           alt={product.name}

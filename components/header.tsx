@@ -251,20 +251,10 @@ export function Header() {
             <Link
               href="/destacados"
               onClick={closeMenu}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border transition-all shadow-sm"
-              style={{
-                background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-                borderColor: '#F59E0B66',
-              }}
+              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-amber-200 bg-amber-50 transition-all shadow-sm"
             >
-              <span
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
-                style={{
-                  background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)',
-                  borderColor: '#F59E0B',
-                }}
-              >
-                <Star className="w-4 h-4 text-amber-900" fill="currentColor" strokeWidth={1.5} />
+              <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-amber-100 text-amber-700">
+                <Star className="w-4 h-4" fill="currentColor" strokeWidth={1.5} />
               </span>
               <span className="font-bold text-sm text-amber-900">Destacados</span>
               <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-amber-700">Envío gratis</span>

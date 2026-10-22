@@ -16,6 +16,7 @@ import { useFavorites } from '@/app/providers/favorites-provider';
 import { VariantSelector } from './variant-selector';
 import { OfferCountdownInline } from './offer-countdown-inline';
 import { sanityCdnImage } from '@/lib/sanity/cdn-image';
+import { categoryTitle } from '@/lib/categories';
 
 interface ProductHeroProps {
   product: Product;
@@ -196,12 +197,12 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
               {/* Neutro, no salmón: el salmón es el color del botón de compra
                   y nada más puede llevarlo, o deja de destacar. */}
               <span className="text-xs md:text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                {product.category}
+                {categoryTitle(product.category)}
               </span>
               {product.isBestSeller && (
                 <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full uppercase tracking-wider">
                   <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                  Más Vendido
+                  Más vendido
                 </span>
               )}
             </div>

@@ -108,18 +108,15 @@ export default async function BlogPage() {
         {/* Hero section */}
         <section className="bg-surface-soft py-14 md:py-20">
           <div className="container mx-auto px-4 text-center">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-todopolis-lavender-deep mb-4">
+            {/* Antetítulo gris con filete y titular, como el resto de la tienda
+                (guía §5). El titular ya dice qué hay: sin subtítulo. */}
+            <p className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
               Blog Todópolis
-            </span>
-            <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Guías y consejos para{' '}
-              <span className="bg-gradient-to-r from-todopolis-blue-deep to-todopolis-lavender-deep bg-clip-text text-transparent">
-                comprar mejor
-              </span>
-            </h1>
-            <p className="text-gray-500 max-w-xl mx-auto text-lg">
-              Artículos informativos del equipo Todópolis para ayudarte a tomar las mejores decisiones de compra.
             </p>
+            <h1 className="font-serif text-3xl md:text-5xl font-extrabold tracking-[-0.02em] text-ink-title">
+              Guías y consejos para comprar mejor
+            </h1>
           </div>
         </section>
 

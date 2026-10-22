@@ -313,7 +313,6 @@ El campo `aiLifestyleImage` está en **ambos** queries de Sanity:
 Si se agrega un nuevo query, incluirlo también: `"aiLifestyleImage": aiLifestyleImage.asset->url`
 
 ### Componentes que son `'use client'`
-- `product-testimonials.tsx` — tiene auto-rotación con `useEffect`. No quitar `'use client'`.
 - `product-browser.tsx` — maneja estado de filtros y búsqueda. No quitar `'use client'`.
 
 ### `unoptimized` en imágenes IA — intencional
@@ -408,6 +407,9 @@ Lo que había en el dataset (auditado el 17-sep-2026 sobre 558 productos):
 
 Se sanea **al renderizar y no en el dataset** a propósito: cubre también lo que genere la IA mañana, sin depender de que alguien vuelva a pasar un script. El prompt además ya pide máximo 22 caracteres y prohíbe nombrar el medio de pago.
 
+### Promesas viejas de la IA en la ficha — `lib/legacy-claims.ts` (22-oct-2026)
+Mismo criterio que `lib/cta.ts`, para el resto de la ficha. Auditados los 579 publicados: 385 cierres, 69 respuestas, 48 beneficios («Envío Rápido» como virtud del producto), 40 titulares y 10 filas de ficha técnica prometían «24-48 h», «envío rápido», «desde mañana mismo», «garantía de satisfacción», «te devolvemos tu dinero si no te convence» o «Últimas unidades». El adaptador de `app/producto/[slug]/page.tsx` y `closingCopy` los limpian AL RENDERIZAR: una respuesta de plazo o devolución se reemplaza entera por la política (`DELIVERY_FACT`, `REFUND_FACT`), un beneficio así se quita y del resto se cortan solo las frases falsas. El JSON-LD de preguntas sale ya limpio. Si cambia la política, cambia esas dos constantes.
+
 ### Color: tres significados y ni uno más
 El sistema ya tenía tokens semánticos en `globals.css` (`--cta`, `--trust`, `--sale`, `--accent-*`); el problema era que se usaban como decoración. En una sola ficha convivían seis tonos y el MISMO elemento —una burbuja— salía en cuatro colores distintos, así que el comprador dejaba de leer el color como señal y el rojo del botón pesaba igual que un chip de categoría.
 
@@ -482,7 +484,7 @@ Todópolis entra al MCP de Dropi (`https://mcp.dropi.co/mcp`) con OAuth y la cue
 - `list_products` **no filtra por id ni trae descripción**: se reencuentra un producto buscando por su nombre original (`dropiName`) y proveedor. El copy sale del nombre y las fotos. Da menos ítems que `page_size` aun habiendo más páginas, oculta los agotados y su backend responde **504 a menudo** (un reintento; si sigue, otra búsqueda).
 - **Import** (`/admin/dropi` → buscar → «Importar como borrador», `app/api/dropi/import`): crea un BORRADOR, sube las fotos de CloudFront a Sanity (no hay que autorizar otro dominio de imágenes), genera el copy con Gemini mirando las fotos, categoría con JEV y etiquetas. No publica, no revalida ni escribe artículo. Si Dropi lo marca «Sex Shop», solo entra si es lencería (`lib/adult-policy.ts`).
 - **Sincronización** `/api/cron/dropi-sync` cada hora (min 15): costo, stock y variantes en publicados y borradores; si Dropi ya no lo lista, `dropiStock: 0`. Exige `CRON_SECRET` definido.
-- **Pedidos: se crean A MANO en Dropi** (decisión del 21-oct-2026). Se venden como cualquier producto y `/admin/pedidos` marca «Dropi · crear a mano · producto #… · variación #…» (busca el `dropiId` en Sanity por el slug del pedido). Nadie llama `create_order`. **Los productos de Dropi NO viajan a Nitro** (salen archivados del feed, `projectSanityProduct`): el bot no sabría despacharlos.
+- **Pedidos: se crean A MANO en Dropi** (decisión del 21-oct-2026). Se venden como cualquier producto y `/admin/pedidos` marca «Dropi · crear a mano · producto #… · variación #…» (busca el `dropiId` en Sanity por el slug del pedido). Nadie llama `create_order`. **El bot de Nitro SÍ los ofrece** (decisión del 22-oct-2026): el feed los manda con `supplier: 'dropi'` y `dropi_id` (`projectSanityProduct`; las claves solo van en los de Dropi para no cambiar el hash del resto), y Nitro marca el pedido «Dropi · crear a mano · producto #…» en sus pedidos del asesor y en «Pedidos de la web» (`nitro_bot/lib/todopolis/supplier.ts`). Agotados en Dropi viajan archivados. Desplegar Nitro ANTES que un cambio de este contrato: si llega la marca a un Nitro viejo, la ignora y el pedido sale sin aviso.
 - **Agotado** (`dropiStock` 0): igual que Mastershop, ver abajo.
 - Consola: `node scripts/dropi-mcp.ts tools | schema <herramienta> | call <herramienta> '<json>'` (solo herramientas de lectura).
 

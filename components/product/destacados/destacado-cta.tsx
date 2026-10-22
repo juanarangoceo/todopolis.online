@@ -6,6 +6,7 @@ import { PaymentMethods } from '@/components/payment-methods'
 import { OfferCountdownInline } from '../offer-countdown-inline'
 import { Product } from '@/lib/types'
 import { DestacadoSection } from './destacado-section-header'
+import { safeHeadline, stripUnsafeSentences } from '@/lib/legacy-claims'
 
 export function formatCop(price: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -24,16 +25,14 @@ export function closingCopy(product: Product) {
   const hasOffer = typeof originalPrice === 'number' && originalPrice > product.price;
   const discount = hasOffer ? Math.round((1 - product.price / originalPrice) * 100) : 0;
   // Textos generados con prompts viejos que prometían lo que la tienda no
-  // cumple: plazos de 24-48 h («rápido») o garantías de satisfacción. Se
-  // descartan al renderizar, igual que `sanitizeHeroCta`, para no depender de
-  // regenerar 577 productos.
-  const unsafeLegacyClaim = /garantía de satisfacción|sin riesgos|devolución gratis|envío inmediato|envío rápido|despacho rápido|entrega rápida|24\s*-?\s*(a\s*)?48|esta semana/i;
-  const headline = product.ctaHeadline?.trim()
+  // cumple: plazos de 24-48 h («rápido»), «desde mañana mismo», garantías de
+  // satisfacción o «Últimas unidades». Se descartan al renderizar
+  // (lib/legacy-claims.ts), para no depender de regenerar 579 productos. Del
+  // texto se quitan solo las frases falsas: el resto suele ser bueno.
+  const headline = safeHeadline(product.ctaHeadline)
     || (hasOffer ? 'Aprovecha mientras dure el precio' : 'Tú eliges cómo pagarlo');
-  const customSupportingText = product.ctaText?.trim();
-  const supportingText = customSupportingText && !unsafeLegacyClaim.test(customSupportingText)
-    ? customSupportingText
-    : 'Ya sabes de qué está hecho, cómo se usa y qué trae. Lo único que falta es elegir cómo pagarlo.';
+  const supportingText = stripUnsafeSentences(product.ctaText?.trim())
+    || 'Ya sabes de qué está hecho, cómo se usa y qué trae. Lo único que falta es elegir cómo pagarlo.';
   return { originalPrice: hasOffer ? originalPrice : undefined, hasOffer, discount, headline, supportingText };
 }
 

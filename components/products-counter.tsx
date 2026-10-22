@@ -50,20 +50,18 @@ export function ProductsCounter({ variant = 'desktop', initialCount = 0 }: Produ
 
   if (variant === 'mobile-drawer') {
     return (
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-br from-todopolis-blue/10 to-todopolis-lavender/15 border border-todopolis-lavender/30">
-        <span className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center shrink-0 border border-todopolis-lavender/30 shadow-sm">
-          <Package className="w-4 h-4 text-todopolis-lavender-deep" />
+      // Quieto y en gris (22-oct-2026): era un degradado con un punto verde
+      // latiendo, el «pulso de radar» que la guía prohíbe. Es un dato.
+      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-surface-soft border border-nav-inactive-border">
+        <span className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center shrink-0 border border-nav-inactive-border">
+          <Package className="w-4 h-4 text-foreground/70" />
         </span>
         <div className="flex flex-col leading-tight">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-todopolis-lavender-deep">Catálogo</span>
-          <span className="text-sm font-bold text-foreground tabular-nums">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Catálogo</span>
+          <span className="text-sm font-bold text-ink-title tabular-nums">
             {count.toLocaleString('es-CO')} productos
           </span>
         </div>
-        <span className="ml-auto relative flex items-center justify-center">
-          <span className="absolute w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-60" />
-          <span className="relative w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-        </span>
       </div>
     )
   }
@@ -73,10 +71,6 @@ export function ProductsCounter({ variant = 'desktop', initialCount = 0 }: Produ
       className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-todopolis-lavender/15 border border-todopolis-lavender/30"
       title="Productos disponibles en el catálogo"
     >
-      <span className="relative flex items-center justify-center">
-        <span className="absolute w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping opacity-60" />
-        <span className="relative w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-      </span>
       <span className="text-[11px] font-bold text-todopolis-lavender-deep tabular-nums leading-none">
         {count.toLocaleString('es-CO')}
       </span>

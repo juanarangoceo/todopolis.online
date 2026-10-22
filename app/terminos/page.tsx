@@ -39,7 +39,7 @@ export default function TerminosPage() {
         </p>
         <p>
           Al hacer un pedido aceptas estos términos y la{' '}
-          <a href="/privacidad">Política de Privacidad</a>.
+          <a href="/privacidad">Política de privacidad</a>.
         </p>
       </LegalSection>
 

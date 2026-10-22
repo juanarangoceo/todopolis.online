@@ -29,7 +29,7 @@ export default function LoginPage() {
       console.error(error)
       setError('Ocurrió un error al enviar el enlace. Intenta de nuevo.')
     } else {
-      setMessage('✨ ¡Revisa tu correo! Te hemos enviado un Magic Link para iniciar sesión.')
+      setMessage('Revisa tu correo: te enviamos un enlace para iniciar sesión.')
     }
     setLoading(false)
   }

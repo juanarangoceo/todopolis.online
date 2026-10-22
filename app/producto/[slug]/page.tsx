@@ -6,6 +6,7 @@ import { Footer } from '@/components/footer'
 import { ProductHero } from '@/components/product/product-hero'
 import { ProductImageGallery } from '@/components/product/product-image-gallery'
 import { lifestyleImages } from '@/lib/lifestyle'
+import { safeHeadline, sanitizeBenefits, sanitizeFaqs, sanitizeSpecs, stripUnsafeSentences } from '@/lib/legacy-claims'
 import { relatedProducts } from '@/lib/related-products'
 import { ProductDetails } from '@/components/product/product-details'
 import { ProductTestimonials } from '@/components/product/product-testimonials'
@@ -159,14 +160,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     isNew: product.isNew,
     isBestSeller: product.isBestSeller,
     heroTitle: product.heroTitle,
-    heroSubtitle: product.heroSubtitle,
+    // Las promesas viejas de la IA («envío rápido», «24-48 h», «te devolvemos
+    // tu dinero si no te convence») se limpian al renderizar: lib/legacy-claims.ts.
+    heroSubtitle: safeHeadline(product.heroSubtitle),
     heroCta: product.heroCta ?? 'Comprar ahora',
-    benefits: product.benefits ?? [],
-    specifications: product.specifications ?? [],
+    benefits: sanitizeBenefits(product.benefits),
+    specifications: sanitizeSpecs(product.specifications),
     testimonials: product.testimonials ?? [],
     reviewsCount: product.reviewsCount,
-    ctaHeadline: product.ctaHeadline,
-    ctaText: product.ctaText,
+    ctaHeadline: safeHeadline(product.ctaHeadline),
+    ctaText: stripUnsafeSentences(product.ctaText) || undefined,
     aiLifestyleImage: product.aiLifestyleImage,
     // Principal + galería, ya sin huecos ni repetidos: es lo que pinta el
     // carrusel lifestyle en las dos variantes de la ficha.
@@ -175,7 +178,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     articleTopic: (product as any).articleTopic ?? null,
     offerName: (product as any).offerName ?? null,
     offerEndsAt: (product as any).offerEndsAt ?? null,
-    faqs: (product as any).faqs ?? [],
+    faqs: sanitizeFaqs((product as { faqs?: { question: string; answer: string }[] }).faqs),
     customerPhotos: product.customerPhotos ?? [],
     quantityOffers: product.quantityOffers ?? [],
     audienceFit: product.audienceFit,
