@@ -167,6 +167,7 @@ Si existe, se usa. Si hace falta uno nuevo, se hace en este mismo lenguaje.
 | Contar cómo se compra (pago → entrega → defecto) | `PolicyBadges` («Así compras en Todópolis»): pasos numerados con filetes, sin cajas. |
 | Categorías en móvil / escritorio | `CategoryCards` (tarjetas con foto) / `CategoryBar` (pestañas de texto + «Más categorías»). Home y ofertas. |
 | Una sección de ficha o de colección | `DestacadoSection`, `DestacadoSectionHeader`, `DestacadoSplit`. |
+| Información de consulta en la ficha | `ProductDisclosure`: usos, «¿Es para ti?» y ficha técnica. Filas compactas, cerradas al entrar, con título, pista del contenido y flecha. Se abren de forma independiente, con foco visible y teclado. |
 | Nombrar una categoría | `categoryTitle(value)` de `lib/categories.ts`. |
 | Elegir talla, color u opción | `VariantSelector`: chips compactos; si las variantes son «talla/color», dos filas (`lib/variant-options.ts`). Más de 8 opciones: lista desplegable. La elegida en lavanda. Debajo, la guía de tallas si la ficha técnica la trae. |
 | Saludar al abrir el home | `HomeGreeting`: saludo por hora + frase de `lib/home-phrases.ts`. Una por visita, quieta. |

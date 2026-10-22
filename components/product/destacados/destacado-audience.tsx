@@ -1,6 +1,6 @@
 import { Check, X } from 'lucide-react'
 import { AudienceFit } from '@/lib/types'
-import { DestacadoSection, DestacadoSectionHeader } from './destacado-section-header'
+import { ProductDisclosure } from '../product-disclosure'
 
 interface Props {
   fit?: AudienceFit
@@ -19,15 +19,18 @@ export function DestacadoAudience({ fit }: Props) {
   if (forWho.length === 0) return null
 
   return (
-    <DestacadoSection>
-      <DestacadoSectionHeader eyebrow="Antes de decidir" title="¿Es para ti?" />
+    <ProductDisclosure
+      id="para-ti"
+      title="¿Es para ti?"
+      description={notFor.length ? 'Para quién sí y cuándo elegir otra opción' : 'Revisa si encaja con lo que buscas'}
+    >
       <div className={`grid gap-10 ${notFor.length ? 'md:grid-cols-2 lg:gap-16' : ''}`}>
         <div>
           <p className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-trust-fg">Es para ti si…</p>
           <ul className="divide-y divide-nav-inactive-border border-y border-nav-inactive-border">
             {forWho.map((item, i) => (
               <li key={i} className="flex gap-3 py-4">
-                <Check className="mt-0.5 h-5 w-5 shrink-0 text-trust-fg" strokeWidth={2.5} />
+                <Check aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-trust-fg" strokeWidth={2.5} />
                 <span className="leading-relaxed text-ink-title">{item}</span>
               </li>
             ))}
@@ -39,7 +42,7 @@ export function DestacadoAudience({ fit }: Props) {
             <ul className="divide-y divide-nav-inactive-border border-y border-nav-inactive-border">
               {notFor.map((item, i) => (
                 <li key={i} className="flex gap-3 py-4">
-                  <X className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={2.5} />
+                  <X aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={2.5} />
                   <span className="leading-relaxed text-foreground/75">{item}</span>
                 </li>
               ))}
@@ -47,6 +50,6 @@ export function DestacadoAudience({ fit }: Props) {
           </div>
         )}
       </div>
-    </DestacadoSection>
+    </ProductDisclosure>
   )
 }

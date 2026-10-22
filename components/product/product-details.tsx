@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Info, ListChecks } from 'lucide-react';
-import { DestacadoSection, DestacadoSectionHeader, DestacadoSplit } from './destacados/destacado-section-header';
+import { ProductDisclosure } from './product-disclosure';
 
 interface ProductDetailsProps {
   product: Product;
@@ -22,33 +22,26 @@ export function ProductDetails({ product, specificationsOnly = false }: ProductD
     { id: 'specifications' as Tab, label: 'Especificaciones', icon: ListChecks },
   ];
 
-  // Variante de la landing de Destacados: ficha técnica en la rejilla de la
-  // landing (título a la izquierda, datos a la derecha) y como lista con
-  // filetes, no como tabla dentro de una tarjeta.
+  // La ficha técnica se consulta bajo demanda en todas las landings.
   if (specificationsOnly) {
     if (!product.specifications?.length) return null;
+    const labels = [...new Set(product.specifications.map((spec) => spec.label?.trim()).filter(Boolean))];
 
     return (
-      <DestacadoSection>
-        <DestacadoSplit
-          header={
-            <DestacadoSectionHeader
-              eyebrow="Ficha técnica"
-              title="Medidas, materiales y detalles"
-              className="lg:mb-0"
-            />
-          }
-        >
-          <dl className="divide-y divide-nav-inactive-border border-y border-nav-inactive-border">
-            {product.specifications.map((spec, index) => (
-              <div key={`${spec.label}-${index}`} className="grid gap-1 py-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6">
-                <dt className="text-sm font-semibold text-muted-foreground md:text-base">{spec.label}</dt>
-                <dd className="text-sm text-ink-title md:text-base">{spec.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </DestacadoSplit>
-      </DestacadoSection>
+      <ProductDisclosure
+        id="ficha-tecnica"
+        title="Medidas, materiales y detalles"
+        description={labels.slice(0, 3).join(' · ') || 'Consulta la ficha técnica del producto'}
+      >
+        <dl className="divide-y divide-nav-inactive-border border-y border-nav-inactive-border">
+          {product.specifications.map((spec, index) => (
+            <div key={`${spec.label}-${index}`} className="grid gap-1 py-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6">
+              <dt className="text-sm font-semibold text-muted-foreground md:text-base">{spec.label}</dt>
+              <dd className="text-sm text-ink-title md:text-base">{spec.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </ProductDisclosure>
     );
   }
 

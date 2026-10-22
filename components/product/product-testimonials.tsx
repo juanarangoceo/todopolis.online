@@ -1,4 +1,4 @@
-import { DestacadoSection, DestacadoSectionHeader } from './destacados/destacado-section-header';
+import { ProductDisclosure } from './product-disclosure';
 import { Product } from '@/lib/types';
 
 interface ProductTestimonialsProps {
@@ -73,20 +73,18 @@ export function ProductTestimonials({ product }: ProductTestimonialsProps) {
   if (cases.length === 0) return null;
 
   return (
-    <DestacadoSection id="usos" className="scroll-mt-24">
-        {/* Misma rejilla y encabezado que el resto de la ficha. */}
-        <DestacadoSectionHeader
-          eyebrow="En el día a día"
-          title="Así te va a servir"
-        />
-
-        {/* Tres columnas desde `lg` y no `md`: en tablet tres columnas dejan
-            184 px de texto útil. */}
-        <div className={`grid gap-5 sm:grid-cols-2 ${cases.length === 2 || cases.length === 4 ? '' : 'lg:grid-cols-3'}`}>
-          {cases.map((text, i) => (
-            <UseCaseCard key={i} text={text} index={i} />
-          ))}
-        </div>
-    </DestacadoSection>
+    <ProductDisclosure
+      id="usos"
+      title="Así te va a servir"
+      description={`${cases.length} ${cases.length === 1 ? 'situación de uso' : 'situaciones de uso'} en tu día a día`}
+    >
+      {/* Tres columnas desde `lg` y no `md`: en tablet tres columnas dejan
+          184 px de texto útil. */}
+      <div className={`grid gap-5 sm:grid-cols-2 ${cases.length === 2 || cases.length === 4 ? '' : 'lg:grid-cols-3'}`}>
+        {cases.map((text, i) => (
+          <UseCaseCard key={i} text={text} index={i} />
+        ))}
+      </div>
+    </ProductDisclosure>
   );
 }

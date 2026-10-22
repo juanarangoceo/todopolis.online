@@ -4,6 +4,15 @@ const IMAGE_HOSTS = new Set(['cdn.sanity.io', 'cdn.bemaster.com'])
 const TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const MAX_BYTES = 5 * 1024 * 1024
 
+// Mastershop también sirve fotos como application/octet-stream. El formato
+// lo determina la firma del archivo, no la extensión ni solo la cabecera HTTP.
+function imageMimeType(bytes: Buffer): string | null {
+  if (bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) return 'image/jpeg'
+  if (bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png'
+  if (bytes.length >= 12 && bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP') return 'image/webp'
+  return null
+}
+
 // Solo fuentes del catálogo conocidas. No seguir redirecciones hacia redes
 // privadas ni aceptar una URL arbitraria enviada por el navegador.
 export function isReferenceImageUrl(value: string): boolean {
@@ -18,8 +27,9 @@ export async function fetchInlineImages(urls: string[], timeoutMs = 8000): Promi
     if (!isReferenceImageUrl(url)) return null
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' })
-      const mimeType = res.headers.get('content-type')?.split(';')[0].trim() ?? ''
-      if (!res.ok || !TYPES.has(mimeType) || Number(res.headers.get('content-length')) > MAX_BYTES || !res.body) {
+      const contentType = res.headers.get('content-type')?.split(';')[0].trim().toLowerCase() ?? ''
+      const canReadImage = TYPES.has(contentType) || contentType === 'application/octet-stream' || !contentType
+      if (!res.ok || !canReadImage || Number(res.headers.get('content-length')) > MAX_BYTES || !res.body) {
         await res.body?.cancel()
         return null
       }
@@ -34,7 +44,9 @@ export async function fetchInlineImages(urls: string[], timeoutMs = 8000): Promi
         chunks.push(value)
       }
       if (!length) return null
-      return { mimeType, data: Buffer.concat(chunks).toString('base64') }
+      const bytes = Buffer.concat(chunks)
+      const mimeType = imageMimeType(bytes)
+      return mimeType ? { mimeType, data: bytes.toString('base64') } : null
     } catch { return null }
   }))
   return images.filter((image): image is InlineImage => image !== null)
