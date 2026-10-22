@@ -1,3 +1,5 @@
+'use client'
+
 import { Banknote } from 'lucide-react'
 import { PaymentLogos } from './payment-logos'
 import { cn } from '@/lib/utils'
@@ -23,7 +25,33 @@ export function advancePaymentVisible(): boolean {
  * (Había una variante `block` con degradado que nadie usaba; se quitó en
  * oct 2026.)
  */
-export function PaymentMethods({ className }: { className?: string }) {
+/**
+ * Con `selectable`, las dos vías son BOTONES (22-oct-2026): tocar uno abre el
+ * checkout de la ficha con esa forma de pago ya elegida (evento `product:buy`
+ * con `detail.method`, lo escucha `product-hero.tsx`). Antes parecían
+ * etiquetas y la gente las tocaba sin que pasara nada.
+ */
+export function PaymentMethods({ className, selectable = false }: { className?: string; selectable?: boolean }) {
+  if (selectable) {
+    const buy = (method: 'cod' | 'confio') =>
+      window.dispatchEvent(new CustomEvent('product:buy', { detail: { method } }))
+    const btn =
+      'inline-flex min-h-11 items-center gap-2 rounded-2xl border border-trust-border bg-surface px-3.5 py-2 text-sm font-bold text-ink-title shadow-sm transition-colors hover:bg-trust-bg active:scale-[0.98]'
+    return (
+      <div className={cn('flex flex-wrap items-center gap-2', className)}>
+        <button type="button" onClick={() => buy('cod')} className={btn}>
+          <Banknote className="h-4 w-4 shrink-0 text-trust-fg" />
+          Contraentrega
+        </button>
+        {advancePaymentVisible() && (
+          <button type="button" onClick={() => buy('confio')} className={btn} aria-label="Pagar ya con Confío: PSE, Nequi o Bancolombia">
+            <span>Confío</span>
+            <PaymentLogos className="gap-x-2" logoClassName="h-5" />
+          </button>
+        )}
+      </div>
+    )
+  }
   return (
     <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-2', className)}>
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-trust-bg border border-trust-border text-trust-fg text-xs font-bold">

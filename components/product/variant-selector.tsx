@@ -28,6 +28,13 @@ const chipOff = 'border-nav-inactive-border bg-surface-soft text-muted-foregroun
 // otra elección), solo se ve más apagado.
 const chipDim = 'border-dashed border-nav-inactive-border bg-surface text-muted-foreground';
 
+// Con muchas opciones, lista desplegable (22-oct-2026): Mastershop manda hasta
+// 50 combinaciones y como botones eran cinco renglones de fichas que no se
+// leían. Por debajo del límite, botones: se comparan de un vistazo.
+const MAX_CHIPS = 8;
+const selectCls =
+  'w-full rounded-2xl border border-nav-inactive-border bg-surface px-4 py-3 text-base font-semibold text-ink-title focus:outline-none focus:ring-2 focus:ring-todopolis-lavender-deep';
+
 export function VariantSelector({ className, showHint = false }: VariantSelectorProps) {
   const { variants, selectedVariant, setSelectedVariant, picks, setPicks } = useProductVariant();
   const opts = useMemo(() => variantOptions(variants ?? []), [variants]);
@@ -51,6 +58,24 @@ export function VariantSelector({ className, showHint = false }: VariantSelector
           Elige una opción
           {current && <span className="ml-2 font-medium text-muted-foreground">{current.label}</span>}
         </p>
+        {opts.values.length > MAX_CHIPS ? (
+          <select
+            aria-label="Elige una opción"
+            className={selectCls}
+            value={selectedVariant?.idVariant != null ? String(selectedVariant.idVariant) : ''}
+            onChange={(e) => {
+              const hit = opts.values.find((o) => String(o.variant.idVariant) === e.target.value);
+              if (hit) setSelectedVariant(hit.variant);
+            }}
+          >
+            <option value="" disabled>Selecciona ({opts.values.length} opciones)</option>
+            {opts.values.map(({ variant, label }) => (
+              <option key={variant._key ?? variant.idVariant} value={String(variant.idVariant)} disabled={isSoldOut(variant)}>
+                {isSoldOut(variant) ? `${label} · agotado` : label}
+              </option>
+            ))}
+          </select>
+        ) : (
         <div className="flex flex-wrap gap-1.5">
           {opts.values.map(({ variant, label }) => {
             const on = selectedVariant?.idVariant === variant.idVariant;
@@ -70,6 +95,7 @@ export function VariantSelector({ className, showHint = false }: VariantSelector
             );
           })}
         </div>
+        )}
         {hint}
       </div>
     );
@@ -90,6 +116,28 @@ export function VariantSelector({ className, showHint = false }: VariantSelector
               {axis.label}
               {chosen && <span className="ml-2 font-medium text-muted-foreground">{chosen.label}</span>}
             </p>
+            {axis.values.length > MAX_CHIPS ? (
+              <select
+                aria-label={axis.label}
+                className={selectCls}
+                value={current[axisIndex] ?? ''}
+                onChange={(e) => {
+                  const r = pick(opts, current, axisIndex, e.target.value);
+                  setPicks(r.picks);
+                  setSelectedVariant(r.variant);
+                }}
+              >
+                <option value="" disabled>Selecciona {axis.label.toLowerCase()}</option>
+                {axis.values.map((o) => {
+                  const anyStock = isValueAvailable(opts, axisIndex, o.key, [null, null]);
+                  return (
+                    <option key={o.key} value={o.key} disabled={!anyStock}>
+                      {anyStock ? o.label : `${o.label} · agotado`}
+                    </option>
+                  );
+                })}
+              </select>
+            ) : (
             <div className="flex flex-wrap gap-1.5">
               {axis.values.map((o) => {
                 const on = current[axisIndex] === o.key;
@@ -114,6 +162,7 @@ export function VariantSelector({ className, showHint = false }: VariantSelector
                 );
               })}
             </div>
+            )}
           </div>
         );
       })}

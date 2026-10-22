@@ -29,6 +29,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
   const isWishlisted = favoriteSlugs.includes(slug);
   
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutMethod, setCheckoutMethod] = useState<'cod' | 'confio'>('cod');
   // La barra fija se esconde mientras otro botón de compra (el del hero o el
   // del cierre, `data-buy-button`) está a la vista: eran dos botones rojos
   // uno encima del otro.
@@ -57,7 +58,13 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
   const soldOut = isSoldOut(product as any);
   useEffect(() => {
     if (soldOut) return;
-    const handler = () => setIsCheckoutOpen(true);
+    // `detail.method` lo mandan los botones de forma de pago (`PaymentMethods`
+    // con `selectable`): el checkout abre con esa vía ya elegida.
+    const handler = (e: Event) => {
+      const method = (e as CustomEvent<{ method?: 'cod' | 'confio' }>).detail?.method;
+      setCheckoutMethod(method ?? 'cod');
+      setIsCheckoutOpen(true);
+    };
     window.addEventListener('product:buy', handler);
     return () => window.removeEventListener('product:buy', handler);
   }, [soldOut]);
@@ -260,7 +267,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
             {/* Oculto en móvil: el bloque de confianza de más abajo ya lista
                 los mismos medios y con contexto. Repetirlos aquí solo gastaba
                 dos renglones de una pantalla donde el precio todavía no se ve. */}
-            <PaymentMethods className="hidden sm:flex justify-center" />
+            <PaymentMethods selectable className="hidden sm:flex justify-center" />
           </div>
 
           {/* Subtitle — a la izquierda: son 160 caracteres, ya es texto de
@@ -415,7 +422,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
               ) : (
               <button
                 data-buy-button
-                onClick={() => setIsCheckoutOpen(true)}
+                onClick={() => { setCheckoutMethod('cod'); setIsCheckoutOpen(true); }}
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2.5 px-5 py-4 rounded-2xl font-bold transition-all duration-300",
                   "text-base md:text-lg whitespace-nowrap",
@@ -485,6 +492,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
         onClose={() => setIsCheckoutOpen(false)} 
         product={product} 
         initialQuantity={qty}
+        initialPaymentMethod={checkoutMethod}
       />
     </section>
 
@@ -524,7 +532,7 @@ export function ProductHero({ product, whatsappHref }: ProductHeroProps) {
         </a>
       )}
       <button
-        onClick={() => setIsCheckoutOpen(true)}
+        onClick={() => { setCheckoutMethod('cod'); setIsCheckoutOpen(true); }}
         className="flex-1 min-w-0 flex items-center justify-between gap-3 px-5 py-4 rounded-2xl font-bold text-lg bg-cta text-cta-fg shadow-lg shadow-black/15 active:scale-[0.98] transition-all"
       >
         <span className="truncate">{heroCta}</span>

@@ -26,9 +26,11 @@ interface CheckoutModalProps {
   product: Product;
   /** Cantidad elegida en el selector de combos del hero. */
   initialQuantity?: number;
+  /** Forma de pago elegida al abrir (los botones «Contraentrega» / «Confío» de la ficha). */
+  initialPaymentMethod?: 'cod' | 'confio';
 }
 
-export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }: CheckoutModalProps) {
+export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1, initialPaymentMethod = 'cod' }: CheckoutModalProps) {
   const [step, setStep] = useState(1);
   // 'cod' = contraentrega (el de siempre). 'confio' = pagar ya con Confío.
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'confio'>('cod');
@@ -53,7 +55,8 @@ export function CheckoutModal({ isOpen, onClose, product, initialQuantity = 1 }:
       setError(null);
       setLoading(false);
       setQuantity(initialQuantity);
-      setPaymentMethod('cod');
+      // Confío solo si está encendido; si no, el botón no existe y vale contraentrega.
+      setPaymentMethod(initialPaymentMethod === 'confio' && process.env.NEXT_PUBLIC_CONFIO_ENABLED === 'true' ? 'confio' : 'cod');
       setFieldErrors({});
       setDelivery(loadSavedDelivery());
       trackInitiateCheckout({

@@ -296,6 +296,8 @@ El chat web de Lucy se retiró del todo: botón flotante, panel, entrada del men
 - **Feed de Meta sin vigilancia oculta** (`/espía/` en el nombre): Meta prohíbe anunciar cámaras espía.
 - **«Pídelo por WhatsApp»** (`components/product/whatsapp-order-block.tsx`), justo después del cierre: el chat se abre con «Hola, quiero pedir <producto> ($precio)» y el enlace (`buildWhatsAppUrl` con `message`). No promete «te atiende una persona»: puede contestar el asesor de Nitro.
 - **«Cómo pagas» en móvil**: un resumen de una línea por tarjeta; los pasos solo en escritorio.
+- **Formas de pago como botones** (`PaymentMethods selectable`, en el hero y el cierre): «Contraentrega» y «Confío» abren el checkout con esa vía ya elegida (`product:buy` con `detail.method` → `initialPaymentMethod` del `CheckoutModal`). El botón de compra abre siempre en contraentrega.
+- **Variantes: más de 8 opciones → lista desplegable** (`MAX_CHIPS` en `variant-selector.tsx`), por eje o en la lista única; las agotadas salen deshabilitadas con «· agotado».
 - **Guía de tallas bajo el selector**: sale de la fila de la ficha técnica cuyo nombre dice «talla» o «medida», solo si el producto tiene variantes.
 - **Ficha: un solo texto de botón, «Comprar ahora»**, sin bolsa ni halo rojo; la barra fija de móvil se esconde mientras el botón del hero o del cierre (`data-buy-button`) está a la vista; el subtítulo del hero ya no sale en escritorio, para que el botón quede arriba del borde.
 
