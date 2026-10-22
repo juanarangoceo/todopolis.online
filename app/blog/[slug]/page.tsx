@@ -3,8 +3,10 @@ import { categoryTitle } from '@/lib/categories'
 import { notFound } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { getArticleBySlug, getAllArticleSlugs } from '@/lib/sanity/queries'
+import { getArticleBySlug, getAllArticleSlugs, getArticles } from '@/lib/sanity/queries'
 import { ArticleSections } from '@/components/blog/article-sections'
+import { ArticleCard } from '@/components/blog/article-card'
+import { relatedArticles } from '@/lib/related-articles'
 import { SanityArticle } from '@/lib/types'
 
 export const revalidate = 86400
@@ -33,9 +35,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       locale: 'es_CO',
       siteName: 'Todópolis',
       publishedTime: article.publishedAt,
+      modifiedTime: article._updatedAt,
+      images: [{ url: article.productImage || "/opengraph-image", alt: article.productName || article.title }],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
+      images: [article.productImage || '/opengraph-image'],
       title: article.title,
       description: article.seoDescription ?? '',
     },
@@ -56,11 +61,14 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://todopolis.online'
   const category = categoryTitle(article.category) || 'General'
 
+  const related = relatedArticles(article, await getArticles())
+
   // Schema.org BlogPosting JSON-LD
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: article.title,
+    inLanguage: 'es-CO',
     description: article.seoDescription,
     ...(article.productImage && { image: article.productImage }),
     keywords: article.seoKeywords?.join(', '),
@@ -98,10 +106,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd).replace(/</g, '\\u003c') }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c') }} />
       {faqJsonLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, '\\u003c') }} />
       )}
 
       <Header />
@@ -111,7 +119,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <header className="bg-surface-soft pt-10 pb-8">
           <div className="container mx-auto px-4 max-w-3xl">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
+            <nav aria-label="Ruta de navegación" className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-6">
               <Link href="/blog" className="hover:text-todopolis-lavender-deep transition-colors">Blog</Link>
               <span>/</span>
               <span className="text-todopolis-lavender-deep font-medium">{category}</span>
@@ -128,7 +136,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             </h1>
 
             {/* Meta */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               {article.topic && (
                 <span className="font-medium text-todopolis-pink-deep">{article.topic}</span>
               )}
@@ -136,7 +144,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 <span>{article.readingTime} min de lectura</span>
               )}
               {article.publishedAt && (
-                <span>{formatDate(article.publishedAt)}</span>
+                <time dateTime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
               )}
               <span>Por Equipo Todópolis</span>
             </div>
@@ -156,11 +164,22 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           />
         </article>
 
+        {related.length > 0 && (
+          <section aria-labelledby="related-guides" className="bg-surface-soft py-8 md:py-12">
+            <div className="container mx-auto px-4">
+              <h2 id="related-guides" className="mb-6 font-serif text-2xl font-extrabold text-ink-title">Más guías de {category.toLocaleLowerCase('es')}</h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                {related.map((item) => <ArticleCard key={item.slug} article={item} />)}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Back to blog */}
-        <div className="container mx-auto px-4 max-w-3xl pb-12">
+        <div className="container mx-auto px-4 max-w-3xl py-8">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-todopolis-lavender-deep transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-todopolis-lavender-deep transition-colors"
           >
             ← Volver al blog
           </Link>
