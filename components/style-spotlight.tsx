@@ -1,8 +1,5 @@
-'use client'
-
-import { ArrowRight } from 'lucide-react'
 import { Product } from '@/lib/types'
-import { COMPACT_ROW_ITEM, SuggestedProductsCarousel } from '@/components/product/suggested-products-carousel'
+import { CategorySpotlight } from '@/components/category-spotlight'
 
 // «Eleva tu estilo»: la sección de moda y accesorios del home, y el H1 de la
 // página (sep 2026). Todópolis se enfoca poco a poco en ese sector y el slogan
@@ -18,40 +15,15 @@ export function StyleSpotlight({ products }: { products: Product[] }) {
   // hacer. Mejor no pintar la sección.
   if (products.length < 4) return null
 
-  const showAll = () => window.dispatchEvent(new CustomEvent('todopolis:show-category', { detail: 'Ropa' }))
-
   return (
-    <section className="w-full bg-surface pb-8 pt-6 md:py-12" aria-labelledby="estilo-titulo">
-      <div className="container mx-auto px-4">
-        <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
-          <div>
-            <p className="mb-2 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              <span aria-hidden className="h-px w-6 bg-todopolis-lavender-deep/60" />
-              Moda y accesorios
-            </p>
-            {/* El H1 del home. Hasta sep 2026 el home no tenía ninguno. */}
-            <h1
-              id="estilo-titulo"
-              className="font-serif text-2xl font-extrabold leading-tight tracking-[-0.02em] text-ink-title text-balance md:text-[2rem]"
-            >
-              Eleva tu estilo
-            </h1>
-          </div>
-          <button
-            type="button"
-            onClick={showAll}
-            className="inline-flex shrink-0 items-center gap-1.5 pb-1 text-sm font-bold text-todopolis-lavender-deep transition-all hover:gap-2.5"
-          >
-            Ver toda la ropa
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-
-        <SuggestedProductsCarousel
-          products={products}
-          itemClassName={COMPACT_ROW_ITEM}
-        />
-      </div>
-    </section>
+    <CategorySpotlight
+      products={products}
+      id="estilo-titulo"
+      eyebrow="Moda y accesorios"
+      title="Eleva tu estilo"
+      category="Ropa"
+      linkLabel="Ver toda la ropa"
+      primary
+    />
   )
 }

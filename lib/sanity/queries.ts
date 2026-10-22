@@ -57,6 +57,7 @@ const PRODUCTS_LIST_QUERY = `*[_type == "product" && defined(slug.current) && !(
   mastershopImageUrl,
   "image": images[0].asset->url,
   "aiLifestyleImage": aiLifestyleImage.asset->url,
+  "aiLifestyleImageCreatedAt": aiLifestyleImage.asset->_createdAt,
   category,
   isNew,
   isBestSeller,

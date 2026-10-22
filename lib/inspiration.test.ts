@@ -4,7 +4,30 @@
 
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { RAIL_SIZE, railSlice, type AiImage } from './inspiration.ts'
+import { inspirationImages, RAIL_SIZE, railSlice, type AiImage } from './inspiration.ts'
+
+test('las fotos recién generadas en productos antiguos entran en el primer carril', () => {
+  const products = Array.from({ length: 32 }, (_, i) => ({
+    name: `Producto ${i}`, slug: `p${i}`, price: 100,
+    aiLifestyleImage: `image${i}`, aiLifestyleImageCreatedAt: '2026-09-01T00:00:00Z',
+  }))
+  products[31].aiLifestyleImageCreatedAt = '2026-10-22T15:26:23Z'
+  products[29].aiLifestyleImageCreatedAt = '2026-10-22T15:35:01Z'
+  const originalOrder = products.map((p) => p.slug)
+  assert.deepEqual(railSlice(inspirationImages(products), 0).slice(0, 2).map((p) => p.slug), ['p29', 'p31'])
+  assert.deepEqual(products.map((p) => p.slug), originalOrder)
+})
+
+test('omite productos sin foto y conserva las fotos antiguas sin fecha', () => {
+  assert.deepEqual(inspirationImages([
+    { name: 'Sin foto', slug: 'sin-foto' },
+    { name: 'Foto antigua', slug: 'antigua', aiLifestyleImage: 'old.jpg' },
+    { name: 'Foto nueva', slug: 'nueva', aiLifestyleImage: 'new.jpg', aiLifestyleImageCreatedAt: '2026-10-22T15:35:01Z', price: 50 },
+  ]), [
+    { name: 'Foto nueva', slug: 'nueva', image: 'new.jpg', price: 50 },
+    { name: 'Foto antigua', slug: 'antigua', image: 'old.jpg', price: 0 },
+  ])
+})
 
 const make = (n: number): AiImage[] =>
   Array.from({ length: n }, (_, i) => ({ image: `img${i}`, name: `Producto ${i}`, slug: `p${i}` }))

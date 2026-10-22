@@ -1,8 +1,12 @@
 import type { Metadata } from 'next'
+import type { SanityProduct, ProductTag } from '@/lib/types'
 import { Header } from '@/components/header';
 import { NewArrivalsBanner } from '@/components/new-arrivals-banner';
 import { newestProductIds } from '@/lib/new-arrivals';
 import { StyleSpotlight } from '@/components/style-spotlight';
+import { CategorySpotlight } from '@/components/category-spotlight';
+import { inspirationImages } from '@/lib/inspiration';
+import { categoryTitle } from '@/lib/categories';
 import { HomeGreeting } from '@/components/home-greeting';
 import { stylePickIds } from '@/lib/style-picks';
 import { ProductBrowser } from '@/components/product-browser';
@@ -17,6 +21,12 @@ import { getSanityProducts, getSanityStoreSettings, getSanityTags } from '@/lib/
 const HOME_TITLE = 'Todópolis | Eleva tu estilo: moda, accesorios y más en Colombia'
 const HOME_DESCRIPTION =
   'Moda, accesorios, belleza y hogar en una tienda online colombiana. Pagas al recibir o con Confío por PSE, Nequi o Bancolombia. Llega a todo el país en 3 a 7 días hábiles.'
+
+interface HomeCatalogProduct extends SanityProduct {
+  originalPrice?: number
+  tags?: ProductTag[]
+  aiLifestyleImageCreatedAt?: string
+}
 
 export const metadata: Metadata = {
   // `absolute`: la plantilla del layout añadiría otro «| Todópolis».
@@ -33,8 +43,8 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   // Fetch products from Sanity
-  const sanityProducts = await getSanityProducts().catch(() => []);
-  const initialProducts = sanityProducts.map((p: any) => ({
+  const sanityProducts: HomeCatalogProduct[] = await getSanityProducts().catch(() => []);
+  const initialProducts = sanityProducts.map((p) => ({
     id: p._id,
     name: p.name,
     slug: p.slug,
@@ -64,14 +74,12 @@ export default async function Home() {
     .map((id) => byId.get(id))
     .filter((p): p is (typeof initialProducts)[number] => Boolean(p));
 
-  const aiImages = sanityProducts
-    .filter((p: any) => p.aiLifestyleImage)
-    .map((p: any) => ({
-      image: p.aiLifestyleImage as string,
-      name: p.name as string,
-      slug: p.slug as string,
-      price: (p.price ?? 0) as number,
-    }));
+  const beautyIds = newestProductIds(sanityProducts.filter((p: { _id: string; category?: string }) => p.category === 'belleza' && !recentIds.has(p._id)));
+  const beautyPicks = [...beautyIds]
+    .map((id) => byId.get(id))
+    .filter((p): p is (typeof initialProducts)[number] => Boolean(p));
+
+  const aiImages = inspirationImages(sanityProducts);
 
   const [storeSettings, tagTaxonomy] = await Promise.all([
     getSanityStoreSettings(),
@@ -115,24 +123,33 @@ export default async function Home() {
           initialProducts={initialProducts}
           aiImages={aiImages}
           tagTaxonomy={tagTaxonomy}
-          // Lo que ya sale en «Eleva tu estilo» y en Novedades no se repite en
+          // Lo que ya sale en Moda, Belleza y Novedades no se repite en
           // la cuadrícula limpia. Con búsqueda o filtros vuelve a aparecer.
-          featuredIds={[...newArrivals, ...stylePicks].map((p: { id: string }) => p.id)}
+          featuredIds={[...newArrivals, ...stylePicks, ...beautyPicks].map((p: { id: string }) => p.id)}
           intro={<HomeGreeting />}
           // Sin banner de temporada en el home (22-oct-2026): la pieza traía
           // degradado, texto pintado y dos botones, y chocaba con la marca.
           // La campaña sigue viva en /temporada.
         >
-          {/* Un solo hijo: tres sueltos cruzando a un componente de cliente
-              daban el aviso de React de «each child should have a key». */}
+          {/* Claves estables al pasar las secciones de servidor al navegador. */}
           <>
-            <StyleSpotlight products={stylePicks} />
+            <StyleSpotlight key="moda" products={stylePicks} />
 
             {/* Novedades DESPUÉS de «Así compras» (22-oct-2026): pegada a
                 «Eleva tu estilo» eran dos carruseles casi iguales seguidos. */}
-            <PolicyBadges policies={policies} whatsappHref={whatsappHref} showPayments={advancePaymentEnabled()} />
+            <PolicyBadges key="politicas" policies={policies} whatsappHref={whatsappHref} showPayments={advancePaymentEnabled()} />
 
-            <NewArrivalsBanner products={newArrivals} />
+            <CategorySpotlight
+              key="belleza"
+              products={beautyPicks}
+              id="belleza-titulo"
+              eyebrow="Cuidado personal"
+              title="Tu rutina de belleza"
+              category={categoryTitle('belleza')}
+              linkLabel="Ver toda la belleza"
+            />
+
+            <NewArrivalsBanner key="novedades" products={newArrivals} />
           </>
         </ProductBrowser>
         

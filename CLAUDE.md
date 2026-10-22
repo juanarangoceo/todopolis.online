@@ -247,6 +247,8 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 ### «Eleva tu estilo» — moda y accesorios, y el H1 del home (sep 2026)
 `components/style-spotlight.tsx`, con la selección en `lib/style-picks.ts` y su test. Es la primera sección del home, encima de Novedades: los 12 productos de Moda y Accesorios más recientes que NO salen ya en Novedades. Lleva el slogan como **H1** (el home no tenía ninguno). Con menos de 4 productos no se pinta.
 
+**Belleza (22-oct-2026):** «Tu rutina de belleza», después de «Así compras», usa el mismo `CategorySpotlight` que Moda. Son los 12 productos de `belleza` más recientes fuera de Novedades. «Ver toda la belleza» abre la categoría; sus productos vuelven al catálogo al filtrar y no se repiten en la cuadrícula limpia.
+
 - El slogan va AQUÍ y no como franja sobre todo el home: el catálogo sigue siendo sobre todo hogar y belleza, y «Eleva tu estilo» encima de una cafetera no se sostiene. Ver §1 de la guía de marca.
 - «Ver toda la moda» dispara el evento `todopolis:show-category` (que escucha `product-browser.tsx`). Un `<Link>` a `?categoria=Moda` no sirve: el home ya está montado y la URL solo se lee al montar.
 - El grupo de moda (Ropa, Fajas, Calzado, Accesorios, Lencería) va primero en `PRODUCT_CATEGORIES`. La sección toma todo el grupo MENOS Lencería; «Ver toda la ropa» abre Ropa.
@@ -270,6 +272,8 @@ Verificar que no haya uno viejo colgado: `ps aux | grep "ssh -fNR"` y matarlo co
 `ProductGrid` con la lógica en `lib/catalog-paging.ts` (con test). Era scroll infinito sobre ~560 productos: **el pie de página era inalcanzable en el home** (Privacidad y Términos, que Meta exige encontrables) y al volver de una ficha se perdía todo lo cargado. Ahora carga sola hasta `AUTO_LOAD_LIMIT` (48) y después pide el botón «Ver más productos». Al abrir una ficha desde la cuadrícula se guarda lo cargado y la posición (`sessionStorage`, `tp_grid_v1`) y se recuperan al volver, si la lista es la misma (`listSignature`).
 
 **Carriles de inspiración: solo dos**, tras el producto 16 y tras el 48 (`RAIL_AFTER`). Eran ~23 con ~41 imágenes: el mismo carril volvía cada cinco.
+
+**Fotos recientes primero (22-oct-2026):** `inspirationImages()` ordena por `aiLifestyleImageCreatedAt`, la fecha del asset, no por la creación del producto ni su `_updatedAt` (el stock lo modifica cada hora). Antes las fotos nuevas de productos antiguos quedaban fuera de las 16 visibles. Solo se usan las imágenes principales publicadas de productos disponibles.
 
 ### Los carriles de inspiración NO se mueven solos (sep 2026)
 `components/inspiration-rail.tsx`. Fueron una marquesina CSS que pasaba a manual al primer gesto; se quitó. Un blanco en movimiento cuesta tocarlo (se abre la tarjeta de al lado), con ~24 carriles siempre había algo corriéndose de lado mientras el ojo baja por la cuadrícula, y la primera tarjeta salía cortada. Ahora es scroll nativo con `snap` y flechas en la cabecera que se apagan en los extremos. **No reponer el movimiento automático.**

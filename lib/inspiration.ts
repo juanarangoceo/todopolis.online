@@ -12,6 +12,29 @@ export interface AiImage {
   price?: number
 }
 
+interface InspirationProduct {
+  name: string
+  slug: string
+  price?: number | null
+  aiLifestyleImage?: string | null
+  aiLifestyleImageCreatedAt?: string | null
+}
+
+/** Primero las fotos nuevas, aunque se hayan generado para productos antiguos.
+ * No usar _updatedAt del producto: el stock lo cambia cada hora. */
+export function inspirationImages(products: InspirationProduct[]): AiImage[] {
+  const imageTime = (product: InspirationProduct) => Date.parse(product.aiLifestyleImageCreatedAt ?? '') || 0
+  return products
+    .filter((product) => !!product.aiLifestyleImage)
+    .sort((a, b) => imageTime(b) - imageTime(a))
+    .map((product) => ({
+      image: product.aiLifestyleImage!,
+      name: product.name,
+      slug: product.slug,
+      price: product.price ?? 0,
+    }))
+}
+
 /** Imágenes por carril. Con ~39 disponibles salen ~5 carriles sin repetir. */
 export const RAIL_SIZE = 8
 
