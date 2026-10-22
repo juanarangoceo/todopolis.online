@@ -63,8 +63,8 @@ export function HomeBlogSuggestions({ articles }: { articles: HomeArticle[] }) {
       role="region"
       aria-label="Lecturas del blog"
       aria-roledescription="carrusel"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHovered(true) }}
+      onPointerLeave={(event) => { if (event.pointerType === 'mouse') setHovered(false) }}
       onFocusCapture={() => setRotationChoice(false)}
       onTouchStart={() => setRotationChoice(false)}
       className="flex min-h-[4.25rem] min-w-0 items-center gap-2 border-l-2 border-todopolis-lavender pl-3"
